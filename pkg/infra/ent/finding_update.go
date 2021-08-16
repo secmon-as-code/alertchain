@@ -39,9 +39,9 @@ func (fu *FindingUpdate) SetSource(s string) *FindingUpdate {
 	return fu
 }
 
-// SetKey sets the "key" field.
-func (fu *FindingUpdate) SetKey(s string) *FindingUpdate {
-	fu.mutation.SetKey(s)
+// SetName sets the "name" field.
+func (fu *FindingUpdate) SetName(s string) *FindingUpdate {
+	fu.mutation.SetName(s)
 	return fu
 }
 
@@ -142,11 +142,11 @@ func (fu *FindingUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: finding.FieldSource,
 		})
 	}
-	if value, ok := fu.mutation.Key(); ok {
+	if value, ok := fu.mutation.Name(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: finding.FieldKey,
+			Column: finding.FieldName,
 		})
 	}
 	if value, ok := fu.mutation.Value(); ok {
@@ -187,9 +187,9 @@ func (fuo *FindingUpdateOne) SetSource(s string) *FindingUpdateOne {
 	return fuo
 }
 
-// SetKey sets the "key" field.
-func (fuo *FindingUpdateOne) SetKey(s string) *FindingUpdateOne {
-	fuo.mutation.SetKey(s)
+// SetName sets the "name" field.
+func (fuo *FindingUpdateOne) SetName(s string) *FindingUpdateOne {
+	fuo.mutation.SetName(s)
 	return fuo
 }
 
@@ -314,11 +314,11 @@ func (fuo *FindingUpdateOne) sqlSave(ctx context.Context) (_node *Finding, err e
 			Column: finding.FieldSource,
 		})
 	}
-	if value, ok := fuo.mutation.Key(); ok {
+	if value, ok := fuo.mutation.Name(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: finding.FieldKey,
+			Column: finding.FieldName,
 		})
 	}
 	if value, ok := fuo.mutation.Value(); ok {

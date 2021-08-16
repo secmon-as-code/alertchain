@@ -123,6 +123,14 @@ func Status(v types.AlertStatus) predicate.Alert {
 	})
 }
 
+// Severity applies equality check predicate on the "severity" field. It's identical to SeverityEQ.
+func Severity(v types.Severity) predicate.Alert {
+	vc := string(v)
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldSeverity), vc))
+	})
+}
+
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
 func CreatedAt(v time.Time) predicate.Alert {
 	return predicate.Alert(func(s *sql.Selector) {
@@ -631,6 +639,142 @@ func StatusContainsFold(v types.AlertStatus) predicate.Alert {
 	vc := string(v)
 	return predicate.Alert(func(s *sql.Selector) {
 		s.Where(sql.ContainsFold(s.C(FieldStatus), vc))
+	})
+}
+
+// SeverityEQ applies the EQ predicate on the "severity" field.
+func SeverityEQ(v types.Severity) predicate.Alert {
+	vc := string(v)
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldSeverity), vc))
+	})
+}
+
+// SeverityNEQ applies the NEQ predicate on the "severity" field.
+func SeverityNEQ(v types.Severity) predicate.Alert {
+	vc := string(v)
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldSeverity), vc))
+	})
+}
+
+// SeverityIn applies the In predicate on the "severity" field.
+func SeverityIn(vs ...types.Severity) predicate.Alert {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = string(vs[i])
+	}
+	return predicate.Alert(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldSeverity), v...))
+	})
+}
+
+// SeverityNotIn applies the NotIn predicate on the "severity" field.
+func SeverityNotIn(vs ...types.Severity) predicate.Alert {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = string(vs[i])
+	}
+	return predicate.Alert(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldSeverity), v...))
+	})
+}
+
+// SeverityGT applies the GT predicate on the "severity" field.
+func SeverityGT(v types.Severity) predicate.Alert {
+	vc := string(v)
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldSeverity), vc))
+	})
+}
+
+// SeverityGTE applies the GTE predicate on the "severity" field.
+func SeverityGTE(v types.Severity) predicate.Alert {
+	vc := string(v)
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldSeverity), vc))
+	})
+}
+
+// SeverityLT applies the LT predicate on the "severity" field.
+func SeverityLT(v types.Severity) predicate.Alert {
+	vc := string(v)
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldSeverity), vc))
+	})
+}
+
+// SeverityLTE applies the LTE predicate on the "severity" field.
+func SeverityLTE(v types.Severity) predicate.Alert {
+	vc := string(v)
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldSeverity), vc))
+	})
+}
+
+// SeverityContains applies the Contains predicate on the "severity" field.
+func SeverityContains(v types.Severity) predicate.Alert {
+	vc := string(v)
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldSeverity), vc))
+	})
+}
+
+// SeverityHasPrefix applies the HasPrefix predicate on the "severity" field.
+func SeverityHasPrefix(v types.Severity) predicate.Alert {
+	vc := string(v)
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldSeverity), vc))
+	})
+}
+
+// SeverityHasSuffix applies the HasSuffix predicate on the "severity" field.
+func SeverityHasSuffix(v types.Severity) predicate.Alert {
+	vc := string(v)
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldSeverity), vc))
+	})
+}
+
+// SeverityIsNil applies the IsNil predicate on the "severity" field.
+func SeverityIsNil() predicate.Alert {
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.IsNull(s.C(FieldSeverity)))
+	})
+}
+
+// SeverityNotNil applies the NotNil predicate on the "severity" field.
+func SeverityNotNil() predicate.Alert {
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.NotNull(s.C(FieldSeverity)))
+	})
+}
+
+// SeverityEqualFold applies the EqualFold predicate on the "severity" field.
+func SeverityEqualFold(v types.Severity) predicate.Alert {
+	vc := string(v)
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldSeverity), vc))
+	})
+}
+
+// SeverityContainsFold applies the ContainsFold predicate on the "severity" field.
+func SeverityContainsFold(v types.Severity) predicate.Alert {
+	vc := string(v)
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldSeverity), vc))
 	})
 }
 

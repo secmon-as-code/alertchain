@@ -21,6 +21,8 @@ const (
 	FieldDetector = "detector"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
+	// FieldSeverity holds the string denoting the severity field in the database.
+	FieldSeverity = "severity"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldClosedAt holds the string denoting the closed_at field in the database.
@@ -45,6 +47,7 @@ var Columns = []string{
 	FieldDescription,
 	FieldDetector,
 	FieldStatus,
+	FieldSeverity,
 	FieldCreatedAt,
 	FieldClosedAt,
 }

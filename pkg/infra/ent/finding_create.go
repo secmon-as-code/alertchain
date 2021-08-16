@@ -32,9 +32,9 @@ func (fc *FindingCreate) SetSource(s string) *FindingCreate {
 	return fc
 }
 
-// SetKey sets the "key" field.
-func (fc *FindingCreate) SetKey(s string) *FindingCreate {
-	fc.mutation.SetKey(s)
+// SetName sets the "name" field.
+func (fc *FindingCreate) SetName(s string) *FindingCreate {
+	fc.mutation.SetName(s)
 	return fc
 }
 
@@ -120,8 +120,8 @@ func (fc *FindingCreate) check() error {
 	if _, ok := fc.mutation.Source(); !ok {
 		return &ValidationError{Name: "source", err: errors.New(`ent: missing required field "source"`)}
 	}
-	if _, ok := fc.mutation.Key(); !ok {
-		return &ValidationError{Name: "key", err: errors.New(`ent: missing required field "key"`)}
+	if _, ok := fc.mutation.Name(); !ok {
+		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "name"`)}
 	}
 	if _, ok := fc.mutation.Value(); !ok {
 		return &ValidationError{Name: "value", err: errors.New(`ent: missing required field "value"`)}
@@ -169,13 +169,13 @@ func (fc *FindingCreate) createSpec() (*Finding, *sqlgraph.CreateSpec) {
 		})
 		_node.Source = value
 	}
-	if value, ok := fc.mutation.Key(); ok {
+	if value, ok := fc.mutation.Name(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: finding.FieldKey,
+			Column: finding.FieldName,
 		})
-		_node.Key = value
+		_node.Name = value
 	}
 	if value, ok := fc.mutation.Value(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{

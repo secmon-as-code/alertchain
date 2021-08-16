@@ -1,23 +1,3 @@
-# AlertChain
-
-AlertChain is programmable SOAR (Security Orchestration, Automation and Response) platform and universal alert manager.
-
-## Installation
-
-Build binary with `go >= 1.16` and `npm >= 7.18.1`.
-
-```sh
-% git clone https://github.com/m-mizutani/alertchain.git
-% cd alertchain
-% make
-% cp alertchain /path/to/bin
-```
-
-## Usage
-
-Write your workflow in your github project.
-
-```go
 package main
 
 import (
@@ -48,16 +28,3 @@ func Chain() *alertchain.Chain {
 		},
 	}
 }
-```
-
-Then, compile it as plugin.
-
-```sh
-$ go build -buildmode=plugin -o mychain .
-```
-
-Finally, run `alertchain` with your plugin.
-
-```sh
-$ alertchain -p mychain
-```

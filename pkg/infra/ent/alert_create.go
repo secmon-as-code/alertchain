@@ -78,6 +78,20 @@ func (ac *AlertCreate) SetNillableStatus(ts *types.AlertStatus) *AlertCreate {
 	return ac
 }
 
+// SetSeverity sets the "severity" field.
+func (ac *AlertCreate) SetSeverity(t types.Severity) *AlertCreate {
+	ac.mutation.SetSeverity(t)
+	return ac
+}
+
+// SetNillableSeverity sets the "severity" field if the given value is not nil.
+func (ac *AlertCreate) SetNillableSeverity(t *types.Severity) *AlertCreate {
+	if t != nil {
+		ac.SetSeverity(*t)
+	}
+	return ac
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (ac *AlertCreate) SetCreatedAt(t time.Time) *AlertCreate {
 	ac.mutation.SetCreatedAt(t)
@@ -276,6 +290,14 @@ func (ac *AlertCreate) createSpec() (*Alert, *sqlgraph.CreateSpec) {
 			Column: alert.FieldStatus,
 		})
 		_node.Status = value
+	}
+	if value, ok := ac.mutation.Severity(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: alert.FieldSeverity,
+		})
+		_node.Severity = value
 	}
 	if value, ok := ac.mutation.CreatedAt(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{

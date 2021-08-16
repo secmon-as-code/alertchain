@@ -11,8 +11,8 @@ const (
 	FieldTime = "time"
 	// FieldSource holds the string denoting the source field in the database.
 	FieldSource = "source"
-	// FieldKey holds the string denoting the key field in the database.
-	FieldKey = "key"
+	// FieldName holds the string denoting the name field in the database.
+	FieldName = "name"
 	// FieldValue holds the string denoting the value field in the database.
 	FieldValue = "value"
 	// Table holds the table name of the finding in the database.
@@ -24,7 +24,7 @@ var Columns = []string{
 	FieldID,
 	FieldTime,
 	FieldSource,
-	FieldKey,
+	FieldName,
 	FieldValue,
 }
 

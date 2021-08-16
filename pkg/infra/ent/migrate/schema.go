@@ -15,6 +15,7 @@ var (
 		{Name: "description", Type: field.TypeString, Nullable: true},
 		{Name: "detector", Type: field.TypeString, Nullable: true},
 		{Name: "status", Type: field.TypeString, Default: "new"},
+		{Name: "severity", Type: field.TypeString, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "closed_at", Type: field.TypeTime, Nullable: true},
 	}
@@ -52,7 +53,7 @@ var (
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "time", Type: field.TypeTime},
 		{Name: "source", Type: field.TypeString},
-		{Name: "key", Type: field.TypeString},
+		{Name: "name", Type: field.TypeString},
 		{Name: "value", Type: field.TypeString},
 		{Name: "attribute_findings", Type: field.TypeInt, Nullable: true},
 	}

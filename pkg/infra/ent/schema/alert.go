@@ -22,6 +22,7 @@ func (Alert) Fields() []ent.Field {
 		field.String("description").Optional(),
 		field.String("detector").Optional(),
 		field.String("status").GoType(types.AlertStatus("")).Default(string(types.StatusNew)),
+		field.String("severity").GoType(types.Severity("")).Optional(),
 		field.Time("created_at").Immutable().Default(func() time.Time {
 			return time.Now().UTC()
 		}),

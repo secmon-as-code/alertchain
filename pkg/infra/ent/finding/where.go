@@ -106,10 +106,10 @@ func Source(v string) predicate.Finding {
 	})
 }
 
-// Key applies equality check predicate on the "key" field. It's identical to KeyEQ.
-func Key(v string) predicate.Finding {
+// Name applies equality check predicate on the "name" field. It's identical to NameEQ.
+func Name(v string) predicate.Finding {
 	return predicate.Finding(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldKey), v))
+		s.Where(sql.EQ(s.C(FieldName), v))
 	})
 }
 
@@ -307,22 +307,22 @@ func SourceContainsFold(v string) predicate.Finding {
 	})
 }
 
-// KeyEQ applies the EQ predicate on the "key" field.
-func KeyEQ(v string) predicate.Finding {
+// NameEQ applies the EQ predicate on the "name" field.
+func NameEQ(v string) predicate.Finding {
 	return predicate.Finding(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldKey), v))
+		s.Where(sql.EQ(s.C(FieldName), v))
 	})
 }
 
-// KeyNEQ applies the NEQ predicate on the "key" field.
-func KeyNEQ(v string) predicate.Finding {
+// NameNEQ applies the NEQ predicate on the "name" field.
+func NameNEQ(v string) predicate.Finding {
 	return predicate.Finding(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldKey), v))
+		s.Where(sql.NEQ(s.C(FieldName), v))
 	})
 }
 
-// KeyIn applies the In predicate on the "key" field.
-func KeyIn(vs ...string) predicate.Finding {
+// NameIn applies the In predicate on the "name" field.
+func NameIn(vs ...string) predicate.Finding {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -334,12 +334,12 @@ func KeyIn(vs ...string) predicate.Finding {
 			s.Where(sql.False())
 			return
 		}
-		s.Where(sql.In(s.C(FieldKey), v...))
+		s.Where(sql.In(s.C(FieldName), v...))
 	})
 }
 
-// KeyNotIn applies the NotIn predicate on the "key" field.
-func KeyNotIn(vs ...string) predicate.Finding {
+// NameNotIn applies the NotIn predicate on the "name" field.
+func NameNotIn(vs ...string) predicate.Finding {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -351,70 +351,70 @@ func KeyNotIn(vs ...string) predicate.Finding {
 			s.Where(sql.False())
 			return
 		}
-		s.Where(sql.NotIn(s.C(FieldKey), v...))
+		s.Where(sql.NotIn(s.C(FieldName), v...))
 	})
 }
 
-// KeyGT applies the GT predicate on the "key" field.
-func KeyGT(v string) predicate.Finding {
+// NameGT applies the GT predicate on the "name" field.
+func NameGT(v string) predicate.Finding {
 	return predicate.Finding(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldKey), v))
+		s.Where(sql.GT(s.C(FieldName), v))
 	})
 }
 
-// KeyGTE applies the GTE predicate on the "key" field.
-func KeyGTE(v string) predicate.Finding {
+// NameGTE applies the GTE predicate on the "name" field.
+func NameGTE(v string) predicate.Finding {
 	return predicate.Finding(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldKey), v))
+		s.Where(sql.GTE(s.C(FieldName), v))
 	})
 }
 
-// KeyLT applies the LT predicate on the "key" field.
-func KeyLT(v string) predicate.Finding {
+// NameLT applies the LT predicate on the "name" field.
+func NameLT(v string) predicate.Finding {
 	return predicate.Finding(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldKey), v))
+		s.Where(sql.LT(s.C(FieldName), v))
 	})
 }
 
-// KeyLTE applies the LTE predicate on the "key" field.
-func KeyLTE(v string) predicate.Finding {
+// NameLTE applies the LTE predicate on the "name" field.
+func NameLTE(v string) predicate.Finding {
 	return predicate.Finding(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldKey), v))
+		s.Where(sql.LTE(s.C(FieldName), v))
 	})
 }
 
-// KeyContains applies the Contains predicate on the "key" field.
-func KeyContains(v string) predicate.Finding {
+// NameContains applies the Contains predicate on the "name" field.
+func NameContains(v string) predicate.Finding {
 	return predicate.Finding(func(s *sql.Selector) {
-		s.Where(sql.Contains(s.C(FieldKey), v))
+		s.Where(sql.Contains(s.C(FieldName), v))
 	})
 }
 
-// KeyHasPrefix applies the HasPrefix predicate on the "key" field.
-func KeyHasPrefix(v string) predicate.Finding {
+// NameHasPrefix applies the HasPrefix predicate on the "name" field.
+func NameHasPrefix(v string) predicate.Finding {
 	return predicate.Finding(func(s *sql.Selector) {
-		s.Where(sql.HasPrefix(s.C(FieldKey), v))
+		s.Where(sql.HasPrefix(s.C(FieldName), v))
 	})
 }
 
-// KeyHasSuffix applies the HasSuffix predicate on the "key" field.
-func KeyHasSuffix(v string) predicate.Finding {
+// NameHasSuffix applies the HasSuffix predicate on the "name" field.
+func NameHasSuffix(v string) predicate.Finding {
 	return predicate.Finding(func(s *sql.Selector) {
-		s.Where(sql.HasSuffix(s.C(FieldKey), v))
+		s.Where(sql.HasSuffix(s.C(FieldName), v))
 	})
 }
 
-// KeyEqualFold applies the EqualFold predicate on the "key" field.
-func KeyEqualFold(v string) predicate.Finding {
+// NameEqualFold applies the EqualFold predicate on the "name" field.
+func NameEqualFold(v string) predicate.Finding {
 	return predicate.Finding(func(s *sql.Selector) {
-		s.Where(sql.EqualFold(s.C(FieldKey), v))
+		s.Where(sql.EqualFold(s.C(FieldName), v))
 	})
 }
 
-// KeyContainsFold applies the ContainsFold predicate on the "key" field.
-func KeyContainsFold(v string) predicate.Finding {
+// NameContainsFold applies the ContainsFold predicate on the "name" field.
+func NameContainsFold(v string) predicate.Finding {
 	return predicate.Finding(func(s *sql.Selector) {
-		s.Where(sql.ContainsFold(s.C(FieldKey), v))
+		s.Where(sql.ContainsFold(s.C(FieldName), v))
 	})
 }
 

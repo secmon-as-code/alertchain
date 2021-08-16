@@ -25,6 +25,8 @@ type Alert struct {
 	Detector string `json:"detector,omitempty"`
 	// Status holds the value of the "status" field.
 	Status types.AlertStatus `json:"status,omitempty"`
+	// Severity holds the value of the "severity" field.
+	Severity types.Severity `json:"severity,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// ClosedAt holds the value of the "closed_at" field.
@@ -57,7 +59,7 @@ func (*Alert) scanValues(columns []string) ([]interface{}, error) {
 	values := make([]interface{}, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case alert.FieldID, alert.FieldTitle, alert.FieldDescription, alert.FieldDetector, alert.FieldStatus:
+		case alert.FieldID, alert.FieldTitle, alert.FieldDescription, alert.FieldDetector, alert.FieldStatus, alert.FieldSeverity:
 			values[i] = new(sql.NullString)
 		case alert.FieldCreatedAt, alert.FieldClosedAt:
 			values[i] = new(sql.NullTime)
@@ -105,6 +107,12 @@ func (a *Alert) assignValues(columns []string, values []interface{}) error {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
 			} else if value.Valid {
 				a.Status = types.AlertStatus(value.String)
+			}
+		case alert.FieldSeverity:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field severity", values[i])
+			} else if value.Valid {
+				a.Severity = types.Severity(value.String)
 			}
 		case alert.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -160,6 +168,8 @@ func (a *Alert) String() string {
 	builder.WriteString(a.Detector)
 	builder.WriteString(", status=")
 	builder.WriteString(fmt.Sprintf("%v", a.Status))
+	builder.WriteString(", severity=")
+	builder.WriteString(fmt.Sprintf("%v", a.Severity))
 	builder.WriteString(", created_at=")
 	builder.WriteString(a.CreatedAt.Format(time.ANSIC))
 	if v := a.ClosedAt; v != nil {

@@ -3,8 +3,8 @@ package db
 import (
 	"context"
 
+	"github.com/m-mizutani/alertchain/pkg/infra"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent"
-	"github.com/m-mizutani/alertchain/pkg/interfaces"
 	"github.com/m-mizutani/alertchain/types"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -16,24 +16,30 @@ type Client struct {
 	client *ent.Client
 }
 
-func NewClient() interfaces.DBClient {
+func newClient() *Client {
 	return &Client{
 		ctx: context.Background(),
 	}
 }
 
-func NewDBMock() interfaces.DBClient {
-	db := NewClient().(*Client)
-	db.mock = true
+func New(dbType, dbConfig string) (infra.DBClient, error) {
+	client := newClient()
+	if err := client.init(dbType, dbConfig); err != nil {
+		return nil, err
+	}
+	return client, nil
+}
+
+func NewDBMock() infra.DBClient {
+	db := newClient()
+
+	if err := db.init("sqlite3", "file:ent?mode=memory&cache=shared&_fk=1"); err != nil {
+		panic(err.Error())
+	}
 	return db
 }
 
-func (x *Client) Init(dbType, dbConfig string) error {
-	if x.mock {
-		dbType = "sqlite3"
-		dbConfig = "file:ent?mode=memory&cache=shared&_fk=1"
-	}
-
+func (x *Client) init(dbType, dbConfig string) error {
 	client, err := ent.Open(dbType, dbConfig)
 	if err != nil {
 		return types.ErrDatabaseUnexpected.Wrap(err)

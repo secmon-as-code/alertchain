@@ -1,4 +1,4 @@
-ROOT_DIR := $(abspath $(lastword $(MAKEFILE_LIST)))
+ROOT_DIR := $(dir $(abspath $(firstword $(MAKEFILE_LIST))))
 
 ASSET_DIR=./assets
 DIST_DIR=$(ASSET_DIR)/dist
@@ -20,6 +20,12 @@ $(ASSET_JS): $(ASSET_SRC)
 
 $(ENT_SRC): $(ENT_SCHEMA)
 	go generate $(ENT_DIR)
+
+test: $(SRC) $(ENT_SRC)
+	go test ./...
+
+example: ./examples/chain/*.go
+	go build -buildmode=plugin -o chain.so ./examples/chain
 
 alertchain: $(ASSETS) $(SRC) $(ENT_SRC)
 	go build -o alertchain ./cmd/alertchain

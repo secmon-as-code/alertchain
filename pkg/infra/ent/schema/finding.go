@@ -15,7 +15,7 @@ func (Finding) Fields() []ent.Field {
 	return []ent.Field{
 		field.Time("time"),
 		field.String("source"),
-		field.String("key"),
+		field.String("name"),
 		field.String("value"),
 	}
 }

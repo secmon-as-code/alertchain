@@ -3,6 +3,11 @@ package types
 import "github.com/google/uuid"
 
 type AlertID string
+
+func NewAlertID() AlertID {
+	return AlertID(uuid.New().String())
+}
+
 type AlertStatus string
 
 const (
@@ -11,6 +16,11 @@ const (
 	StatusClosed   AlertStatus = "closed"
 )
 
-func NewAlertID() AlertID {
-	return AlertID(uuid.New().String())
-}
+type Severity string
+
+const (
+	SevUnclassified Severity = "unclassified"
+	SevSafe         Severity = "safe"
+	SevAffected     Severity = "affected"
+	SevUrgent       Severity = "urgent"
+)

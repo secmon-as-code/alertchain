@@ -19,6 +19,15 @@ func (x *Client) GetAlert(id types.AlertID) (*ent.Alert, error) {
 	return fetched, nil
 }
 
+func (x *Client) GetAlerts() ([]*ent.Alert, error) {
+	fetched, err := x.client.Alert.Query().All(x.ctx)
+	if err != nil {
+		return nil, types.ErrDatabaseUnexpected.Wrap(err)
+	}
+
+	return fetched, nil
+}
+
 func (x *Client) NewAlert() (*ent.Alert, error) {
 	newAlert, err := x.client.Alert.Create().SetID(types.NewAlertID()).Save(x.ctx)
 	if err != nil {
@@ -33,7 +42,8 @@ func (x *Client) SaveAlert(alert *ent.Alert) error {
 		SetTitle(alert.Title).
 		SetDescription(alert.Description).
 		SetDetector(alert.Detector).
-		SetStatus(alert.Status)
+		SetStatus(alert.Status).
+		SetSeverity(alert.Severity)
 
 	if alert.ClosedAt != nil {
 		q.SetClosedAt(*alert.ClosedAt)

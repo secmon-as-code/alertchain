@@ -2,14 +2,14 @@ package alertchain
 
 import (
 	"github.com/google/uuid"
+	"github.com/m-mizutani/alertchain/pkg/infra"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent"
-	"github.com/m-mizutani/alertchain/pkg/interfaces"
 	"github.com/m-mizutani/alertchain/types"
 )
 
 type Alert struct {
 	ent.Alert
-	db       interfaces.DBClient
+	db       infra.DBClient
 	newAttrs []*Attribute
 }
 
@@ -28,7 +28,7 @@ func (x *Alert) AddAttributes(attrs []*Attribute) {
 	x.newAttrs = append(x.newAttrs, attrs...)
 }
 
-func NewAlert(db interfaces.DBClient) *Alert {
+func NewAlert(db infra.DBClient) *Alert {
 	return &Alert{
 		Alert: ent.Alert{
 			ID: types.AlertID(uuid.New().String()),

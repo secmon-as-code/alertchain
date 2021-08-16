@@ -41,6 +41,7 @@ type AlertMutation struct {
 	description       *string
 	detector          *string
 	status            *types.AlertStatus
+	severity          *types.Severity
 	created_at        *time.Time
 	closed_at         *time.Time
 	clearedFields     map[string]struct{}
@@ -320,6 +321,55 @@ func (m *AlertMutation) ResetStatus() {
 	m.status = nil
 }
 
+// SetSeverity sets the "severity" field.
+func (m *AlertMutation) SetSeverity(t types.Severity) {
+	m.severity = &t
+}
+
+// Severity returns the value of the "severity" field in the mutation.
+func (m *AlertMutation) Severity() (r types.Severity, exists bool) {
+	v := m.severity
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSeverity returns the old "severity" field's value of the Alert entity.
+// If the Alert object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AlertMutation) OldSeverity(ctx context.Context) (v types.Severity, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldSeverity is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldSeverity requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSeverity: %w", err)
+	}
+	return oldValue.Severity, nil
+}
+
+// ClearSeverity clears the value of the "severity" field.
+func (m *AlertMutation) ClearSeverity() {
+	m.severity = nil
+	m.clearedFields[alert.FieldSeverity] = struct{}{}
+}
+
+// SeverityCleared returns if the "severity" field was cleared in this mutation.
+func (m *AlertMutation) SeverityCleared() bool {
+	_, ok := m.clearedFields[alert.FieldSeverity]
+	return ok
+}
+
+// ResetSeverity resets all changes to the "severity" field.
+func (m *AlertMutation) ResetSeverity() {
+	m.severity = nil
+	delete(m.clearedFields, alert.FieldSeverity)
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (m *AlertMutation) SetCreatedAt(t time.Time) {
 	m.created_at = &t
@@ -478,7 +528,7 @@ func (m *AlertMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *AlertMutation) Fields() []string {
-	fields := make([]string, 0, 6)
+	fields := make([]string, 0, 7)
 	if m.title != nil {
 		fields = append(fields, alert.FieldTitle)
 	}
@@ -490,6 +540,9 @@ func (m *AlertMutation) Fields() []string {
 	}
 	if m.status != nil {
 		fields = append(fields, alert.FieldStatus)
+	}
+	if m.severity != nil {
+		fields = append(fields, alert.FieldSeverity)
 	}
 	if m.created_at != nil {
 		fields = append(fields, alert.FieldCreatedAt)
@@ -513,6 +566,8 @@ func (m *AlertMutation) Field(name string) (ent.Value, bool) {
 		return m.Detector()
 	case alert.FieldStatus:
 		return m.Status()
+	case alert.FieldSeverity:
+		return m.Severity()
 	case alert.FieldCreatedAt:
 		return m.CreatedAt()
 	case alert.FieldClosedAt:
@@ -534,6 +589,8 @@ func (m *AlertMutation) OldField(ctx context.Context, name string) (ent.Value, e
 		return m.OldDetector(ctx)
 	case alert.FieldStatus:
 		return m.OldStatus(ctx)
+	case alert.FieldSeverity:
+		return m.OldSeverity(ctx)
 	case alert.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
 	case alert.FieldClosedAt:
@@ -574,6 +631,13 @@ func (m *AlertMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetStatus(v)
+		return nil
+	case alert.FieldSeverity:
+		v, ok := value.(types.Severity)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSeverity(v)
 		return nil
 	case alert.FieldCreatedAt:
 		v, ok := value.(time.Time)
@@ -628,6 +692,9 @@ func (m *AlertMutation) ClearedFields() []string {
 	if m.FieldCleared(alert.FieldDetector) {
 		fields = append(fields, alert.FieldDetector)
 	}
+	if m.FieldCleared(alert.FieldSeverity) {
+		fields = append(fields, alert.FieldSeverity)
+	}
 	if m.FieldCleared(alert.FieldClosedAt) {
 		fields = append(fields, alert.FieldClosedAt)
 	}
@@ -654,6 +721,9 @@ func (m *AlertMutation) ClearField(name string) error {
 	case alert.FieldDetector:
 		m.ClearDetector()
 		return nil
+	case alert.FieldSeverity:
+		m.ClearSeverity()
+		return nil
 	case alert.FieldClosedAt:
 		m.ClearClosedAt()
 		return nil
@@ -676,6 +746,9 @@ func (m *AlertMutation) ResetField(name string) error {
 		return nil
 	case alert.FieldStatus:
 		m.ResetStatus()
+		return nil
+	case alert.FieldSeverity:
+		m.ResetSeverity()
 		return nil
 	case alert.FieldCreatedAt:
 		m.ResetCreatedAt()
@@ -1326,7 +1399,7 @@ type FindingMutation struct {
 	id            *int
 	time          *time.Time
 	source        *string
-	key           *string
+	name          *string
 	value         *string
 	clearedFields map[string]struct{}
 	done          bool
@@ -1485,40 +1558,40 @@ func (m *FindingMutation) ResetSource() {
 	m.source = nil
 }
 
-// SetKey sets the "key" field.
-func (m *FindingMutation) SetKey(s string) {
-	m.key = &s
+// SetName sets the "name" field.
+func (m *FindingMutation) SetName(s string) {
+	m.name = &s
 }
 
-// Key returns the value of the "key" field in the mutation.
-func (m *FindingMutation) Key() (r string, exists bool) {
-	v := m.key
+// Name returns the value of the "name" field in the mutation.
+func (m *FindingMutation) Name() (r string, exists bool) {
+	v := m.name
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldKey returns the old "key" field's value of the Finding entity.
+// OldName returns the old "name" field's value of the Finding entity.
 // If the Finding object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *FindingMutation) OldKey(ctx context.Context) (v string, err error) {
+func (m *FindingMutation) OldName(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldKey is only allowed on UpdateOne operations")
+		return v, fmt.Errorf("OldName is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldKey requires an ID field in the mutation")
+		return v, fmt.Errorf("OldName requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldKey: %w", err)
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
 	}
-	return oldValue.Key, nil
+	return oldValue.Name, nil
 }
 
-// ResetKey resets all changes to the "key" field.
-func (m *FindingMutation) ResetKey() {
-	m.key = nil
+// ResetName resets all changes to the "name" field.
+func (m *FindingMutation) ResetName() {
+	m.name = nil
 }
 
 // SetValue sets the "value" field.
@@ -1583,8 +1656,8 @@ func (m *FindingMutation) Fields() []string {
 	if m.source != nil {
 		fields = append(fields, finding.FieldSource)
 	}
-	if m.key != nil {
-		fields = append(fields, finding.FieldKey)
+	if m.name != nil {
+		fields = append(fields, finding.FieldName)
 	}
 	if m.value != nil {
 		fields = append(fields, finding.FieldValue)
@@ -1601,8 +1674,8 @@ func (m *FindingMutation) Field(name string) (ent.Value, bool) {
 		return m.Time()
 	case finding.FieldSource:
 		return m.Source()
-	case finding.FieldKey:
-		return m.Key()
+	case finding.FieldName:
+		return m.Name()
 	case finding.FieldValue:
 		return m.Value()
 	}
@@ -1618,8 +1691,8 @@ func (m *FindingMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldTime(ctx)
 	case finding.FieldSource:
 		return m.OldSource(ctx)
-	case finding.FieldKey:
-		return m.OldKey(ctx)
+	case finding.FieldName:
+		return m.OldName(ctx)
 	case finding.FieldValue:
 		return m.OldValue(ctx)
 	}
@@ -1645,12 +1718,12 @@ func (m *FindingMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetSource(v)
 		return nil
-	case finding.FieldKey:
+	case finding.FieldName:
 		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetKey(v)
+		m.SetName(v)
 		return nil
 	case finding.FieldValue:
 		v, ok := value.(string)
@@ -1714,8 +1787,8 @@ func (m *FindingMutation) ResetField(name string) error {
 	case finding.FieldSource:
 		m.ResetSource()
 		return nil
-	case finding.FieldKey:
-		m.ResetKey()
+	case finding.FieldName:
+		m.ResetName()
 		return nil
 	case finding.FieldValue:
 		m.ResetValue()

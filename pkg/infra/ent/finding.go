@@ -20,8 +20,8 @@ type Finding struct {
 	Time time.Time `json:"time,omitempty"`
 	// Source holds the value of the "source" field.
 	Source string `json:"source,omitempty"`
-	// Key holds the value of the "key" field.
-	Key string `json:"key,omitempty"`
+	// Name holds the value of the "name" field.
+	Name string `json:"name,omitempty"`
 	// Value holds the value of the "value" field.
 	Value              string `json:"value,omitempty"`
 	attribute_findings *int
@@ -34,7 +34,7 @@ func (*Finding) scanValues(columns []string) ([]interface{}, error) {
 		switch columns[i] {
 		case finding.FieldID:
 			values[i] = new(sql.NullInt64)
-		case finding.FieldSource, finding.FieldKey, finding.FieldValue:
+		case finding.FieldSource, finding.FieldName, finding.FieldValue:
 			values[i] = new(sql.NullString)
 		case finding.FieldTime:
 			values[i] = new(sql.NullTime)
@@ -73,11 +73,11 @@ func (f *Finding) assignValues(columns []string, values []interface{}) error {
 			} else if value.Valid {
 				f.Source = value.String
 			}
-		case finding.FieldKey:
+		case finding.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field key", values[i])
+				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
-				f.Key = value.String
+				f.Name = value.String
 			}
 		case finding.FieldValue:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -124,8 +124,8 @@ func (f *Finding) String() string {
 	builder.WriteString(f.Time.Format(time.ANSIC))
 	builder.WriteString(", source=")
 	builder.WriteString(f.Source)
-	builder.WriteString(", key=")
-	builder.WriteString(f.Key)
+	builder.WriteString(", name=")
+	builder.WriteString(f.Name)
 	builder.WriteString(", value=")
 	builder.WriteString(f.Value)
 	builder.WriteByte(')')

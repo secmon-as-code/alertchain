@@ -103,6 +103,26 @@ func (au *AlertUpdate) SetNillableStatus(ts *types.AlertStatus) *AlertUpdate {
 	return au
 }
 
+// SetSeverity sets the "severity" field.
+func (au *AlertUpdate) SetSeverity(t types.Severity) *AlertUpdate {
+	au.mutation.SetSeverity(t)
+	return au
+}
+
+// SetNillableSeverity sets the "severity" field if the given value is not nil.
+func (au *AlertUpdate) SetNillableSeverity(t *types.Severity) *AlertUpdate {
+	if t != nil {
+		au.SetSeverity(*t)
+	}
+	return au
+}
+
+// ClearSeverity clears the value of the "severity" field.
+func (au *AlertUpdate) ClearSeverity() *AlertUpdate {
+	au.mutation.ClearSeverity()
+	return au
+}
+
 // SetClosedAt sets the "closed_at" field.
 func (au *AlertUpdate) SetClosedAt(t time.Time) *AlertUpdate {
 	au.mutation.SetClosedAt(t)
@@ -282,6 +302,19 @@ func (au *AlertUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: alert.FieldStatus,
 		})
 	}
+	if value, ok := au.mutation.Severity(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: alert.FieldSeverity,
+		})
+	}
+	if au.mutation.SeverityCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Column: alert.FieldSeverity,
+		})
+	}
 	if value, ok := au.mutation.ClosedAt(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
@@ -439,6 +472,26 @@ func (auo *AlertUpdateOne) SetNillableStatus(ts *types.AlertStatus) *AlertUpdate
 	if ts != nil {
 		auo.SetStatus(*ts)
 	}
+	return auo
+}
+
+// SetSeverity sets the "severity" field.
+func (auo *AlertUpdateOne) SetSeverity(t types.Severity) *AlertUpdateOne {
+	auo.mutation.SetSeverity(t)
+	return auo
+}
+
+// SetNillableSeverity sets the "severity" field if the given value is not nil.
+func (auo *AlertUpdateOne) SetNillableSeverity(t *types.Severity) *AlertUpdateOne {
+	if t != nil {
+		auo.SetSeverity(*t)
+	}
+	return auo
+}
+
+// ClearSeverity clears the value of the "severity" field.
+func (auo *AlertUpdateOne) ClearSeverity() *AlertUpdateOne {
+	auo.mutation.ClearSeverity()
 	return auo
 }
 
@@ -643,6 +696,19 @@ func (auo *AlertUpdateOne) sqlSave(ctx context.Context) (_node *Alert, err error
 			Type:   field.TypeString,
 			Value:  value,
 			Column: alert.FieldStatus,
+		})
+	}
+	if value, ok := auo.mutation.Severity(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: alert.FieldSeverity,
+		})
+	}
+	if auo.mutation.SeverityCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Column: alert.FieldSeverity,
 		})
 	}
 	if value, ok := auo.mutation.ClosedAt(); ok {

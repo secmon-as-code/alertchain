@@ -32,6 +32,7 @@ func TestAlert(t *testing.T) {
 			alert.Detector = "blue"
 			alert.Description = "insane"
 			alert.Status = types.StatusClosed
+			alert.Severity = types.SevAffected
 			alert.ClosedAt = &now
 
 			require.NoError(t, client.SaveAlert(alert))
@@ -44,6 +45,7 @@ func TestAlert(t *testing.T) {
 				assert.Equal(t, "blue", got.Detector)
 				assert.Equal(t, "insane", got.Description)
 				assert.Equal(t, types.StatusClosed, got.Status)
+				assert.Equal(t, types.SevAffected, got.Severity)
 				assert.Equal(t, now, *got.ClosedAt)
 			})
 		})

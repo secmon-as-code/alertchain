@@ -21,7 +21,7 @@ func init() {
 	// alert.DefaultStatus holds the default value on creation for the status field.
 	alert.DefaultStatus = types.AlertStatus(alertDescStatus.Default.(string))
 	// alertDescCreatedAt is the schema descriptor for created_at field.
-	alertDescCreatedAt := alertFields[5].Descriptor()
+	alertDescCreatedAt := alertFields[6].Descriptor()
 	// alert.DefaultCreatedAt holds the default value on creation for the created_at field.
 	alert.DefaultCreatedAt = alertDescCreatedAt.Default.(func() time.Time)
 }
