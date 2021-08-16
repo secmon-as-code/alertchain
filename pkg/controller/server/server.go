@@ -57,6 +57,7 @@ func (x *Server) Run() error {
 	r := engine.Group("/api/v1")
 	r.GET("/alert", getAlerts)
 	r.GET("/alert/:id", getAlert)
+	r.POST("/alert", postAlert)
 
 	if err := engine.Run(fmt.Sprintf("%s:%d", x.addr, x.port)); err != nil {
 		return err

@@ -1,5 +1,7 @@
 package types
 
+import "github.com/m-mizutani/goerr"
+
 type AttrType string
 
 const (
@@ -11,6 +13,14 @@ const (
 	AttrURL      AttrType = "url"
 )
 
+func (x AttrType) IsValid() error {
+	switch x {
+	case AttrIPAddr, AttrDomain, AttrPort, AttrSha256, AttrFilePath, AttrURL:
+		return nil
+	}
+	return goerr.Wrap(ErrInvalidInput, "invalid attribute type")
+}
+
 type AttrContext string
 
 const (
@@ -19,3 +29,11 @@ const (
 	CtxServer AttrContext = "server"
 	CtxClient AttrContext = "client"
 )
+
+func (x AttrContext) IsValid() error {
+	switch x {
+	case CtxRemote, CtxLocal, CtxServer, CtxClient:
+		return nil
+	}
+	return goerr.Wrap(ErrInvalidInput, "invalid attribute context")
+}

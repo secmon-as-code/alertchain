@@ -35,7 +35,7 @@ func TestAlert(t *testing.T) {
 			alert.Severity = types.SevAffected
 			alert.ClosedAt = &now
 
-			require.NoError(t, client.SaveAlert(alert))
+			require.NoError(t, client.UpdateAlert(alert.ID, alert))
 
 			t.Run("Get updated alert", func(t *testing.T) {
 				got, err := client.GetAlert(alert.ID)
@@ -44,9 +44,12 @@ func TestAlert(t *testing.T) {
 				assert.Equal(t, "five", got.Title)
 				assert.Equal(t, "blue", got.Detector)
 				assert.Equal(t, "insane", got.Description)
-				assert.Equal(t, types.StatusClosed, got.Status)
 				assert.Equal(t, types.SevAffected, got.Severity)
 				assert.Equal(t, now, *got.ClosedAt)
+
+				t.Run("status can not be updated via SaveAlert", func(t *testing.T) {
+					assert.NotEqual(t, types.StatusClosed, got.Status)
+				})
 			})
 		})
 	})
@@ -69,8 +72,8 @@ func TestAlert(t *testing.T) {
 				Context: []string{string(types.CtxLocal)},
 			},
 		}
-		require.NoError(t, client.SaveAlert(alert))
-		require.NoError(t, client.AddAttributes(alert, attrs))
+		require.NoError(t, client.UpdateAlert(alert.ID, alert))
+		require.NoError(t, client.AddAttributes(alert.ID, attrs))
 
 		t.Run("Get alert with attributes", func(t *testing.T) {
 			got, err := client.GetAlert(alert.ID)

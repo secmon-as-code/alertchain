@@ -4,8 +4,9 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/m-mizutani/alertchain/pkg/infra/ent"
+	"github.com/m-mizutani/alertchain"
 	"github.com/m-mizutani/alertchain/types"
+	"github.com/m-mizutani/goerr"
 )
 
 func getAlerts(c *gin.Context) {
@@ -34,7 +35,7 @@ func getAlert(c *gin.Context) {
 }
 
 func postAlert(c *gin.Context) {
-	var alert ent.Alert
+	var alert alertchain.Alert
 
 	if err := c.BindJSON(&alert); err != nil {
 		c.Error(types.ErrInvalidInput.Wrap(err))
@@ -44,7 +45,7 @@ func postAlert(c *gin.Context) {
 	uc := ctxUsecase(c)
 	newAlert, err := uc.RecvAlert(&alert)
 	if err != nil {
-		c.Error(err)
+		c.Error(goerr.Wrap(err).With("alert", alert))
 		return
 	}
 

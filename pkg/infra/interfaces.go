@@ -15,8 +15,9 @@ type DBClient interface {
 	GetAlert(id types.AlertID) (*ent.Alert, error)
 	GetAlerts() ([]*ent.Alert, error)
 	NewAlert() (*ent.Alert, error)
-	SaveAlert(alert *ent.Alert) error
+	UpdateAlert(id types.AlertID, alert *ent.Alert) error
+	UpdateAlertStatus(id types.AlertID, status types.AlertStatus) error
 
-	AddAttributes(alert *ent.Alert, newAttrs []*ent.Attribute) error
+	AddAttributes(id types.AlertID, newAttrs []*ent.Attribute) error
 	AddFindings(attr *ent.Attribute, findings []*ent.Finding) error
 }

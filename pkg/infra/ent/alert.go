@@ -29,6 +29,8 @@ type Alert struct {
 	Severity types.Severity `json:"severity,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
+	// DetectedAt holds the value of the "detected_at" field.
+	DetectedAt *time.Time `json:"detected_at,omitempty"`
 	// ClosedAt holds the value of the "closed_at" field.
 	ClosedAt *time.Time `json:"closed_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -61,7 +63,7 @@ func (*Alert) scanValues(columns []string) ([]interface{}, error) {
 		switch columns[i] {
 		case alert.FieldID, alert.FieldTitle, alert.FieldDescription, alert.FieldDetector, alert.FieldStatus, alert.FieldSeverity:
 			values[i] = new(sql.NullString)
-		case alert.FieldCreatedAt, alert.FieldClosedAt:
+		case alert.FieldCreatedAt, alert.FieldDetectedAt, alert.FieldClosedAt:
 			values[i] = new(sql.NullTime)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Alert", columns[i])
@@ -120,6 +122,13 @@ func (a *Alert) assignValues(columns []string, values []interface{}) error {
 			} else if value.Valid {
 				a.CreatedAt = value.Time
 			}
+		case alert.FieldDetectedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field detected_at", values[i])
+			} else if value.Valid {
+				a.DetectedAt = new(time.Time)
+				*a.DetectedAt = value.Time
+			}
 		case alert.FieldClosedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field closed_at", values[i])
@@ -172,6 +181,10 @@ func (a *Alert) String() string {
 	builder.WriteString(fmt.Sprintf("%v", a.Severity))
 	builder.WriteString(", created_at=")
 	builder.WriteString(a.CreatedAt.Format(time.ANSIC))
+	if v := a.DetectedAt; v != nil {
+		builder.WriteString(", detected_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
 	if v := a.ClosedAt; v != nil {
 		builder.WriteString(", closed_at=")
 		builder.WriteString(v.Format(time.ANSIC))

@@ -106,6 +106,20 @@ func (ac *AlertCreate) SetNillableCreatedAt(t *time.Time) *AlertCreate {
 	return ac
 }
 
+// SetDetectedAt sets the "detected_at" field.
+func (ac *AlertCreate) SetDetectedAt(t time.Time) *AlertCreate {
+	ac.mutation.SetDetectedAt(t)
+	return ac
+}
+
+// SetNillableDetectedAt sets the "detected_at" field if the given value is not nil.
+func (ac *AlertCreate) SetNillableDetectedAt(t *time.Time) *AlertCreate {
+	if t != nil {
+		ac.SetDetectedAt(*t)
+	}
+	return ac
+}
+
 // SetClosedAt sets the "closed_at" field.
 func (ac *AlertCreate) SetClosedAt(t time.Time) *AlertCreate {
 	ac.mutation.SetClosedAt(t)
@@ -306,6 +320,14 @@ func (ac *AlertCreate) createSpec() (*Alert, *sqlgraph.CreateSpec) {
 			Column: alert.FieldCreatedAt,
 		})
 		_node.CreatedAt = value
+	}
+	if value, ok := ac.mutation.DetectedAt(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: alert.FieldDetectedAt,
+		})
+		_node.DetectedAt = &value
 	}
 	if value, ok := ac.mutation.ClosedAt(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{

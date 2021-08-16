@@ -26,6 +26,7 @@ func (Alert) Fields() []ent.Field {
 		field.Time("created_at").Immutable().Default(func() time.Time {
 			return time.Now().UTC()
 		}),
+		field.Time("detected_at").Optional().Nillable(),
 		field.Time("closed_at").Optional().Nillable(),
 	}
 }

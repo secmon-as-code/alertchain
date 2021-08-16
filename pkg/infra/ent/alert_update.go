@@ -123,6 +123,26 @@ func (au *AlertUpdate) ClearSeverity() *AlertUpdate {
 	return au
 }
 
+// SetDetectedAt sets the "detected_at" field.
+func (au *AlertUpdate) SetDetectedAt(t time.Time) *AlertUpdate {
+	au.mutation.SetDetectedAt(t)
+	return au
+}
+
+// SetNillableDetectedAt sets the "detected_at" field if the given value is not nil.
+func (au *AlertUpdate) SetNillableDetectedAt(t *time.Time) *AlertUpdate {
+	if t != nil {
+		au.SetDetectedAt(*t)
+	}
+	return au
+}
+
+// ClearDetectedAt clears the value of the "detected_at" field.
+func (au *AlertUpdate) ClearDetectedAt() *AlertUpdate {
+	au.mutation.ClearDetectedAt()
+	return au
+}
+
 // SetClosedAt sets the "closed_at" field.
 func (au *AlertUpdate) SetClosedAt(t time.Time) *AlertUpdate {
 	au.mutation.SetClosedAt(t)
@@ -315,6 +335,19 @@ func (au *AlertUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: alert.FieldSeverity,
 		})
 	}
+	if value, ok := au.mutation.DetectedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: alert.FieldDetectedAt,
+		})
+	}
+	if au.mutation.DetectedAtCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Column: alert.FieldDetectedAt,
+		})
+	}
 	if value, ok := au.mutation.ClosedAt(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
@@ -492,6 +525,26 @@ func (auo *AlertUpdateOne) SetNillableSeverity(t *types.Severity) *AlertUpdateOn
 // ClearSeverity clears the value of the "severity" field.
 func (auo *AlertUpdateOne) ClearSeverity() *AlertUpdateOne {
 	auo.mutation.ClearSeverity()
+	return auo
+}
+
+// SetDetectedAt sets the "detected_at" field.
+func (auo *AlertUpdateOne) SetDetectedAt(t time.Time) *AlertUpdateOne {
+	auo.mutation.SetDetectedAt(t)
+	return auo
+}
+
+// SetNillableDetectedAt sets the "detected_at" field if the given value is not nil.
+func (auo *AlertUpdateOne) SetNillableDetectedAt(t *time.Time) *AlertUpdateOne {
+	if t != nil {
+		auo.SetDetectedAt(*t)
+	}
+	return auo
+}
+
+// ClearDetectedAt clears the value of the "detected_at" field.
+func (auo *AlertUpdateOne) ClearDetectedAt() *AlertUpdateOne {
+	auo.mutation.ClearDetectedAt()
 	return auo
 }
 
@@ -709,6 +762,19 @@ func (auo *AlertUpdateOne) sqlSave(ctx context.Context) (_node *Alert, err error
 		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Column: alert.FieldSeverity,
+		})
+	}
+	if value, ok := auo.mutation.DetectedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: alert.FieldDetectedAt,
+		})
+	}
+	if auo.mutation.DetectedAtCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Column: alert.FieldDetectedAt,
 		})
 	}
 	if value, ok := auo.mutation.ClosedAt(); ok {

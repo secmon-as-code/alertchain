@@ -138,6 +138,13 @@ func CreatedAt(v time.Time) predicate.Alert {
 	})
 }
 
+// DetectedAt applies equality check predicate on the "detected_at" field. It's identical to DetectedAtEQ.
+func DetectedAt(v time.Time) predicate.Alert {
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldDetectedAt), v))
+	})
+}
+
 // ClosedAt applies equality check predicate on the "closed_at" field. It's identical to ClosedAtEQ.
 func ClosedAt(v time.Time) predicate.Alert {
 	return predicate.Alert(func(s *sql.Selector) {
@@ -851,6 +858,96 @@ func CreatedAtLT(v time.Time) predicate.Alert {
 func CreatedAtLTE(v time.Time) predicate.Alert {
 	return predicate.Alert(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldCreatedAt), v))
+	})
+}
+
+// DetectedAtEQ applies the EQ predicate on the "detected_at" field.
+func DetectedAtEQ(v time.Time) predicate.Alert {
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldDetectedAt), v))
+	})
+}
+
+// DetectedAtNEQ applies the NEQ predicate on the "detected_at" field.
+func DetectedAtNEQ(v time.Time) predicate.Alert {
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldDetectedAt), v))
+	})
+}
+
+// DetectedAtIn applies the In predicate on the "detected_at" field.
+func DetectedAtIn(vs ...time.Time) predicate.Alert {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Alert(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldDetectedAt), v...))
+	})
+}
+
+// DetectedAtNotIn applies the NotIn predicate on the "detected_at" field.
+func DetectedAtNotIn(vs ...time.Time) predicate.Alert {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Alert(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldDetectedAt), v...))
+	})
+}
+
+// DetectedAtGT applies the GT predicate on the "detected_at" field.
+func DetectedAtGT(v time.Time) predicate.Alert {
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldDetectedAt), v))
+	})
+}
+
+// DetectedAtGTE applies the GTE predicate on the "detected_at" field.
+func DetectedAtGTE(v time.Time) predicate.Alert {
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldDetectedAt), v))
+	})
+}
+
+// DetectedAtLT applies the LT predicate on the "detected_at" field.
+func DetectedAtLT(v time.Time) predicate.Alert {
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldDetectedAt), v))
+	})
+}
+
+// DetectedAtLTE applies the LTE predicate on the "detected_at" field.
+func DetectedAtLTE(v time.Time) predicate.Alert {
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldDetectedAt), v))
+	})
+}
+
+// DetectedAtIsNil applies the IsNil predicate on the "detected_at" field.
+func DetectedAtIsNil() predicate.Alert {
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.IsNull(s.C(FieldDetectedAt)))
+	})
+}
+
+// DetectedAtNotNil applies the NotNil predicate on the "detected_at" field.
+func DetectedAtNotNil() predicate.Alert {
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.NotNull(s.C(FieldDetectedAt)))
 	})
 }
 

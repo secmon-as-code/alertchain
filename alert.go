@@ -1,7 +1,6 @@
 package alertchain
 
 import (
-	"github.com/google/uuid"
 	"github.com/m-mizutani/alertchain/pkg/infra"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent"
 	"github.com/m-mizutani/alertchain/types"
@@ -9,36 +8,36 @@ import (
 
 type Alert struct {
 	ent.Alert
+	Attributes []*Attribute `json:"attributes"`
+
+	id       types.AlertID // Immutable AlertID copied from ent.Alert.ID
 	db       infra.DBClient
 	newAttrs []*Attribute
-}
-
-func (x *Alert) Attributes() Attributes {
-	attrs := make(Attributes, len(x.Edges.Attributes))
-	for i, attr := range x.Edges.Attributes {
-		attrs[i] = &Attribute{
-			Attribute: *attr,
-			alert:     x,
-		}
-	}
-	return attrs
 }
 
 func (x *Alert) AddAttributes(attrs []*Attribute) {
 	x.newAttrs = append(x.newAttrs, attrs...)
 }
 
-func NewAlert(db infra.DBClient) *Alert {
-	return &Alert{
-		Alert: ent.Alert{
-			ID: types.AlertID(uuid.New().String()),
-		},
-		db: db,
+func NewAlert(alert *ent.Alert, db infra.DBClient) *Alert {
+	newAlert := &Alert{
+		Alert: *alert,
+		id:    alert.ID,
+		db:    db,
 	}
+	attrs := make(Attributes, len(alert.Edges.Attributes))
+	for i, attr := range alert.Edges.Attributes {
+		attrs[i] = &Attribute{
+			Attribute: *attr,
+			alert:     newAlert,
+		}
+	}
+
+	return newAlert
 }
 
 func (x *Alert) Commit() error {
-	if err := x.db.SaveAlert(&x.Alert); err != nil {
+	if err := x.db.UpdateAlert(x.id, &x.Alert); err != nil {
 		return err
 	}
 
@@ -46,11 +45,11 @@ func (x *Alert) Commit() error {
 	for i, a := range x.newAttrs {
 		attrs[i] = &a.Attribute
 	}
-	if err := x.db.AddAttributes(&x.Alert, attrs); err != nil {
+	if err := x.db.AddAttributes(x.id, attrs); err != nil {
 		return err
 	}
 
-	for _, attr := range x.Attributes() {
+	for _, attr := range x.Attributes {
 		if len(attr.newFindings) == 0 {
 			continue
 		}

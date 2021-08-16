@@ -2,9 +2,11 @@ package db
 
 import (
 	"context"
+	"testing"
 
 	"github.com/m-mizutani/alertchain/pkg/infra"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/enttest"
 	"github.com/m-mizutani/alertchain/types"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -30,12 +32,9 @@ func New(dbType, dbConfig string) (infra.DBClient, error) {
 	return client, nil
 }
 
-func NewDBMock() infra.DBClient {
+func NewDBMock(t *testing.T) infra.DBClient {
 	db := newClient()
-
-	if err := db.init("sqlite3", "file:ent?mode=memory&cache=shared&_fk=1"); err != nil {
-		panic(err.Error())
-	}
+	db.client = enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
 	return db
 }
 

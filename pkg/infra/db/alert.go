@@ -37,16 +37,18 @@ func (x *Client) NewAlert() (*ent.Alert, error) {
 	return newAlert, nil
 }
 
-func (x *Client) SaveAlert(alert *ent.Alert) error {
-	q := alert.Update().
+func (x *Client) UpdateAlert(id types.AlertID, alert *ent.Alert) error {
+	q := x.client.Alert.UpdateOneID(id).
 		SetTitle(alert.Title).
 		SetDescription(alert.Description).
 		SetDetector(alert.Detector).
-		SetStatus(alert.Status).
 		SetSeverity(alert.Severity)
 
+	if alert.DetectedAt != nil {
+		q = q.SetDetectedAt(*alert.DetectedAt)
+	}
 	if alert.ClosedAt != nil {
-		q.SetClosedAt(*alert.ClosedAt)
+		q = q.SetClosedAt(*alert.ClosedAt)
 	}
 
 	if _, err := q.Save(x.ctx); err != nil {
@@ -55,7 +57,14 @@ func (x *Client) SaveAlert(alert *ent.Alert) error {
 	return nil
 }
 
-func (x *Client) AddAttributes(alert *ent.Alert, newAttrs []*ent.Attribute) error {
+func (x *Client) UpdateAlertStatus(id types.AlertID, status types.AlertStatus) error {
+	if _, err := x.client.Alert.UpdateOneID(id).SetStatus(status).Save(x.ctx); err != nil {
+		return types.ErrDatabaseUnexpected.Wrap(err)
+	}
+	return nil
+}
+
+func (x *Client) AddAttributes(id types.AlertID, newAttrs []*ent.Attribute) error {
 	if len(newAttrs) == 0 {
 		return nil // nothing to do
 	}
@@ -73,7 +82,7 @@ func (x *Client) AddAttributes(alert *ent.Alert, newAttrs []*ent.Attribute) erro
 		return types.ErrDatabaseUnexpected.Wrap(err)
 	}
 
-	if _, err := alert.Update().AddAttributes(added...).Save(x.ctx); err != nil {
+	if _, err := x.client.Alert.UpdateOneID(id).AddAttributes(added...).Save(x.ctx); err != nil {
 		return types.ErrDatabaseUnexpected.Wrap(err)
 	}
 

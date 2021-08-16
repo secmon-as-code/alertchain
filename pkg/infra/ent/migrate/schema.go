@@ -17,6 +17,7 @@ var (
 		{Name: "status", Type: field.TypeString, Default: "new"},
 		{Name: "severity", Type: field.TypeString, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
+		{Name: "detected_at", Type: field.TypeTime, Nullable: true},
 		{Name: "closed_at", Type: field.TypeTime, Nullable: true},
 	}
 	// AlertsTable holds the schema information for the "alerts" table.
