@@ -8,11 +8,11 @@ import (
 )
 
 func (x *usecase) GetAlerts() ([]*ent.Alert, error) {
-	return x.infra.DB.GetAlerts()
+	return x.clients.DB.GetAlerts()
 }
 
 func (x *usecase) GetAlert(id types.AlertID) (*ent.Alert, error) {
-	return x.infra.DB.GetAlert(id)
+	return x.clients.DB.GetAlert(id)
 }
 
 func (x *usecase) RecvAlert(alert *alertchain.Alert) (*ent.Alert, error) {
@@ -20,12 +20,12 @@ func (x *usecase) RecvAlert(alert *alertchain.Alert) (*ent.Alert, error) {
 		return nil, goerr.Wrap(err)
 	}
 
-	created, err := x.infra.DB.NewAlert()
+	created, err := x.clients.DB.NewAlert()
 	if err != nil {
 		return nil, err
 	}
 
-	if err := x.infra.DB.UpdateAlert(created.ID, &alert.Alert); err != nil {
+	if err := x.clients.DB.UpdateAlert(created.ID, &alert.Alert); err != nil {
 		return nil, err
 	}
 
@@ -33,11 +33,11 @@ func (x *usecase) RecvAlert(alert *alertchain.Alert) (*ent.Alert, error) {
 	for i, attr := range alert.Attributes {
 		attrs[i] = &attr.Attribute
 	}
-	if err := x.infra.DB.AddAttributes(created.ID, attrs); err != nil {
+	if err := x.clients.DB.AddAttributes(created.ID, attrs); err != nil {
 		return nil, err
 	}
 
-	newAlert, err := x.infra.DB.GetAlert(created.ID)
+	newAlert, err := x.clients.DB.GetAlert(created.ID)
 	if err != nil {
 		return nil, err
 	}

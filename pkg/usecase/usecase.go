@@ -10,7 +10,7 @@ type usecase struct {
 	chain   *alertchain.Chain
 }
 
-func New(clients infra.Clients, chain *alertchain.Chain) Usecase {
+func New(clients infra.Clients, chain *alertchain.Chain) Interface {
 	return &usecase{
 		clients: clients,
 		chain:   chain,

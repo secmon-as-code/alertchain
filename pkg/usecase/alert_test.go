@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func setupAlertTest(t *testing.T) (usecase.Usecase, infra.Clients) {
+func setupAlertTest(t *testing.T) (usecase.Interface, infra.Clients) {
 	chain := &alertchain.Chain{
 		Stages: []alertchain.Tasks{
 			{},

@@ -6,7 +6,7 @@ import (
 	"github.com/m-mizutani/alertchain/types"
 )
 
-type Usecase interface {
+type Interface interface {
 	RecvAlert(alert *alertchain.Alert) (*ent.Alert, error)
 	GetAlerts() ([]*ent.Alert, error)
 	GetAlert(id types.AlertID) (*ent.Alert, error)

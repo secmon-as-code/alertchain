@@ -12,12 +12,12 @@ import (
 )
 
 type Server struct {
-	usecase usecase.Usecase
+	usecase usecase.Interface
 	addr    string
 	port    uint64
 }
 
-func New(uc usecase.Usecase, addr string, port uint64) *Server {
+func New(uc usecase.Interface, addr string, port uint64) *Server {
 	return &Server{
 		usecase: uc,
 		addr:    addr,
@@ -72,14 +72,14 @@ const (
 	cookieReferrerName  = "referrer"
 )
 
-func ctxUsecase(c *gin.Context) usecase.Usecase {
+func ctxUsecase(c *gin.Context) usecase.Interface {
 	val, ok := c.Get(contextUsecase)
 	if !ok {
 		panic("No usecase saved in gin.Context")
 	}
-	uc, ok := val.(usecase.Usecase)
+	uc, ok := val.(usecase.Interface)
 	if !ok {
-		panic("Can not cast value in gin.Context to usecase.Usecase")
+		panic("Can not cast value in gin.Context to usecase.Interface")
 	}
 	return uc
 }
