@@ -6,13 +6,13 @@ import (
 )
 
 type usecase struct {
-	infra infra.Infra
-	chain *alertchain.Chain
+	clients infra.Clients
+	chain   *alertchain.Chain
 }
 
-func New(infra infra.Infra, chain *alertchain.Chain) Usecase {
+func New(clients infra.Clients, chain *alertchain.Chain) Usecase {
 	return &usecase{
-		infra: infra,
-		chain: chain,
+		clients: clients,
+		chain:   chain,
 	}
 }

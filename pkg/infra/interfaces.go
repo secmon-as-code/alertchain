@@ -5,7 +5,7 @@ import (
 	"github.com/m-mizutani/alertchain/types"
 )
 
-type Infra struct {
+type Clients struct {
 	DB DBClient
 }
 

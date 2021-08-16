@@ -12,19 +12,19 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func setupAlertTest(t *testing.T) (usecase.Usecase, infra.DBClient) {
+func setupAlertTest(t *testing.T) (usecase.Usecase, infra.Clients) {
 	chain := &alertchain.Chain{
 		Stages: []alertchain.Tasks{
 			{},
 		},
 	}
 
-	infrastructure := infra.Infra{
+	clients := infra.Clients{
 		DB: db.NewDBMock(t),
 	}
-	uc := usecase.New(infrastructure, chain)
+	uc := usecase.New(clients, chain)
 
-	return uc, infrastructure.DB
+	return uc, clients
 }
 
 func TestRecvAlert(t *testing.T) {
@@ -40,7 +40,7 @@ func TestRecvAlert(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, alert)
 
-	got, err := inf.GetAlert(alert.ID)
+	got, err := inf.DB.GetAlert(alert.ID)
 	require.NoError(t, err)
 	assert.Equal(t, alert.Title, got.Title)
 }
