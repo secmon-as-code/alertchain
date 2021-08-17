@@ -6,5 +6,3 @@ type Task interface {
 	Execute(alert *Alert) error
 	IsExecutable(alert *Alert) bool
 }
-
-type Tasks []Task

@@ -1,8 +1,13 @@
 package usecase
 
 import (
+	"sync"
+
+	"github.com/jinzhu/copier"
 	"github.com/m-mizutani/alertchain"
+	"github.com/m-mizutani/alertchain/pkg/infra"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent"
+	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/alertchain/types"
 	"github.com/m-mizutani/goerr"
 )
@@ -15,8 +20,8 @@ func (x *usecase) GetAlert(id types.AlertID) (*ent.Alert, error) {
 	return x.clients.DB.GetAlert(id)
 }
 
-func (x *usecase) RecvAlert(alert *alertchain.Alert) (*ent.Alert, error) {
-	if err := validateAlert(alert); err != nil {
+func (x *usecase) RecvAlert(recvAlert *alertchain.Alert) (*alertchain.Alert, error) {
+	if err := validateAlert(recvAlert); err != nil {
 		return nil, goerr.Wrap(err)
 	}
 
@@ -25,12 +30,12 @@ func (x *usecase) RecvAlert(alert *alertchain.Alert) (*ent.Alert, error) {
 		return nil, err
 	}
 
-	if err := x.clients.DB.UpdateAlert(created.ID, &alert.Alert); err != nil {
+	if err := x.clients.DB.UpdateAlert(created.ID, &recvAlert.Alert); err != nil {
 		return nil, err
 	}
 
-	attrs := make([]*ent.Attribute, len(alert.Attributes))
-	for i, attr := range alert.Attributes {
+	attrs := make([]*ent.Attribute, len(recvAlert.Attributes))
+	for i, attr := range recvAlert.Attributes {
 		attrs[i] = &attr.Attribute
 	}
 	if err := x.clients.DB.AddAttributes(created.ID, attrs); err != nil {
@@ -42,7 +47,51 @@ func (x *usecase) RecvAlert(alert *alertchain.Alert) (*ent.Alert, error) {
 		return nil, err
 	}
 
-	return newAlert, nil
+	go func() {
+		if err := executeChain(x.chain, newAlert.ID, x.clients); err != nil {
+			utils.OutputError(logger, err)
+		}
+	}()
+
+	return alertchain.NewAlert(newAlert, x.clients.DB), nil
+}
+
+func executeTask(task alertchain.Task, alert *alertchain.Alert) error {
+	if err := task.Execute(alert); err != nil {
+		utils.OutputError(logger, err)
+		return goerr.Wrap(err).With("task.Name", task.Name())
+	}
+	return nil
+}
+
+func executeChain(chain *alertchain.Chain, alertID types.AlertID, clients infra.Clients) error {
+	for _, stage := range chain.Stages {
+		alert, err := clients.DB.GetAlert(alertID)
+		if err != nil {
+			return err
+		}
+
+		wg := sync.WaitGroup{}
+		results := make([]error, len(stage.Tasks))
+
+		for i, task := range stage.Tasks {
+			wg.Add(1)
+			args := new(ent.Alert)
+			copier.Copy(&args, alert)
+
+			go func(exec alertchain.Task, input *alertchain.Alert, idx int) {
+				results[idx] = executeTask(exec, input)
+			}(task, alertchain.NewAlert(args, clients.DB), i)
+		}
+
+		wg.Wait()
+		for _, err := range results {
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func validateAlert(alert *alertchain.Alert) error {

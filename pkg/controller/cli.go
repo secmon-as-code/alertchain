@@ -1,7 +1,6 @@
 package controller
 
 import (
-	"errors"
 	"os"
 	"plugin"
 
@@ -57,18 +56,7 @@ func (x *Controller) CLI(args []string) {
 	}
 
 	if err := app.Run(args); err != nil {
-		ev := logger.Error()
-
-		var goErr *goerr.Error
-		if errors.As(err, &goErr) {
-			for k, v := range goErr.Values() {
-				ev.Interface(k, v)
-			}
-			for _, st := range goErr.Stacks() {
-				logger.Debug().Interface("stack", st).Send()
-			}
-		}
-		ev.Msg(err.Error())
+		utils.OutputError(logger, err)
 		os.Exit(1)
 	}
 }

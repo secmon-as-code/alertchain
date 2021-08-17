@@ -1,6 +1,7 @@
 package usecase_test
 
 import (
+	"sync"
 	"testing"
 
 	"github.com/m-mizutani/alertchain"
@@ -12,23 +13,35 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func setupAlertTest(t *testing.T) (usecase.Interface, infra.Clients) {
-	chain := &alertchain.Chain{
-		Stages: []alertchain.Tasks{
-			{},
-		},
-	}
+type blockTask struct {
+	wg sync.WaitGroup
+}
+
+func (x *blockTask) Name() string                              { return "blocker" }
+func (x *blockTask) Description() string                       { return "blocking" }
+func (x *blockTask) IsExecutable(alert *alertchain.Alert) bool { return false }
+func (x *blockTask) Execute(alert *alertchain.Alert) error {
+	x.wg.Done()
+	return nil
+}
+
+func setupAlertTest(t *testing.T) (usecase.Interface, infra.Clients, *alertchain.Chain) {
+	chain := &alertchain.Chain{}
 
 	clients := infra.Clients{
 		DB: db.NewDBMock(t),
 	}
 	uc := usecase.New(clients, chain)
 
-	return uc, clients
+	return uc, clients, chain
 }
 
 func TestRecvAlert(t *testing.T) {
-	uc, inf := setupAlertTest(t)
+	uc, clients, chain := setupAlertTest(t)
+	stage := chain.NewStage()
+	blocker := &blockTask{}
+	blocker.wg.Add(1)
+	stage.AddTask(blocker)
 
 	input := alertchain.Alert{
 		Alert: ent.Alert{
@@ -40,7 +53,9 @@ func TestRecvAlert(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, alert)
 
-	got, err := inf.DB.GetAlert(alert.ID)
+	blocker.wg.Wait()
+
+	got, err := clients.DB.GetAlert(alert.ID)
 	require.NoError(t, err)
 	assert.Equal(t, alert.Title, got.Title)
 }
