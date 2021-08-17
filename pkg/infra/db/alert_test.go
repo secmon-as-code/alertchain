@@ -1,6 +1,7 @@
 package db_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -11,16 +12,17 @@ import (
 )
 
 func TestAlert(t *testing.T) {
+	ctx := context.Background()
 	t.Run("Create a new alert", func(t *testing.T) {
 		client := setupDB(t)
-		alert, err := client.NewAlert()
+		alert, err := client.NewAlert(ctx)
 		require.NoError(t, err)
 		assert.NotEmpty(t, alert.ID)
 		assert.NotEmpty(t, alert.CreatedAt)
 		assert.Empty(t, alert.Title)
 
 		t.Run("Get alert by ID", func(t *testing.T) {
-			got, err := client.GetAlert(alert.ID)
+			got, err := client.GetAlert(ctx, alert.ID)
 			require.NoError(t, err)
 			assert.Equal(t, got.ID, alert.ID)
 			assert.Empty(t, alert.Title)
@@ -35,10 +37,10 @@ func TestAlert(t *testing.T) {
 			alert.Severity = types.SevAffected
 			alert.ClosedAt = &now
 
-			require.NoError(t, client.UpdateAlert(alert.ID, alert))
+			require.NoError(t, client.UpdateAlert(ctx, alert.ID, alert))
 
 			t.Run("Get updated alert", func(t *testing.T) {
-				got, err := client.GetAlert(alert.ID)
+				got, err := client.GetAlert(ctx, alert.ID)
 				require.NoError(t, err)
 				assert.Equal(t, got.ID, alert.ID)
 				assert.Equal(t, "five", got.Title)
@@ -56,7 +58,7 @@ func TestAlert(t *testing.T) {
 
 	t.Run("Create a new alert with attributes", func(t *testing.T) {
 		client := setupDB(t)
-		alert, _ := client.NewAlert()
+		alert, _ := client.NewAlert(ctx)
 		alert.Title = "five"
 		attrs := []*ent.Attribute{
 			{
@@ -72,11 +74,11 @@ func TestAlert(t *testing.T) {
 				Context: []string{string(types.CtxLocal)},
 			},
 		}
-		require.NoError(t, client.UpdateAlert(alert.ID, alert))
-		require.NoError(t, client.AddAttributes(alert.ID, attrs))
+		require.NoError(t, client.UpdateAlert(ctx, alert.ID, alert))
+		require.NoError(t, client.AddAttributes(ctx, alert.ID, attrs))
 
 		t.Run("Get alert with attributes", func(t *testing.T) {
-			got, err := client.GetAlert(alert.ID)
+			got, err := client.GetAlert(ctx, alert.ID)
 			require.NoError(t, err)
 			assert.Len(t, got.Edges.Attributes, 2)
 			equalAttributes(t, got.Edges.Attributes[0], attrs[0])

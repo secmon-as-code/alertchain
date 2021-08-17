@@ -1,6 +1,7 @@
 package usecase_test
 
 import (
+	"context"
 	"sync"
 	"testing"
 
@@ -20,7 +21,7 @@ type blockTask struct {
 func (x *blockTask) Name() string                              { return "blocker" }
 func (x *blockTask) Description() string                       { return "blocking" }
 func (x *blockTask) IsExecutable(alert *alertchain.Alert) bool { return false }
-func (x *blockTask) Execute(alert *alertchain.Alert) error {
+func (x *blockTask) Execute(ctx context.Context, alert *alertchain.Alert) error {
 	x.wg.Done()
 	return nil
 }
@@ -37,6 +38,8 @@ func setupAlertTest(t *testing.T) (usecase.Interface, infra.Clients, *alertchain
 }
 
 func TestRecvAlert(t *testing.T) {
+	ctx := context.Background()
+
 	uc, clients, chain := setupAlertTest(t)
 	stage := chain.NewStage()
 	blocker := &blockTask{}
@@ -49,13 +52,13 @@ func TestRecvAlert(t *testing.T) {
 			Detector: "blue",
 		},
 	}
-	alert, err := uc.RecvAlert(&input)
+	alert, err := uc.RecvAlert(context.Background(), &input)
 	require.NoError(t, err)
 	require.NotNil(t, alert)
 
 	blocker.wg.Wait()
 
-	got, err := clients.DB.GetAlert(alert.ID)
+	got, err := clients.DB.GetAlert(ctx, alert.ID)
 	require.NoError(t, err)
 	assert.Equal(t, alert.Title, got.Title)
 }

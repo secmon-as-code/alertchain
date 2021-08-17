@@ -12,7 +12,7 @@ import (
 func getAlerts(c *gin.Context) {
 	uc := ctxUsecase(c)
 
-	alerts, err := uc.GetAlerts()
+	alerts, err := uc.GetAlerts(c)
 	if err != nil {
 		c.Error(err)
 		return
@@ -25,7 +25,7 @@ func getAlert(c *gin.Context) {
 	alertID := c.Param("id")
 	uc := ctxUsecase(c)
 
-	alert, err := uc.GetAlert(types.AlertID(alertID))
+	alert, err := uc.GetAlert(c, types.AlertID(alertID))
 	if err != nil {
 		c.Error(err)
 		return
@@ -43,7 +43,7 @@ func postAlert(c *gin.Context) {
 	}
 
 	uc := ctxUsecase(c)
-	newAlert, err := uc.RecvAlert(&alert)
+	newAlert, err := uc.RecvAlert(c, &alert)
 	if err != nil {
 		c.Error(goerr.Wrap(err).With("alert", alert))
 		return

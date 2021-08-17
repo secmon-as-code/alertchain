@@ -1,13 +1,15 @@
 package db
 
 import (
+	"context"
+
 	"github.com/m-mizutani/alertchain/pkg/infra/ent"
 	"github.com/m-mizutani/alertchain/types"
 
 	entAlert "github.com/m-mizutani/alertchain/pkg/infra/ent/alert"
 )
 
-func (x *Client) GetAlert(id types.AlertID) (*ent.Alert, error) {
+func (x *Client) GetAlert(ctx context.Context, id types.AlertID) (*ent.Alert, error) {
 	fetched, err := x.client.Alert.Query().
 		Where(entAlert.ID(id)).WithAttributes(func(aq *ent.AttributeQuery) {
 		aq.WithFindings()
@@ -19,7 +21,7 @@ func (x *Client) GetAlert(id types.AlertID) (*ent.Alert, error) {
 	return fetched, nil
 }
 
-func (x *Client) GetAlerts() ([]*ent.Alert, error) {
+func (x *Client) GetAlerts(ctx context.Context) ([]*ent.Alert, error) {
 	fetched, err := x.client.Alert.Query().All(x.ctx)
 	if err != nil {
 		return nil, types.ErrDatabaseUnexpected.Wrap(err)
@@ -28,7 +30,7 @@ func (x *Client) GetAlerts() ([]*ent.Alert, error) {
 	return fetched, nil
 }
 
-func (x *Client) NewAlert() (*ent.Alert, error) {
+func (x *Client) NewAlert(ctx context.Context) (*ent.Alert, error) {
 	newAlert, err := x.client.Alert.Create().SetID(types.NewAlertID()).Save(x.ctx)
 	if err != nil {
 		return nil, types.ErrDatabaseUnexpected.Wrap(err)
@@ -37,7 +39,7 @@ func (x *Client) NewAlert() (*ent.Alert, error) {
 	return newAlert, nil
 }
 
-func (x *Client) UpdateAlert(id types.AlertID, alert *ent.Alert) error {
+func (x *Client) UpdateAlert(ctx context.Context, id types.AlertID, alert *ent.Alert) error {
 	q := x.client.Alert.UpdateOneID(id).
 		SetTitle(alert.Title).
 		SetDescription(alert.Description).
@@ -57,14 +59,14 @@ func (x *Client) UpdateAlert(id types.AlertID, alert *ent.Alert) error {
 	return nil
 }
 
-func (x *Client) UpdateAlertStatus(id types.AlertID, status types.AlertStatus) error {
+func (x *Client) UpdateAlertStatus(ctx context.Context, id types.AlertID, status types.AlertStatus) error {
 	if _, err := x.client.Alert.UpdateOneID(id).SetStatus(status).Save(x.ctx); err != nil {
 		return types.ErrDatabaseUnexpected.Wrap(err)
 	}
 	return nil
 }
 
-func (x *Client) AddAttributes(id types.AlertID, newAttrs []*ent.Attribute) error {
+func (x *Client) AddAttributes(ctx context.Context, id types.AlertID, newAttrs []*ent.Attribute) error {
 	if len(newAttrs) == 0 {
 		return nil // nothing to do
 	}
@@ -89,7 +91,7 @@ func (x *Client) AddAttributes(id types.AlertID, newAttrs []*ent.Attribute) erro
 	return nil
 }
 
-func (x *Client) AddFindings(attr *ent.Attribute, findings []*ent.Finding) error {
+func (x *Client) AddFindings(ctx context.Context, attr *ent.Attribute, findings []*ent.Finding) error {
 	if len(findings) == 0 {
 		return nil
 	}

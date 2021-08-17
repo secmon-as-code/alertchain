@@ -1,6 +1,8 @@
 package infra
 
 import (
+	"context"
+
 	"github.com/m-mizutani/alertchain/pkg/infra/ent"
 	"github.com/m-mizutani/alertchain/types"
 )
@@ -12,12 +14,12 @@ type Clients struct {
 type DBClient interface {
 	Close() error
 
-	GetAlert(id types.AlertID) (*ent.Alert, error)
-	GetAlerts() ([]*ent.Alert, error)
-	NewAlert() (*ent.Alert, error)
-	UpdateAlert(id types.AlertID, alert *ent.Alert) error
-	UpdateAlertStatus(id types.AlertID, status types.AlertStatus) error
+	GetAlert(ctx context.Context, id types.AlertID) (*ent.Alert, error)
+	GetAlerts(ctx context.Context) ([]*ent.Alert, error)
+	NewAlert(ctx context.Context) (*ent.Alert, error)
+	UpdateAlert(ctx context.Context, id types.AlertID, alert *ent.Alert) error
+	UpdateAlertStatus(ctx context.Context, id types.AlertID, status types.AlertStatus) error
 
-	AddAttributes(id types.AlertID, newAttrs []*ent.Attribute) error
-	AddFindings(attr *ent.Attribute, findings []*ent.Finding) error
+	AddAttributes(ctx context.Context, id types.AlertID, newAttrs []*ent.Attribute) error
+	AddFindings(ctx context.Context, attr *ent.Attribute, findings []*ent.Finding) error
 }

@@ -1,8 +1,10 @@
 package alertchain
 
+import "context"
+
 type Task interface {
 	Name() string
 	Description() string
-	Execute(alert *Alert) error
+	Execute(ctx context.Context, alert *Alert) error
 	IsExecutable(alert *Alert) bool
 }

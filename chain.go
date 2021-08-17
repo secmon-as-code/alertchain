@@ -1,12 +1,16 @@
 package alertchain
 
+import "time"
+
 type Chain struct {
 	Stages    []*Stage
 	Arbitrary []Task
 }
 
 type Stage struct {
-	Tasks []Task
+	Timeout        *time.Duration
+	AdditionalTime *time.Duration
+	Tasks          []Task
 }
 
 func (x *Chain) NewStage() *Stage {

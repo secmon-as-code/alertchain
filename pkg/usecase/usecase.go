@@ -1,6 +1,8 @@
 package usecase
 
 import (
+	"context"
+
 	"github.com/m-mizutani/alertchain"
 	"github.com/m-mizutani/alertchain/pkg/infra"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent"
@@ -11,9 +13,9 @@ import (
 var logger = utils.Logger
 
 type Interface interface {
-	RecvAlert(alert *alertchain.Alert) (*alertchain.Alert, error)
-	GetAlerts() ([]*ent.Alert, error)
-	GetAlert(id types.AlertID) (*ent.Alert, error)
+	RecvAlert(ctx context.Context, alert *alertchain.Alert) (*alertchain.Alert, error)
+	GetAlerts(ctx context.Context) ([]*ent.Alert, error)
+	GetAlert(ctx context.Context, id types.AlertID) (*ent.Alert, error)
 }
 
 type usecase struct {

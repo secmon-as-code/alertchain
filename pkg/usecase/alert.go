@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"sync"
 
 	"github.com/jinzhu/copier"
@@ -12,25 +13,25 @@ import (
 	"github.com/m-mizutani/goerr"
 )
 
-func (x *usecase) GetAlerts() ([]*ent.Alert, error) {
-	return x.clients.DB.GetAlerts()
+func (x *usecase) GetAlerts(ctx context.Context) ([]*ent.Alert, error) {
+	return x.clients.DB.GetAlerts(ctx)
 }
 
-func (x *usecase) GetAlert(id types.AlertID) (*ent.Alert, error) {
-	return x.clients.DB.GetAlert(id)
+func (x *usecase) GetAlert(ctx context.Context, id types.AlertID) (*ent.Alert, error) {
+	return x.clients.DB.GetAlert(ctx, id)
 }
 
-func (x *usecase) RecvAlert(recvAlert *alertchain.Alert) (*alertchain.Alert, error) {
+func (x *usecase) RecvAlert(ctx context.Context, recvAlert *alertchain.Alert) (*alertchain.Alert, error) {
 	if err := validateAlert(recvAlert); err != nil {
 		return nil, goerr.Wrap(err)
 	}
 
-	created, err := x.clients.DB.NewAlert()
+	created, err := x.clients.DB.NewAlert(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := x.clients.DB.UpdateAlert(created.ID, &recvAlert.Alert); err != nil {
+	if err := x.clients.DB.UpdateAlert(ctx, created.ID, &recvAlert.Alert); err != nil {
 		return nil, err
 	}
 
@@ -38,17 +39,17 @@ func (x *usecase) RecvAlert(recvAlert *alertchain.Alert) (*alertchain.Alert, err
 	for i, attr := range recvAlert.Attributes {
 		attrs[i] = &attr.Attribute
 	}
-	if err := x.clients.DB.AddAttributes(created.ID, attrs); err != nil {
+	if err := x.clients.DB.AddAttributes(ctx, created.ID, attrs); err != nil {
 		return nil, err
 	}
 
-	newAlert, err := x.clients.DB.GetAlert(created.ID)
+	newAlert, err := x.clients.DB.GetAlert(ctx, created.ID)
 	if err != nil {
 		return nil, err
 	}
 
 	go func() {
-		if err := executeChain(x.chain, newAlert.ID, x.clients); err != nil {
+		if err := executeChain(ctx, x.chain, newAlert.ID, x.clients); err != nil {
 			utils.OutputError(logger, err)
 		}
 	}()
@@ -56,17 +57,9 @@ func (x *usecase) RecvAlert(recvAlert *alertchain.Alert) (*alertchain.Alert, err
 	return alertchain.NewAlert(newAlert, x.clients.DB), nil
 }
 
-func executeTask(task alertchain.Task, alert *alertchain.Alert) error {
-	if err := task.Execute(alert); err != nil {
-		utils.OutputError(logger, err)
-		return goerr.Wrap(err).With("task.Name", task.Name())
-	}
-	return nil
-}
-
-func executeChain(chain *alertchain.Chain, alertID types.AlertID, clients infra.Clients) error {
+func executeChain(ctx context.Context, chain *alertchain.Chain, alertID types.AlertID, clients infra.Clients) error {
 	for _, stage := range chain.Stages {
-		alert, err := clients.DB.GetAlert(alertID)
+		alert, err := clients.DB.GetAlert(ctx, alertID)
 		if err != nil {
 			return err
 		}
@@ -79,8 +72,11 @@ func executeChain(chain *alertchain.Chain, alertID types.AlertID, clients infra.
 			args := new(ent.Alert)
 			copier.Copy(&args, alert)
 
-			go func(exec alertchain.Task, input *alertchain.Alert, idx int) {
-				results[idx] = executeTask(exec, input)
+			go func(t alertchain.Task, input *alertchain.Alert, idx int) {
+				if err := t.Execute(ctx, input); err != nil {
+					results[idx] = goerr.Wrap(err).With("task.Name", t.Name())
+					utils.OutputError(logger, results[idx])
+				}
 			}(task, alertchain.NewAlert(args, clients.DB), i)
 		}
 

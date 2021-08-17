@@ -1,6 +1,8 @@
 package alertchain
 
 import (
+	"context"
+
 	"github.com/m-mizutani/alertchain/pkg/infra"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent"
 	"github.com/m-mizutani/alertchain/types"
@@ -36,8 +38,8 @@ func NewAlert(alert *ent.Alert, db infra.DBClient) *Alert {
 	return newAlert
 }
 
-func (x *Alert) Commit() error {
-	if err := x.db.UpdateAlert(x.id, &x.Alert); err != nil {
+func (x *Alert) Commit(ctx context.Context) error {
+	if err := x.db.UpdateAlert(ctx, x.id, &x.Alert); err != nil {
 		return err
 	}
 
@@ -45,7 +47,7 @@ func (x *Alert) Commit() error {
 	for i, a := range x.newAttrs {
 		attrs[i] = &a.Attribute
 	}
-	if err := x.db.AddAttributes(x.id, attrs); err != nil {
+	if err := x.db.AddAttributes(ctx, x.id, attrs); err != nil {
 		return err
 	}
 
@@ -58,7 +60,7 @@ func (x *Alert) Commit() error {
 		for i, finding := range attr.newFindings {
 			findings[i] = &finding.Finding
 		}
-		if err := x.db.AddFindings(&attr.Attribute, findings); err != nil {
+		if err := x.db.AddFindings(ctx, &attr.Attribute, findings); err != nil {
 			return err
 		}
 	}
