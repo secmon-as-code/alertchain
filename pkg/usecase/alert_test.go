@@ -2,8 +2,10 @@ package usecase_test
 
 import (
 	"context"
-	"sync"
+	"errors"
+	"math/rand"
 	"testing"
+	"time"
 
 	"github.com/m-mizutani/alertchain"
 	"github.com/m-mizutani/alertchain/pkg/infra"
@@ -14,16 +16,20 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type blockTask struct {
-	wg sync.WaitGroup
+type sleeper struct {
+	Done bool
 }
 
-func (x *blockTask) Name() string                              { return "blocker" }
-func (x *blockTask) Description() string                       { return "blocking" }
-func (x *blockTask) IsExecutable(alert *alertchain.Alert) bool { return false }
-func (x *blockTask) Execute(ctx context.Context, alert *alertchain.Alert) error {
-	x.wg.Done()
+func (x *sleeper) Name() string        { return "sleeper" }
+func (x *sleeper) Description() string { return "sleep random duration" }
+func (x *sleeper) Execute(ctx context.Context, alert *alertchain.Alert) error {
+	time.Sleep(time.Millisecond * time.Duration(rand.Int31n(2000)))
+	x.Done = true
 	return nil
+}
+
+func (x *sleeper) IsExecutable(alert *alertchain.Alert) bool {
+	panic("not implemented") // TODO: Implement
 }
 
 func setupAlertTest(t *testing.T) (usecase.Interface, infra.Clients, *alertchain.Chain) {
@@ -37,28 +43,141 @@ func setupAlertTest(t *testing.T) (usecase.Interface, infra.Clients, *alertchain
 	return uc, clients, chain
 }
 
+type mock struct {
+	Exec func(alert *alertchain.Alert) error
+}
+
+func (x *mock) Name() string                              { return "mock" }
+func (x *mock) Description() string                       { return "mock" }
+func (x *mock) IsExecutable(alert *alertchain.Alert) bool { return false }
+func (x *mock) Execute(ctx context.Context, alert *alertchain.Alert) error {
+	return x.Exec(alert)
+}
+
 func TestRecvAlert(t *testing.T) {
-	ctx := context.Background()
+	t.Run("executed blocker", func(t *testing.T) {
+		uc, clients, chain := setupAlertTest(t)
 
-	uc, clients, chain := setupAlertTest(t)
-	stage := chain.NewStage()
-	blocker := &blockTask{}
-	blocker.wg.Add(1)
-	stage.AddTask(blocker)
+		var done bool
+		chain.NewStage().AddTask(&mock{
+			Exec: func(alert *alertchain.Alert) error {
+				done = true
+				return nil
+			},
+		})
 
-	input := alertchain.Alert{
-		Alert: ent.Alert{
-			Title:    "five",
-			Detector: "blue",
-		},
-	}
-	alert, err := uc.RecvAlert(context.Background(), &input)
-	require.NoError(t, err)
-	require.NotNil(t, alert)
+		input := alertchain.Alert{
+			Alert: ent.Alert{
+				Title:    "five",
+				Detector: "blue",
+			},
+		}
+		ctx, wg := usecase.ContextWithWaitGroup(context.Background())
+		alert, err := uc.RecvAlert(ctx, &input)
+		require.NoError(t, err)
+		require.NotNil(t, alert)
 
-	blocker.wg.Wait()
+		wg.Wait()
+		assert.True(t, done)
 
-	got, err := clients.DB.GetAlert(ctx, alert.ID)
-	require.NoError(t, err)
-	assert.Equal(t, alert.Title, got.Title)
+		got, err := clients.DB.GetAlert(context.Background(), alert.ID)
+		require.NoError(t, err)
+		assert.Equal(t, alert.Title, got.Title)
+	})
+
+	t.Run("executed multiple tasks with over timeout", func(t *testing.T) {
+		uc, _, chain := setupAlertTest(t)
+
+		stage := chain.NewStage()
+		stage.Timeout = time.Second
+		for i := 0; i < 32; i++ {
+			stage.AddTask(&sleeper{})
+		}
+
+		ctx, wg := usecase.ContextWithWaitGroup(context.Background())
+		input := alertchain.Alert{
+			Alert: ent.Alert{
+				Title:    "five",
+				Detector: "blue",
+			},
+		}
+		_, err := uc.RecvAlert(ctx, &input)
+		require.NoError(t, err)
+		wg.Wait()
+
+		require.Len(t, stage.Tasks, 32)
+		for _, task := range stage.Tasks {
+			s, ok := task.(*sleeper)
+			require.True(t, ok)
+			assert.True(t, s.Done)
+		}
+	})
+
+	t.Run("error handling", func(t *testing.T) {
+		t.Run("exit on error", func(t *testing.T) {
+			uc, _, chain := setupAlertTest(t)
+
+			stage := chain.NewStage()
+			stage.ExitOnErr = true
+			stage.AddTask(&mock{
+				Exec: func(alert *alertchain.Alert) error { return nil },
+			})
+			stage.AddTask(&mock{
+				Exec: func(alert *alertchain.Alert) error { return errors.New("bomb!") },
+			})
+
+			done2ndStage := false
+			chain.NewStage().AddTask(&mock{
+				Exec: func(alert *alertchain.Alert) error {
+					done2ndStage = true
+					return nil
+				},
+			})
+
+			input := alertchain.Alert{
+				Alert: ent.Alert{
+					Title:    "five",
+					Detector: "blue",
+				},
+			}
+			ctx, wg := usecase.ContextWithWaitGroup(context.Background())
+			_, err := uc.RecvAlert(ctx, &input)
+			require.NoError(t, err)
+			wg.Wait()
+			assert.False(t, done2ndStage)
+		})
+
+		t.Run("not exit on error", func(t *testing.T) {
+			uc, _, chain := setupAlertTest(t)
+
+			stage := chain.NewStage()
+			// Default: stage.ExitOnErr = false
+			stage.AddTask(&mock{
+				Exec: func(alert *alertchain.Alert) error { return nil },
+			})
+			stage.AddTask(&mock{
+				Exec: func(alert *alertchain.Alert) error { return errors.New("bomb!") },
+			})
+
+			done2ndStage := false
+			chain.NewStage().AddTask(&mock{
+				Exec: func(alert *alertchain.Alert) error {
+					done2ndStage = true
+					return nil
+				},
+			})
+
+			input := alertchain.Alert{
+				Alert: ent.Alert{
+					Title:    "five",
+					Detector: "blue",
+				},
+			}
+			ctx, wg := usecase.ContextWithWaitGroup(context.Background())
+			_, err := uc.RecvAlert(ctx, &input)
+			require.NoError(t, err)
+			wg.Wait()
+			assert.True(t, done2ndStage)
+		})
+	})
 }

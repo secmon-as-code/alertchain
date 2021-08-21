@@ -8,9 +8,9 @@ type Chain struct {
 }
 
 type Stage struct {
-	Timeout        *time.Duration
-	AdditionalTime *time.Duration
-	Tasks          []Task
+	Timeout   time.Duration
+	ExitOnErr bool
+	Tasks     []Task
 }
 
 func (x *Chain) NewStage() *Stage {
