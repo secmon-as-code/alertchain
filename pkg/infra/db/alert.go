@@ -43,8 +43,7 @@ func (x *Client) UpdateAlert(ctx context.Context, id types.AlertID, alert *ent.A
 	q := x.client.Alert.UpdateOneID(id).
 		SetTitle(alert.Title).
 		SetDescription(alert.Description).
-		SetDetector(alert.Detector).
-		SetSeverity(alert.Severity)
+		SetDetector(alert.Detector)
 
 	if alert.DetectedAt != nil {
 		q = q.SetDetectedAt(*alert.DetectedAt)
@@ -61,6 +60,13 @@ func (x *Client) UpdateAlert(ctx context.Context, id types.AlertID, alert *ent.A
 
 func (x *Client) UpdateAlertStatus(ctx context.Context, id types.AlertID, status types.AlertStatus) error {
 	if _, err := x.client.Alert.UpdateOneID(id).SetStatus(status).Save(x.ctx); err != nil {
+		return types.ErrDatabaseUnexpected.Wrap(err)
+	}
+	return nil
+}
+
+func (x *Client) UpdateAlertSeverity(ctx context.Context, id types.AlertID, sev types.Severity) error {
+	if _, err := x.client.Alert.UpdateOneID(id).SetSeverity(sev).Save(x.ctx); err != nil {
 		return types.ErrDatabaseUnexpected.Wrap(err)
 	}
 	return nil

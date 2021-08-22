@@ -4,7 +4,6 @@ import (
 	"context"
 	"sync"
 
-	"github.com/jinzhu/copier"
 	"github.com/m-mizutani/alertchain"
 	"github.com/m-mizutani/alertchain/pkg/infra"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent"
@@ -120,9 +119,7 @@ func executeChain(ctx context.Context, chain *alertchain.Chain, alertID types.Al
 
 		for _, task := range stage.Tasks {
 			wg.Add(1)
-			args := new(ent.Alert)
-			copier.Copy(&args, alert)
-			go executeTask(ctx, task, &wg, alertchain.NewAlert(args, clients.DB), errCh)
+			go executeTask(ctx, task, &wg, alertchain.NewAlert(alert, clients.DB), errCh)
 		}
 		wg.Wait()
 

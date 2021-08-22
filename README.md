@@ -1,6 +1,14 @@
 # AlertChain
 
-AlertChain is programmable SOAR (Security Orchestration, Automation and Response) platform and universal alert manager.
+AlertChain is simple & programmable SOAR (Security Orchestration, Automation and Response) platform.
+
+## Concept
+
+![Concept](https://user-images.githubusercontent.com/605953/130339742-4aba4f88-1b1d-4b48-8323-0dce5f8a85fc.jpg)
+
+AlertChain has `Chain` consisting of multiple steps, `Stage`. Also Each `Stage` has one ore more `Task` to annotate and evaluate a security alert and execute workflow.
+
+A security engineer can build own chain as a Go plugin and AlertChain import the plugin. AlertChain executes a `Chain` provided by the plugin step by step. A security engineer can not only use pre-defined Task but also write own original procedure.
 
 ## Installation
 
@@ -59,5 +67,5 @@ $ go build -buildmode=plugin -o mychain .
 Finally, run `alertchain` with your plugin.
 
 ```sh
-$ alertchain -p mychain
+$ alertchain -c mychain
 ```

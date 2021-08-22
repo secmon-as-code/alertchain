@@ -1,10 +1,14 @@
 package alertchain
 
-import "time"
+import (
+	"context"
+	"time"
+)
 
 type Chain struct {
-	Stages    []*Stage
-	Arbitrary []Task
+	Stages   []*Stage
+	Optional []Task
+	Sources  []Source
 }
 
 type Stage struct {
@@ -21,4 +25,16 @@ func (x *Chain) NewStage() *Stage {
 
 func (x *Stage) AddTask(task Task) {
 	x.Tasks = append(x.Tasks, task)
+}
+
+type Task interface {
+	Name() string
+	Description() string
+	Execute(ctx context.Context, alert *Alert) error
+	Optional(alert *Alert) bool
+}
+
+type Source interface {
+	Name() string
+	Run(alertCh chan *Alert) error
 }

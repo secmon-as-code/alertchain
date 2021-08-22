@@ -12,13 +12,23 @@ type Alert struct {
 	ent.Alert
 	Attributes []*Attribute `json:"attributes"`
 
-	id       types.AlertID // Immutable AlertID copied from ent.Alert.ID
-	db       infra.DBClient
-	newAttrs []*Attribute
+	id          types.AlertID // Immutable AlertID copied from ent.Alert.ID
+	db          infra.DBClient
+	newAttrs    []*Attribute
+	newStatus   *types.AlertStatus
+	newSeverity *types.Severity
 }
 
 func (x *Alert) AddAttributes(attrs []*Attribute) {
 	x.newAttrs = append(x.newAttrs, attrs...)
+}
+
+func (x *Alert) UpdateStatus(status types.AlertStatus) {
+	x.newStatus = &status
+}
+
+func (x *Alert) UpdateSeverity(sev types.Severity) {
+	x.newSeverity = &sev
 }
 
 func NewAlert(alert *ent.Alert, db infra.DBClient) *Alert {
@@ -39,29 +49,38 @@ func NewAlert(alert *ent.Alert, db infra.DBClient) *Alert {
 }
 
 func (x *Alert) Commit(ctx context.Context) error {
-	if err := x.db.UpdateAlert(ctx, x.id, &x.Alert); err != nil {
-		return err
-	}
-
-	attrs := make([]*ent.Attribute, len(x.newAttrs))
-	for i, a := range x.newAttrs {
-		attrs[i] = &a.Attribute
-	}
-	if err := x.db.AddAttributes(ctx, x.id, attrs); err != nil {
-		return err
-	}
-
-	for _, attr := range x.Attributes {
-		if len(attr.newFindings) == 0 {
-			continue
-		}
-
-		findings := make([]*ent.Finding, len(attr.newFindings))
-		for i, finding := range attr.newFindings {
-			findings[i] = &finding.Finding
-		}
-		if err := x.db.AddFindings(ctx, &attr.Attribute, findings); err != nil {
+	if x.newStatus != nil {
+		if err := x.db.UpdateAlertStatus(ctx, x.id, *x.newStatus); err != nil {
 			return err
+		}
+	}
+	if x.newSeverity != nil {
+		if err := x.db.UpdateAlertSeverity(ctx, x.id, *x.newSeverity); err != nil {
+			return err
+		}
+	}
+
+	if len(x.newAttrs) > 0 {
+		attrs := make([]*ent.Attribute, len(x.newAttrs))
+		for i, a := range x.newAttrs {
+			attrs[i] = &a.Attribute
+		}
+		if err := x.db.AddAttributes(ctx, x.id, attrs); err != nil {
+			return err
+		}
+
+		for _, attr := range x.Attributes {
+			if len(attr.newFindings) == 0 {
+				continue
+			}
+
+			findings := make([]*ent.Finding, len(attr.newFindings))
+			for i, finding := range attr.newFindings {
+				findings[i] = &finding.Finding
+			}
+			if err := x.db.AddFindings(ctx, &attr.Attribute, findings); err != nil {
+				return err
+			}
 		}
 	}
 
