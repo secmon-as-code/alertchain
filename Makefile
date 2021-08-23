@@ -11,7 +11,7 @@ SRC=*.go \
 	types/*.go
 ENT_DIR=./pkg/infra/ent
 ENT_SRC=$(ENT_DIR)/ent.go
-ENT_SCHEMA=$(ENT_DIR)/schema/*.go
+ENT_SCHEMA_DIR=./pkg/infra/schema
 
 CHAIN=chain.so
 
@@ -20,11 +20,10 @@ all: alertchain
 $(ASSET_JS): $(ASSET_SRC)
 	cd $(ASSET_DIR) && npm i && cd $(ROOT_DIR)
 
-$(ENT_SRC): $(ENT_SCHEMA)
-	go generate $(ENT_DIR)
+$(ENT_SRC): $(ENT_SCHEMA_DIR)/*.go
+	ent generate $(ENT_SCHEMA_DIR) --target $(ENT_DIR)
 
-
-$(CHAIN): ./examples/chain/*.go $(SRC)
+$(CHAIN): ./examples/chain/*.go $(SRC) $(ENT_SRC)
 	go build -buildmode=plugin -o $(CHAIN) ./examples/chain/
 
 dev: $(CHAIN)

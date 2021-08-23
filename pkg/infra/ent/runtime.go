@@ -4,7 +4,7 @@ package ent
 
 import (
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/alert"
-	"github.com/m-mizutani/alertchain/pkg/infra/ent/schema"
+	"github.com/m-mizutani/alertchain/pkg/infra/schema"
 	"github.com/m-mizutani/alertchain/types"
 )
 
