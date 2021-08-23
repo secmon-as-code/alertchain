@@ -5,7 +5,6 @@ package ent
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -124,16 +123,23 @@ func (au *AlertUpdate) ClearSeverity() *AlertUpdate {
 }
 
 // SetDetectedAt sets the "detected_at" field.
-func (au *AlertUpdate) SetDetectedAt(t time.Time) *AlertUpdate {
-	au.mutation.SetDetectedAt(t)
+func (au *AlertUpdate) SetDetectedAt(i int64) *AlertUpdate {
+	au.mutation.ResetDetectedAt()
+	au.mutation.SetDetectedAt(i)
 	return au
 }
 
 // SetNillableDetectedAt sets the "detected_at" field if the given value is not nil.
-func (au *AlertUpdate) SetNillableDetectedAt(t *time.Time) *AlertUpdate {
-	if t != nil {
-		au.SetDetectedAt(*t)
+func (au *AlertUpdate) SetNillableDetectedAt(i *int64) *AlertUpdate {
+	if i != nil {
+		au.SetDetectedAt(*i)
 	}
+	return au
+}
+
+// AddDetectedAt adds i to the "detected_at" field.
+func (au *AlertUpdate) AddDetectedAt(i int64) *AlertUpdate {
+	au.mutation.AddDetectedAt(i)
 	return au
 }
 
@@ -144,16 +150,23 @@ func (au *AlertUpdate) ClearDetectedAt() *AlertUpdate {
 }
 
 // SetClosedAt sets the "closed_at" field.
-func (au *AlertUpdate) SetClosedAt(t time.Time) *AlertUpdate {
-	au.mutation.SetClosedAt(t)
+func (au *AlertUpdate) SetClosedAt(i int64) *AlertUpdate {
+	au.mutation.ResetClosedAt()
+	au.mutation.SetClosedAt(i)
 	return au
 }
 
 // SetNillableClosedAt sets the "closed_at" field if the given value is not nil.
-func (au *AlertUpdate) SetNillableClosedAt(t *time.Time) *AlertUpdate {
-	if t != nil {
-		au.SetClosedAt(*t)
+func (au *AlertUpdate) SetNillableClosedAt(i *int64) *AlertUpdate {
+	if i != nil {
+		au.SetClosedAt(*i)
 	}
+	return au
+}
+
+// AddClosedAt adds i to the "closed_at" field.
+func (au *AlertUpdate) AddClosedAt(i int64) *AlertUpdate {
+	au.mutation.AddClosedAt(i)
 	return au
 }
 
@@ -337,27 +350,41 @@ func (au *AlertUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := au.mutation.DetectedAt(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
+			Type:   field.TypeInt64,
+			Value:  value,
+			Column: alert.FieldDetectedAt,
+		})
+	}
+	if value, ok := au.mutation.AddedDetectedAt(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt64,
 			Value:  value,
 			Column: alert.FieldDetectedAt,
 		})
 	}
 	if au.mutation.DetectedAtCleared() {
 		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
+			Type:   field.TypeInt64,
 			Column: alert.FieldDetectedAt,
 		})
 	}
 	if value, ok := au.mutation.ClosedAt(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
+			Type:   field.TypeInt64,
+			Value:  value,
+			Column: alert.FieldClosedAt,
+		})
+	}
+	if value, ok := au.mutation.AddedClosedAt(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt64,
 			Value:  value,
 			Column: alert.FieldClosedAt,
 		})
 	}
 	if au.mutation.ClosedAtCleared() {
 		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
+			Type:   field.TypeInt64,
 			Column: alert.FieldClosedAt,
 		})
 	}
@@ -529,16 +556,23 @@ func (auo *AlertUpdateOne) ClearSeverity() *AlertUpdateOne {
 }
 
 // SetDetectedAt sets the "detected_at" field.
-func (auo *AlertUpdateOne) SetDetectedAt(t time.Time) *AlertUpdateOne {
-	auo.mutation.SetDetectedAt(t)
+func (auo *AlertUpdateOne) SetDetectedAt(i int64) *AlertUpdateOne {
+	auo.mutation.ResetDetectedAt()
+	auo.mutation.SetDetectedAt(i)
 	return auo
 }
 
 // SetNillableDetectedAt sets the "detected_at" field if the given value is not nil.
-func (auo *AlertUpdateOne) SetNillableDetectedAt(t *time.Time) *AlertUpdateOne {
-	if t != nil {
-		auo.SetDetectedAt(*t)
+func (auo *AlertUpdateOne) SetNillableDetectedAt(i *int64) *AlertUpdateOne {
+	if i != nil {
+		auo.SetDetectedAt(*i)
 	}
+	return auo
+}
+
+// AddDetectedAt adds i to the "detected_at" field.
+func (auo *AlertUpdateOne) AddDetectedAt(i int64) *AlertUpdateOne {
+	auo.mutation.AddDetectedAt(i)
 	return auo
 }
 
@@ -549,16 +583,23 @@ func (auo *AlertUpdateOne) ClearDetectedAt() *AlertUpdateOne {
 }
 
 // SetClosedAt sets the "closed_at" field.
-func (auo *AlertUpdateOne) SetClosedAt(t time.Time) *AlertUpdateOne {
-	auo.mutation.SetClosedAt(t)
+func (auo *AlertUpdateOne) SetClosedAt(i int64) *AlertUpdateOne {
+	auo.mutation.ResetClosedAt()
+	auo.mutation.SetClosedAt(i)
 	return auo
 }
 
 // SetNillableClosedAt sets the "closed_at" field if the given value is not nil.
-func (auo *AlertUpdateOne) SetNillableClosedAt(t *time.Time) *AlertUpdateOne {
-	if t != nil {
-		auo.SetClosedAt(*t)
+func (auo *AlertUpdateOne) SetNillableClosedAt(i *int64) *AlertUpdateOne {
+	if i != nil {
+		auo.SetClosedAt(*i)
 	}
+	return auo
+}
+
+// AddClosedAt adds i to the "closed_at" field.
+func (auo *AlertUpdateOne) AddClosedAt(i int64) *AlertUpdateOne {
+	auo.mutation.AddClosedAt(i)
 	return auo
 }
 
@@ -766,27 +807,41 @@ func (auo *AlertUpdateOne) sqlSave(ctx context.Context) (_node *Alert, err error
 	}
 	if value, ok := auo.mutation.DetectedAt(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
+			Type:   field.TypeInt64,
+			Value:  value,
+			Column: alert.FieldDetectedAt,
+		})
+	}
+	if value, ok := auo.mutation.AddedDetectedAt(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt64,
 			Value:  value,
 			Column: alert.FieldDetectedAt,
 		})
 	}
 	if auo.mutation.DetectedAtCleared() {
 		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
+			Type:   field.TypeInt64,
 			Column: alert.FieldDetectedAt,
 		})
 	}
 	if value, ok := auo.mutation.ClosedAt(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
+			Type:   field.TypeInt64,
+			Value:  value,
+			Column: alert.FieldClosedAt,
+		})
+	}
+	if value, ok := auo.mutation.AddedClosedAt(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt64,
 			Value:  value,
 			Column: alert.FieldClosedAt,
 		})
 	}
 	if auo.mutation.ClosedAtCleared() {
 		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
+			Type:   field.TypeInt64,
 			Column: alert.FieldClosedAt,
 		})
 	}

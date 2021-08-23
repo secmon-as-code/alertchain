@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/alert"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/attribute"
@@ -42,9 +41,12 @@ type AlertMutation struct {
 	detector          *string
 	status            *types.AlertStatus
 	severity          *types.Severity
-	created_at        *time.Time
-	detected_at       *time.Time
-	closed_at         *time.Time
+	created_at        *int64
+	addcreated_at     *int64
+	detected_at       *int64
+	adddetected_at    *int64
+	closed_at         *int64
+	addclosed_at      *int64
 	clearedFields     map[string]struct{}
 	attributes        map[int]struct{}
 	removedattributes map[int]struct{}
@@ -372,12 +374,13 @@ func (m *AlertMutation) ResetSeverity() {
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (m *AlertMutation) SetCreatedAt(t time.Time) {
-	m.created_at = &t
+func (m *AlertMutation) SetCreatedAt(i int64) {
+	m.created_at = &i
+	m.addcreated_at = nil
 }
 
 // CreatedAt returns the value of the "created_at" field in the mutation.
-func (m *AlertMutation) CreatedAt() (r time.Time, exists bool) {
+func (m *AlertMutation) CreatedAt() (r int64, exists bool) {
 	v := m.created_at
 	if v == nil {
 		return
@@ -388,7 +391,7 @@ func (m *AlertMutation) CreatedAt() (r time.Time, exists bool) {
 // OldCreatedAt returns the old "created_at" field's value of the Alert entity.
 // If the Alert object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *AlertMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+func (m *AlertMutation) OldCreatedAt(ctx context.Context) (v int64, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, fmt.Errorf("OldCreatedAt is only allowed on UpdateOne operations")
 	}
@@ -402,18 +405,38 @@ func (m *AlertMutation) OldCreatedAt(ctx context.Context) (v time.Time, err erro
 	return oldValue.CreatedAt, nil
 }
 
+// AddCreatedAt adds i to the "created_at" field.
+func (m *AlertMutation) AddCreatedAt(i int64) {
+	if m.addcreated_at != nil {
+		*m.addcreated_at += i
+	} else {
+		m.addcreated_at = &i
+	}
+}
+
+// AddedCreatedAt returns the value that was added to the "created_at" field in this mutation.
+func (m *AlertMutation) AddedCreatedAt() (r int64, exists bool) {
+	v := m.addcreated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
 // ResetCreatedAt resets all changes to the "created_at" field.
 func (m *AlertMutation) ResetCreatedAt() {
 	m.created_at = nil
+	m.addcreated_at = nil
 }
 
 // SetDetectedAt sets the "detected_at" field.
-func (m *AlertMutation) SetDetectedAt(t time.Time) {
-	m.detected_at = &t
+func (m *AlertMutation) SetDetectedAt(i int64) {
+	m.detected_at = &i
+	m.adddetected_at = nil
 }
 
 // DetectedAt returns the value of the "detected_at" field in the mutation.
-func (m *AlertMutation) DetectedAt() (r time.Time, exists bool) {
+func (m *AlertMutation) DetectedAt() (r int64, exists bool) {
 	v := m.detected_at
 	if v == nil {
 		return
@@ -424,7 +447,7 @@ func (m *AlertMutation) DetectedAt() (r time.Time, exists bool) {
 // OldDetectedAt returns the old "detected_at" field's value of the Alert entity.
 // If the Alert object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *AlertMutation) OldDetectedAt(ctx context.Context) (v *time.Time, err error) {
+func (m *AlertMutation) OldDetectedAt(ctx context.Context) (v *int64, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, fmt.Errorf("OldDetectedAt is only allowed on UpdateOne operations")
 	}
@@ -438,9 +461,28 @@ func (m *AlertMutation) OldDetectedAt(ctx context.Context) (v *time.Time, err er
 	return oldValue.DetectedAt, nil
 }
 
+// AddDetectedAt adds i to the "detected_at" field.
+func (m *AlertMutation) AddDetectedAt(i int64) {
+	if m.adddetected_at != nil {
+		*m.adddetected_at += i
+	} else {
+		m.adddetected_at = &i
+	}
+}
+
+// AddedDetectedAt returns the value that was added to the "detected_at" field in this mutation.
+func (m *AlertMutation) AddedDetectedAt() (r int64, exists bool) {
+	v := m.adddetected_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
 // ClearDetectedAt clears the value of the "detected_at" field.
 func (m *AlertMutation) ClearDetectedAt() {
 	m.detected_at = nil
+	m.adddetected_at = nil
 	m.clearedFields[alert.FieldDetectedAt] = struct{}{}
 }
 
@@ -453,16 +495,18 @@ func (m *AlertMutation) DetectedAtCleared() bool {
 // ResetDetectedAt resets all changes to the "detected_at" field.
 func (m *AlertMutation) ResetDetectedAt() {
 	m.detected_at = nil
+	m.adddetected_at = nil
 	delete(m.clearedFields, alert.FieldDetectedAt)
 }
 
 // SetClosedAt sets the "closed_at" field.
-func (m *AlertMutation) SetClosedAt(t time.Time) {
-	m.closed_at = &t
+func (m *AlertMutation) SetClosedAt(i int64) {
+	m.closed_at = &i
+	m.addclosed_at = nil
 }
 
 // ClosedAt returns the value of the "closed_at" field in the mutation.
-func (m *AlertMutation) ClosedAt() (r time.Time, exists bool) {
+func (m *AlertMutation) ClosedAt() (r int64, exists bool) {
 	v := m.closed_at
 	if v == nil {
 		return
@@ -473,7 +517,7 @@ func (m *AlertMutation) ClosedAt() (r time.Time, exists bool) {
 // OldClosedAt returns the old "closed_at" field's value of the Alert entity.
 // If the Alert object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *AlertMutation) OldClosedAt(ctx context.Context) (v *time.Time, err error) {
+func (m *AlertMutation) OldClosedAt(ctx context.Context) (v *int64, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, fmt.Errorf("OldClosedAt is only allowed on UpdateOne operations")
 	}
@@ -487,9 +531,28 @@ func (m *AlertMutation) OldClosedAt(ctx context.Context) (v *time.Time, err erro
 	return oldValue.ClosedAt, nil
 }
 
+// AddClosedAt adds i to the "closed_at" field.
+func (m *AlertMutation) AddClosedAt(i int64) {
+	if m.addclosed_at != nil {
+		*m.addclosed_at += i
+	} else {
+		m.addclosed_at = &i
+	}
+}
+
+// AddedClosedAt returns the value that was added to the "closed_at" field in this mutation.
+func (m *AlertMutation) AddedClosedAt() (r int64, exists bool) {
+	v := m.addclosed_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
 // ClearClosedAt clears the value of the "closed_at" field.
 func (m *AlertMutation) ClearClosedAt() {
 	m.closed_at = nil
+	m.addclosed_at = nil
 	m.clearedFields[alert.FieldClosedAt] = struct{}{}
 }
 
@@ -502,6 +565,7 @@ func (m *AlertMutation) ClosedAtCleared() bool {
 // ResetClosedAt resets all changes to the "closed_at" field.
 func (m *AlertMutation) ResetClosedAt() {
 	m.closed_at = nil
+	m.addclosed_at = nil
 	delete(m.clearedFields, alert.FieldClosedAt)
 }
 
@@ -697,21 +761,21 @@ func (m *AlertMutation) SetField(name string, value ent.Value) error {
 		m.SetSeverity(v)
 		return nil
 	case alert.FieldCreatedAt:
-		v, ok := value.(time.Time)
+		v, ok := value.(int64)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetCreatedAt(v)
 		return nil
 	case alert.FieldDetectedAt:
-		v, ok := value.(time.Time)
+		v, ok := value.(int64)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetDetectedAt(v)
 		return nil
 	case alert.FieldClosedAt:
-		v, ok := value.(time.Time)
+		v, ok := value.(int64)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
@@ -724,13 +788,31 @@ func (m *AlertMutation) SetField(name string, value ent.Value) error {
 // AddedFields returns all numeric fields that were incremented/decremented during
 // this mutation.
 func (m *AlertMutation) AddedFields() []string {
-	return nil
+	var fields []string
+	if m.addcreated_at != nil {
+		fields = append(fields, alert.FieldCreatedAt)
+	}
+	if m.adddetected_at != nil {
+		fields = append(fields, alert.FieldDetectedAt)
+	}
+	if m.addclosed_at != nil {
+		fields = append(fields, alert.FieldClosedAt)
+	}
+	return fields
 }
 
 // AddedField returns the numeric value that was incremented/decremented on a field
 // with the given name. The second boolean return value indicates that this field
 // was not set, or was not defined in the schema.
 func (m *AlertMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case alert.FieldCreatedAt:
+		return m.AddedCreatedAt()
+	case alert.FieldDetectedAt:
+		return m.AddedDetectedAt()
+	case alert.FieldClosedAt:
+		return m.AddedClosedAt()
+	}
 	return nil, false
 }
 
@@ -739,6 +821,27 @@ func (m *AlertMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *AlertMutation) AddField(name string, value ent.Value) error {
 	switch name {
+	case alert.FieldCreatedAt:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddCreatedAt(v)
+		return nil
+	case alert.FieldDetectedAt:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddDetectedAt(v)
+		return nil
+	case alert.FieldClosedAt:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddClosedAt(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Alert numeric field %s", name)
 }
@@ -1470,7 +1573,8 @@ type FindingMutation struct {
 	op            Op
 	typ           string
 	id            *int
-	time          *time.Time
+	timestamp     *int64
+	addtimestamp  *int64
 	source        *string
 	name          *string
 	value         *string
@@ -1559,40 +1663,60 @@ func (m *FindingMutation) ID() (id int, exists bool) {
 	return *m.id, true
 }
 
-// SetTime sets the "time" field.
-func (m *FindingMutation) SetTime(t time.Time) {
-	m.time = &t
+// SetTimestamp sets the "timestamp" field.
+func (m *FindingMutation) SetTimestamp(i int64) {
+	m.timestamp = &i
+	m.addtimestamp = nil
 }
 
-// Time returns the value of the "time" field in the mutation.
-func (m *FindingMutation) Time() (r time.Time, exists bool) {
-	v := m.time
+// Timestamp returns the value of the "timestamp" field in the mutation.
+func (m *FindingMutation) Timestamp() (r int64, exists bool) {
+	v := m.timestamp
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldTime returns the old "time" field's value of the Finding entity.
+// OldTimestamp returns the old "timestamp" field's value of the Finding entity.
 // If the Finding object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *FindingMutation) OldTime(ctx context.Context) (v time.Time, err error) {
+func (m *FindingMutation) OldTimestamp(ctx context.Context) (v int64, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldTime is only allowed on UpdateOne operations")
+		return v, fmt.Errorf("OldTimestamp is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldTime requires an ID field in the mutation")
+		return v, fmt.Errorf("OldTimestamp requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldTime: %w", err)
+		return v, fmt.Errorf("querying old value for OldTimestamp: %w", err)
 	}
-	return oldValue.Time, nil
+	return oldValue.Timestamp, nil
 }
 
-// ResetTime resets all changes to the "time" field.
-func (m *FindingMutation) ResetTime() {
-	m.time = nil
+// AddTimestamp adds i to the "timestamp" field.
+func (m *FindingMutation) AddTimestamp(i int64) {
+	if m.addtimestamp != nil {
+		*m.addtimestamp += i
+	} else {
+		m.addtimestamp = &i
+	}
+}
+
+// AddedTimestamp returns the value that was added to the "timestamp" field in this mutation.
+func (m *FindingMutation) AddedTimestamp() (r int64, exists bool) {
+	v := m.addtimestamp
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetTimestamp resets all changes to the "timestamp" field.
+func (m *FindingMutation) ResetTimestamp() {
+	m.timestamp = nil
+	m.addtimestamp = nil
 }
 
 // SetSource sets the "source" field.
@@ -1723,8 +1847,8 @@ func (m *FindingMutation) Type() string {
 // AddedFields().
 func (m *FindingMutation) Fields() []string {
 	fields := make([]string, 0, 4)
-	if m.time != nil {
-		fields = append(fields, finding.FieldTime)
+	if m.timestamp != nil {
+		fields = append(fields, finding.FieldTimestamp)
 	}
 	if m.source != nil {
 		fields = append(fields, finding.FieldSource)
@@ -1743,8 +1867,8 @@ func (m *FindingMutation) Fields() []string {
 // schema.
 func (m *FindingMutation) Field(name string) (ent.Value, bool) {
 	switch name {
-	case finding.FieldTime:
-		return m.Time()
+	case finding.FieldTimestamp:
+		return m.Timestamp()
 	case finding.FieldSource:
 		return m.Source()
 	case finding.FieldName:
@@ -1760,8 +1884,8 @@ func (m *FindingMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *FindingMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
-	case finding.FieldTime:
-		return m.OldTime(ctx)
+	case finding.FieldTimestamp:
+		return m.OldTimestamp(ctx)
 	case finding.FieldSource:
 		return m.OldSource(ctx)
 	case finding.FieldName:
@@ -1777,12 +1901,12 @@ func (m *FindingMutation) OldField(ctx context.Context, name string) (ent.Value,
 // type.
 func (m *FindingMutation) SetField(name string, value ent.Value) error {
 	switch name {
-	case finding.FieldTime:
-		v, ok := value.(time.Time)
+	case finding.FieldTimestamp:
+		v, ok := value.(int64)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetTime(v)
+		m.SetTimestamp(v)
 		return nil
 	case finding.FieldSource:
 		v, ok := value.(string)
@@ -1812,13 +1936,21 @@ func (m *FindingMutation) SetField(name string, value ent.Value) error {
 // AddedFields returns all numeric fields that were incremented/decremented during
 // this mutation.
 func (m *FindingMutation) AddedFields() []string {
-	return nil
+	var fields []string
+	if m.addtimestamp != nil {
+		fields = append(fields, finding.FieldTimestamp)
+	}
+	return fields
 }
 
 // AddedField returns the numeric value that was incremented/decremented on a field
 // with the given name. The second boolean return value indicates that this field
 // was not set, or was not defined in the schema.
 func (m *FindingMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case finding.FieldTimestamp:
+		return m.AddedTimestamp()
+	}
 	return nil, false
 }
 
@@ -1827,6 +1959,13 @@ func (m *FindingMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *FindingMutation) AddField(name string, value ent.Value) error {
 	switch name {
+	case finding.FieldTimestamp:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTimestamp(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Finding numeric field %s", name)
 }
@@ -1854,8 +1993,8 @@ func (m *FindingMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *FindingMutation) ResetField(name string) error {
 	switch name {
-	case finding.FieldTime:
-		m.ResetTime()
+	case finding.FieldTimestamp:
+		m.ResetTimestamp()
 		return nil
 	case finding.FieldSource:
 		m.ResetSource()

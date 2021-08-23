@@ -31,7 +31,7 @@ type Task interface {
 	Name() string
 	Description() string
 	Execute(ctx context.Context, alert *Alert) error
-	Optional(alert *Alert) bool
+	Optionable(alert *Alert) bool
 }
 
 type Source interface {

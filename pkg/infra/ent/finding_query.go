@@ -254,12 +254,12 @@ func (fq *FindingQuery) Clone() *FindingQuery {
 // Example:
 //
 //	var v []struct {
-//		Time time.Time `json:"time,omitempty"`
+//		Timestamp int64 `json:"timestamp,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Finding.Query().
-//		GroupBy(finding.FieldTime).
+//		GroupBy(finding.FieldTimestamp).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 //
@@ -281,11 +281,11 @@ func (fq *FindingQuery) GroupBy(field string, fields ...string) *FindingGroupBy 
 // Example:
 //
 //	var v []struct {
-//		Time time.Time `json:"time,omitempty"`
+//		Timestamp int64 `json:"timestamp,omitempty"`
 //	}
 //
 //	client.Finding.Query().
-//		Select(finding.FieldTime).
+//		Select(finding.FieldTimestamp).
 //		Scan(ctx, &v)
 //
 func (fq *FindingQuery) Select(fields ...string) *FindingSelect {

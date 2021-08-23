@@ -1,8 +1,6 @@
 package schema
 
 import (
-	"time"
-
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
@@ -23,11 +21,9 @@ func (Alert) Fields() []ent.Field {
 		field.String("detector").Optional(),
 		field.String("status").GoType(types.AlertStatus("")).Default(string(types.StatusNew)),
 		field.String("severity").GoType(types.Severity("")).Optional(),
-		field.Time("created_at").Immutable().Default(func() time.Time {
-			return time.Now().UTC()
-		}),
-		field.Time("detected_at").Optional().Nillable(),
-		field.Time("closed_at").Optional().Nillable(),
+		field.Int64("created_at").Immutable(),
+		field.Int64("detected_at").Optional().Nillable(),
+		field.Int64("closed_at").Optional().Nillable(),
 	}
 }
 

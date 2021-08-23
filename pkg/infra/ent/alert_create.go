@@ -6,7 +6,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -93,43 +92,35 @@ func (ac *AlertCreate) SetNillableSeverity(t *types.Severity) *AlertCreate {
 }
 
 // SetCreatedAt sets the "created_at" field.
-func (ac *AlertCreate) SetCreatedAt(t time.Time) *AlertCreate {
-	ac.mutation.SetCreatedAt(t)
-	return ac
-}
-
-// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (ac *AlertCreate) SetNillableCreatedAt(t *time.Time) *AlertCreate {
-	if t != nil {
-		ac.SetCreatedAt(*t)
-	}
+func (ac *AlertCreate) SetCreatedAt(i int64) *AlertCreate {
+	ac.mutation.SetCreatedAt(i)
 	return ac
 }
 
 // SetDetectedAt sets the "detected_at" field.
-func (ac *AlertCreate) SetDetectedAt(t time.Time) *AlertCreate {
-	ac.mutation.SetDetectedAt(t)
+func (ac *AlertCreate) SetDetectedAt(i int64) *AlertCreate {
+	ac.mutation.SetDetectedAt(i)
 	return ac
 }
 
 // SetNillableDetectedAt sets the "detected_at" field if the given value is not nil.
-func (ac *AlertCreate) SetNillableDetectedAt(t *time.Time) *AlertCreate {
-	if t != nil {
-		ac.SetDetectedAt(*t)
+func (ac *AlertCreate) SetNillableDetectedAt(i *int64) *AlertCreate {
+	if i != nil {
+		ac.SetDetectedAt(*i)
 	}
 	return ac
 }
 
 // SetClosedAt sets the "closed_at" field.
-func (ac *AlertCreate) SetClosedAt(t time.Time) *AlertCreate {
-	ac.mutation.SetClosedAt(t)
+func (ac *AlertCreate) SetClosedAt(i int64) *AlertCreate {
+	ac.mutation.SetClosedAt(i)
 	return ac
 }
 
 // SetNillableClosedAt sets the "closed_at" field if the given value is not nil.
-func (ac *AlertCreate) SetNillableClosedAt(t *time.Time) *AlertCreate {
-	if t != nil {
-		ac.SetClosedAt(*t)
+func (ac *AlertCreate) SetNillableClosedAt(i *int64) *AlertCreate {
+	if i != nil {
+		ac.SetClosedAt(*i)
 	}
 	return ac
 }
@@ -230,10 +221,6 @@ func (ac *AlertCreate) defaults() {
 		v := alert.DefaultStatus
 		ac.mutation.SetStatus(v)
 	}
-	if _, ok := ac.mutation.CreatedAt(); !ok {
-		v := alert.DefaultCreatedAt()
-		ac.mutation.SetCreatedAt(v)
-	}
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -315,7 +302,7 @@ func (ac *AlertCreate) createSpec() (*Alert, *sqlgraph.CreateSpec) {
 	}
 	if value, ok := ac.mutation.CreatedAt(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
+			Type:   field.TypeInt64,
 			Value:  value,
 			Column: alert.FieldCreatedAt,
 		})
@@ -323,7 +310,7 @@ func (ac *AlertCreate) createSpec() (*Alert, *sqlgraph.CreateSpec) {
 	}
 	if value, ok := ac.mutation.DetectedAt(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
+			Type:   field.TypeInt64,
 			Value:  value,
 			Column: alert.FieldDetectedAt,
 		})
@@ -331,7 +318,7 @@ func (ac *AlertCreate) createSpec() (*Alert, *sqlgraph.CreateSpec) {
 	}
 	if value, ok := ac.mutation.ClosedAt(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
+			Type:   field.TypeInt64,
 			Value:  value,
 			Column: alert.FieldClosedAt,
 		})

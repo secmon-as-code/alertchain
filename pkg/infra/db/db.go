@@ -9,6 +9,7 @@ import (
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/enttest"
 	"github.com/m-mizutani/alertchain/types"
 
+	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/mattn/go-sqlite3"
 )
 

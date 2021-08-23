@@ -3,8 +3,6 @@
 package finding
 
 import (
-	"time"
-
 	"entgo.io/ent/dialect/sql"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/predicate"
 )
@@ -92,10 +90,10 @@ func IDLTE(id int) predicate.Finding {
 	})
 }
 
-// Time applies equality check predicate on the "time" field. It's identical to TimeEQ.
-func Time(v time.Time) predicate.Finding {
+// Timestamp applies equality check predicate on the "timestamp" field. It's identical to TimestampEQ.
+func Timestamp(v int64) predicate.Finding {
 	return predicate.Finding(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldTime), v))
+		s.Where(sql.EQ(s.C(FieldTimestamp), v))
 	})
 }
 
@@ -120,22 +118,22 @@ func Value(v string) predicate.Finding {
 	})
 }
 
-// TimeEQ applies the EQ predicate on the "time" field.
-func TimeEQ(v time.Time) predicate.Finding {
+// TimestampEQ applies the EQ predicate on the "timestamp" field.
+func TimestampEQ(v int64) predicate.Finding {
 	return predicate.Finding(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldTime), v))
+		s.Where(sql.EQ(s.C(FieldTimestamp), v))
 	})
 }
 
-// TimeNEQ applies the NEQ predicate on the "time" field.
-func TimeNEQ(v time.Time) predicate.Finding {
+// TimestampNEQ applies the NEQ predicate on the "timestamp" field.
+func TimestampNEQ(v int64) predicate.Finding {
 	return predicate.Finding(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldTime), v))
+		s.Where(sql.NEQ(s.C(FieldTimestamp), v))
 	})
 }
 
-// TimeIn applies the In predicate on the "time" field.
-func TimeIn(vs ...time.Time) predicate.Finding {
+// TimestampIn applies the In predicate on the "timestamp" field.
+func TimestampIn(vs ...int64) predicate.Finding {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -147,12 +145,12 @@ func TimeIn(vs ...time.Time) predicate.Finding {
 			s.Where(sql.False())
 			return
 		}
-		s.Where(sql.In(s.C(FieldTime), v...))
+		s.Where(sql.In(s.C(FieldTimestamp), v...))
 	})
 }
 
-// TimeNotIn applies the NotIn predicate on the "time" field.
-func TimeNotIn(vs ...time.Time) predicate.Finding {
+// TimestampNotIn applies the NotIn predicate on the "timestamp" field.
+func TimestampNotIn(vs ...int64) predicate.Finding {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -164,35 +162,35 @@ func TimeNotIn(vs ...time.Time) predicate.Finding {
 			s.Where(sql.False())
 			return
 		}
-		s.Where(sql.NotIn(s.C(FieldTime), v...))
+		s.Where(sql.NotIn(s.C(FieldTimestamp), v...))
 	})
 }
 
-// TimeGT applies the GT predicate on the "time" field.
-func TimeGT(v time.Time) predicate.Finding {
+// TimestampGT applies the GT predicate on the "timestamp" field.
+func TimestampGT(v int64) predicate.Finding {
 	return predicate.Finding(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldTime), v))
+		s.Where(sql.GT(s.C(FieldTimestamp), v))
 	})
 }
 
-// TimeGTE applies the GTE predicate on the "time" field.
-func TimeGTE(v time.Time) predicate.Finding {
+// TimestampGTE applies the GTE predicate on the "timestamp" field.
+func TimestampGTE(v int64) predicate.Finding {
 	return predicate.Finding(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldTime), v))
+		s.Where(sql.GTE(s.C(FieldTimestamp), v))
 	})
 }
 
-// TimeLT applies the LT predicate on the "time" field.
-func TimeLT(v time.Time) predicate.Finding {
+// TimestampLT applies the LT predicate on the "timestamp" field.
+func TimestampLT(v int64) predicate.Finding {
 	return predicate.Finding(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldTime), v))
+		s.Where(sql.LT(s.C(FieldTimestamp), v))
 	})
 }
 
-// TimeLTE applies the LTE predicate on the "time" field.
-func TimeLTE(v time.Time) predicate.Finding {
+// TimestampLTE applies the LTE predicate on the "timestamp" field.
+func TimestampLTE(v int64) predicate.Finding {
 	return predicate.Finding(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldTime), v))
+		s.Where(sql.LTE(s.C(FieldTimestamp), v))
 	})
 }
 

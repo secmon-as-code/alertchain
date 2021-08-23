@@ -3,13 +3,16 @@ package db_test
 import (
 	"context"
 	"testing"
-	"time"
 
 	"github.com/m-mizutani/alertchain/pkg/infra/ent"
 	"github.com/m-mizutani/alertchain/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func int64ptr(v int64) *int64 {
+	return &v
+}
 
 func TestAlert(t *testing.T) {
 	ctx := context.Background()
@@ -29,13 +32,13 @@ func TestAlert(t *testing.T) {
 		})
 
 		t.Run("Update alert", func(t *testing.T) {
-			now := time.Now().UTC().Add(time.Hour)
 			alert.Title = "five"
 			alert.Detector = "blue"
 			alert.Description = "insane"
+
+			// Should not be updated
 			alert.Status = types.StatusClosed
 			alert.Severity = types.SevAffected
-			alert.ClosedAt = &now
 
 			require.NoError(t, client.UpdateAlert(ctx, alert.ID, alert))
 
@@ -46,8 +49,8 @@ func TestAlert(t *testing.T) {
 				assert.Equal(t, "five", got.Title)
 				assert.Equal(t, "blue", got.Detector)
 				assert.Equal(t, "insane", got.Description)
-				assert.Equal(t, types.SevAffected, got.Severity)
-				assert.Equal(t, now, *got.ClosedAt)
+				assert.NotEqual(t, types.StatusClosed, got.Status)
+				assert.NotEqual(t, types.SevAffected, got.Severity)
 
 				t.Run("status can not be updated via SaveAlert", func(t *testing.T) {
 					assert.NotEqual(t, types.StatusClosed, got.Status)

@@ -11,7 +11,7 @@ type myEvaluator struct{}
 
 func (x *myEvaluator) Name() string        { return "myEvaluator" }
 func (x *myEvaluator) Description() string { return "Eval alert" }
-func (x *myEvaluator) Optional(alert *alertchain.Alert) bool {
+func (x *myEvaluator) Optionable(alert *alertchain.Alert) bool {
 	return false
 }
 

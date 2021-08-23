@@ -13,7 +13,7 @@ type Finding struct {
 // Fields of the Finding.
 func (Finding) Fields() []ent.Field {
 	return []ent.Field{
-		field.Time("time"),
+		field.Int64("timestamp"),
 		field.String("source"),
 		field.String("name"),
 		field.String("value"),

@@ -3,8 +3,6 @@
 package alert
 
 import (
-	"time"
-
 	"github.com/m-mizutani/alertchain/types"
 )
 
@@ -68,6 +66,4 @@ func ValidColumn(column string) bool {
 var (
 	// DefaultStatus holds the default value on creation for the "status" field.
 	DefaultStatus types.AlertStatus
-	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
-	DefaultCreatedAt func() time.Time
 )

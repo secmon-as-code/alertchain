@@ -3,8 +3,6 @@
 package alert
 
 import (
-	"time"
-
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/predicate"
@@ -132,21 +130,21 @@ func Severity(v types.Severity) predicate.Alert {
 }
 
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
-func CreatedAt(v time.Time) predicate.Alert {
+func CreatedAt(v int64) predicate.Alert {
 	return predicate.Alert(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldCreatedAt), v))
 	})
 }
 
 // DetectedAt applies equality check predicate on the "detected_at" field. It's identical to DetectedAtEQ.
-func DetectedAt(v time.Time) predicate.Alert {
+func DetectedAt(v int64) predicate.Alert {
 	return predicate.Alert(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldDetectedAt), v))
 	})
 }
 
 // ClosedAt applies equality check predicate on the "closed_at" field. It's identical to ClosedAtEQ.
-func ClosedAt(v time.Time) predicate.Alert {
+func ClosedAt(v int64) predicate.Alert {
 	return predicate.Alert(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldClosedAt), v))
 	})
@@ -786,21 +784,21 @@ func SeverityContainsFold(v types.Severity) predicate.Alert {
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
-func CreatedAtEQ(v time.Time) predicate.Alert {
+func CreatedAtEQ(v int64) predicate.Alert {
 	return predicate.Alert(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldCreatedAt), v))
 	})
 }
 
 // CreatedAtNEQ applies the NEQ predicate on the "created_at" field.
-func CreatedAtNEQ(v time.Time) predicate.Alert {
+func CreatedAtNEQ(v int64) predicate.Alert {
 	return predicate.Alert(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldCreatedAt), v))
 	})
 }
 
 // CreatedAtIn applies the In predicate on the "created_at" field.
-func CreatedAtIn(vs ...time.Time) predicate.Alert {
+func CreatedAtIn(vs ...int64) predicate.Alert {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -817,7 +815,7 @@ func CreatedAtIn(vs ...time.Time) predicate.Alert {
 }
 
 // CreatedAtNotIn applies the NotIn predicate on the "created_at" field.
-func CreatedAtNotIn(vs ...time.Time) predicate.Alert {
+func CreatedAtNotIn(vs ...int64) predicate.Alert {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -834,49 +832,49 @@ func CreatedAtNotIn(vs ...time.Time) predicate.Alert {
 }
 
 // CreatedAtGT applies the GT predicate on the "created_at" field.
-func CreatedAtGT(v time.Time) predicate.Alert {
+func CreatedAtGT(v int64) predicate.Alert {
 	return predicate.Alert(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldCreatedAt), v))
 	})
 }
 
 // CreatedAtGTE applies the GTE predicate on the "created_at" field.
-func CreatedAtGTE(v time.Time) predicate.Alert {
+func CreatedAtGTE(v int64) predicate.Alert {
 	return predicate.Alert(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldCreatedAt), v))
 	})
 }
 
 // CreatedAtLT applies the LT predicate on the "created_at" field.
-func CreatedAtLT(v time.Time) predicate.Alert {
+func CreatedAtLT(v int64) predicate.Alert {
 	return predicate.Alert(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldCreatedAt), v))
 	})
 }
 
 // CreatedAtLTE applies the LTE predicate on the "created_at" field.
-func CreatedAtLTE(v time.Time) predicate.Alert {
+func CreatedAtLTE(v int64) predicate.Alert {
 	return predicate.Alert(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldCreatedAt), v))
 	})
 }
 
 // DetectedAtEQ applies the EQ predicate on the "detected_at" field.
-func DetectedAtEQ(v time.Time) predicate.Alert {
+func DetectedAtEQ(v int64) predicate.Alert {
 	return predicate.Alert(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldDetectedAt), v))
 	})
 }
 
 // DetectedAtNEQ applies the NEQ predicate on the "detected_at" field.
-func DetectedAtNEQ(v time.Time) predicate.Alert {
+func DetectedAtNEQ(v int64) predicate.Alert {
 	return predicate.Alert(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldDetectedAt), v))
 	})
 }
 
 // DetectedAtIn applies the In predicate on the "detected_at" field.
-func DetectedAtIn(vs ...time.Time) predicate.Alert {
+func DetectedAtIn(vs ...int64) predicate.Alert {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -893,7 +891,7 @@ func DetectedAtIn(vs ...time.Time) predicate.Alert {
 }
 
 // DetectedAtNotIn applies the NotIn predicate on the "detected_at" field.
-func DetectedAtNotIn(vs ...time.Time) predicate.Alert {
+func DetectedAtNotIn(vs ...int64) predicate.Alert {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -910,28 +908,28 @@ func DetectedAtNotIn(vs ...time.Time) predicate.Alert {
 }
 
 // DetectedAtGT applies the GT predicate on the "detected_at" field.
-func DetectedAtGT(v time.Time) predicate.Alert {
+func DetectedAtGT(v int64) predicate.Alert {
 	return predicate.Alert(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldDetectedAt), v))
 	})
 }
 
 // DetectedAtGTE applies the GTE predicate on the "detected_at" field.
-func DetectedAtGTE(v time.Time) predicate.Alert {
+func DetectedAtGTE(v int64) predicate.Alert {
 	return predicate.Alert(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldDetectedAt), v))
 	})
 }
 
 // DetectedAtLT applies the LT predicate on the "detected_at" field.
-func DetectedAtLT(v time.Time) predicate.Alert {
+func DetectedAtLT(v int64) predicate.Alert {
 	return predicate.Alert(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldDetectedAt), v))
 	})
 }
 
 // DetectedAtLTE applies the LTE predicate on the "detected_at" field.
-func DetectedAtLTE(v time.Time) predicate.Alert {
+func DetectedAtLTE(v int64) predicate.Alert {
 	return predicate.Alert(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldDetectedAt), v))
 	})
@@ -952,21 +950,21 @@ func DetectedAtNotNil() predicate.Alert {
 }
 
 // ClosedAtEQ applies the EQ predicate on the "closed_at" field.
-func ClosedAtEQ(v time.Time) predicate.Alert {
+func ClosedAtEQ(v int64) predicate.Alert {
 	return predicate.Alert(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldClosedAt), v))
 	})
 }
 
 // ClosedAtNEQ applies the NEQ predicate on the "closed_at" field.
-func ClosedAtNEQ(v time.Time) predicate.Alert {
+func ClosedAtNEQ(v int64) predicate.Alert {
 	return predicate.Alert(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldClosedAt), v))
 	})
 }
 
 // ClosedAtIn applies the In predicate on the "closed_at" field.
-func ClosedAtIn(vs ...time.Time) predicate.Alert {
+func ClosedAtIn(vs ...int64) predicate.Alert {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -983,7 +981,7 @@ func ClosedAtIn(vs ...time.Time) predicate.Alert {
 }
 
 // ClosedAtNotIn applies the NotIn predicate on the "closed_at" field.
-func ClosedAtNotIn(vs ...time.Time) predicate.Alert {
+func ClosedAtNotIn(vs ...int64) predicate.Alert {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -1000,28 +998,28 @@ func ClosedAtNotIn(vs ...time.Time) predicate.Alert {
 }
 
 // ClosedAtGT applies the GT predicate on the "closed_at" field.
-func ClosedAtGT(v time.Time) predicate.Alert {
+func ClosedAtGT(v int64) predicate.Alert {
 	return predicate.Alert(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldClosedAt), v))
 	})
 }
 
 // ClosedAtGTE applies the GTE predicate on the "closed_at" field.
-func ClosedAtGTE(v time.Time) predicate.Alert {
+func ClosedAtGTE(v int64) predicate.Alert {
 	return predicate.Alert(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldClosedAt), v))
 	})
 }
 
 // ClosedAtLT applies the LT predicate on the "closed_at" field.
-func ClosedAtLT(v time.Time) predicate.Alert {
+func ClosedAtLT(v int64) predicate.Alert {
 	return predicate.Alert(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldClosedAt), v))
 	})
 }
 
 // ClosedAtLTE applies the LTE predicate on the "closed_at" field.
-func ClosedAtLTE(v time.Time) predicate.Alert {
+func ClosedAtLTE(v int64) predicate.Alert {
 	return predicate.Alert(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldClosedAt), v))
 	})

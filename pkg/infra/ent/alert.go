@@ -5,7 +5,6 @@ package ent
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/alert"
@@ -28,11 +27,11 @@ type Alert struct {
 	// Severity holds the value of the "severity" field.
 	Severity types.Severity `json:"severity,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
-	CreatedAt time.Time `json:"created_at,omitempty"`
+	CreatedAt int64 `json:"created_at,omitempty"`
 	// DetectedAt holds the value of the "detected_at" field.
-	DetectedAt *time.Time `json:"detected_at,omitempty"`
+	DetectedAt *int64 `json:"detected_at,omitempty"`
 	// ClosedAt holds the value of the "closed_at" field.
-	ClosedAt *time.Time `json:"closed_at,omitempty"`
+	ClosedAt *int64 `json:"closed_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the AlertQuery when eager-loading is set.
 	Edges AlertEdges `json:"edges"`
@@ -61,10 +60,10 @@ func (*Alert) scanValues(columns []string) ([]interface{}, error) {
 	values := make([]interface{}, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case alert.FieldCreatedAt, alert.FieldDetectedAt, alert.FieldClosedAt:
+			values[i] = new(sql.NullInt64)
 		case alert.FieldID, alert.FieldTitle, alert.FieldDescription, alert.FieldDetector, alert.FieldStatus, alert.FieldSeverity:
 			values[i] = new(sql.NullString)
-		case alert.FieldCreatedAt, alert.FieldDetectedAt, alert.FieldClosedAt:
-			values[i] = new(sql.NullTime)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Alert", columns[i])
 		}
@@ -117,24 +116,24 @@ func (a *Alert) assignValues(columns []string, values []interface{}) error {
 				a.Severity = types.Severity(value.String)
 			}
 		case alert.FieldCreatedAt:
-			if value, ok := values[i].(*sql.NullTime); !ok {
+			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				a.CreatedAt = value.Time
+				a.CreatedAt = value.Int64
 			}
 		case alert.FieldDetectedAt:
-			if value, ok := values[i].(*sql.NullTime); !ok {
+			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field detected_at", values[i])
 			} else if value.Valid {
-				a.DetectedAt = new(time.Time)
-				*a.DetectedAt = value.Time
+				a.DetectedAt = new(int64)
+				*a.DetectedAt = value.Int64
 			}
 		case alert.FieldClosedAt:
-			if value, ok := values[i].(*sql.NullTime); !ok {
+			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field closed_at", values[i])
 			} else if value.Valid {
-				a.ClosedAt = new(time.Time)
-				*a.ClosedAt = value.Time
+				a.ClosedAt = new(int64)
+				*a.ClosedAt = value.Int64
 			}
 		}
 	}
@@ -180,14 +179,14 @@ func (a *Alert) String() string {
 	builder.WriteString(", severity=")
 	builder.WriteString(fmt.Sprintf("%v", a.Severity))
 	builder.WriteString(", created_at=")
-	builder.WriteString(a.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(fmt.Sprintf("%v", a.CreatedAt))
 	if v := a.DetectedAt; v != nil {
 		builder.WriteString(", detected_at=")
-		builder.WriteString(v.Format(time.ANSIC))
+		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
 	if v := a.ClosedAt; v != nil {
 		builder.WriteString(", closed_at=")
-		builder.WriteString(v.Format(time.ANSIC))
+		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
 	builder.WriteByte(')')
 	return builder.String()

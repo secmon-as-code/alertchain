@@ -7,8 +7,8 @@ const (
 	Label = "finding"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
-	// FieldTime holds the string denoting the time field in the database.
-	FieldTime = "time"
+	// FieldTimestamp holds the string denoting the timestamp field in the database.
+	FieldTimestamp = "timestamp"
 	// FieldSource holds the string denoting the source field in the database.
 	FieldSource = "source"
 	// FieldName holds the string denoting the name field in the database.
@@ -22,7 +22,7 @@ const (
 // Columns holds all SQL columns for finding fields.
 var Columns = []string{
 	FieldID,
-	FieldTime,
+	FieldTimestamp,
 	FieldSource,
 	FieldName,
 	FieldValue,

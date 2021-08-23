@@ -6,7 +6,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
@@ -20,9 +19,9 @@ type FindingCreate struct {
 	hooks    []Hook
 }
 
-// SetTime sets the "time" field.
-func (fc *FindingCreate) SetTime(t time.Time) *FindingCreate {
-	fc.mutation.SetTime(t)
+// SetTimestamp sets the "timestamp" field.
+func (fc *FindingCreate) SetTimestamp(i int64) *FindingCreate {
+	fc.mutation.SetTimestamp(i)
 	return fc
 }
 
@@ -114,8 +113,8 @@ func (fc *FindingCreate) ExecX(ctx context.Context) {
 
 // check runs all checks and user-defined validators on the builder.
 func (fc *FindingCreate) check() error {
-	if _, ok := fc.mutation.Time(); !ok {
-		return &ValidationError{Name: "time", err: errors.New(`ent: missing required field "time"`)}
+	if _, ok := fc.mutation.Timestamp(); !ok {
+		return &ValidationError{Name: "timestamp", err: errors.New(`ent: missing required field "timestamp"`)}
 	}
 	if _, ok := fc.mutation.Source(); !ok {
 		return &ValidationError{Name: "source", err: errors.New(`ent: missing required field "source"`)}
@@ -153,13 +152,13 @@ func (fc *FindingCreate) createSpec() (*Finding, *sqlgraph.CreateSpec) {
 			},
 		}
 	)
-	if value, ok := fc.mutation.Time(); ok {
+	if value, ok := fc.mutation.Timestamp(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
+			Type:   field.TypeInt64,
 			Value:  value,
-			Column: finding.FieldTime,
+			Column: finding.FieldTimestamp,
 		})
-		_node.Time = value
+		_node.Timestamp = value
 	}
 	if value, ok := fc.mutation.Source(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{

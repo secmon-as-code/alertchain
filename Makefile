@@ -13,6 +13,8 @@ ENT_DIR=./pkg/infra/ent
 ENT_SRC=$(ENT_DIR)/ent.go
 ENT_SCHEMA=$(ENT_DIR)/schema/*.go
 
+CHAIN=chain.so
+
 all: alertchain
 
 $(ASSET_JS): $(ASSET_SRC)
@@ -20,6 +22,13 @@ $(ASSET_JS): $(ASSET_SRC)
 
 $(ENT_SRC): $(ENT_SCHEMA)
 	go generate $(ENT_DIR)
+
+
+$(CHAIN): ./examples/chain/*.go $(SRC)
+	go build -buildmode=plugin -o $(CHAIN) ./examples/chain/
+
+dev: $(CHAIN)
+	go run ./cmd/alertchain/ serve -d "root:${MYSQL_ROOT_PASSWORD}@tcp(localhost:3306)/${MYSQL_DATABASE}" -c chain.so
 
 test: $(SRC) $(ENT_SRC)
 	go test ./...

@@ -5,7 +5,6 @@ package ent
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/finding"
@@ -16,8 +15,8 @@ type Finding struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
-	// Time holds the value of the "time" field.
-	Time time.Time `json:"time,omitempty"`
+	// Timestamp holds the value of the "timestamp" field.
+	Timestamp int64 `json:"timestamp,omitempty"`
 	// Source holds the value of the "source" field.
 	Source string `json:"source,omitempty"`
 	// Name holds the value of the "name" field.
@@ -32,12 +31,10 @@ func (*Finding) scanValues(columns []string) ([]interface{}, error) {
 	values := make([]interface{}, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case finding.FieldID:
+		case finding.FieldID, finding.FieldTimestamp:
 			values[i] = new(sql.NullInt64)
 		case finding.FieldSource, finding.FieldName, finding.FieldValue:
 			values[i] = new(sql.NullString)
-		case finding.FieldTime:
-			values[i] = new(sql.NullTime)
 		case finding.ForeignKeys[0]: // attribute_findings
 			values[i] = new(sql.NullInt64)
 		default:
@@ -61,11 +58,11 @@ func (f *Finding) assignValues(columns []string, values []interface{}) error {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			f.ID = int(value.Int64)
-		case finding.FieldTime:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field time", values[i])
+		case finding.FieldTimestamp:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field timestamp", values[i])
 			} else if value.Valid {
-				f.Time = value.Time
+				f.Timestamp = value.Int64
 			}
 		case finding.FieldSource:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -120,8 +117,8 @@ func (f *Finding) String() string {
 	var builder strings.Builder
 	builder.WriteString("Finding(")
 	builder.WriteString(fmt.Sprintf("id=%v", f.ID))
-	builder.WriteString(", time=")
-	builder.WriteString(f.Time.Format(time.ANSIC))
+	builder.WriteString(", timestamp=")
+	builder.WriteString(fmt.Sprintf("%v", f.Timestamp))
 	builder.WriteString(", source=")
 	builder.WriteString(f.Source)
 	builder.WriteString(", name=")

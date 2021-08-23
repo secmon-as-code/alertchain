@@ -29,7 +29,7 @@ func (x *sleeper) Execute(ctx context.Context, alert *alertchain.Alert) error {
 	return nil
 }
 
-func (x *sleeper) Optional(alert *alertchain.Alert) bool {
+func (x *sleeper) Optionable(alert *alertchain.Alert) bool {
 	panic("not implemented") // TODO: Implement
 }
 
@@ -48,9 +48,9 @@ type mock struct {
 	Exec func(alert *alertchain.Alert) error
 }
 
-func (x *mock) Name() string                          { return "mock" }
-func (x *mock) Description() string                   { return "mock" }
-func (x *mock) Optional(alert *alertchain.Alert) bool { return false }
+func (x *mock) Name() string                            { return "mock" }
+func (x *mock) Description() string                     { return "mock" }
+func (x *mock) Optionable(alert *alertchain.Alert) bool { return false }
 func (x *mock) Execute(ctx context.Context, alert *alertchain.Alert) error {
 	return x.Exec(alert)
 }

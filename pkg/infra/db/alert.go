@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"time"
 
 	"github.com/m-mizutani/alertchain/pkg/infra/ent"
 	"github.com/m-mizutani/alertchain/types"
@@ -31,7 +32,10 @@ func (x *Client) GetAlerts(ctx context.Context) ([]*ent.Alert, error) {
 }
 
 func (x *Client) NewAlert(ctx context.Context) (*ent.Alert, error) {
-	newAlert, err := x.client.Alert.Create().SetID(types.NewAlertID()).Save(x.ctx)
+	newAlert, err := x.client.Alert.Create().
+		SetID(types.NewAlertID()).
+		SetCreatedAt(time.Now().UTC().Unix()).
+		Save(x.ctx)
 	if err != nil {
 		return nil, types.ErrDatabaseUnexpected.Wrap(err)
 	}
@@ -58,14 +62,18 @@ func (x *Client) UpdateAlert(ctx context.Context, id types.AlertID, alert *ent.A
 	return nil
 }
 
-func (x *Client) UpdateAlertStatus(ctx context.Context, id types.AlertID, status types.AlertStatus) error {
-	if _, err := x.client.Alert.UpdateOneID(id).SetStatus(status).Save(x.ctx); err != nil {
+func (x *Client) UpdateAlertStatus(ctx context.Context, id types.AlertID, status types.AlertStatus, ts int64) error {
+	q := x.client.Alert.UpdateOneID(id).SetStatus(status)
+	if status == types.StatusClosed {
+		q = q.SetClosedAt(ts)
+	}
+	if _, err := q.Save(x.ctx); err != nil {
 		return types.ErrDatabaseUnexpected.Wrap(err)
 	}
 	return nil
 }
 
-func (x *Client) UpdateAlertSeverity(ctx context.Context, id types.AlertID, sev types.Severity) error {
+func (x *Client) UpdateAlertSeverity(ctx context.Context, id types.AlertID, sev types.Severity, ts int64) error {
 	if _, err := x.client.Alert.UpdateOneID(id).SetSeverity(sev).Save(x.ctx); err != nil {
 		return types.ErrDatabaseUnexpected.Wrap(err)
 	}
@@ -107,7 +115,7 @@ func (x *Client) AddFindings(ctx context.Context, attr *ent.Attribute, findings 
 		builders[i] = x.client.Finding.Create().
 			SetSource(finding.Source).
 			SetValue(finding.Value).
-			SetTime(finding.Time)
+			SetTimestamp(finding.Timestamp)
 	}
 
 	added, err := x.client.Finding.CreateBulk(builders...).Save(x.ctx)

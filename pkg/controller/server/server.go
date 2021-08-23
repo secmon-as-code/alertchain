@@ -26,7 +26,9 @@ func New(uc usecase.Interface, addr string, port uint64) *Server {
 }
 
 func (x *Server) Run() error {
-	if _, ok := os.LookupEnv("GIN_MODE"); !ok {
+	if mode, ok := os.LookupEnv("GIN_MODE"); ok {
+		gin.SetMode(mode)
+	} else {
 		gin.SetMode("release") // Set release as default
 	}
 

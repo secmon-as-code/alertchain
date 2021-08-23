@@ -2,6 +2,7 @@ package alertchain
 
 import (
 	"context"
+	"time"
 
 	"github.com/m-mizutani/alertchain/pkg/infra"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent"
@@ -49,13 +50,14 @@ func NewAlert(alert *ent.Alert, db infra.DBClient) *Alert {
 }
 
 func (x *Alert) Commit(ctx context.Context) error {
+	ts := time.Now().UTC().Unix()
 	if x.newStatus != nil {
-		if err := x.db.UpdateAlertStatus(ctx, x.id, *x.newStatus); err != nil {
+		if err := x.db.UpdateAlertStatus(ctx, x.id, *x.newStatus, ts); err != nil {
 			return err
 		}
 	}
 	if x.newSeverity != nil {
-		if err := x.db.UpdateAlertSeverity(ctx, x.id, *x.newSeverity); err != nil {
+		if err := x.db.UpdateAlertSeverity(ctx, x.id, *x.newSeverity, ts); err != nil {
 			return err
 		}
 	}

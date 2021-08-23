@@ -5,7 +5,6 @@ package ent
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -27,9 +26,16 @@ func (fu *FindingUpdate) Where(ps ...predicate.Finding) *FindingUpdate {
 	return fu
 }
 
-// SetTime sets the "time" field.
-func (fu *FindingUpdate) SetTime(t time.Time) *FindingUpdate {
-	fu.mutation.SetTime(t)
+// SetTimestamp sets the "timestamp" field.
+func (fu *FindingUpdate) SetTimestamp(i int64) *FindingUpdate {
+	fu.mutation.ResetTimestamp()
+	fu.mutation.SetTimestamp(i)
+	return fu
+}
+
+// AddTimestamp adds i to the "timestamp" field.
+func (fu *FindingUpdate) AddTimestamp(i int64) *FindingUpdate {
+	fu.mutation.AddTimestamp(i)
 	return fu
 }
 
@@ -128,11 +134,18 @@ func (fu *FindingUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
-	if value, ok := fu.mutation.Time(); ok {
+	if value, ok := fu.mutation.Timestamp(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
+			Type:   field.TypeInt64,
 			Value:  value,
-			Column: finding.FieldTime,
+			Column: finding.FieldTimestamp,
+		})
+	}
+	if value, ok := fu.mutation.AddedTimestamp(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt64,
+			Value:  value,
+			Column: finding.FieldTimestamp,
 		})
 	}
 	if value, ok := fu.mutation.Source(); ok {
@@ -175,9 +188,16 @@ type FindingUpdateOne struct {
 	mutation *FindingMutation
 }
 
-// SetTime sets the "time" field.
-func (fuo *FindingUpdateOne) SetTime(t time.Time) *FindingUpdateOne {
-	fuo.mutation.SetTime(t)
+// SetTimestamp sets the "timestamp" field.
+func (fuo *FindingUpdateOne) SetTimestamp(i int64) *FindingUpdateOne {
+	fuo.mutation.ResetTimestamp()
+	fuo.mutation.SetTimestamp(i)
+	return fuo
+}
+
+// AddTimestamp adds i to the "timestamp" field.
+func (fuo *FindingUpdateOne) AddTimestamp(i int64) *FindingUpdateOne {
+	fuo.mutation.AddTimestamp(i)
 	return fuo
 }
 
@@ -300,11 +320,18 @@ func (fuo *FindingUpdateOne) sqlSave(ctx context.Context) (_node *Finding, err e
 			}
 		}
 	}
-	if value, ok := fuo.mutation.Time(); ok {
+	if value, ok := fuo.mutation.Timestamp(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
+			Type:   field.TypeInt64,
 			Value:  value,
-			Column: finding.FieldTime,
+			Column: finding.FieldTimestamp,
+		})
+	}
+	if value, ok := fuo.mutation.AddedTimestamp(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt64,
+			Value:  value,
+			Column: finding.FieldTimestamp,
 		})
 	}
 	if value, ok := fuo.mutation.Source(); ok {
