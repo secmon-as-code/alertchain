@@ -22,6 +22,19 @@ func (f AlertFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error
 	return f(ctx, mv)
 }
 
+// The AnnotationFunc type is an adapter to allow the use of ordinary
+// function as Annotation mutator.
+type AnnotationFunc func(context.Context, *ent.AnnotationMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f AnnotationFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.AnnotationMutation)
+	if !ok {
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AnnotationMutation", m)
+	}
+	return f(ctx, mv)
+}
+
 // The AttributeFunc type is an adapter to allow the use of ordinary
 // function as Attribute mutator.
 type AttributeFunc func(context.Context, *ent.AttributeMutation) (ent.Value, error)
@@ -31,19 +44,6 @@ func (f AttributeFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, e
 	mv, ok := m.(*ent.AttributeMutation)
 	if !ok {
 		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AttributeMutation", m)
-	}
-	return f(ctx, mv)
-}
-
-// The FindingFunc type is an adapter to allow the use of ordinary
-// function as Finding mutator.
-type FindingFunc func(context.Context, *ent.FindingMutation) (ent.Value, error)
-
-// Mutate calls f(ctx, m).
-func (f FindingFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	mv, ok := m.(*ent.FindingMutation)
-	if !ok {
-		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.FindingMutation", m)
 	}
 	return f(ctx, mv)
 }

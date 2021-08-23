@@ -7,11 +7,11 @@ import (
 	"strings"
 
 	"entgo.io/ent/dialect/sql"
-	"github.com/m-mizutani/alertchain/pkg/infra/ent/finding"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/annotation"
 )
 
-// Finding is the model entity for the Finding schema.
-type Finding struct {
+// Annotation is the model entity for the Annotation schema.
+type Annotation struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
@@ -22,118 +22,118 @@ type Finding struct {
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// Value holds the value of the "value" field.
-	Value              string `json:"value,omitempty"`
-	attribute_findings *int
+	Value                 string `json:"value,omitempty"`
+	attribute_annotations *int
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
-func (*Finding) scanValues(columns []string) ([]interface{}, error) {
+func (*Annotation) scanValues(columns []string) ([]interface{}, error) {
 	values := make([]interface{}, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case finding.FieldID, finding.FieldTimestamp:
+		case annotation.FieldID, annotation.FieldTimestamp:
 			values[i] = new(sql.NullInt64)
-		case finding.FieldSource, finding.FieldName, finding.FieldValue:
+		case annotation.FieldSource, annotation.FieldName, annotation.FieldValue:
 			values[i] = new(sql.NullString)
-		case finding.ForeignKeys[0]: // attribute_findings
+		case annotation.ForeignKeys[0]: // attribute_annotations
 			values[i] = new(sql.NullInt64)
 		default:
-			return nil, fmt.Errorf("unexpected column %q for type Finding", columns[i])
+			return nil, fmt.Errorf("unexpected column %q for type Annotation", columns[i])
 		}
 	}
 	return values, nil
 }
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
-// to the Finding fields.
-func (f *Finding) assignValues(columns []string, values []interface{}) error {
+// to the Annotation fields.
+func (a *Annotation) assignValues(columns []string, values []interface{}) error {
 	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
 	for i := range columns {
 		switch columns[i] {
-		case finding.FieldID:
+		case annotation.FieldID:
 			value, ok := values[i].(*sql.NullInt64)
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			f.ID = int(value.Int64)
-		case finding.FieldTimestamp:
+			a.ID = int(value.Int64)
+		case annotation.FieldTimestamp:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field timestamp", values[i])
 			} else if value.Valid {
-				f.Timestamp = value.Int64
+				a.Timestamp = value.Int64
 			}
-		case finding.FieldSource:
+		case annotation.FieldSource:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field source", values[i])
 			} else if value.Valid {
-				f.Source = value.String
+				a.Source = value.String
 			}
-		case finding.FieldName:
+		case annotation.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
-				f.Name = value.String
+				a.Name = value.String
 			}
-		case finding.FieldValue:
+		case annotation.FieldValue:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field value", values[i])
 			} else if value.Valid {
-				f.Value = value.String
+				a.Value = value.String
 			}
-		case finding.ForeignKeys[0]:
+		case annotation.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field attribute_findings", value)
+				return fmt.Errorf("unexpected type %T for edge-field attribute_annotations", value)
 			} else if value.Valid {
-				f.attribute_findings = new(int)
-				*f.attribute_findings = int(value.Int64)
+				a.attribute_annotations = new(int)
+				*a.attribute_annotations = int(value.Int64)
 			}
 		}
 	}
 	return nil
 }
 
-// Update returns a builder for updating this Finding.
-// Note that you need to call Finding.Unwrap() before calling this method if this Finding
+// Update returns a builder for updating this Annotation.
+// Note that you need to call Annotation.Unwrap() before calling this method if this Annotation
 // was returned from a transaction, and the transaction was committed or rolled back.
-func (f *Finding) Update() *FindingUpdateOne {
-	return (&FindingClient{config: f.config}).UpdateOne(f)
+func (a *Annotation) Update() *AnnotationUpdateOne {
+	return (&AnnotationClient{config: a.config}).UpdateOne(a)
 }
 
-// Unwrap unwraps the Finding entity that was returned from a transaction after it was closed,
+// Unwrap unwraps the Annotation entity that was returned from a transaction after it was closed,
 // so that all future queries will be executed through the driver which created the transaction.
-func (f *Finding) Unwrap() *Finding {
-	tx, ok := f.config.driver.(*txDriver)
+func (a *Annotation) Unwrap() *Annotation {
+	tx, ok := a.config.driver.(*txDriver)
 	if !ok {
-		panic("ent: Finding is not a transactional entity")
+		panic("ent: Annotation is not a transactional entity")
 	}
-	f.config.driver = tx.drv
-	return f
+	a.config.driver = tx.drv
+	return a
 }
 
 // String implements the fmt.Stringer.
-func (f *Finding) String() string {
+func (a *Annotation) String() string {
 	var builder strings.Builder
-	builder.WriteString("Finding(")
-	builder.WriteString(fmt.Sprintf("id=%v", f.ID))
+	builder.WriteString("Annotation(")
+	builder.WriteString(fmt.Sprintf("id=%v", a.ID))
 	builder.WriteString(", timestamp=")
-	builder.WriteString(fmt.Sprintf("%v", f.Timestamp))
+	builder.WriteString(fmt.Sprintf("%v", a.Timestamp))
 	builder.WriteString(", source=")
-	builder.WriteString(f.Source)
+	builder.WriteString(a.Source)
 	builder.WriteString(", name=")
-	builder.WriteString(f.Name)
+	builder.WriteString(a.Name)
 	builder.WriteString(", value=")
-	builder.WriteString(f.Value)
+	builder.WriteString(a.Value)
 	builder.WriteByte(')')
 	return builder.String()
 }
 
-// Findings is a parsable slice of Finding.
-type Findings []*Finding
+// Annotations is a parsable slice of Annotation.
+type Annotations []*Annotation
 
-func (f Findings) config(cfg config) {
-	for _i := range f {
-		f[_i].config = cfg
+func (a Annotations) config(cfg config) {
+	for _i := range a {
+		a[_i].config = cfg
 	}
 }

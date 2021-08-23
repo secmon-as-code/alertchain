@@ -9,80 +9,80 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/m-mizutani/alertchain/pkg/infra/ent/finding"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/annotation"
 )
 
-// FindingCreate is the builder for creating a Finding entity.
-type FindingCreate struct {
+// AnnotationCreate is the builder for creating a Annotation entity.
+type AnnotationCreate struct {
 	config
-	mutation *FindingMutation
+	mutation *AnnotationMutation
 	hooks    []Hook
 }
 
 // SetTimestamp sets the "timestamp" field.
-func (fc *FindingCreate) SetTimestamp(i int64) *FindingCreate {
-	fc.mutation.SetTimestamp(i)
-	return fc
+func (ac *AnnotationCreate) SetTimestamp(i int64) *AnnotationCreate {
+	ac.mutation.SetTimestamp(i)
+	return ac
 }
 
 // SetSource sets the "source" field.
-func (fc *FindingCreate) SetSource(s string) *FindingCreate {
-	fc.mutation.SetSource(s)
-	return fc
+func (ac *AnnotationCreate) SetSource(s string) *AnnotationCreate {
+	ac.mutation.SetSource(s)
+	return ac
 }
 
 // SetName sets the "name" field.
-func (fc *FindingCreate) SetName(s string) *FindingCreate {
-	fc.mutation.SetName(s)
-	return fc
+func (ac *AnnotationCreate) SetName(s string) *AnnotationCreate {
+	ac.mutation.SetName(s)
+	return ac
 }
 
 // SetValue sets the "value" field.
-func (fc *FindingCreate) SetValue(s string) *FindingCreate {
-	fc.mutation.SetValue(s)
-	return fc
+func (ac *AnnotationCreate) SetValue(s string) *AnnotationCreate {
+	ac.mutation.SetValue(s)
+	return ac
 }
 
-// Mutation returns the FindingMutation object of the builder.
-func (fc *FindingCreate) Mutation() *FindingMutation {
-	return fc.mutation
+// Mutation returns the AnnotationMutation object of the builder.
+func (ac *AnnotationCreate) Mutation() *AnnotationMutation {
+	return ac.mutation
 }
 
-// Save creates the Finding in the database.
-func (fc *FindingCreate) Save(ctx context.Context) (*Finding, error) {
+// Save creates the Annotation in the database.
+func (ac *AnnotationCreate) Save(ctx context.Context) (*Annotation, error) {
 	var (
 		err  error
-		node *Finding
+		node *Annotation
 	)
-	if len(fc.hooks) == 0 {
-		if err = fc.check(); err != nil {
+	if len(ac.hooks) == 0 {
+		if err = ac.check(); err != nil {
 			return nil, err
 		}
-		node, err = fc.sqlSave(ctx)
+		node, err = ac.sqlSave(ctx)
 	} else {
 		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
-			mutation, ok := m.(*FindingMutation)
+			mutation, ok := m.(*AnnotationMutation)
 			if !ok {
 				return nil, fmt.Errorf("unexpected mutation type %T", m)
 			}
-			if err = fc.check(); err != nil {
+			if err = ac.check(); err != nil {
 				return nil, err
 			}
-			fc.mutation = mutation
-			if node, err = fc.sqlSave(ctx); err != nil {
+			ac.mutation = mutation
+			if node, err = ac.sqlSave(ctx); err != nil {
 				return nil, err
 			}
 			mutation.id = &node.ID
 			mutation.done = true
 			return node, err
 		})
-		for i := len(fc.hooks) - 1; i >= 0; i-- {
-			if fc.hooks[i] == nil {
+		for i := len(ac.hooks) - 1; i >= 0; i-- {
+			if ac.hooks[i] == nil {
 				return nil, fmt.Errorf("ent: uninitialized hook (forgotten import ent/runtime?)")
 			}
-			mut = fc.hooks[i](mut)
+			mut = ac.hooks[i](mut)
 		}
-		if _, err := mut.Mutate(ctx, fc.mutation); err != nil {
+		if _, err := mut.Mutate(ctx, ac.mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -90,8 +90,8 @@ func (fc *FindingCreate) Save(ctx context.Context) (*Finding, error) {
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (fc *FindingCreate) SaveX(ctx context.Context) *Finding {
-	v, err := fc.Save(ctx)
+func (ac *AnnotationCreate) SaveX(ctx context.Context) *Annotation {
+	v, err := ac.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -99,38 +99,38 @@ func (fc *FindingCreate) SaveX(ctx context.Context) *Finding {
 }
 
 // Exec executes the query.
-func (fc *FindingCreate) Exec(ctx context.Context) error {
-	_, err := fc.Save(ctx)
+func (ac *AnnotationCreate) Exec(ctx context.Context) error {
+	_, err := ac.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (fc *FindingCreate) ExecX(ctx context.Context) {
-	if err := fc.Exec(ctx); err != nil {
+func (ac *AnnotationCreate) ExecX(ctx context.Context) {
+	if err := ac.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (fc *FindingCreate) check() error {
-	if _, ok := fc.mutation.Timestamp(); !ok {
+func (ac *AnnotationCreate) check() error {
+	if _, ok := ac.mutation.Timestamp(); !ok {
 		return &ValidationError{Name: "timestamp", err: errors.New(`ent: missing required field "timestamp"`)}
 	}
-	if _, ok := fc.mutation.Source(); !ok {
+	if _, ok := ac.mutation.Source(); !ok {
 		return &ValidationError{Name: "source", err: errors.New(`ent: missing required field "source"`)}
 	}
-	if _, ok := fc.mutation.Name(); !ok {
+	if _, ok := ac.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "name"`)}
 	}
-	if _, ok := fc.mutation.Value(); !ok {
+	if _, ok := ac.mutation.Value(); !ok {
 		return &ValidationError{Name: "value", err: errors.New(`ent: missing required field "value"`)}
 	}
 	return nil
 }
 
-func (fc *FindingCreate) sqlSave(ctx context.Context) (*Finding, error) {
-	_node, _spec := fc.createSpec()
-	if err := sqlgraph.CreateNode(ctx, fc.driver, _spec); err != nil {
+func (ac *AnnotationCreate) sqlSave(ctx context.Context) (*Annotation, error) {
+	_node, _spec := ac.createSpec()
+	if err := sqlgraph.CreateNode(ctx, ac.driver, _spec); err != nil {
 		if sqlgraph.IsConstraintError(err) {
 			err = &ConstraintError{err.Error(), err}
 		}
@@ -141,68 +141,68 @@ func (fc *FindingCreate) sqlSave(ctx context.Context) (*Finding, error) {
 	return _node, nil
 }
 
-func (fc *FindingCreate) createSpec() (*Finding, *sqlgraph.CreateSpec) {
+func (ac *AnnotationCreate) createSpec() (*Annotation, *sqlgraph.CreateSpec) {
 	var (
-		_node = &Finding{config: fc.config}
+		_node = &Annotation{config: ac.config}
 		_spec = &sqlgraph.CreateSpec{
-			Table: finding.Table,
+			Table: annotation.Table,
 			ID: &sqlgraph.FieldSpec{
 				Type:   field.TypeInt,
-				Column: finding.FieldID,
+				Column: annotation.FieldID,
 			},
 		}
 	)
-	if value, ok := fc.mutation.Timestamp(); ok {
+	if value, ok := ac.mutation.Timestamp(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt64,
 			Value:  value,
-			Column: finding.FieldTimestamp,
+			Column: annotation.FieldTimestamp,
 		})
 		_node.Timestamp = value
 	}
-	if value, ok := fc.mutation.Source(); ok {
+	if value, ok := ac.mutation.Source(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: finding.FieldSource,
+			Column: annotation.FieldSource,
 		})
 		_node.Source = value
 	}
-	if value, ok := fc.mutation.Name(); ok {
+	if value, ok := ac.mutation.Name(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: finding.FieldName,
+			Column: annotation.FieldName,
 		})
 		_node.Name = value
 	}
-	if value, ok := fc.mutation.Value(); ok {
+	if value, ok := ac.mutation.Value(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: finding.FieldValue,
+			Column: annotation.FieldValue,
 		})
 		_node.Value = value
 	}
 	return _node, _spec
 }
 
-// FindingCreateBulk is the builder for creating many Finding entities in bulk.
-type FindingCreateBulk struct {
+// AnnotationCreateBulk is the builder for creating many Annotation entities in bulk.
+type AnnotationCreateBulk struct {
 	config
-	builders []*FindingCreate
+	builders []*AnnotationCreate
 }
 
-// Save creates the Finding entities in the database.
-func (fcb *FindingCreateBulk) Save(ctx context.Context) ([]*Finding, error) {
-	specs := make([]*sqlgraph.CreateSpec, len(fcb.builders))
-	nodes := make([]*Finding, len(fcb.builders))
-	mutators := make([]Mutator, len(fcb.builders))
-	for i := range fcb.builders {
+// Save creates the Annotation entities in the database.
+func (acb *AnnotationCreateBulk) Save(ctx context.Context) ([]*Annotation, error) {
+	specs := make([]*sqlgraph.CreateSpec, len(acb.builders))
+	nodes := make([]*Annotation, len(acb.builders))
+	mutators := make([]Mutator, len(acb.builders))
+	for i := range acb.builders {
 		func(i int, root context.Context) {
-			builder := fcb.builders[i]
+			builder := acb.builders[i]
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
-				mutation, ok := m.(*FindingMutation)
+				mutation, ok := m.(*AnnotationMutation)
 				if !ok {
 					return nil, fmt.Errorf("unexpected mutation type %T", m)
 				}
@@ -213,11 +213,11 @@ func (fcb *FindingCreateBulk) Save(ctx context.Context) ([]*Finding, error) {
 				nodes[i], specs[i] = builder.createSpec()
 				var err error
 				if i < len(mutators)-1 {
-					_, err = mutators[i+1].Mutate(root, fcb.builders[i+1].mutation)
+					_, err = mutators[i+1].Mutate(root, acb.builders[i+1].mutation)
 				} else {
 					spec := &sqlgraph.BatchCreateSpec{Nodes: specs}
 					// Invoke the actual operation on the latest mutation in the chain.
-					if err = sqlgraph.BatchCreate(ctx, fcb.driver, spec); err != nil {
+					if err = sqlgraph.BatchCreate(ctx, acb.driver, spec); err != nil {
 						if sqlgraph.IsConstraintError(err) {
 							err = &ConstraintError{err.Error(), err}
 						}
@@ -241,7 +241,7 @@ func (fcb *FindingCreateBulk) Save(ctx context.Context) ([]*Finding, error) {
 		}(i, ctx)
 	}
 	if len(mutators) > 0 {
-		if _, err := mutators[0].Mutate(ctx, fcb.builders[0].mutation); err != nil {
+		if _, err := mutators[0].Mutate(ctx, acb.builders[0].mutation); err != nil {
 			return nil, err
 		}
 	}
@@ -249,8 +249,8 @@ func (fcb *FindingCreateBulk) Save(ctx context.Context) ([]*Finding, error) {
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (fcb *FindingCreateBulk) SaveX(ctx context.Context) []*Finding {
-	v, err := fcb.Save(ctx)
+func (acb *AnnotationCreateBulk) SaveX(ctx context.Context) []*Annotation {
+	v, err := acb.Save(ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -258,14 +258,14 @@ func (fcb *FindingCreateBulk) SaveX(ctx context.Context) []*Finding {
 }
 
 // Exec executes the query.
-func (fcb *FindingCreateBulk) Exec(ctx context.Context) error {
-	_, err := fcb.Save(ctx)
+func (acb *AnnotationCreateBulk) Exec(ctx context.Context) error {
+	_, err := acb.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (fcb *FindingCreateBulk) ExecX(ctx context.Context) {
-	if err := fcb.Exec(ctx); err != nil {
+func (acb *AnnotationCreateBulk) ExecX(ctx context.Context) {
+	if err := acb.Exec(ctx); err != nil {
 		panic(err)
 	}
 }

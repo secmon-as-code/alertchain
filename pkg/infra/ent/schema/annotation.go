@@ -5,13 +5,13 @@ import (
 	"entgo.io/ent/schema/field"
 )
 
-// Finding holds the schema definition for the Finding entity.
-type Finding struct {
+// Annotation holds the schema definition for the Annotation entity.
+type Annotation struct {
 	ent.Schema
 }
 
-// Fields of the Finding.
-func (Finding) Fields() []ent.Field {
+// Fields of the Annotation.
+func (Annotation) Fields() []ent.Field {
 	return []ent.Field{
 		field.Int64("timestamp"),
 		field.String("source"),
@@ -20,7 +20,7 @@ func (Finding) Fields() []ent.Field {
 	}
 }
 
-// Edges of the Finding.
-func (Finding) Edges() []ent.Edge {
+// Edges of the Annotation.
+func (Annotation) Edges() []ent.Edge {
 	return nil
 }

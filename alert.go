@@ -72,15 +72,15 @@ func (x *Alert) Commit(ctx context.Context) error {
 		}
 
 		for _, attr := range x.Attributes {
-			if len(attr.newFindings) == 0 {
+			if len(attr.newAnnotations) == 0 {
 				continue
 			}
 
-			findings := make([]*ent.Finding, len(attr.newFindings))
-			for i, finding := range attr.newFindings {
-				findings[i] = &finding.Finding
+			annotations := make([]*ent.Annotation, len(attr.newAnnotations))
+			for i, ann := range attr.newAnnotations {
+				annotations[i] = &ann.Annotation
 			}
-			if err := x.db.AddFindings(ctx, &attr.Attribute, findings); err != nil {
+			if err := x.db.AddAnnotation(ctx, &attr.Attribute, annotations); err != nil {
 				return err
 			}
 		}

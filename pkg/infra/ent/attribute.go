@@ -33,20 +33,20 @@ type Attribute struct {
 
 // AttributeEdges holds the relations/edges for other nodes in the graph.
 type AttributeEdges struct {
-	// Findings holds the value of the findings edge.
-	Findings []*Finding `json:"findings,omitempty"`
+	// Annotations holds the value of the annotations edge.
+	Annotations []*Annotation `json:"annotations,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
 	loadedTypes [1]bool
 }
 
-// FindingsOrErr returns the Findings value or an error if the edge
+// AnnotationsOrErr returns the Annotations value or an error if the edge
 // was not loaded in eager-loading.
-func (e AttributeEdges) FindingsOrErr() ([]*Finding, error) {
+func (e AttributeEdges) AnnotationsOrErr() ([]*Annotation, error) {
 	if e.loadedTypes[0] {
-		return e.Findings, nil
+		return e.Annotations, nil
 	}
-	return nil, &NotLoadedError{edge: "findings"}
+	return nil, &NotLoadedError{edge: "annotations"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -121,9 +121,9 @@ func (a *Attribute) assignValues(columns []string, values []interface{}) error {
 	return nil
 }
 
-// QueryFindings queries the "findings" edge of the Attribute entity.
-func (a *Attribute) QueryFindings() *FindingQuery {
-	return (&AttributeClient{config: a.config}).QueryFindings(a)
+// QueryAnnotations queries the "annotations" edge of the Attribute entity.
+func (a *Attribute) QueryAnnotations() *AnnotationQuery {
+	return (&AttributeClient{config: a.config}).QueryAnnotations(a)
 }
 
 // Update returns a builder for updating this Attribute.

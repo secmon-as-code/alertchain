@@ -14,10 +14,10 @@ type Tx struct {
 	config
 	// Alert is the client for interacting with the Alert builders.
 	Alert *AlertClient
+	// Annotation is the client for interacting with the Annotation builders.
+	Annotation *AnnotationClient
 	// Attribute is the client for interacting with the Attribute builders.
 	Attribute *AttributeClient
-	// Finding is the client for interacting with the Finding builders.
-	Finding *FindingClient
 
 	// lazily loaded.
 	client     *Client
@@ -154,8 +154,8 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.Alert = NewAlertClient(tx.config)
+	tx.Annotation = NewAnnotationClient(tx.config)
 	tx.Attribute = NewAttributeClient(tx.config)
-	tx.Finding = NewFindingClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

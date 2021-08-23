@@ -9,8 +9,8 @@ import (
 // Alert is the predicate function for alert builders.
 type Alert func(*sql.Selector)
 
+// Annotation is the predicate function for annotation builders.
+type Annotation func(*sql.Selector)
+
 // Attribute is the predicate function for attribute builders.
 type Attribute func(*sql.Selector)
-
-// Finding is the predicate function for finding builders.
-type Finding func(*sql.Selector)

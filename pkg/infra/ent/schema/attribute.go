@@ -25,6 +25,6 @@ func (Attribute) Fields() []ent.Field {
 // Edges of the Attribute.
 func (Attribute) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("findings", Finding.Type),
+		edge.To("annotations", Annotation.Type),
 	}
 }

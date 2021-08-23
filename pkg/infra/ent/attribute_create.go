@@ -9,8 +9,8 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/annotation"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/attribute"
-	"github.com/m-mizutani/alertchain/pkg/infra/ent/finding"
 	"github.com/m-mizutani/alertchain/types"
 )
 
@@ -45,19 +45,19 @@ func (ac *AttributeCreate) SetContext(s []string) *AttributeCreate {
 	return ac
 }
 
-// AddFindingIDs adds the "findings" edge to the Finding entity by IDs.
-func (ac *AttributeCreate) AddFindingIDs(ids ...int) *AttributeCreate {
-	ac.mutation.AddFindingIDs(ids...)
+// AddAnnotationIDs adds the "annotations" edge to the Annotation entity by IDs.
+func (ac *AttributeCreate) AddAnnotationIDs(ids ...int) *AttributeCreate {
+	ac.mutation.AddAnnotationIDs(ids...)
 	return ac
 }
 
-// AddFindings adds the "findings" edges to the Finding entity.
-func (ac *AttributeCreate) AddFindings(f ...*Finding) *AttributeCreate {
-	ids := make([]int, len(f))
-	for i := range f {
-		ids[i] = f[i].ID
+// AddAnnotations adds the "annotations" edges to the Annotation entity.
+func (ac *AttributeCreate) AddAnnotations(a ...*Annotation) *AttributeCreate {
+	ids := make([]int, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
 	}
-	return ac.AddFindingIDs(ids...)
+	return ac.AddAnnotationIDs(ids...)
 }
 
 // Mutation returns the AttributeMutation object of the builder.
@@ -201,17 +201,17 @@ func (ac *AttributeCreate) createSpec() (*Attribute, *sqlgraph.CreateSpec) {
 		})
 		_node.Context = value
 	}
-	if nodes := ac.mutation.FindingsIDs(); len(nodes) > 0 {
+	if nodes := ac.mutation.AnnotationsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   attribute.FindingsTable,
-			Columns: []string{attribute.FindingsColumn},
+			Table:   attribute.AnnotationsTable,
+			Columns: []string{attribute.AnnotationsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: finding.FieldID,
+					Column: annotation.FieldID,
 				},
 			},
 		}

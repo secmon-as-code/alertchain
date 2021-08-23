@@ -8,8 +8,8 @@ import (
 	"sync"
 
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/alert"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/annotation"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/attribute"
-	"github.com/m-mizutani/alertchain/pkg/infra/ent/finding"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/predicate"
 	"github.com/m-mizutani/alertchain/types"
 
@@ -25,9 +25,9 @@ const (
 	OpUpdateOne = ent.OpUpdateOne
 
 	// Node types.
-	TypeAlert     = "Alert"
-	TypeAttribute = "Attribute"
-	TypeFinding   = "Finding"
+	TypeAlert      = "Alert"
+	TypeAnnotation = "Annotation"
+	TypeAttribute  = "Attribute"
 )
 
 // AlertMutation represents an operation that mutates the Alert nodes in the graph.
@@ -1020,23 +1020,513 @@ func (m *AlertMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown Alert edge %s", name)
 }
 
+// AnnotationMutation represents an operation that mutates the Annotation nodes in the graph.
+type AnnotationMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *int
+	timestamp     *int64
+	addtimestamp  *int64
+	source        *string
+	name          *string
+	value         *string
+	clearedFields map[string]struct{}
+	done          bool
+	oldValue      func(context.Context) (*Annotation, error)
+	predicates    []predicate.Annotation
+}
+
+var _ ent.Mutation = (*AnnotationMutation)(nil)
+
+// annotationOption allows management of the mutation configuration using functional options.
+type annotationOption func(*AnnotationMutation)
+
+// newAnnotationMutation creates new mutation for the Annotation entity.
+func newAnnotationMutation(c config, op Op, opts ...annotationOption) *AnnotationMutation {
+	m := &AnnotationMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeAnnotation,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withAnnotationID sets the ID field of the mutation.
+func withAnnotationID(id int) annotationOption {
+	return func(m *AnnotationMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Annotation
+		)
+		m.oldValue = func(ctx context.Context) (*Annotation, error) {
+			once.Do(func() {
+				if m.done {
+					err = fmt.Errorf("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Annotation.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withAnnotation sets the old Annotation of the mutation.
+func withAnnotation(node *Annotation) annotationOption {
+	return func(m *AnnotationMutation) {
+		m.oldValue = func(context.Context) (*Annotation, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m AnnotationMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m AnnotationMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, fmt.Errorf("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *AnnotationMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// SetTimestamp sets the "timestamp" field.
+func (m *AnnotationMutation) SetTimestamp(i int64) {
+	m.timestamp = &i
+	m.addtimestamp = nil
+}
+
+// Timestamp returns the value of the "timestamp" field in the mutation.
+func (m *AnnotationMutation) Timestamp() (r int64, exists bool) {
+	v := m.timestamp
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTimestamp returns the old "timestamp" field's value of the Annotation entity.
+// If the Annotation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AnnotationMutation) OldTimestamp(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldTimestamp is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldTimestamp requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTimestamp: %w", err)
+	}
+	return oldValue.Timestamp, nil
+}
+
+// AddTimestamp adds i to the "timestamp" field.
+func (m *AnnotationMutation) AddTimestamp(i int64) {
+	if m.addtimestamp != nil {
+		*m.addtimestamp += i
+	} else {
+		m.addtimestamp = &i
+	}
+}
+
+// AddedTimestamp returns the value that was added to the "timestamp" field in this mutation.
+func (m *AnnotationMutation) AddedTimestamp() (r int64, exists bool) {
+	v := m.addtimestamp
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetTimestamp resets all changes to the "timestamp" field.
+func (m *AnnotationMutation) ResetTimestamp() {
+	m.timestamp = nil
+	m.addtimestamp = nil
+}
+
+// SetSource sets the "source" field.
+func (m *AnnotationMutation) SetSource(s string) {
+	m.source = &s
+}
+
+// Source returns the value of the "source" field in the mutation.
+func (m *AnnotationMutation) Source() (r string, exists bool) {
+	v := m.source
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSource returns the old "source" field's value of the Annotation entity.
+// If the Annotation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AnnotationMutation) OldSource(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldSource is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldSource requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSource: %w", err)
+	}
+	return oldValue.Source, nil
+}
+
+// ResetSource resets all changes to the "source" field.
+func (m *AnnotationMutation) ResetSource() {
+	m.source = nil
+}
+
+// SetName sets the "name" field.
+func (m *AnnotationMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *AnnotationMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the Annotation entity.
+// If the Annotation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AnnotationMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *AnnotationMutation) ResetName() {
+	m.name = nil
+}
+
+// SetValue sets the "value" field.
+func (m *AnnotationMutation) SetValue(s string) {
+	m.value = &s
+}
+
+// Value returns the value of the "value" field in the mutation.
+func (m *AnnotationMutation) Value() (r string, exists bool) {
+	v := m.value
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldValue returns the old "value" field's value of the Annotation entity.
+// If the Annotation object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AnnotationMutation) OldValue(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldValue is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldValue requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldValue: %w", err)
+	}
+	return oldValue.Value, nil
+}
+
+// ResetValue resets all changes to the "value" field.
+func (m *AnnotationMutation) ResetValue() {
+	m.value = nil
+}
+
+// Where appends a list predicates to the AnnotationMutation builder.
+func (m *AnnotationMutation) Where(ps ...predicate.Annotation) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// Op returns the operation name.
+func (m *AnnotationMutation) Op() Op {
+	return m.op
+}
+
+// Type returns the node type of this mutation (Annotation).
+func (m *AnnotationMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *AnnotationMutation) Fields() []string {
+	fields := make([]string, 0, 4)
+	if m.timestamp != nil {
+		fields = append(fields, annotation.FieldTimestamp)
+	}
+	if m.source != nil {
+		fields = append(fields, annotation.FieldSource)
+	}
+	if m.name != nil {
+		fields = append(fields, annotation.FieldName)
+	}
+	if m.value != nil {
+		fields = append(fields, annotation.FieldValue)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *AnnotationMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case annotation.FieldTimestamp:
+		return m.Timestamp()
+	case annotation.FieldSource:
+		return m.Source()
+	case annotation.FieldName:
+		return m.Name()
+	case annotation.FieldValue:
+		return m.Value()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *AnnotationMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case annotation.FieldTimestamp:
+		return m.OldTimestamp(ctx)
+	case annotation.FieldSource:
+		return m.OldSource(ctx)
+	case annotation.FieldName:
+		return m.OldName(ctx)
+	case annotation.FieldValue:
+		return m.OldValue(ctx)
+	}
+	return nil, fmt.Errorf("unknown Annotation field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *AnnotationMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case annotation.FieldTimestamp:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTimestamp(v)
+		return nil
+	case annotation.FieldSource:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSource(v)
+		return nil
+	case annotation.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case annotation.FieldValue:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetValue(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Annotation field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *AnnotationMutation) AddedFields() []string {
+	var fields []string
+	if m.addtimestamp != nil {
+		fields = append(fields, annotation.FieldTimestamp)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *AnnotationMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case annotation.FieldTimestamp:
+		return m.AddedTimestamp()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *AnnotationMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case annotation.FieldTimestamp:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTimestamp(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Annotation numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *AnnotationMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *AnnotationMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *AnnotationMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown Annotation nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *AnnotationMutation) ResetField(name string) error {
+	switch name {
+	case annotation.FieldTimestamp:
+		m.ResetTimestamp()
+		return nil
+	case annotation.FieldSource:
+		m.ResetSource()
+		return nil
+	case annotation.FieldName:
+		m.ResetName()
+		return nil
+	case annotation.FieldValue:
+		m.ResetValue()
+		return nil
+	}
+	return fmt.Errorf("unknown Annotation field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *AnnotationMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *AnnotationMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *AnnotationMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *AnnotationMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *AnnotationMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *AnnotationMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *AnnotationMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown Annotation unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *AnnotationMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown Annotation edge %s", name)
+}
+
 // AttributeMutation represents an operation that mutates the Attribute nodes in the graph.
 type AttributeMutation struct {
 	config
-	op              Op
-	typ             string
-	id              *int
-	key             *string
-	value           *string
-	_type           *types.AttrType
-	context         *[]string
-	clearedFields   map[string]struct{}
-	findings        map[int]struct{}
-	removedfindings map[int]struct{}
-	clearedfindings bool
-	done            bool
-	oldValue        func(context.Context) (*Attribute, error)
-	predicates      []predicate.Attribute
+	op                 Op
+	typ                string
+	id                 *int
+	key                *string
+	value              *string
+	_type              *types.AttrType
+	context            *[]string
+	clearedFields      map[string]struct{}
+	annotations        map[int]struct{}
+	removedannotations map[int]struct{}
+	clearedannotations bool
+	done               bool
+	oldValue           func(context.Context) (*Attribute, error)
+	predicates         []predicate.Attribute
 }
 
 var _ ent.Mutation = (*AttributeMutation)(nil)
@@ -1262,58 +1752,58 @@ func (m *AttributeMutation) ResetContext() {
 	m.context = nil
 }
 
-// AddFindingIDs adds the "findings" edge to the Finding entity by ids.
-func (m *AttributeMutation) AddFindingIDs(ids ...int) {
-	if m.findings == nil {
-		m.findings = make(map[int]struct{})
+// AddAnnotationIDs adds the "annotations" edge to the Annotation entity by ids.
+func (m *AttributeMutation) AddAnnotationIDs(ids ...int) {
+	if m.annotations == nil {
+		m.annotations = make(map[int]struct{})
 	}
 	for i := range ids {
-		m.findings[ids[i]] = struct{}{}
+		m.annotations[ids[i]] = struct{}{}
 	}
 }
 
-// ClearFindings clears the "findings" edge to the Finding entity.
-func (m *AttributeMutation) ClearFindings() {
-	m.clearedfindings = true
+// ClearAnnotations clears the "annotations" edge to the Annotation entity.
+func (m *AttributeMutation) ClearAnnotations() {
+	m.clearedannotations = true
 }
 
-// FindingsCleared reports if the "findings" edge to the Finding entity was cleared.
-func (m *AttributeMutation) FindingsCleared() bool {
-	return m.clearedfindings
+// AnnotationsCleared reports if the "annotations" edge to the Annotation entity was cleared.
+func (m *AttributeMutation) AnnotationsCleared() bool {
+	return m.clearedannotations
 }
 
-// RemoveFindingIDs removes the "findings" edge to the Finding entity by IDs.
-func (m *AttributeMutation) RemoveFindingIDs(ids ...int) {
-	if m.removedfindings == nil {
-		m.removedfindings = make(map[int]struct{})
+// RemoveAnnotationIDs removes the "annotations" edge to the Annotation entity by IDs.
+func (m *AttributeMutation) RemoveAnnotationIDs(ids ...int) {
+	if m.removedannotations == nil {
+		m.removedannotations = make(map[int]struct{})
 	}
 	for i := range ids {
-		delete(m.findings, ids[i])
-		m.removedfindings[ids[i]] = struct{}{}
+		delete(m.annotations, ids[i])
+		m.removedannotations[ids[i]] = struct{}{}
 	}
 }
 
-// RemovedFindings returns the removed IDs of the "findings" edge to the Finding entity.
-func (m *AttributeMutation) RemovedFindingsIDs() (ids []int) {
-	for id := range m.removedfindings {
+// RemovedAnnotations returns the removed IDs of the "annotations" edge to the Annotation entity.
+func (m *AttributeMutation) RemovedAnnotationsIDs() (ids []int) {
+	for id := range m.removedannotations {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// FindingsIDs returns the "findings" edge IDs in the mutation.
-func (m *AttributeMutation) FindingsIDs() (ids []int) {
-	for id := range m.findings {
+// AnnotationsIDs returns the "annotations" edge IDs in the mutation.
+func (m *AttributeMutation) AnnotationsIDs() (ids []int) {
+	for id := range m.annotations {
 		ids = append(ids, id)
 	}
 	return
 }
 
-// ResetFindings resets all changes to the "findings" edge.
-func (m *AttributeMutation) ResetFindings() {
-	m.findings = nil
-	m.clearedfindings = false
-	m.removedfindings = nil
+// ResetAnnotations resets all changes to the "annotations" edge.
+func (m *AttributeMutation) ResetAnnotations() {
+	m.annotations = nil
+	m.clearedannotations = false
+	m.removedannotations = nil
 }
 
 // Where appends a list predicates to the AttributeMutation builder.
@@ -1486,8 +1976,8 @@ func (m *AttributeMutation) ResetField(name string) error {
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *AttributeMutation) AddedEdges() []string {
 	edges := make([]string, 0, 1)
-	if m.findings != nil {
-		edges = append(edges, attribute.EdgeFindings)
+	if m.annotations != nil {
+		edges = append(edges, attribute.EdgeAnnotations)
 	}
 	return edges
 }
@@ -1496,9 +1986,9 @@ func (m *AttributeMutation) AddedEdges() []string {
 // name in this mutation.
 func (m *AttributeMutation) AddedIDs(name string) []ent.Value {
 	switch name {
-	case attribute.EdgeFindings:
-		ids := make([]ent.Value, 0, len(m.findings))
-		for id := range m.findings {
+	case attribute.EdgeAnnotations:
+		ids := make([]ent.Value, 0, len(m.annotations))
+		for id := range m.annotations {
 			ids = append(ids, id)
 		}
 		return ids
@@ -1509,8 +1999,8 @@ func (m *AttributeMutation) AddedIDs(name string) []ent.Value {
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *AttributeMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 1)
-	if m.removedfindings != nil {
-		edges = append(edges, attribute.EdgeFindings)
+	if m.removedannotations != nil {
+		edges = append(edges, attribute.EdgeAnnotations)
 	}
 	return edges
 }
@@ -1519,9 +2009,9 @@ func (m *AttributeMutation) RemovedEdges() []string {
 // the given name in this mutation.
 func (m *AttributeMutation) RemovedIDs(name string) []ent.Value {
 	switch name {
-	case attribute.EdgeFindings:
-		ids := make([]ent.Value, 0, len(m.removedfindings))
-		for id := range m.removedfindings {
+	case attribute.EdgeAnnotations:
+		ids := make([]ent.Value, 0, len(m.removedannotations))
+		for id := range m.removedannotations {
 			ids = append(ids, id)
 		}
 		return ids
@@ -1532,8 +2022,8 @@ func (m *AttributeMutation) RemovedIDs(name string) []ent.Value {
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *AttributeMutation) ClearedEdges() []string {
 	edges := make([]string, 0, 1)
-	if m.clearedfindings {
-		edges = append(edges, attribute.EdgeFindings)
+	if m.clearedannotations {
+		edges = append(edges, attribute.EdgeAnnotations)
 	}
 	return edges
 }
@@ -1542,8 +2032,8 @@ func (m *AttributeMutation) ClearedEdges() []string {
 // was cleared in this mutation.
 func (m *AttributeMutation) EdgeCleared(name string) bool {
 	switch name {
-	case attribute.EdgeFindings:
-		return m.clearedfindings
+	case attribute.EdgeAnnotations:
+		return m.clearedannotations
 	}
 	return false
 }
@@ -1560,499 +2050,9 @@ func (m *AttributeMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *AttributeMutation) ResetEdge(name string) error {
 	switch name {
-	case attribute.EdgeFindings:
-		m.ResetFindings()
+	case attribute.EdgeAnnotations:
+		m.ResetAnnotations()
 		return nil
 	}
 	return fmt.Errorf("unknown Attribute edge %s", name)
-}
-
-// FindingMutation represents an operation that mutates the Finding nodes in the graph.
-type FindingMutation struct {
-	config
-	op            Op
-	typ           string
-	id            *int
-	timestamp     *int64
-	addtimestamp  *int64
-	source        *string
-	name          *string
-	value         *string
-	clearedFields map[string]struct{}
-	done          bool
-	oldValue      func(context.Context) (*Finding, error)
-	predicates    []predicate.Finding
-}
-
-var _ ent.Mutation = (*FindingMutation)(nil)
-
-// findingOption allows management of the mutation configuration using functional options.
-type findingOption func(*FindingMutation)
-
-// newFindingMutation creates new mutation for the Finding entity.
-func newFindingMutation(c config, op Op, opts ...findingOption) *FindingMutation {
-	m := &FindingMutation{
-		config:        c,
-		op:            op,
-		typ:           TypeFinding,
-		clearedFields: make(map[string]struct{}),
-	}
-	for _, opt := range opts {
-		opt(m)
-	}
-	return m
-}
-
-// withFindingID sets the ID field of the mutation.
-func withFindingID(id int) findingOption {
-	return func(m *FindingMutation) {
-		var (
-			err   error
-			once  sync.Once
-			value *Finding
-		)
-		m.oldValue = func(ctx context.Context) (*Finding, error) {
-			once.Do(func() {
-				if m.done {
-					err = fmt.Errorf("querying old values post mutation is not allowed")
-				} else {
-					value, err = m.Client().Finding.Get(ctx, id)
-				}
-			})
-			return value, err
-		}
-		m.id = &id
-	}
-}
-
-// withFinding sets the old Finding of the mutation.
-func withFinding(node *Finding) findingOption {
-	return func(m *FindingMutation) {
-		m.oldValue = func(context.Context) (*Finding, error) {
-			return node, nil
-		}
-		m.id = &node.ID
-	}
-}
-
-// Client returns a new `ent.Client` from the mutation. If the mutation was
-// executed in a transaction (ent.Tx), a transactional client is returned.
-func (m FindingMutation) Client() *Client {
-	client := &Client{config: m.config}
-	client.init()
-	return client
-}
-
-// Tx returns an `ent.Tx` for mutations that were executed in transactions;
-// it returns an error otherwise.
-func (m FindingMutation) Tx() (*Tx, error) {
-	if _, ok := m.driver.(*txDriver); !ok {
-		return nil, fmt.Errorf("ent: mutation is not running in a transaction")
-	}
-	tx := &Tx{config: m.config}
-	tx.init()
-	return tx, nil
-}
-
-// ID returns the ID value in the mutation. Note that the ID is only available
-// if it was provided to the builder or after it was returned from the database.
-func (m *FindingMutation) ID() (id int, exists bool) {
-	if m.id == nil {
-		return
-	}
-	return *m.id, true
-}
-
-// SetTimestamp sets the "timestamp" field.
-func (m *FindingMutation) SetTimestamp(i int64) {
-	m.timestamp = &i
-	m.addtimestamp = nil
-}
-
-// Timestamp returns the value of the "timestamp" field in the mutation.
-func (m *FindingMutation) Timestamp() (r int64, exists bool) {
-	v := m.timestamp
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldTimestamp returns the old "timestamp" field's value of the Finding entity.
-// If the Finding object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *FindingMutation) OldTimestamp(ctx context.Context) (v int64, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldTimestamp is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldTimestamp requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldTimestamp: %w", err)
-	}
-	return oldValue.Timestamp, nil
-}
-
-// AddTimestamp adds i to the "timestamp" field.
-func (m *FindingMutation) AddTimestamp(i int64) {
-	if m.addtimestamp != nil {
-		*m.addtimestamp += i
-	} else {
-		m.addtimestamp = &i
-	}
-}
-
-// AddedTimestamp returns the value that was added to the "timestamp" field in this mutation.
-func (m *FindingMutation) AddedTimestamp() (r int64, exists bool) {
-	v := m.addtimestamp
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// ResetTimestamp resets all changes to the "timestamp" field.
-func (m *FindingMutation) ResetTimestamp() {
-	m.timestamp = nil
-	m.addtimestamp = nil
-}
-
-// SetSource sets the "source" field.
-func (m *FindingMutation) SetSource(s string) {
-	m.source = &s
-}
-
-// Source returns the value of the "source" field in the mutation.
-func (m *FindingMutation) Source() (r string, exists bool) {
-	v := m.source
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldSource returns the old "source" field's value of the Finding entity.
-// If the Finding object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *FindingMutation) OldSource(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldSource is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldSource requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldSource: %w", err)
-	}
-	return oldValue.Source, nil
-}
-
-// ResetSource resets all changes to the "source" field.
-func (m *FindingMutation) ResetSource() {
-	m.source = nil
-}
-
-// SetName sets the "name" field.
-func (m *FindingMutation) SetName(s string) {
-	m.name = &s
-}
-
-// Name returns the value of the "name" field in the mutation.
-func (m *FindingMutation) Name() (r string, exists bool) {
-	v := m.name
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldName returns the old "name" field's value of the Finding entity.
-// If the Finding object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *FindingMutation) OldName(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldName is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldName requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldName: %w", err)
-	}
-	return oldValue.Name, nil
-}
-
-// ResetName resets all changes to the "name" field.
-func (m *FindingMutation) ResetName() {
-	m.name = nil
-}
-
-// SetValue sets the "value" field.
-func (m *FindingMutation) SetValue(s string) {
-	m.value = &s
-}
-
-// Value returns the value of the "value" field in the mutation.
-func (m *FindingMutation) Value() (r string, exists bool) {
-	v := m.value
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldValue returns the old "value" field's value of the Finding entity.
-// If the Finding object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *FindingMutation) OldValue(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldValue is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldValue requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldValue: %w", err)
-	}
-	return oldValue.Value, nil
-}
-
-// ResetValue resets all changes to the "value" field.
-func (m *FindingMutation) ResetValue() {
-	m.value = nil
-}
-
-// Where appends a list predicates to the FindingMutation builder.
-func (m *FindingMutation) Where(ps ...predicate.Finding) {
-	m.predicates = append(m.predicates, ps...)
-}
-
-// Op returns the operation name.
-func (m *FindingMutation) Op() Op {
-	return m.op
-}
-
-// Type returns the node type of this mutation (Finding).
-func (m *FindingMutation) Type() string {
-	return m.typ
-}
-
-// Fields returns all fields that were changed during this mutation. Note that in
-// order to get all numeric fields that were incremented/decremented, call
-// AddedFields().
-func (m *FindingMutation) Fields() []string {
-	fields := make([]string, 0, 4)
-	if m.timestamp != nil {
-		fields = append(fields, finding.FieldTimestamp)
-	}
-	if m.source != nil {
-		fields = append(fields, finding.FieldSource)
-	}
-	if m.name != nil {
-		fields = append(fields, finding.FieldName)
-	}
-	if m.value != nil {
-		fields = append(fields, finding.FieldValue)
-	}
-	return fields
-}
-
-// Field returns the value of a field with the given name. The second boolean
-// return value indicates that this field was not set, or was not defined in the
-// schema.
-func (m *FindingMutation) Field(name string) (ent.Value, bool) {
-	switch name {
-	case finding.FieldTimestamp:
-		return m.Timestamp()
-	case finding.FieldSource:
-		return m.Source()
-	case finding.FieldName:
-		return m.Name()
-	case finding.FieldValue:
-		return m.Value()
-	}
-	return nil, false
-}
-
-// OldField returns the old value of the field from the database. An error is
-// returned if the mutation operation is not UpdateOne, or the query to the
-// database failed.
-func (m *FindingMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
-	switch name {
-	case finding.FieldTimestamp:
-		return m.OldTimestamp(ctx)
-	case finding.FieldSource:
-		return m.OldSource(ctx)
-	case finding.FieldName:
-		return m.OldName(ctx)
-	case finding.FieldValue:
-		return m.OldValue(ctx)
-	}
-	return nil, fmt.Errorf("unknown Finding field %s", name)
-}
-
-// SetField sets the value of a field with the given name. It returns an error if
-// the field is not defined in the schema, or if the type mismatched the field
-// type.
-func (m *FindingMutation) SetField(name string, value ent.Value) error {
-	switch name {
-	case finding.FieldTimestamp:
-		v, ok := value.(int64)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetTimestamp(v)
-		return nil
-	case finding.FieldSource:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetSource(v)
-		return nil
-	case finding.FieldName:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetName(v)
-		return nil
-	case finding.FieldValue:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetValue(v)
-		return nil
-	}
-	return fmt.Errorf("unknown Finding field %s", name)
-}
-
-// AddedFields returns all numeric fields that were incremented/decremented during
-// this mutation.
-func (m *FindingMutation) AddedFields() []string {
-	var fields []string
-	if m.addtimestamp != nil {
-		fields = append(fields, finding.FieldTimestamp)
-	}
-	return fields
-}
-
-// AddedField returns the numeric value that was incremented/decremented on a field
-// with the given name. The second boolean return value indicates that this field
-// was not set, or was not defined in the schema.
-func (m *FindingMutation) AddedField(name string) (ent.Value, bool) {
-	switch name {
-	case finding.FieldTimestamp:
-		return m.AddedTimestamp()
-	}
-	return nil, false
-}
-
-// AddField adds the value to the field with the given name. It returns an error if
-// the field is not defined in the schema, or if the type mismatched the field
-// type.
-func (m *FindingMutation) AddField(name string, value ent.Value) error {
-	switch name {
-	case finding.FieldTimestamp:
-		v, ok := value.(int64)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.AddTimestamp(v)
-		return nil
-	}
-	return fmt.Errorf("unknown Finding numeric field %s", name)
-}
-
-// ClearedFields returns all nullable fields that were cleared during this
-// mutation.
-func (m *FindingMutation) ClearedFields() []string {
-	return nil
-}
-
-// FieldCleared returns a boolean indicating if a field with the given name was
-// cleared in this mutation.
-func (m *FindingMutation) FieldCleared(name string) bool {
-	_, ok := m.clearedFields[name]
-	return ok
-}
-
-// ClearField clears the value of the field with the given name. It returns an
-// error if the field is not defined in the schema.
-func (m *FindingMutation) ClearField(name string) error {
-	return fmt.Errorf("unknown Finding nullable field %s", name)
-}
-
-// ResetField resets all changes in the mutation for the field with the given name.
-// It returns an error if the field is not defined in the schema.
-func (m *FindingMutation) ResetField(name string) error {
-	switch name {
-	case finding.FieldTimestamp:
-		m.ResetTimestamp()
-		return nil
-	case finding.FieldSource:
-		m.ResetSource()
-		return nil
-	case finding.FieldName:
-		m.ResetName()
-		return nil
-	case finding.FieldValue:
-		m.ResetValue()
-		return nil
-	}
-	return fmt.Errorf("unknown Finding field %s", name)
-}
-
-// AddedEdges returns all edge names that were set/added in this mutation.
-func (m *FindingMutation) AddedEdges() []string {
-	edges := make([]string, 0, 0)
-	return edges
-}
-
-// AddedIDs returns all IDs (to other nodes) that were added for the given edge
-// name in this mutation.
-func (m *FindingMutation) AddedIDs(name string) []ent.Value {
-	return nil
-}
-
-// RemovedEdges returns all edge names that were removed in this mutation.
-func (m *FindingMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 0)
-	return edges
-}
-
-// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
-// the given name in this mutation.
-func (m *FindingMutation) RemovedIDs(name string) []ent.Value {
-	return nil
-}
-
-// ClearedEdges returns all edge names that were cleared in this mutation.
-func (m *FindingMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 0)
-	return edges
-}
-
-// EdgeCleared returns a boolean which indicates if the edge with the given name
-// was cleared in this mutation.
-func (m *FindingMutation) EdgeCleared(name string) bool {
-	return false
-}
-
-// ClearEdge clears the value of the edge with the given name. It returns an error
-// if that edge is not defined in the schema.
-func (m *FindingMutation) ClearEdge(name string) error {
-	return fmt.Errorf("unknown Finding unique edge %s", name)
-}
-
-// ResetEdge resets all changes to the edge with the given name in this mutation.
-// It returns an error if the edge is not defined in the schema.
-func (m *FindingMutation) ResetEdge(name string) error {
-	return fmt.Errorf("unknown Finding edge %s", name)
 }

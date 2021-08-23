@@ -15,17 +15,17 @@ const (
 	FieldType = "type"
 	// FieldContext holds the string denoting the context field in the database.
 	FieldContext = "context"
-	// EdgeFindings holds the string denoting the findings edge name in mutations.
-	EdgeFindings = "findings"
+	// EdgeAnnotations holds the string denoting the annotations edge name in mutations.
+	EdgeAnnotations = "annotations"
 	// Table holds the table name of the attribute in the database.
 	Table = "attributes"
-	// FindingsTable is the table that holds the findings relation/edge.
-	FindingsTable = "findings"
-	// FindingsInverseTable is the table name for the Finding entity.
-	// It exists in this package in order to avoid circular dependency with the "finding" package.
-	FindingsInverseTable = "findings"
-	// FindingsColumn is the table column denoting the findings relation/edge.
-	FindingsColumn = "attribute_findings"
+	// AnnotationsTable is the table that holds the annotations relation/edge.
+	AnnotationsTable = "annotations"
+	// AnnotationsInverseTable is the table name for the Annotation entity.
+	// It exists in this package in order to avoid circular dependency with the "annotation" package.
+	AnnotationsInverseTable = "annotations"
+	// AnnotationsColumn is the table column denoting the annotations relation/edge.
+	AnnotationsColumn = "attribute_annotations"
 )
 
 // Columns holds all SQL columns for attribute fields.

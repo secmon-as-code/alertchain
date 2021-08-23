@@ -26,6 +26,29 @@ var (
 		Columns:    AlertsColumns,
 		PrimaryKey: []*schema.Column{AlertsColumns[0]},
 	}
+	// AnnotationsColumns holds the columns for the "annotations" table.
+	AnnotationsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "timestamp", Type: field.TypeInt64},
+		{Name: "source", Type: field.TypeString},
+		{Name: "name", Type: field.TypeString},
+		{Name: "value", Type: field.TypeString},
+		{Name: "attribute_annotations", Type: field.TypeInt, Nullable: true},
+	}
+	// AnnotationsTable holds the schema information for the "annotations" table.
+	AnnotationsTable = &schema.Table{
+		Name:       "annotations",
+		Columns:    AnnotationsColumns,
+		PrimaryKey: []*schema.Column{AnnotationsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "annotations_attributes_annotations",
+				Columns:    []*schema.Column{AnnotationsColumns[5]},
+				RefColumns: []*schema.Column{AttributesColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
 	// AttributesColumns holds the columns for the "attributes" table.
 	AttributesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -49,38 +72,15 @@ var (
 			},
 		},
 	}
-	// FindingsColumns holds the columns for the "findings" table.
-	FindingsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "timestamp", Type: field.TypeInt64},
-		{Name: "source", Type: field.TypeString},
-		{Name: "name", Type: field.TypeString},
-		{Name: "value", Type: field.TypeString},
-		{Name: "attribute_findings", Type: field.TypeInt, Nullable: true},
-	}
-	// FindingsTable holds the schema information for the "findings" table.
-	FindingsTable = &schema.Table{
-		Name:       "findings",
-		Columns:    FindingsColumns,
-		PrimaryKey: []*schema.Column{FindingsColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "findings_attributes_findings",
-				Columns:    []*schema.Column{FindingsColumns[5]},
-				RefColumns: []*schema.Column{AttributesColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-		},
-	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		AlertsTable,
+		AnnotationsTable,
 		AttributesTable,
-		FindingsTable,
 	}
 )
 
 func init() {
+	AnnotationsTable.ForeignKeys[0].RefTable = AttributesTable
 	AttributesTable.ForeignKeys[0].RefTable = AlertsTable
-	FindingsTable.ForeignKeys[0].RefTable = AttributesTable
 }

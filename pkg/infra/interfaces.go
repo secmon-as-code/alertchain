@@ -22,5 +22,5 @@ type DBClient interface {
 	UpdateAlertSeverity(ctx context.Context, id types.AlertID, status types.Severity, ts int64) error
 
 	AddAttributes(ctx context.Context, id types.AlertID, newAttrs []*ent.Attribute) error
-	AddFindings(ctx context.Context, attr *ent.Attribute, findings []*ent.Finding) error
+	AddAnnotation(ctx context.Context, attr *ent.Attribute, ann []*ent.Annotation) error
 }

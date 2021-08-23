@@ -13,7 +13,7 @@ import (
 func (x *Client) GetAlert(ctx context.Context, id types.AlertID) (*ent.Alert, error) {
 	fetched, err := x.client.Alert.Query().
 		Where(entAlert.ID(id)).WithAttributes(func(aq *ent.AttributeQuery) {
-		aq.WithFindings()
+		aq.WithAnnotations()
 	}).Only(x.ctx)
 	if err != nil {
 		return nil, types.ErrDatabaseUnexpected.Wrap(err)
@@ -105,25 +105,25 @@ func (x *Client) AddAttributes(ctx context.Context, id types.AlertID, newAttrs [
 	return nil
 }
 
-func (x *Client) AddFindings(ctx context.Context, attr *ent.Attribute, findings []*ent.Finding) error {
-	if len(findings) == 0 {
+func (x *Client) AddAnnotation(ctx context.Context, attr *ent.Attribute, annotations []*ent.Annotation) error {
+	if len(annotations) == 0 {
 		return nil
 	}
 
-	builders := make([]*ent.FindingCreate, len(findings))
-	for i, finding := range findings {
-		builders[i] = x.client.Finding.Create().
-			SetSource(finding.Source).
-			SetValue(finding.Value).
-			SetTimestamp(finding.Timestamp)
+	builders := make([]*ent.AnnotationCreate, len(annotations))
+	for i, ann := range annotations {
+		builders[i] = x.client.Annotation.Create().
+			SetSource(ann.Source).
+			SetValue(ann.Value).
+			SetTimestamp(ann.Timestamp)
 	}
 
-	added, err := x.client.Finding.CreateBulk(builders...).Save(x.ctx)
+	added, err := x.client.Annotation.CreateBulk(builders...).Save(x.ctx)
 	if err != nil {
 		return types.ErrDatabaseUnexpected.Wrap(err)
 	}
 
-	if _, err := attr.Update().AddFindings(added...).Save(x.ctx); err != nil {
+	if _, err := attr.Update().AddAnnotations(added...).Save(x.ctx); err != nil {
 		return types.ErrDatabaseUnexpected.Wrap(err)
 	}
 
