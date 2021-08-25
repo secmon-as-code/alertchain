@@ -54,6 +54,8 @@ func (x *Server) Run() error {
 	})
 
 	engine.GET("/", getIndex)
+	engine.GET("/alert", getIndex)
+	engine.GET("/alert/:id", getIndex)
 	engine.GET("/bundle.js", getBundleJS)
 
 	r := engine.Group("/api/v1")

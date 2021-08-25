@@ -6,6 +6,9 @@ type Attribute struct {
 	ent.Attribute
 	alert          *Alert
 	newAnnotations []*Annotation
+
+	// To remove "edges" in JSON. DO NOT USE as data field
+	EdgesOverride interface{} `json:"edges,omitempty"`
 }
 
 type Attributes []*Attribute

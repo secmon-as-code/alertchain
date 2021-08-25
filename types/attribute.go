@@ -8,14 +8,25 @@ const (
 	AttrIPAddr   AttrType = "ipaddr"
 	AttrDomain   AttrType = "domain"
 	AttrPort     AttrType = "port"
+	AttrUserID   AttrType = "user_id"
+	AttrEmail    AttrType = "email"
 	AttrSha256   AttrType = "sha256"
 	AttrFilePath AttrType = "filepath"
 	AttrURL      AttrType = "url"
+	AttrNoType   AttrType = ""
 )
 
 func (x AttrType) IsValid() error {
 	switch x {
-	case AttrIPAddr, AttrDomain, AttrPort, AttrSha256, AttrFilePath, AttrURL:
+	case AttrIPAddr,
+		AttrDomain,
+		AttrPort,
+		AttrUserID,
+		AttrEmail,
+		AttrSha256,
+		AttrFilePath,
+		AttrURL,
+		AttrNoType:
 		return nil
 	}
 	return goerr.Wrap(ErrInvalidInput, "invalid attribute type")

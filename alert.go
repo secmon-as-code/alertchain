@@ -18,6 +18,9 @@ type Alert struct {
 	newAttrs    []*Attribute
 	newStatus   *types.AlertStatus
 	newSeverity *types.Severity
+
+	// To remove "edges" in JSON. DO NOT USE as data field
+	EdgesOverride interface{} `json:"edges,omitempty"`
 }
 
 func (x *Alert) AddAttributes(attrs []*Attribute) {
@@ -38,12 +41,15 @@ func NewAlert(alert *ent.Alert, db infra.DBClient) *Alert {
 		id:    alert.ID,
 		db:    db,
 	}
-	attrs := make(Attributes, len(alert.Edges.Attributes))
-	for i, attr := range alert.Edges.Attributes {
-		attrs[i] = &Attribute{
-			Attribute: *attr,
-			alert:     newAlert,
+	if len(alert.Edges.Attributes) > 0 {
+		attrs := make(Attributes, len(alert.Edges.Attributes))
+		for i, attr := range alert.Edges.Attributes {
+			attrs[i] = &Attribute{
+				Attribute: *attr,
+				alert:     newAlert,
+			}
 		}
+		newAlert.Attributes = attrs
 	}
 
 	return newAlert
