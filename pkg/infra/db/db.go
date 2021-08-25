@@ -14,7 +14,6 @@ import (
 )
 
 type Client struct {
-	mock   bool
 	ctx    context.Context
 	client *ent.Client
 }
