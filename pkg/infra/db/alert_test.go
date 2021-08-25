@@ -10,14 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func int64ptr(v int64) *int64 {
-	return &v
-}
-
-func boolptr(v bool) *bool {
-	return &v
-}
-
 func TestAlert(t *testing.T) {
 	ctx := context.Background()
 	t.Run("Create a new alert", func(t *testing.T) {
