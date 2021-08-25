@@ -3,7 +3,9 @@ package usecase_test
 import (
 	"context"
 	"errors"
+	"fmt"
 	"math/rand"
+	"os"
 	"testing"
 	"time"
 
@@ -49,7 +51,7 @@ type mock struct {
 }
 
 func (x *mock) Name() string                            { return "mock" }
-func (x *mock) Description() string                     { return "mock" }
+func (x *mock) Description() string                     { return "mocking" }
 func (x *mock) Optionable(alert *alertchain.Alert) bool { return false }
 func (x *mock) Execute(ctx context.Context, alert *alertchain.Alert) error {
 	return x.Exec(alert)
@@ -157,6 +159,73 @@ func TestRecvAlertMultipleTask(t *testing.T) {
 		require.True(t, ok)
 		assert.True(t, s.Done)
 	}
+}
+
+func TestRecvAlertMassiveAnnotation(t *testing.T) {
+	const multiplex = 12
+
+	// root:${MYSQL_ROOT_PASSWORD}@tcp(localhost:3306)/${MYSQL_DATABASE}
+	passwd := os.Getenv("MYSQL_ROOT_PASSWORD")
+	dbName := os.Getenv("MYSQL_DATABASE")
+	if passwd == "" || dbName == "" {
+		t.Skip("MYSQL_ROOT_PASSWORD and MYSQL_DATABASE are required")
+	}
+
+	chain := &alertchain.Chain{}
+	dsn := fmt.Sprintf("root:%s@tcp(localhost:3306)/%s", passwd, dbName)
+	client, err := db.New("mysql", dsn)
+	require.NoError(t, err)
+
+	clients := infra.Clients{DB: client}
+	uc := usecase.New(clients, chain)
+
+	stage := chain.NewStage()
+	stage.Timeout = time.Second
+	for i := 0; i < multiplex; i++ {
+		stage.AddTask(&mock{
+			Exec: func(alert *alertchain.Alert) error {
+				require.Len(t, alert.Attributes, 1)
+				alert.Attributes[0].Annotate(&alertchain.Annotation{
+					Annotation: ent.Annotation{
+						Source:    "x",
+						Timestamp: rand.Int63(), /* nosec */
+						Name:      "y",
+						Value:     "z",
+					},
+				})
+				return nil
+			},
+		})
+	}
+
+	ctx, wg := usecase.ContextWithWaitGroup(context.Background())
+	input := alertchain.Alert{
+		Alert: ent.Alert{
+			Title:    "five",
+			Detector: "blue",
+		},
+		Attributes: []*alertchain.Attribute{
+			{
+				Attribute: ent.Attribute{
+					Key:   "color",
+					Value: "red",
+					Type:  types.AttrUserID,
+				},
+			},
+		},
+	}
+	created, err := uc.RecvAlert(ctx, &input)
+	require.NoError(t, err)
+	wg.Wait()
+
+	alert, err := clients.DB.GetAlert(context.Background(), created.Alert.ID)
+	require.NoError(t, err)
+	require.Len(t, alert.Edges.Attributes[0].Edges.Annotations, multiplex)
+	ann := alert.Edges.Attributes[0].Edges.Annotations[0]
+	assert.Equal(t, "x", ann.Source)
+	assert.Equal(t, "y", ann.Name)
+	assert.Equal(t, "z", ann.Value)
+	assert.Greater(t, ann.Timestamp, int64(0))
 }
 
 func TestRecvAlertErrorHandling(t *testing.T) {

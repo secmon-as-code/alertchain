@@ -13,7 +13,7 @@ type Attribute struct {
 
 type Attributes []*Attribute
 
-func (x *Attribute) AddFinding(ann *Annotation) {
+func (x *Attribute) Annotate(ann *Annotation) {
 	x.newAnnotations = append(x.newAnnotations, ann)
 }
 

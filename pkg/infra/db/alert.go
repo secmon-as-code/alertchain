@@ -117,6 +117,7 @@ func (x *Client) AddAnnotation(ctx context.Context, attr *ent.Attribute, annotat
 	builders := make([]*ent.AnnotationCreate, len(annotations))
 	for i, ann := range annotations {
 		builders[i] = x.client.Annotation.Create().
+			SetName(ann.Name).
 			SetSource(ann.Source).
 			SetValue(ann.Value).
 			SetTimestamp(ann.Timestamp)

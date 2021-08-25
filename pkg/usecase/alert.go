@@ -119,7 +119,13 @@ func executeChain(ctx context.Context, chain *alertchain.Chain, alertID types.Al
 
 		for _, task := range stage.Tasks {
 			wg.Add(1)
-			go executeTask(ctx, task, &wg, alertchain.NewAlert(alert, clients.DB), errCh)
+			go executeTask(ctx, &executeTaskInput{
+				task:   task,
+				wg:     &wg,
+				alert:  alert,
+				client: clients.DB,
+				errCh:  errCh,
+			})
 		}
 		wg.Wait()
 
@@ -133,12 +139,26 @@ func executeChain(ctx context.Context, chain *alertchain.Chain, alertID types.Al
 	return nil
 }
 
-func executeTask(ctx context.Context, task alertchain.Task, wg *sync.WaitGroup, alert *alertchain.Alert, errCh chan error) {
-	defer wg.Done()
-	if err := task.Execute(ctx, alert); err != nil {
-		wrapped := goerr.Wrap(err).With("task.Name", task.Name())
+type executeTaskInput struct {
+	task   alertchain.Task
+	wg     *sync.WaitGroup
+	alert  *ent.Alert
+	client infra.DBClient
+	errCh  chan error
+}
+
+func executeTask(ctx context.Context, input *executeTaskInput) {
+	defer input.wg.Done()
+	alert := alertchain.NewAlert(input.alert, input.client)
+	if err := input.task.Execute(ctx, alert); err != nil {
+		wrapped := goerr.Wrap(err).With("task.Name", input.task.Name())
 		utils.OutputError(logger, wrapped)
-		errCh <- wrapped
+		input.errCh <- wrapped
+	}
+	if err := alert.Commit(ctx); err != nil {
+		wrapped := goerr.Wrap(err).With("task.Name", input.task.Name())
+		utils.OutputError(logger, wrapped)
+		input.errCh <- wrapped
 	}
 }
 

@@ -76,19 +76,19 @@ func (x *Alert) Commit(ctx context.Context) error {
 		if err := x.db.AddAttributes(ctx, x.id, attrs); err != nil {
 			return err
 		}
+	}
 
-		for _, attr := range x.Attributes {
-			if len(attr.newAnnotations) == 0 {
-				continue
-			}
+	for _, attr := range x.Attributes {
+		if len(attr.newAnnotations) == 0 {
+			continue
+		}
 
-			annotations := make([]*ent.Annotation, len(attr.newAnnotations))
-			for i, ann := range attr.newAnnotations {
-				annotations[i] = &ann.Annotation
-			}
-			if err := x.db.AddAnnotation(ctx, &attr.Attribute, annotations); err != nil {
-				return err
-			}
+		annotations := make([]*ent.Annotation, len(attr.newAnnotations))
+		for i, ann := range attr.newAnnotations {
+			annotations[i] = &ann.Annotation
+		}
+		if err := x.db.AddAnnotation(ctx, &attr.Attribute, annotations); err != nil {
+			return err
 		}
 	}
 
