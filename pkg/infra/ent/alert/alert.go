@@ -29,6 +29,10 @@ const (
 	FieldClosedAt = "closed_at"
 	// EdgeAttributes holds the string denoting the attributes edge name in mutations.
 	EdgeAttributes = "attributes"
+	// EdgeReferences holds the string denoting the references edge name in mutations.
+	EdgeReferences = "references"
+	// EdgeTaskLogs holds the string denoting the task_logs edge name in mutations.
+	EdgeTaskLogs = "task_logs"
 	// Table holds the table name of the alert in the database.
 	Table = "alerts"
 	// AttributesTable is the table that holds the attributes relation/edge.
@@ -38,6 +42,20 @@ const (
 	AttributesInverseTable = "attributes"
 	// AttributesColumn is the table column denoting the attributes relation/edge.
 	AttributesColumn = "alert_attributes"
+	// ReferencesTable is the table that holds the references relation/edge.
+	ReferencesTable = "references"
+	// ReferencesInverseTable is the table name for the Reference entity.
+	// It exists in this package in order to avoid circular dependency with the "reference" package.
+	ReferencesInverseTable = "references"
+	// ReferencesColumn is the table column denoting the references relation/edge.
+	ReferencesColumn = "alert_references"
+	// TaskLogsTable is the table that holds the task_logs relation/edge.
+	TaskLogsTable = "task_logs"
+	// TaskLogsInverseTable is the table name for the TaskLog entity.
+	// It exists in this package in order to avoid circular dependency with the "tasklog" package.
+	TaskLogsInverseTable = "task_logs"
+	// TaskLogsColumn is the table column denoting the task_logs relation/edge.
+	TaskLogsColumn = "alert_task_logs"
 )
 
 // Columns holds all SQL columns for alert fields.

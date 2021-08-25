@@ -17,6 +17,8 @@ CHAIN=chain.so
 
 all: alertchain
 
+ent: $(ENT_SRC)
+
 $(ASSET_JS): $(ASSET_SRC)
 	cd $(ASSET_DIR) && npm i && cd $(ROOT_DIR)
 

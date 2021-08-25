@@ -48,6 +48,32 @@ func (f AttributeFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, e
 	return f(ctx, mv)
 }
 
+// The ReferenceFunc type is an adapter to allow the use of ordinary
+// function as Reference mutator.
+type ReferenceFunc func(context.Context, *ent.ReferenceMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ReferenceFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.ReferenceMutation)
+	if !ok {
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ReferenceMutation", m)
+	}
+	return f(ctx, mv)
+}
+
+// The TaskLogFunc type is an adapter to allow the use of ordinary
+// function as TaskLog mutator.
+type TaskLogFunc func(context.Context, *ent.TaskLogMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f TaskLogFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.TaskLogMutation)
+	if !ok {
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TaskLogMutation", m)
+	}
+	return f(ctx, mv)
+}
+
 // Condition is a hook condition function.
 type Condition func(context.Context, ent.Mutation) bool
 

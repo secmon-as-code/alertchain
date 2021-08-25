@@ -27,6 +27,8 @@ type hooks struct {
 	Alert      []ent.Hook
 	Annotation []ent.Hook
 	Attribute  []ent.Hook
+	Reference  []ent.Hook
+	TaskLog    []ent.Hook
 }
 
 // Options applies the options on the config object.

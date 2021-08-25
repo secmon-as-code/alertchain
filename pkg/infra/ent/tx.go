@@ -18,6 +18,10 @@ type Tx struct {
 	Annotation *AnnotationClient
 	// Attribute is the client for interacting with the Attribute builders.
 	Attribute *AttributeClient
+	// Reference is the client for interacting with the Reference builders.
+	Reference *ReferenceClient
+	// TaskLog is the client for interacting with the TaskLog builders.
+	TaskLog *TaskLogClient
 
 	// lazily loaded.
 	client     *Client
@@ -156,6 +160,8 @@ func (tx *Tx) init() {
 	tx.Alert = NewAlertClient(tx.config)
 	tx.Annotation = NewAnnotationClient(tx.config)
 	tx.Attribute = NewAttributeClient(tx.config)
+	tx.Reference = NewReferenceClient(tx.config)
+	tx.TaskLog = NewTaskLogClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

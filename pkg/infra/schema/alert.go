@@ -31,5 +31,7 @@ func (Alert) Fields() []ent.Field {
 func (Alert) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("attributes", Attribute.Type),
+		edge.To("references", Reference.Type),
+		edge.To("task_logs", TaskLog.Type),
 	}
 }

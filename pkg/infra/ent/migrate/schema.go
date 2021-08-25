@@ -34,6 +34,7 @@ var (
 		{Name: "name", Type: field.TypeString},
 		{Name: "value", Type: field.TypeString},
 		{Name: "attribute_annotations", Type: field.TypeInt, Nullable: true},
+		{Name: "task_log_annotated", Type: field.TypeInt, Nullable: true},
 	}
 	// AnnotationsTable holds the schema information for the "annotations" table.
 	AnnotationsTable = &schema.Table{
@@ -45,6 +46,12 @@ var (
 				Symbol:     "annotations_attributes_annotations",
 				Columns:    []*schema.Column{AnnotationsColumns[5]},
 				RefColumns: []*schema.Column{AttributesColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "annotations_task_logs_annotated",
+				Columns:    []*schema.Column{AnnotationsColumns[6]},
+				RefColumns: []*schema.Column{TaskLogsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 		},
@@ -72,15 +79,70 @@ var (
 			},
 		},
 	}
+	// ReferencesColumns holds the columns for the "references" table.
+	ReferencesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "source", Type: field.TypeString},
+		{Name: "title", Type: field.TypeString},
+		{Name: "url", Type: field.TypeString},
+		{Name: "comment", Type: field.TypeString, Nullable: true},
+		{Name: "alert_references", Type: field.TypeString, Nullable: true},
+	}
+	// ReferencesTable holds the schema information for the "references" table.
+	ReferencesTable = &schema.Table{
+		Name:       "references",
+		Columns:    ReferencesColumns,
+		PrimaryKey: []*schema.Column{ReferencesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "references_alerts_references",
+				Columns:    []*schema.Column{ReferencesColumns[5]},
+				RefColumns: []*schema.Column{AlertsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
+	// TaskLogsColumns holds the columns for the "task_logs" table.
+	TaskLogsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "task_name", Type: field.TypeString},
+		{Name: "optional", Type: field.TypeBool, Default: false},
+		{Name: "stage", Type: field.TypeInt64},
+		{Name: "started_at", Type: field.TypeInt64},
+		{Name: "exited_at", Type: field.TypeInt64, Nullable: true},
+		{Name: "log", Type: field.TypeString, Nullable: true},
+		{Name: "errmsg", Type: field.TypeString, Nullable: true},
+		{Name: "status", Type: field.TypeString, Default: "running"},
+		{Name: "alert_task_logs", Type: field.TypeString, Nullable: true},
+	}
+	// TaskLogsTable holds the schema information for the "task_logs" table.
+	TaskLogsTable = &schema.Table{
+		Name:       "task_logs",
+		Columns:    TaskLogsColumns,
+		PrimaryKey: []*schema.Column{TaskLogsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "task_logs_alerts_task_logs",
+				Columns:    []*schema.Column{TaskLogsColumns[9]},
+				RefColumns: []*schema.Column{AlertsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		AlertsTable,
 		AnnotationsTable,
 		AttributesTable,
+		ReferencesTable,
+		TaskLogsTable,
 	}
 )
 
 func init() {
 	AnnotationsTable.ForeignKeys[0].RefTable = AttributesTable
+	AnnotationsTable.ForeignKeys[1].RefTable = TaskLogsTable
 	AttributesTable.ForeignKeys[0].RefTable = AlertsTable
+	ReferencesTable.ForeignKeys[0].RefTable = AlertsTable
+	TaskLogsTable.ForeignKeys[0].RefTable = AlertsTable
 }

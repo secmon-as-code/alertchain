@@ -1067,6 +1067,62 @@ func HasAttributesWith(preds ...predicate.Attribute) predicate.Alert {
 	})
 }
 
+// HasReferences applies the HasEdge predicate on the "references" edge.
+func HasReferences() predicate.Alert {
+	return predicate.Alert(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(ReferencesTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ReferencesTable, ReferencesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasReferencesWith applies the HasEdge predicate on the "references" edge with a given conditions (other predicates).
+func HasReferencesWith(preds ...predicate.Reference) predicate.Alert {
+	return predicate.Alert(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(ReferencesInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ReferencesTable, ReferencesColumn),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasTaskLogs applies the HasEdge predicate on the "task_logs" edge.
+func HasTaskLogs() predicate.Alert {
+	return predicate.Alert(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(TaskLogsTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, TaskLogsTable, TaskLogsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasTaskLogsWith applies the HasEdge predicate on the "task_logs" edge with a given conditions (other predicates).
+func HasTaskLogsWith(preds ...predicate.TaskLog) predicate.Alert {
+	return predicate.Alert(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(TaskLogsInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, TaskLogsTable, TaskLogsColumn),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Alert) predicate.Alert {
 	return predicate.Alert(func(s *sql.Selector) {

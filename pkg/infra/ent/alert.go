@@ -41,9 +41,13 @@ type Alert struct {
 type AlertEdges struct {
 	// Attributes holds the value of the attributes edge.
 	Attributes []*Attribute `json:"attributes,omitempty"`
+	// References holds the value of the references edge.
+	References []*Reference `json:"references,omitempty"`
+	// TaskLogs holds the value of the task_logs edge.
+	TaskLogs []*TaskLog `json:"task_logs,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [3]bool
 }
 
 // AttributesOrErr returns the Attributes value or an error if the edge
@@ -53,6 +57,24 @@ func (e AlertEdges) AttributesOrErr() ([]*Attribute, error) {
 		return e.Attributes, nil
 	}
 	return nil, &NotLoadedError{edge: "attributes"}
+}
+
+// ReferencesOrErr returns the References value or an error if the edge
+// was not loaded in eager-loading.
+func (e AlertEdges) ReferencesOrErr() ([]*Reference, error) {
+	if e.loadedTypes[1] {
+		return e.References, nil
+	}
+	return nil, &NotLoadedError{edge: "references"}
+}
+
+// TaskLogsOrErr returns the TaskLogs value or an error if the edge
+// was not loaded in eager-loading.
+func (e AlertEdges) TaskLogsOrErr() ([]*TaskLog, error) {
+	if e.loadedTypes[2] {
+		return e.TaskLogs, nil
+	}
+	return nil, &NotLoadedError{edge: "task_logs"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -143,6 +165,16 @@ func (a *Alert) assignValues(columns []string, values []interface{}) error {
 // QueryAttributes queries the "attributes" edge of the Alert entity.
 func (a *Alert) QueryAttributes() *AttributeQuery {
 	return (&AlertClient{config: a.config}).QueryAttributes(a)
+}
+
+// QueryReferences queries the "references" edge of the Alert entity.
+func (a *Alert) QueryReferences() *ReferenceQuery {
+	return (&AlertClient{config: a.config}).QueryReferences(a)
+}
+
+// QueryTaskLogs queries the "task_logs" edge of the Alert entity.
+func (a *Alert) QueryTaskLogs() *TaskLogQuery {
+	return (&AlertClient{config: a.config}).QueryTaskLogs(a)
 }
 
 // Update returns a builder for updating this Alert.

@@ -24,6 +24,7 @@ type Annotation struct {
 	// Value holds the value of the "value" field.
 	Value                 string `json:"value,omitempty"`
 	attribute_annotations *int
+	task_log_annotated    *int
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -36,6 +37,8 @@ func (*Annotation) scanValues(columns []string) ([]interface{}, error) {
 		case annotation.FieldSource, annotation.FieldName, annotation.FieldValue:
 			values[i] = new(sql.NullString)
 		case annotation.ForeignKeys[0]: // attribute_annotations
+			values[i] = new(sql.NullInt64)
+		case annotation.ForeignKeys[1]: // task_log_annotated
 			values[i] = new(sql.NullInt64)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Annotation", columns[i])
@@ -88,6 +91,13 @@ func (a *Annotation) assignValues(columns []string, values []interface{}) error 
 			} else if value.Valid {
 				a.attribute_annotations = new(int)
 				*a.attribute_annotations = int(value.Int64)
+			}
+		case annotation.ForeignKeys[1]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field task_log_annotated", value)
+			} else if value.Valid {
+				a.task_log_annotated = new(int)
+				*a.task_log_annotated = int(value.Int64)
 			}
 		}
 	}

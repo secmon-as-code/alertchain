@@ -11,6 +11,8 @@ import (
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/alert"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/annotation"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/attribute"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/reference"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/tasklog"
 )
 
 // ent aliases to avoid import conflicts in user's code.
@@ -34,6 +36,8 @@ func columnChecker(table string) func(string) error {
 		alert.Table:      alert.ValidColumn,
 		annotation.Table: annotation.ValidColumn,
 		attribute.Table:  attribute.ValidColumn,
+		reference.Table:  reference.ValidColumn,
+		tasklog.Table:    tasklog.ValidColumn,
 	}
 	check, ok := checks[table]
 	if !ok {

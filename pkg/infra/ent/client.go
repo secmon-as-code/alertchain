@@ -13,6 +13,8 @@ import (
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/alert"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/annotation"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/attribute"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/reference"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/tasklog"
 
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
@@ -30,6 +32,10 @@ type Client struct {
 	Annotation *AnnotationClient
 	// Attribute is the client for interacting with the Attribute builders.
 	Attribute *AttributeClient
+	// Reference is the client for interacting with the Reference builders.
+	Reference *ReferenceClient
+	// TaskLog is the client for interacting with the TaskLog builders.
+	TaskLog *TaskLogClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -46,6 +52,8 @@ func (c *Client) init() {
 	c.Alert = NewAlertClient(c.config)
 	c.Annotation = NewAnnotationClient(c.config)
 	c.Attribute = NewAttributeClient(c.config)
+	c.Reference = NewReferenceClient(c.config)
+	c.TaskLog = NewTaskLogClient(c.config)
 }
 
 // Open opens a database/sql.DB specified by the driver name and
@@ -82,6 +90,8 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Alert:      NewAlertClient(cfg),
 		Annotation: NewAnnotationClient(cfg),
 		Attribute:  NewAttributeClient(cfg),
+		Reference:  NewReferenceClient(cfg),
+		TaskLog:    NewTaskLogClient(cfg),
 	}, nil
 }
 
@@ -103,6 +113,8 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Alert:      NewAlertClient(cfg),
 		Annotation: NewAnnotationClient(cfg),
 		Attribute:  NewAttributeClient(cfg),
+		Reference:  NewReferenceClient(cfg),
+		TaskLog:    NewTaskLogClient(cfg),
 	}, nil
 }
 
@@ -135,6 +147,8 @@ func (c *Client) Use(hooks ...Hook) {
 	c.Alert.Use(hooks...)
 	c.Annotation.Use(hooks...)
 	c.Attribute.Use(hooks...)
+	c.Reference.Use(hooks...)
+	c.TaskLog.Use(hooks...)
 }
 
 // AlertClient is a client for the Alert schema.
@@ -231,6 +245,38 @@ func (c *AlertClient) QueryAttributes(a *Alert) *AttributeQuery {
 			sqlgraph.From(alert.Table, alert.FieldID, id),
 			sqlgraph.To(attribute.Table, attribute.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, alert.AttributesTable, alert.AttributesColumn),
+		)
+		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryReferences queries the references edge of a Alert.
+func (c *AlertClient) QueryReferences(a *Alert) *ReferenceQuery {
+	query := &ReferenceQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := a.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(alert.Table, alert.FieldID, id),
+			sqlgraph.To(reference.Table, reference.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, alert.ReferencesTable, alert.ReferencesColumn),
+		)
+		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryTaskLogs queries the task_logs edge of a Alert.
+func (c *AlertClient) QueryTaskLogs(a *Alert) *TaskLogQuery {
+	query := &TaskLogQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := a.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(alert.Table, alert.FieldID, id),
+			sqlgraph.To(tasklog.Table, tasklog.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, alert.TaskLogsTable, alert.TaskLogsColumn),
 		)
 		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
 		return fromV, nil
@@ -437,4 +483,200 @@ func (c *AttributeClient) QueryAnnotations(a *Attribute) *AnnotationQuery {
 // Hooks returns the client hooks.
 func (c *AttributeClient) Hooks() []Hook {
 	return c.hooks.Attribute
+}
+
+// ReferenceClient is a client for the Reference schema.
+type ReferenceClient struct {
+	config
+}
+
+// NewReferenceClient returns a client for the Reference from the given config.
+func NewReferenceClient(c config) *ReferenceClient {
+	return &ReferenceClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `reference.Hooks(f(g(h())))`.
+func (c *ReferenceClient) Use(hooks ...Hook) {
+	c.hooks.Reference = append(c.hooks.Reference, hooks...)
+}
+
+// Create returns a create builder for Reference.
+func (c *ReferenceClient) Create() *ReferenceCreate {
+	mutation := newReferenceMutation(c.config, OpCreate)
+	return &ReferenceCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Reference entities.
+func (c *ReferenceClient) CreateBulk(builders ...*ReferenceCreate) *ReferenceCreateBulk {
+	return &ReferenceCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Reference.
+func (c *ReferenceClient) Update() *ReferenceUpdate {
+	mutation := newReferenceMutation(c.config, OpUpdate)
+	return &ReferenceUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ReferenceClient) UpdateOne(r *Reference) *ReferenceUpdateOne {
+	mutation := newReferenceMutation(c.config, OpUpdateOne, withReference(r))
+	return &ReferenceUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ReferenceClient) UpdateOneID(id int) *ReferenceUpdateOne {
+	mutation := newReferenceMutation(c.config, OpUpdateOne, withReferenceID(id))
+	return &ReferenceUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Reference.
+func (c *ReferenceClient) Delete() *ReferenceDelete {
+	mutation := newReferenceMutation(c.config, OpDelete)
+	return &ReferenceDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *ReferenceClient) DeleteOne(r *Reference) *ReferenceDeleteOne {
+	return c.DeleteOneID(r.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *ReferenceClient) DeleteOneID(id int) *ReferenceDeleteOne {
+	builder := c.Delete().Where(reference.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ReferenceDeleteOne{builder}
+}
+
+// Query returns a query builder for Reference.
+func (c *ReferenceClient) Query() *ReferenceQuery {
+	return &ReferenceQuery{
+		config: c.config,
+	}
+}
+
+// Get returns a Reference entity by its id.
+func (c *ReferenceClient) Get(ctx context.Context, id int) (*Reference, error) {
+	return c.Query().Where(reference.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ReferenceClient) GetX(ctx context.Context, id int) *Reference {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ReferenceClient) Hooks() []Hook {
+	return c.hooks.Reference
+}
+
+// TaskLogClient is a client for the TaskLog schema.
+type TaskLogClient struct {
+	config
+}
+
+// NewTaskLogClient returns a client for the TaskLog from the given config.
+func NewTaskLogClient(c config) *TaskLogClient {
+	return &TaskLogClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `tasklog.Hooks(f(g(h())))`.
+func (c *TaskLogClient) Use(hooks ...Hook) {
+	c.hooks.TaskLog = append(c.hooks.TaskLog, hooks...)
+}
+
+// Create returns a create builder for TaskLog.
+func (c *TaskLogClient) Create() *TaskLogCreate {
+	mutation := newTaskLogMutation(c.config, OpCreate)
+	return &TaskLogCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of TaskLog entities.
+func (c *TaskLogClient) CreateBulk(builders ...*TaskLogCreate) *TaskLogCreateBulk {
+	return &TaskLogCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for TaskLog.
+func (c *TaskLogClient) Update() *TaskLogUpdate {
+	mutation := newTaskLogMutation(c.config, OpUpdate)
+	return &TaskLogUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *TaskLogClient) UpdateOne(tl *TaskLog) *TaskLogUpdateOne {
+	mutation := newTaskLogMutation(c.config, OpUpdateOne, withTaskLog(tl))
+	return &TaskLogUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *TaskLogClient) UpdateOneID(id int) *TaskLogUpdateOne {
+	mutation := newTaskLogMutation(c.config, OpUpdateOne, withTaskLogID(id))
+	return &TaskLogUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for TaskLog.
+func (c *TaskLogClient) Delete() *TaskLogDelete {
+	mutation := newTaskLogMutation(c.config, OpDelete)
+	return &TaskLogDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *TaskLogClient) DeleteOne(tl *TaskLog) *TaskLogDeleteOne {
+	return c.DeleteOneID(tl.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *TaskLogClient) DeleteOneID(id int) *TaskLogDeleteOne {
+	builder := c.Delete().Where(tasklog.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &TaskLogDeleteOne{builder}
+}
+
+// Query returns a query builder for TaskLog.
+func (c *TaskLogClient) Query() *TaskLogQuery {
+	return &TaskLogQuery{
+		config: c.config,
+	}
+}
+
+// Get returns a TaskLog entity by its id.
+func (c *TaskLogClient) Get(ctx context.Context, id int) (*TaskLog, error) {
+	return c.Query().Where(tasklog.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *TaskLogClient) GetX(ctx context.Context, id int) *TaskLog {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryAnnotated queries the annotated edge of a TaskLog.
+func (c *TaskLogClient) QueryAnnotated(tl *TaskLog) *AnnotationQuery {
+	query := &AnnotationQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := tl.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tasklog.Table, tasklog.FieldID, id),
+			sqlgraph.To(annotation.Table, annotation.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, tasklog.AnnotatedTable, tasklog.AnnotatedColumn),
+		)
+		fromV = sqlgraph.Neighbors(tl.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *TaskLogClient) Hooks() []Hook {
+	return c.hooks.TaskLog
 }

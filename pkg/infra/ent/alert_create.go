@@ -11,6 +11,8 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/alert"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/attribute"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/reference"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/tasklog"
 	"github.com/m-mizutani/alertchain/types"
 )
 
@@ -144,6 +146,36 @@ func (ac *AlertCreate) AddAttributes(a ...*Attribute) *AlertCreate {
 		ids[i] = a[i].ID
 	}
 	return ac.AddAttributeIDs(ids...)
+}
+
+// AddReferenceIDs adds the "references" edge to the Reference entity by IDs.
+func (ac *AlertCreate) AddReferenceIDs(ids ...int) *AlertCreate {
+	ac.mutation.AddReferenceIDs(ids...)
+	return ac
+}
+
+// AddReferences adds the "references" edges to the Reference entity.
+func (ac *AlertCreate) AddReferences(r ...*Reference) *AlertCreate {
+	ids := make([]int, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return ac.AddReferenceIDs(ids...)
+}
+
+// AddTaskLogIDs adds the "task_logs" edge to the TaskLog entity by IDs.
+func (ac *AlertCreate) AddTaskLogIDs(ids ...int) *AlertCreate {
+	ac.mutation.AddTaskLogIDs(ids...)
+	return ac
+}
+
+// AddTaskLogs adds the "task_logs" edges to the TaskLog entity.
+func (ac *AlertCreate) AddTaskLogs(t ...*TaskLog) *AlertCreate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return ac.AddTaskLogIDs(ids...)
 }
 
 // Mutation returns the AlertMutation object of the builder.
@@ -335,6 +367,44 @@ func (ac *AlertCreate) createSpec() (*Alert, *sqlgraph.CreateSpec) {
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: attribute.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := ac.mutation.ReferencesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   alert.ReferencesTable,
+			Columns: []string{alert.ReferencesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: reference.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := ac.mutation.TaskLogsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   alert.TaskLogsTable,
+			Columns: []string{alert.TaskLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tasklog.FieldID,
 				},
 			},
 		}
