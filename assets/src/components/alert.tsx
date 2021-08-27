@@ -3,6 +3,8 @@ import { useParams } from "react-router-dom";
 import Grid from "@material-ui/core/Grid";
 import Typography from "@material-ui/core/Typography";
 import Paper from "@material-ui/core/Paper";
+import Link from "@material-ui/core/Link";
+import LinkIcon from "@material-ui/icons/Link";
 
 import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
@@ -18,6 +20,10 @@ import Rotate90DegreesCcwIcon from "@material-ui/icons/Rotate90DegreesCcw";
 import ContactMailIcon from "@material-ui/icons/ContactMail";
 import PersonIcon from "@material-ui/icons/Person";
 import NoteIcon from "@material-ui/icons/Note";
+
+import ErrorOutlineOutlinedIcon from "@material-ui/icons/ErrorOutlineOutlined";
+import CheckBoxIcon from "@material-ui/icons/CheckBox";
+import CircularProgress from "@material-ui/core/CircularProgress";
 
 import strftime from "strftime";
 
@@ -44,6 +50,12 @@ const attrIconMap = {
   sha256: <Rotate90DegreesCcwIcon />,
   filepath: <InsertDriveFileIcon />,
   url: <LanguageIcon />,
+};
+
+const taskStatusIconMap = {
+  succeeded: <CheckBoxIcon />,
+  failure: <ErrorOutlineOutlinedIcon />,
+  running: <CircularProgress />,
 };
 
 export function AlertView(props: alertProps) {
@@ -98,13 +110,66 @@ export function AlertView(props: alertProps) {
       <Grid>
         <Paper>
           <Grid>
-            <Typography>
-              Created at{" "}
-              {strftime(
-                "%Y-%m-%d %H:%M:%S",
-                new Date(state.alert.created_at * 1000)
-              )}
-            </Typography>
+            <Typography variant="h5">Summary</Typography>
+          </Grid>
+          <Grid>
+            <List>
+              <ListItem>Description: {state.alert.description}</ListItem>
+              <ListItem>Status: {state.alert.status}</ListItem>
+              <ListItem>Severity: {state.alert.severity}</ListItem>
+              <ListItem>Detected by: {state.alert.detector}</ListItem>
+              <ListItem>
+                Created at:
+                {strftime(
+                  " %Y-%m-%d %H:%M:%S",
+                  new Date(state.alert.created_at * 1000)
+                )}
+              </ListItem>
+              <ListItem>
+                Closed at:
+                {state.alert.closed_at
+                  ? strftime(
+                      " %Y-%m-%d %H:%M:%S",
+                      new Date(state.alert.closed_at * 1000)
+                    )
+                  : "N/A"}
+              </ListItem>
+            </List>
+          </Grid>
+        </Paper>
+      </Grid>
+
+      <Grid>
+        <Paper>
+          <Grid>
+            <Typography variant="h5">References</Typography>
+          </Grid>
+          <Grid>
+            <List dense={true}>
+              {state.alert.references.map((ref) => {
+                return (
+                  <ListItem key={ref.id}>
+                    <ListItemIcon>
+                      <LinkIcon />
+                    </ListItemIcon>
+                    <Link href={ref.url}>
+                      <ListItemText
+                        primary={ref.title}
+                        secondary={ref.comment}
+                      />
+                    </Link>
+                  </ListItem>
+                );
+              })}
+            </List>
+          </Grid>
+        </Paper>
+      </Grid>
+
+      <Grid>
+        <Paper>
+          <Grid>
+            <Typography variant="h5">Attributes</Typography>
           </Grid>
 
           <Grid>
@@ -124,6 +189,25 @@ export function AlertView(props: alertProps) {
               )}
             </List>
           </Grid>
+        </Paper>
+      </Grid>
+
+      <Grid>
+        <Paper>
+          <Grid>
+            <Typography variant="h5">Tasks</Typography>
+          </Grid>
+
+          {state.alert.task_logs.map((task_log) => {
+            return (
+              <Grid key={task_log.id} container>
+                <Grid item>{taskStatusIconMap[task_log.status]}</Grid>
+                <Grid item>
+                  <Typography variant="h6">{task_log.task_name}</Typography>
+                </Grid>
+              </Grid>
+            );
+          })}
         </Paper>
       </Grid>
     </div>

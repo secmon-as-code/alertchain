@@ -10,6 +10,8 @@ export interface alert {
   closed_at: number;
 
   attributes: attribute[];
+  task_logs: taskLog[];
+  references: reference[];
 }
 
 export interface attribute {
@@ -23,8 +25,31 @@ export interface attribute {
 }
 
 export interface annotation {
+  id: number;
   timestamp: number;
   source: string;
   name: string;
   value: string;
+}
+
+export interface taskLog {
+  id: number;
+  task_name: string;
+  optional: boolean;
+  stage: number;
+  started_at: number;
+  exited_at: number;
+  log: string;
+  errmsg: string;
+  err_values: string[];
+  stack_trace: string[];
+  status: string;
+}
+
+export interface reference {
+  id: string;
+  source: string;
+  title: string;
+  url: string;
+  comment: string;
 }
