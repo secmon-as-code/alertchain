@@ -2719,6 +2719,8 @@ type TaskLogMutation struct {
 	addexited_at     *int64
 	log              *string
 	errmsg           *string
+	err_values       *[]string
+	stack_trace      *[]string
 	status           *types.TaskStatus
 	clearedFields    map[string]struct{}
 	annotated        map[int]struct{}
@@ -3160,6 +3162,104 @@ func (m *TaskLogMutation) ResetErrmsg() {
 	delete(m.clearedFields, tasklog.FieldErrmsg)
 }
 
+// SetErrValues sets the "err_values" field.
+func (m *TaskLogMutation) SetErrValues(s []string) {
+	m.err_values = &s
+}
+
+// ErrValues returns the value of the "err_values" field in the mutation.
+func (m *TaskLogMutation) ErrValues() (r []string, exists bool) {
+	v := m.err_values
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldErrValues returns the old "err_values" field's value of the TaskLog entity.
+// If the TaskLog object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TaskLogMutation) OldErrValues(ctx context.Context) (v []string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldErrValues is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldErrValues requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldErrValues: %w", err)
+	}
+	return oldValue.ErrValues, nil
+}
+
+// ClearErrValues clears the value of the "err_values" field.
+func (m *TaskLogMutation) ClearErrValues() {
+	m.err_values = nil
+	m.clearedFields[tasklog.FieldErrValues] = struct{}{}
+}
+
+// ErrValuesCleared returns if the "err_values" field was cleared in this mutation.
+func (m *TaskLogMutation) ErrValuesCleared() bool {
+	_, ok := m.clearedFields[tasklog.FieldErrValues]
+	return ok
+}
+
+// ResetErrValues resets all changes to the "err_values" field.
+func (m *TaskLogMutation) ResetErrValues() {
+	m.err_values = nil
+	delete(m.clearedFields, tasklog.FieldErrValues)
+}
+
+// SetStackTrace sets the "stack_trace" field.
+func (m *TaskLogMutation) SetStackTrace(s []string) {
+	m.stack_trace = &s
+}
+
+// StackTrace returns the value of the "stack_trace" field in the mutation.
+func (m *TaskLogMutation) StackTrace() (r []string, exists bool) {
+	v := m.stack_trace
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStackTrace returns the old "stack_trace" field's value of the TaskLog entity.
+// If the TaskLog object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TaskLogMutation) OldStackTrace(ctx context.Context) (v []string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldStackTrace is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldStackTrace requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStackTrace: %w", err)
+	}
+	return oldValue.StackTrace, nil
+}
+
+// ClearStackTrace clears the value of the "stack_trace" field.
+func (m *TaskLogMutation) ClearStackTrace() {
+	m.stack_trace = nil
+	m.clearedFields[tasklog.FieldStackTrace] = struct{}{}
+}
+
+// StackTraceCleared returns if the "stack_trace" field was cleared in this mutation.
+func (m *TaskLogMutation) StackTraceCleared() bool {
+	_, ok := m.clearedFields[tasklog.FieldStackTrace]
+	return ok
+}
+
+// ResetStackTrace resets all changes to the "stack_trace" field.
+func (m *TaskLogMutation) ResetStackTrace() {
+	m.stack_trace = nil
+	delete(m.clearedFields, tasklog.FieldStackTrace)
+}
+
 // SetStatus sets the "status" field.
 func (m *TaskLogMutation) SetStatus(ts types.TaskStatus) {
 	m.status = &ts
@@ -3269,7 +3369,7 @@ func (m *TaskLogMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *TaskLogMutation) Fields() []string {
-	fields := make([]string, 0, 8)
+	fields := make([]string, 0, 10)
 	if m.task_name != nil {
 		fields = append(fields, tasklog.FieldTaskName)
 	}
@@ -3290,6 +3390,12 @@ func (m *TaskLogMutation) Fields() []string {
 	}
 	if m.errmsg != nil {
 		fields = append(fields, tasklog.FieldErrmsg)
+	}
+	if m.err_values != nil {
+		fields = append(fields, tasklog.FieldErrValues)
+	}
+	if m.stack_trace != nil {
+		fields = append(fields, tasklog.FieldStackTrace)
 	}
 	if m.status != nil {
 		fields = append(fields, tasklog.FieldStatus)
@@ -3316,6 +3422,10 @@ func (m *TaskLogMutation) Field(name string) (ent.Value, bool) {
 		return m.Log()
 	case tasklog.FieldErrmsg:
 		return m.Errmsg()
+	case tasklog.FieldErrValues:
+		return m.ErrValues()
+	case tasklog.FieldStackTrace:
+		return m.StackTrace()
 	case tasklog.FieldStatus:
 		return m.Status()
 	}
@@ -3341,6 +3451,10 @@ func (m *TaskLogMutation) OldField(ctx context.Context, name string) (ent.Value,
 		return m.OldLog(ctx)
 	case tasklog.FieldErrmsg:
 		return m.OldErrmsg(ctx)
+	case tasklog.FieldErrValues:
+		return m.OldErrValues(ctx)
+	case tasklog.FieldStackTrace:
+		return m.OldStackTrace(ctx)
 	case tasklog.FieldStatus:
 		return m.OldStatus(ctx)
 	}
@@ -3400,6 +3514,20 @@ func (m *TaskLogMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetErrmsg(v)
+		return nil
+	case tasklog.FieldErrValues:
+		v, ok := value.([]string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetErrValues(v)
+		return nil
+	case tasklog.FieldStackTrace:
+		v, ok := value.([]string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStackTrace(v)
 		return nil
 	case tasklog.FieldStatus:
 		v, ok := value.(types.TaskStatus)
@@ -3486,6 +3614,12 @@ func (m *TaskLogMutation) ClearedFields() []string {
 	if m.FieldCleared(tasklog.FieldErrmsg) {
 		fields = append(fields, tasklog.FieldErrmsg)
 	}
+	if m.FieldCleared(tasklog.FieldErrValues) {
+		fields = append(fields, tasklog.FieldErrValues)
+	}
+	if m.FieldCleared(tasklog.FieldStackTrace) {
+		fields = append(fields, tasklog.FieldStackTrace)
+	}
 	return fields
 }
 
@@ -3508,6 +3642,12 @@ func (m *TaskLogMutation) ClearField(name string) error {
 		return nil
 	case tasklog.FieldErrmsg:
 		m.ClearErrmsg()
+		return nil
+	case tasklog.FieldErrValues:
+		m.ClearErrValues()
+		return nil
+	case tasklog.FieldStackTrace:
+		m.ClearStackTrace()
 		return nil
 	}
 	return fmt.Errorf("unknown TaskLog nullable field %s", name)
@@ -3537,6 +3677,12 @@ func (m *TaskLogMutation) ResetField(name string) error {
 		return nil
 	case tasklog.FieldErrmsg:
 		m.ResetErrmsg()
+		return nil
+	case tasklog.FieldErrValues:
+		m.ResetErrValues()
+		return nil
+	case tasklog.FieldStackTrace:
+		m.ResetStackTrace()
 		return nil
 	case tasklog.FieldStatus:
 		m.ResetStatus()

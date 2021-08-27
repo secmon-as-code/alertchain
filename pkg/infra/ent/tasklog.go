@@ -3,6 +3,7 @@
 package ent
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -30,6 +31,10 @@ type TaskLog struct {
 	Log string `json:"log,omitempty"`
 	// Errmsg holds the value of the "errmsg" field.
 	Errmsg string `json:"errmsg,omitempty"`
+	// ErrValues holds the value of the "err_values" field.
+	ErrValues []string `json:"err_values,omitempty"`
+	// StackTrace holds the value of the "stack_trace" field.
+	StackTrace []string `json:"stack_trace,omitempty"`
 	// Status holds the value of the "status" field.
 	Status types.TaskStatus `json:"status,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
@@ -61,6 +66,8 @@ func (*TaskLog) scanValues(columns []string) ([]interface{}, error) {
 	values := make([]interface{}, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case tasklog.FieldErrValues, tasklog.FieldStackTrace:
+			values[i] = new([]byte)
 		case tasklog.FieldOptional:
 			values[i] = new(sql.NullBool)
 		case tasklog.FieldID, tasklog.FieldStage, tasklog.FieldStartedAt, tasklog.FieldExitedAt:
@@ -132,6 +139,22 @@ func (tl *TaskLog) assignValues(columns []string, values []interface{}) error {
 			} else if value.Valid {
 				tl.Errmsg = value.String
 			}
+		case tasklog.FieldErrValues:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field err_values", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &tl.ErrValues); err != nil {
+					return fmt.Errorf("unmarshal field err_values: %w", err)
+				}
+			}
+		case tasklog.FieldStackTrace:
+			if value, ok := values[i].(*[]byte); !ok {
+				return fmt.Errorf("unexpected type %T for field stack_trace", values[i])
+			} else if value != nil && len(*value) > 0 {
+				if err := json.Unmarshal(*value, &tl.StackTrace); err != nil {
+					return fmt.Errorf("unmarshal field stack_trace: %w", err)
+				}
+			}
 		case tasklog.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field status", values[i])
@@ -192,6 +215,10 @@ func (tl *TaskLog) String() string {
 	builder.WriteString(tl.Log)
 	builder.WriteString(", errmsg=")
 	builder.WriteString(tl.Errmsg)
+	builder.WriteString(", err_values=")
+	builder.WriteString(fmt.Sprintf("%v", tl.ErrValues))
+	builder.WriteString(", stack_trace=")
+	builder.WriteString(fmt.Sprintf("%v", tl.StackTrace))
 	builder.WriteString(", status=")
 	builder.WriteString(fmt.Sprintf("%v", tl.Status))
 	builder.WriteByte(')')

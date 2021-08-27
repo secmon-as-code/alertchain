@@ -1,8 +1,13 @@
 package usecase
 
 import (
+	"bytes"
 	"context"
+	"errors"
+	"fmt"
+	"os"
 	"sync"
+	"time"
 
 	"github.com/m-mizutani/alertchain"
 	"github.com/m-mizutani/alertchain/pkg/infra"
@@ -99,7 +104,7 @@ func saveAlert(ctx context.Context, client infra.DBClient, recv *alertchain.Aler
 }
 
 func executeChain(ctx context.Context, chain *alertchain.Chain, alertID types.AlertID, clients infra.Clients) error {
-	for _, stage := range chain.Stages {
+	for idx, stage := range chain.Stages {
 		if len(stage.Tasks) == 0 {
 			continue
 		}
@@ -120,6 +125,7 @@ func executeChain(ctx context.Context, chain *alertchain.Chain, alertID types.Al
 		for _, task := range stage.Tasks {
 			wg.Add(1)
 			go executeTask(ctx, &executeTaskInput{
+				stage:  int64(idx),
 				task:   task,
 				wg:     &wg,
 				alert:  alert,
@@ -140,6 +146,7 @@ func executeChain(ctx context.Context, chain *alertchain.Chain, alertID types.Al
 }
 
 type executeTaskInput struct {
+	stage  int64
 	task   alertchain.Task
 	wg     *sync.WaitGroup
 	alert  *ent.Alert
@@ -147,19 +154,72 @@ type executeTaskInput struct {
 	errCh  chan error
 }
 
+type logWriter struct {
+	bytes.Buffer
+}
+
+func (x *logWriter) Write(p []byte) (n int, err error) {
+	if n, err := x.Buffer.Write(p); err != nil {
+		return n, err
+	}
+	return os.Stdout.Write(p)
+}
+
 func executeTask(ctx context.Context, input *executeTaskInput) {
 	defer input.wg.Done()
+	var taskLog *ent.TaskLog
+	var logW logWriter
+	ctx = alertchain.InjectLogOutput(ctx, &logW)
+
+	handlerError := func(err error) {
+		wrapped := goerr.Wrap(err).With("task.Name", input.task.Name())
+		utils.OutputError(logger, wrapped)
+		input.errCh <- wrapped
+
+		if taskLog != nil {
+			taskLog.Errmsg = err.Error()
+			var goErr *goerr.Error
+			if errors.As(err, &goErr) {
+				for k, v := range goErr.Values() {
+					taskLog.ErrValues = append(taskLog.ErrValues, fmt.Sprintf("%s=%v", k, v))
+				}
+				for _, st := range goErr.StackTrace() {
+					taskLog.StackTrace = append(taskLog.StackTrace, fmt.Sprintf("%v", st))
+				}
+			}
+			taskLog.Status = types.TaskFailure
+		}
+	}
+
+	defer func() {
+		taskLog.Log = logW.String()
+		taskLog.ExitedAt = time.Now().UTC().UnixNano()
+		if err := input.client.UpdateTaskLog(ctx, taskLog); err != nil {
+			input.errCh <- err
+		}
+	}()
+
 	alert := alertchain.NewAlert(input.alert, input.client)
+
+	now := time.Now().UTC().UnixNano()
+	taskLog, err := input.client.NewTaskLog(ctx, input.alert.ID, input.task.Name(), now, input.stage, false)
+
+	if err != nil {
+		handlerError(err)
+		return
+	}
+
 	if err := input.task.Execute(ctx, alert); err != nil {
-		wrapped := goerr.Wrap(err).With("task.Name", input.task.Name())
-		utils.OutputError(logger, wrapped)
-		input.errCh <- wrapped
+		handlerError(err)
+		return
 	}
+
 	if err := alert.Commit(ctx); err != nil {
-		wrapped := goerr.Wrap(err).With("task.Name", input.task.Name())
-		utils.OutputError(logger, wrapped)
-		input.errCh <- wrapped
+		handlerError(err)
+		return
 	}
+
+	taskLog.Status = types.TaskSucceeded
 }
 
 func validateAlert(alert *alertchain.Alert) error {

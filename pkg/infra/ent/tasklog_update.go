@@ -95,6 +95,30 @@ func (tlu *TaskLogUpdate) ClearErrmsg() *TaskLogUpdate {
 	return tlu
 }
 
+// SetErrValues sets the "err_values" field.
+func (tlu *TaskLogUpdate) SetErrValues(s []string) *TaskLogUpdate {
+	tlu.mutation.SetErrValues(s)
+	return tlu
+}
+
+// ClearErrValues clears the value of the "err_values" field.
+func (tlu *TaskLogUpdate) ClearErrValues() *TaskLogUpdate {
+	tlu.mutation.ClearErrValues()
+	return tlu
+}
+
+// SetStackTrace sets the "stack_trace" field.
+func (tlu *TaskLogUpdate) SetStackTrace(s []string) *TaskLogUpdate {
+	tlu.mutation.SetStackTrace(s)
+	return tlu
+}
+
+// ClearStackTrace clears the value of the "stack_trace" field.
+func (tlu *TaskLogUpdate) ClearStackTrace() *TaskLogUpdate {
+	tlu.mutation.ClearStackTrace()
+	return tlu
+}
+
 // SetStatus sets the "status" field.
 func (tlu *TaskLogUpdate) SetStatus(ts types.TaskStatus) *TaskLogUpdate {
 	tlu.mutation.SetStatus(ts)
@@ -268,6 +292,32 @@ func (tlu *TaskLogUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: tasklog.FieldErrmsg,
 		})
 	}
+	if value, ok := tlu.mutation.ErrValues(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeJSON,
+			Value:  value,
+			Column: tasklog.FieldErrValues,
+		})
+	}
+	if tlu.mutation.ErrValuesCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeJSON,
+			Column: tasklog.FieldErrValues,
+		})
+	}
+	if value, ok := tlu.mutation.StackTrace(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeJSON,
+			Value:  value,
+			Column: tasklog.FieldStackTrace,
+		})
+	}
+	if tlu.mutation.StackTraceCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeJSON,
+			Column: tasklog.FieldStackTrace,
+		})
+	}
 	if value, ok := tlu.mutation.Status(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
@@ -412,6 +462,30 @@ func (tluo *TaskLogUpdateOne) SetNillableErrmsg(s *string) *TaskLogUpdateOne {
 // ClearErrmsg clears the value of the "errmsg" field.
 func (tluo *TaskLogUpdateOne) ClearErrmsg() *TaskLogUpdateOne {
 	tluo.mutation.ClearErrmsg()
+	return tluo
+}
+
+// SetErrValues sets the "err_values" field.
+func (tluo *TaskLogUpdateOne) SetErrValues(s []string) *TaskLogUpdateOne {
+	tluo.mutation.SetErrValues(s)
+	return tluo
+}
+
+// ClearErrValues clears the value of the "err_values" field.
+func (tluo *TaskLogUpdateOne) ClearErrValues() *TaskLogUpdateOne {
+	tluo.mutation.ClearErrValues()
+	return tluo
+}
+
+// SetStackTrace sets the "stack_trace" field.
+func (tluo *TaskLogUpdateOne) SetStackTrace(s []string) *TaskLogUpdateOne {
+	tluo.mutation.SetStackTrace(s)
+	return tluo
+}
+
+// ClearStackTrace clears the value of the "stack_trace" field.
+func (tluo *TaskLogUpdateOne) ClearStackTrace() *TaskLogUpdateOne {
+	tluo.mutation.ClearStackTrace()
 	return tluo
 }
 
@@ -610,6 +684,32 @@ func (tluo *TaskLogUpdateOne) sqlSave(ctx context.Context) (_node *TaskLog, err 
 		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Column: tasklog.FieldErrmsg,
+		})
+	}
+	if value, ok := tluo.mutation.ErrValues(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeJSON,
+			Value:  value,
+			Column: tasklog.FieldErrValues,
+		})
+	}
+	if tluo.mutation.ErrValuesCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeJSON,
+			Column: tasklog.FieldErrValues,
+		})
+	}
+	if value, ok := tluo.mutation.StackTrace(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeJSON,
+			Value:  value,
+			Column: tasklog.FieldStackTrace,
+		})
+	}
+	if tluo.mutation.StackTraceCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeJSON,
+			Column: tasklog.FieldStackTrace,
 		})
 	}
 	if value, ok := tluo.mutation.Status(); ok {

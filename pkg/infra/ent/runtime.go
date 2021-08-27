@@ -26,7 +26,7 @@ func init() {
 	// tasklog.DefaultOptional holds the default value on creation for the optional field.
 	tasklog.DefaultOptional = tasklogDescOptional.Default.(bool)
 	// tasklogDescStatus is the schema descriptor for status field.
-	tasklogDescStatus := tasklogFields[7].Descriptor()
+	tasklogDescStatus := tasklogFields[9].Descriptor()
 	// tasklog.DefaultStatus holds the default value on creation for the status field.
 	tasklog.DefaultStatus = types.TaskStatus(tasklogDescStatus.Default.(string))
 }

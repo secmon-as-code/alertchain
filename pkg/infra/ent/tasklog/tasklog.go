@@ -25,6 +25,10 @@ const (
 	FieldLog = "log"
 	// FieldErrmsg holds the string denoting the errmsg field in the database.
 	FieldErrmsg = "errmsg"
+	// FieldErrValues holds the string denoting the err_values field in the database.
+	FieldErrValues = "err_values"
+	// FieldStackTrace holds the string denoting the stack_trace field in the database.
+	FieldStackTrace = "stack_trace"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
 	// EdgeAnnotated holds the string denoting the annotated edge name in mutations.
@@ -50,6 +54,8 @@ var Columns = []string{
 	FieldExitedAt,
 	FieldLog,
 	FieldErrmsg,
+	FieldErrValues,
+	FieldStackTrace,
 	FieldStatus,
 }
 

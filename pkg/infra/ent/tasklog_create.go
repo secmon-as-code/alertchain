@@ -95,6 +95,18 @@ func (tlc *TaskLogCreate) SetNillableErrmsg(s *string) *TaskLogCreate {
 	return tlc
 }
 
+// SetErrValues sets the "err_values" field.
+func (tlc *TaskLogCreate) SetErrValues(s []string) *TaskLogCreate {
+	tlc.mutation.SetErrValues(s)
+	return tlc
+}
+
+// SetStackTrace sets the "stack_trace" field.
+func (tlc *TaskLogCreate) SetStackTrace(s []string) *TaskLogCreate {
+	tlc.mutation.SetStackTrace(s)
+	return tlc
+}
+
 // SetStatus sets the "status" field.
 func (tlc *TaskLogCreate) SetStatus(ts types.TaskStatus) *TaskLogCreate {
 	tlc.mutation.SetStatus(ts)
@@ -304,6 +316,22 @@ func (tlc *TaskLogCreate) createSpec() (*TaskLog, *sqlgraph.CreateSpec) {
 			Column: tasklog.FieldErrmsg,
 		})
 		_node.Errmsg = value
+	}
+	if value, ok := tlc.mutation.ErrValues(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeJSON,
+			Value:  value,
+			Column: tasklog.FieldErrValues,
+		})
+		_node.ErrValues = value
+	}
+	if value, ok := tlc.mutation.StackTrace(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeJSON,
+			Value:  value,
+			Column: tasklog.FieldStackTrace,
+		})
+		_node.StackTrace = value
 	}
 	if value, ok := tlc.mutation.Status(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{

@@ -11,20 +11,19 @@ import (
 
 type Alert struct {
 	ent.Alert
-	Attributes []*Attribute `json:"attributes"`
+	Attributes []*Attribute     `json:"attributes"`
+	TaskLogs   []*ent.TaskLog   `json:"task_logs"`
+	References []*ent.Reference `json:"references"`
 
-	id          types.AlertID // Immutable AlertID copied from ent.Alert.ID
-	db          infra.DBClient
-	newAttrs    []*Attribute
-	newStatus   *types.AlertStatus
-	newSeverity *types.Severity
+	id            types.AlertID // Immutable AlertID copied from ent.Alert.ID
+	db            infra.DBClient
+	newAttrs      []*Attribute
+	newReferences []*ent.Reference
+	newStatus     *types.AlertStatus
+	newSeverity   *types.Severity
 
 	// To remove "edges" in JSON. DO NOT USE as data field
 	EdgesOverride interface{} `json:"edges,omitempty"`
-}
-
-func (x *Alert) AddAttributes(attrs []*Attribute) {
-	x.newAttrs = append(x.newAttrs, attrs...)
 }
 
 func (x *Alert) UpdateStatus(status types.AlertStatus) {
@@ -35,18 +34,35 @@ func (x *Alert) UpdateSeverity(sev types.Severity) {
 	x.newSeverity = &sev
 }
 
+func (x *Alert) AddAttributes(attrs []*Attribute) {
+	x.newAttrs = append(x.newAttrs, attrs...)
+}
+
+func (x *Alert) AddReference(ref *ent.Reference) {
+	x.newReferences = append(x.newReferences, ref)
+}
+
 func NewAlert(alert *ent.Alert, db infra.DBClient) *Alert {
 	newAlert := &Alert{
 		Alert: *alert,
 		id:    alert.ID,
 		db:    db,
+
+		TaskLogs:   alert.Edges.TaskLogs,
+		References: alert.Edges.References,
 	}
 	if len(alert.Edges.Attributes) > 0 {
 		attrs := make(Attributes, len(alert.Edges.Attributes))
 		for i, attr := range alert.Edges.Attributes {
+			annotations := make([]*Annotation, len(attr.Edges.Annotations))
+			for j, ann := range attr.Edges.Annotations {
+				annotations[j] = &Annotation{Annotation: *ann}
+			}
+
 			attrs[i] = &Attribute{
-				Attribute: *attr,
-				alert:     newAlert,
+				Attribute:   *attr,
+				alert:       newAlert,
+				Annotations: annotations,
 			}
 		}
 		newAlert.Attributes = attrs
@@ -88,6 +104,12 @@ func (x *Alert) Commit(ctx context.Context) error {
 			annotations[i] = &ann.Annotation
 		}
 		if err := x.db.AddAnnotation(ctx, &attr.Attribute, annotations); err != nil {
+			return err
+		}
+	}
+
+	for _, ref := range x.newReferences {
+		if err := x.db.AddReference(ctx, x.id, ref); err != nil {
 			return err
 		}
 	}

@@ -19,6 +19,9 @@ all: alertchain
 
 ent: $(ENT_SRC)
 
+docker:
+	docker run -p 127.0.0.1:3306:3306 -e MYSQL_ROOT_PASSWORD -e MYSQL_DATABASE mysql
+
 $(ASSET_JS): $(ASSET_SRC)
 	cd $(ASSET_DIR) && npm i && cd $(ROOT_DIR)
 

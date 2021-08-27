@@ -2,6 +2,7 @@ package alertchain
 
 import (
 	"context"
+	"io"
 	"time"
 )
 
@@ -37,4 +38,25 @@ type Task interface {
 type Source interface {
 	Name() string
 	Run(alertCh chan *Alert) error
+}
+
+type ctxKey string
+
+const ctxLogOutput ctxKey = "logOutput"
+
+func InjectLogOutput(ctx context.Context, w io.Writer) context.Context {
+	return context.WithValue(ctx, ctxLogOutput, w)
+}
+
+// LogOutput returns io.Writer to output log message. Log message output via io.Writer will be stored into TaskLog and displayed in Web UI.
+func LogOutput(ctx context.Context) io.Writer {
+	value := ctx.Value(ctxLogOutput)
+	if value == nil {
+		panic("logOutput is not set in context")
+	}
+	w, ok := value.(io.Writer)
+	if !ok {
+		panic("logOutput is not io.Writer")
+	}
+	return w
 }

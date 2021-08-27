@@ -766,6 +766,34 @@ func ErrmsgContainsFold(v string) predicate.TaskLog {
 	})
 }
 
+// ErrValuesIsNil applies the IsNil predicate on the "err_values" field.
+func ErrValuesIsNil() predicate.TaskLog {
+	return predicate.TaskLog(func(s *sql.Selector) {
+		s.Where(sql.IsNull(s.C(FieldErrValues)))
+	})
+}
+
+// ErrValuesNotNil applies the NotNil predicate on the "err_values" field.
+func ErrValuesNotNil() predicate.TaskLog {
+	return predicate.TaskLog(func(s *sql.Selector) {
+		s.Where(sql.NotNull(s.C(FieldErrValues)))
+	})
+}
+
+// StackTraceIsNil applies the IsNil predicate on the "stack_trace" field.
+func StackTraceIsNil() predicate.TaskLog {
+	return predicate.TaskLog(func(s *sql.Selector) {
+		s.Where(sql.IsNull(s.C(FieldStackTrace)))
+	})
+}
+
+// StackTraceNotNil applies the NotNil predicate on the "stack_trace" field.
+func StackTraceNotNil() predicate.TaskLog {
+	return predicate.TaskLog(func(s *sql.Selector) {
+		s.Where(sql.NotNull(s.C(FieldStackTrace)))
+	})
+}
+
 // StatusEQ applies the EQ predicate on the "status" field.
 func StatusEQ(v types.TaskStatus) predicate.TaskLog {
 	vc := string(v)

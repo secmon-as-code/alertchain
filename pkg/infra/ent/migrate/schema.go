@@ -112,6 +112,8 @@ var (
 		{Name: "exited_at", Type: field.TypeInt64, Nullable: true},
 		{Name: "log", Type: field.TypeString, Nullable: true},
 		{Name: "errmsg", Type: field.TypeString, Nullable: true},
+		{Name: "err_values", Type: field.TypeJSON, Nullable: true},
+		{Name: "stack_trace", Type: field.TypeJSON, Nullable: true},
 		{Name: "status", Type: field.TypeString, Default: "running"},
 		{Name: "alert_task_logs", Type: field.TypeString, Nullable: true},
 	}
@@ -123,7 +125,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "task_logs_alerts_task_logs",
-				Columns:    []*schema.Column{TaskLogsColumns[9]},
+				Columns:    []*schema.Column{TaskLogsColumns[11]},
 				RefColumns: []*schema.Column{AlertsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},

@@ -2,31 +2,60 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/m-mizutani/alertchain"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent"
 	"github.com/m-mizutani/alertchain/types"
 )
 
-type myEvaluator struct{}
+type taskExample struct{}
 
-func (x *myEvaluator) Name() string        { return "myEvaluator" }
-func (x *myEvaluator) Description() string { return "Eval alert" }
-func (x *myEvaluator) Optionable(alert *alertchain.Alert) bool {
+func (x *taskExample) Name() string        { return "taskExample" }
+func (x *taskExample) Description() string { return "Example of task" }
+func (x *taskExample) Optionable(alert *alertchain.Alert) bool {
 	return false
 }
 
-func (x *myEvaluator) Execute(ctx context.Context, alert *alertchain.Alert) error {
-	if alert.Title == "Something wrong" {
-		alert.Severity = types.SevAffected
+func (x *taskExample) Execute(ctx context.Context, alert *alertchain.Alert) error {
+	w := alertchain.LogOutput(ctx)
+
+	// Update serverity
+	alert.UpdateSeverity(types.SevUnclassified)
+
+	// Annoate additional info to attributes
+	for _, attr := range alert.Attributes {
+		attr.Annotate(&alertchain.Annotation{
+			Annotation: ent.Annotation{
+				Timestamp: time.Now().UTC().Unix(),
+				Source:    "example task",
+				Name:      "Accessed from",
+				Value:     "192.168.0.1",
+			},
+		})
 	}
-	if err := alert.Commit(ctx); err != nil {
-		return err
-	}
+
+	// Add references
+	alert.AddReference(&ent.Reference{
+		Source:  "example task",
+		Title:   "github issue",
+		URL:     "https://github.com/m-mizutani/alertchain/issues",
+		Comment: "test link",
+	})
+
+	fmt.Fprintf(w, "done")
 	return nil
 }
 
 func Chain() *alertchain.Chain {
-	chain := &alertchain.Chain{}
-	chain.NewStage().AddTask(&myEvaluator{})
-	return chain
+	return &alertchain.Chain{
+		Stages: []*alertchain.Stage{
+			{
+				Tasks: []alertchain.Task{
+					&taskExample{},
+				},
+			},
+		},
+	}
 }

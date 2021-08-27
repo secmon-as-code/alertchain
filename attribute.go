@@ -4,6 +4,8 @@ import "github.com/m-mizutani/alertchain/pkg/infra/ent"
 
 type Attribute struct {
 	ent.Attribute
+	Annotations []*Annotation `json:"annotations"`
+
 	alert          *Alert
 	newAnnotations []*Annotation
 

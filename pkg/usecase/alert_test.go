@@ -164,7 +164,7 @@ func TestRecvAlertMultipleTask(t *testing.T) {
 func TestRecvAlertMassiveAnnotation(t *testing.T) {
 	const multiplex = 12
 
-	// root:${MYSQL_ROOT_PASSWORD}@tcp(localhost:3306)/${MYSQL_DATABASE}
+	// Do not use sqlite3 because of table lock error
 	passwd := os.Getenv("MYSQL_ROOT_PASSWORD")
 	dbName := os.Getenv("MYSQL_DATABASE")
 	if passwd == "" || dbName == "" {
@@ -221,11 +221,12 @@ func TestRecvAlertMassiveAnnotation(t *testing.T) {
 	alert, err := clients.DB.GetAlert(context.Background(), created.Alert.ID)
 	require.NoError(t, err)
 	require.Len(t, alert.Edges.Attributes[0].Edges.Annotations, multiplex)
-	ann := alert.Edges.Attributes[0].Edges.Annotations[0]
-	assert.Equal(t, "x", ann.Source)
-	assert.Equal(t, "y", ann.Name)
-	assert.Equal(t, "z", ann.Value)
-	assert.Greater(t, ann.Timestamp, int64(0))
+	for _, ann := range alert.Edges.Attributes[0].Edges.Annotations {
+		assert.Equal(t, "x", ann.Source)
+		assert.Equal(t, "y", ann.Name)
+		assert.Equal(t, "z", ann.Value)
+		assert.Greater(t, ann.Timestamp, int64(0))
+	}
 }
 
 func TestRecvAlertErrorHandling(t *testing.T) {

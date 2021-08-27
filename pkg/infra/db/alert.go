@@ -27,7 +27,7 @@ func (x *Client) GetAlert(ctx context.Context, id types.AlertID) (*ent.Alert, er
 }
 
 func (x *Client) GetAlerts(ctx context.Context) ([]*ent.Alert, error) {
-	fetched, err := x.client.Alert.Query().All(x.ctx)
+	fetched, err := x.client.Alert.Query().Order(ent.Desc("created_at")).All(x.ctx)
 	if err != nil {
 		return nil, types.ErrDatabaseUnexpected.Wrap(err)
 	}
@@ -200,6 +200,8 @@ func (x *Client) UpdateTaskLog(ctx context.Context, task *ent.TaskLog) error {
 		SetExitedAt(task.ExitedAt).
 		SetLog(task.Log).
 		SetErrmsg(task.Errmsg).
+		SetErrValues(task.ErrValues).
+		SetStackTrace(task.StackTrace).
 		SetStatus(task.Status)
 
 	if _, err := q.Save(ctx); err != nil {
