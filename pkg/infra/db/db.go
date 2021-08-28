@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"sync"
 	"testing"
 
 	"github.com/m-mizutani/alertchain/pkg/infra"
@@ -16,6 +17,9 @@ import (
 type Client struct {
 	ctx    context.Context
 	client *ent.Client
+
+	lock  bool
+	mutex sync.Mutex
 }
 
 func newClient() *Client {
@@ -35,6 +39,7 @@ func New(dbType, dbConfig string) (infra.DBClient, error) {
 func NewDBMock(t *testing.T) infra.DBClient {
 	db := newClient()
 	db.client = enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	db.lock = true
 	return db
 }
 

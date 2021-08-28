@@ -5,8 +5,8 @@ import "github.com/m-mizutani/alertchain/pkg/infra/ent"
 type Attribute struct {
 	ent.Attribute
 	Annotations []*Annotation `json:"annotations"`
+	Alert       *Alert
 
-	alert          *Alert
 	newAnnotations []*Annotation
 
 	// To remove "edges" in JSON. DO NOT USE as data field

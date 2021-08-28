@@ -36,6 +36,11 @@ func (x *Client) GetAlerts(ctx context.Context) ([]*ent.Alert, error) {
 }
 
 func (x *Client) NewAlert(ctx context.Context) (*ent.Alert, error) {
+	if x.lock {
+		x.mutex.Lock()
+		defer x.mutex.Unlock()
+	}
+
 	newAlert, err := x.client.Alert.Create().
 		SetID(types.NewAlertID()).
 		SetCreatedAt(time.Now().UTC().Unix()).
@@ -60,9 +65,14 @@ func (x *Client) UpdateAlert(ctx context.Context, id types.AlertID, alert *ent.A
 		q = q.SetClosedAt(*alert.ClosedAt)
 	}
 
+	if x.lock {
+		x.mutex.Lock()
+		defer x.mutex.Unlock()
+	}
 	if _, err := q.Save(x.ctx); err != nil {
 		return types.ErrDatabaseUnexpected.Wrap(err)
 	}
+
 	return nil
 }
 
@@ -71,16 +81,27 @@ func (x *Client) UpdateAlertStatus(ctx context.Context, id types.AlertID, status
 	if status == types.StatusClosed {
 		q = q.SetClosedAt(ts)
 	}
+
+	if x.lock {
+		x.mutex.Lock()
+		defer x.mutex.Unlock()
+	}
 	if _, err := q.Save(x.ctx); err != nil {
 		return types.ErrDatabaseUnexpected.Wrap(err)
 	}
+
 	return nil
 }
 
 func (x *Client) UpdateAlertSeverity(ctx context.Context, id types.AlertID, sev types.Severity, ts int64) error {
+	if x.lock {
+		x.mutex.Lock()
+		defer x.mutex.Unlock()
+	}
 	if _, err := x.client.Alert.UpdateOneID(id).SetSeverity(sev).Save(x.ctx); err != nil {
 		return types.ErrDatabaseUnexpected.Wrap(err)
 	}
+
 	return nil
 }
 
@@ -96,6 +117,11 @@ func (x *Client) AddAttributes(ctx context.Context, id types.AlertID, newAttrs [
 			SetValue(attr.Value).
 			SetType(attr.Type).
 			SetContext(attr.Context)
+	}
+
+	if x.lock {
+		x.mutex.Lock()
+		defer x.mutex.Unlock()
 	}
 	added, err := x.client.Attribute.CreateBulk(builders...).Save(x.ctx)
 	if err != nil {
@@ -123,6 +149,10 @@ func (x *Client) AddAnnotation(ctx context.Context, attr *ent.Attribute, annotat
 			SetTimestamp(ann.Timestamp)
 	}
 
+	if x.lock {
+		x.mutex.Lock()
+		defer x.mutex.Unlock()
+	}
 	added, err := x.client.Annotation.CreateBulk(builders...).Save(x.ctx)
 	if err != nil {
 		return types.ErrDatabaseUnexpected.Wrap(err)
@@ -149,6 +179,10 @@ func (x *Client) AddReference(ctx context.Context, id types.AlertID, ref *ent.Re
 		return goerr.Wrap(types.ErrInvalidInput, "Reference.URL is not set")
 	}
 
+	if x.lock {
+		x.mutex.Lock()
+		defer x.mutex.Unlock()
+	}
 	added, err := x.client.Reference.Create().
 		SetSource(ref.Source).
 		SetTitle(ref.Title).
@@ -174,6 +208,10 @@ func (x *Client) NewTaskLog(ctx context.Context, id types.AlertID, taskName stri
 		return nil, goerr.Wrap(types.ErrInvalidInput, "Reference.Source is not set")
 	}
 
+	if x.lock {
+		x.mutex.Lock()
+		defer x.mutex.Unlock()
+	}
 	taskLog, err := x.client.TaskLog.Create().
 		SetTaskName(taskName).
 		SetStage(stage).
@@ -204,6 +242,10 @@ func (x *Client) UpdateTaskLog(ctx context.Context, task *ent.TaskLog) error {
 		SetStackTrace(task.StackTrace).
 		SetStatus(task.Status)
 
+	if x.lock {
+		x.mutex.Lock()
+		defer x.mutex.Unlock()
+	}
 	if _, err := q.Save(ctx); err != nil {
 		return types.ErrDatabaseUnexpected.Wrap(err)
 	}

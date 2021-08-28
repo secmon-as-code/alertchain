@@ -10,15 +10,11 @@ import (
 	"github.com/m-mizutani/alertchain/types"
 )
 
-type taskExample struct{}
+type TaskExample struct{}
 
-func (x *taskExample) Name() string        { return "taskExample" }
-func (x *taskExample) Description() string { return "Example of task" }
-func (x *taskExample) Optionable(alert *alertchain.Alert) bool {
-	return false
-}
+func (x *TaskExample) Name() string { return "TaskExample" }
 
-func (x *taskExample) Execute(ctx context.Context, alert *alertchain.Alert) error {
+func (x *TaskExample) Execute(ctx context.Context, alert *alertchain.Alert) error {
 	w := alertchain.LogOutput(ctx)
 
 	// Update serverity
@@ -48,14 +44,14 @@ func (x *taskExample) Execute(ctx context.Context, alert *alertchain.Alert) erro
 	return nil
 }
 
-func Chain() *alertchain.Chain {
+func Chain() (*alertchain.Chain, error) {
 	return &alertchain.Chain{
-		Stages: []*alertchain.Stage{
+		Jobs: []*alertchain.Job{
 			{
 				Tasks: []alertchain.Task{
-					&taskExample{},
+					&TaskExample{},
 				},
 			},
 		},
-	}
+	}, nil
 }

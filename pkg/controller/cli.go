@@ -149,10 +149,15 @@ func loadChainPlugin(filePath string) (*alertchain.Chain, error) {
 		return nil, goerr.Wrap(types.ErrInvalidChain, "Chain() function not found")
 	}
 
-	getChain, ok := f.(func() *alertchain.Chain)
+	makeChain, ok := f.(func() (*alertchain.Chain, error))
 	if !ok {
 		return nil, goerr.Wrap(types.ErrInvalidChain, "Chain() type mismatch")
 	}
 
-	return getChain(), nil
+	chain, err := makeChain()
+	if err != nil {
+		return nil, goerr.Wrap(err)
+	}
+
+	return chain, nil
 }

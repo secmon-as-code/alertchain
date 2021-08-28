@@ -3,9 +3,7 @@ package usecase_test
 import (
 	"context"
 	"errors"
-	"fmt"
 	"math/rand"
-	"os"
 	"testing"
 	"time"
 
@@ -18,22 +16,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-type sleeper struct {
-	Done bool
-}
-
-func (x *sleeper) Name() string        { return "sleeper" }
-func (x *sleeper) Description() string { return "sleep random duration" }
-func (x *sleeper) Execute(ctx context.Context, alert *alertchain.Alert) error {
-	time.Sleep(time.Millisecond * time.Duration(rand.Int31n(2000)))
-	x.Done = true
-	return nil
-}
-
-func (x *sleeper) Optionable(alert *alertchain.Alert) bool {
-	panic("not implemented") // TODO: Implement
-}
 
 func setupAlertTest(t *testing.T) (usecase.Interface, infra.Clients, *alertchain.Chain) {
 	chain := &alertchain.Chain{}
@@ -61,7 +43,7 @@ func TestRecvAlert(t *testing.T) {
 	uc, clients, chain := setupAlertTest(t)
 
 	var done bool
-	chain.NewStage().AddTask(&mock{
+	chain.NewJob().AddTask(&mock{
 		Exec: func(alert *alertchain.Alert) error {
 			alert.UpdateSeverity(types.SevAffected)
 			alert.UpdateStatus(types.StatusClosed)
@@ -99,7 +81,7 @@ func TestRecvAlertDoNotUpdate(t *testing.T) {
 		uc, clients, chain := setupAlertTest(t)
 
 		var done bool
-		chain.NewStage().AddTask(&mock{
+		chain.NewJob().AddTask(&mock{
 			Exec: func(alert *alertchain.Alert) error {
 				alert.Severity = types.SevAffected
 				alert.Status = types.StatusClosed
@@ -133,56 +115,15 @@ func TestRecvAlertDoNotUpdate(t *testing.T) {
 	})
 }
 
-func TestRecvAlertMultipleTask(t *testing.T) {
-	uc, _, chain := setupAlertTest(t)
-
-	stage := chain.NewStage()
-	stage.Timeout = time.Second
-	for i := 0; i < 32; i++ {
-		stage.AddTask(&sleeper{})
-	}
-
-	ctx, wg := usecase.ContextWithWaitGroup(context.Background())
-	input := alertchain.Alert{
-		Alert: ent.Alert{
-			Title:    "five",
-			Detector: "blue",
-		},
-	}
-	_, err := uc.RecvAlert(ctx, &input)
-	require.NoError(t, err)
-	wg.Wait()
-
-	require.Len(t, stage.Tasks, 32)
-	for _, task := range stage.Tasks {
-		s, ok := task.(*sleeper)
-		require.True(t, ok)
-		assert.True(t, s.Done)
-	}
-}
-
 func TestRecvAlertMassiveAnnotation(t *testing.T) {
-	const multiplex = 12
+	const multiplex = 32
 
-	// Do not use sqlite3 because of table lock error
-	passwd := os.Getenv("MYSQL_ROOT_PASSWORD")
-	dbName := os.Getenv("MYSQL_DATABASE")
-	if passwd == "" || dbName == "" {
-		t.Skip("MYSQL_ROOT_PASSWORD and MYSQL_DATABASE are required")
-	}
+	uc, clients, chain := setupAlertTest(t)
 
-	chain := &alertchain.Chain{}
-	dsn := fmt.Sprintf("root:%s@tcp(localhost:3306)/%s", passwd, dbName)
-	client, err := db.New("mysql", dsn)
-	require.NoError(t, err)
-
-	clients := infra.Clients{DB: client}
-	uc := usecase.New(clients, chain)
-
-	stage := chain.NewStage()
-	stage.Timeout = time.Second
+	job := chain.NewJob()
+	job.Timeout = time.Second
 	for i := 0; i < multiplex; i++ {
-		stage.AddTask(&mock{
+		job.AddTask(&mock{
 			Exec: func(alert *alertchain.Alert) error {
 				require.Len(t, alert.Attributes, 1)
 				alert.Attributes[0].Annotate(&alertchain.Annotation{
@@ -233,19 +174,19 @@ func TestRecvAlertErrorHandling(t *testing.T) {
 	t.Run("exit on error", func(t *testing.T) {
 		uc, _, chain := setupAlertTest(t)
 
-		stage := chain.NewStage()
-		stage.ExitOnErr = true
-		stage.AddTask(&mock{
+		job := chain.NewJob()
+		job.ExitOnErr = true
+		job.AddTask(&mock{
 			Exec: func(alert *alertchain.Alert) error { return nil },
 		})
-		stage.AddTask(&mock{
+		job.AddTask(&mock{
 			Exec: func(alert *alertchain.Alert) error { return errors.New("bomb!") },
 		})
 
-		done2ndStage := false
-		chain.NewStage().AddTask(&mock{
+		done2ndJob := false
+		chain.NewJob().AddTask(&mock{
 			Exec: func(alert *alertchain.Alert) error {
-				done2ndStage = true
+				done2ndJob = true
 				return nil
 			},
 		})
@@ -260,25 +201,25 @@ func TestRecvAlertErrorHandling(t *testing.T) {
 		_, err := uc.RecvAlert(ctx, &input)
 		require.NoError(t, err)
 		wg.Wait()
-		assert.False(t, done2ndStage)
+		assert.False(t, done2ndJob)
 	})
 
 	t.Run("not exit on error", func(t *testing.T) {
 		uc, _, chain := setupAlertTest(t)
 
-		stage := chain.NewStage()
-		// Default: stage.ExitOnErr = false
-		stage.AddTask(&mock{
+		job := chain.NewJob()
+		// Default: job.ExitOnErr = false
+		job.AddTask(&mock{
 			Exec: func(alert *alertchain.Alert) error { return nil },
 		})
-		stage.AddTask(&mock{
+		job.AddTask(&mock{
 			Exec: func(alert *alertchain.Alert) error { return errors.New("bomb!") },
 		})
 
-		done2ndStage := false
-		chain.NewStage().AddTask(&mock{
+		done2ndJob := false
+		chain.NewJob().AddTask(&mock{
 			Exec: func(alert *alertchain.Alert) error {
-				done2ndStage = true
+				done2ndJob = true
 				return nil
 			},
 		})
@@ -293,6 +234,6 @@ func TestRecvAlertErrorHandling(t *testing.T) {
 		_, err := uc.RecvAlert(ctx, &input)
 		require.NoError(t, err)
 		wg.Wait()
-		assert.True(t, done2ndStage)
+		assert.True(t, done2ndJob)
 	})
 }
