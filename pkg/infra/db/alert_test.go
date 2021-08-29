@@ -1,7 +1,6 @@
 package db_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/m-mizutani/alertchain/pkg/infra/ent"
@@ -11,7 +10,7 @@ import (
 )
 
 func TestAlert(t *testing.T) {
-	ctx := context.Background()
+	ctx := types.NewContext()
 	t.Run("Create a new alert", func(t *testing.T) {
 		client := setupDB(t)
 		alert, err := client.NewAlert(ctx)
@@ -89,7 +88,7 @@ func TestAlert(t *testing.T) {
 func TestReference(t *testing.T) {
 	t.Run("Add Reference", func(t *testing.T) {
 		client := setupDB(t)
-		alert, _ := client.NewAlert(context.Background())
+		alert, _ := client.NewAlert(types.NewContext())
 
 		ref1 := &ent.Reference{
 			Source:  "blue",
@@ -109,12 +108,12 @@ func TestReference(t *testing.T) {
 			Title:  "b6",
 		}
 
-		require.NoError(t, client.AddReference(context.Background(), alert.ID, ref1))
-		require.NoError(t, client.AddReference(context.Background(), alert.ID, ref2))
-		require.NoError(t, client.AddReference(context.Background(), alert.ID, ref6))
+		require.NoError(t, client.AddReference(types.NewContext(), alert.ID, ref1))
+		require.NoError(t, client.AddReference(types.NewContext(), alert.ID, ref2))
+		require.NoError(t, client.AddReference(types.NewContext(), alert.ID, ref6))
 
 		t.Run("get added references", func(t *testing.T) {
-			got, err := client.GetAlert(context.Background(), alert.ID)
+			got, err := client.GetAlert(types.NewContext(), alert.ID)
 			require.NoError(t, err)
 			require.NotNil(t, got)
 			require.Len(t, got.Edges.References, 3)

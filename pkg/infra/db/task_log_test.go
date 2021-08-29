@@ -1,7 +1,6 @@
 package db_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/m-mizutani/alertchain/pkg/infra/ent"
@@ -11,10 +10,10 @@ import (
 )
 
 func TestTaskLog(t *testing.T) {
-	ctx := context.Background()
+	ctx := types.NewContext()
 	t.Run("Add TaskLog", func(t *testing.T) {
 		client := setupDB(t)
-		alert, _ := client.NewAlert(context.Background())
+		alert, _ := client.NewAlert(ctx)
 
 		t1, err := client.NewTaskLog(ctx, alert.ID, "blue", 0)
 		require.NoError(t, err)

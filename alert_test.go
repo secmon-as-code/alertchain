@@ -1,9 +1,9 @@
 package alertchain_test
 
 import (
-	"context"
 	"errors"
 	"math/rand"
+	"sync"
 	"testing"
 	"time"
 
@@ -17,15 +17,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func setupAlertTest(t *testing.T) (usecase.Interface, infra.Clients, *alertchain.Chain) {
-	chain := &alertchain.Chain{}
-
+func setupAlertTest(t *testing.T, chain *alertchain.Chain) (usecase.Interface, infra.Clients, *types.Context) {
 	clients := infra.Clients{
 		DB: db.NewDBMock(t),
 	}
-	uc := usecase.New(clients, chain)
+	uc := usecase.New(clients, chain.Jobs.Convert(), chain.Actions.Convert())
 
-	return uc, clients, chain
+	var wg sync.WaitGroup
+
+	return uc, clients, types.NewContext().InjectWaitGroup(&wg)
 }
 
 type mock struct {
@@ -33,14 +33,13 @@ type mock struct {
 }
 
 func (x *mock) Name() string { return "mock" }
-func (x *mock) Execute(ctx context.Context, alert *alertchain.Alert) error {
+func (x *mock) Execute(ctx *types.Context, alert *alertchain.Alert) error {
 	return x.Exec(alert)
 }
 
-func TestRecvAlert(t *testing.T) {
-	uc, clients, chain := setupAlertTest(t)
-
+func TestHandleAlert(t *testing.T) {
 	var done bool
+	var chain alertchain.Chain
 	chain.NewJob().AddTask(&mock{
 		Exec: func(alert *alertchain.Alert) error {
 			alert.UpdateSeverity(types.SevAffected)
@@ -49,22 +48,23 @@ func TestRecvAlert(t *testing.T) {
 			return nil
 		},
 	})
+	uc, clients, ctx := setupAlertTest(t, &chain)
 
-	input := alertchain.Alert{
-		Alert: ent.Alert{
-			Title:    "five",
-			Detector: "blue",
-		},
+	input := ent.Alert{
+		Title:    "five",
+		Detector: "blue",
 	}
-	ctx, wg := alertchain.SetWaitGroupToCtx(context.Background())
-	alert, err := uc.RecvAlert(ctx, &input)
+
+	ctx.WaitGroup().Add(1)
+
+	alert, err := uc.HandleAlert(ctx, &input, nil)
 	require.NoError(t, err)
 	require.NotNil(t, alert)
 
-	wg.Wait()
+	ctx.WaitGroup().Wait()
 	assert.True(t, done)
 
-	got, err := clients.DB.GetAlert(context.Background(), alert.ID)
+	got, err := clients.DB.GetAlert(ctx, alert.ID)
 	require.NoError(t, err)
 	assert.Equal(t, alert.Title, got.Title)
 	assert.Equal(t, types.SevAffected, got.Severity)
@@ -73,20 +73,17 @@ func TestRecvAlert(t *testing.T) {
 
 func TestRecvAlertDoNotUpdate(t *testing.T) {
 	t.Run("do not update severity and status by overwriting vars", func(t *testing.T) {
-		uc, clients, chain := setupAlertTest(t)
-
 		var done bool
+		var chain alertchain.Chain
 		chain.NewJob().AddTask(&mock{
 			Exec: func(alert *alertchain.Alert) error {
 				alert.Severity = types.SevAffected
 				alert.Status = types.StatusClosed
-				if err := alert.Commit(context.Background()); err != nil {
-					return err
-				}
 				done = true
 				return nil
 			},
 		})
+		uc, clients, ctx := setupAlertTest(t, &chain)
 
 		input := alertchain.Alert{
 			Alert: ent.Alert{
@@ -94,15 +91,16 @@ func TestRecvAlertDoNotUpdate(t *testing.T) {
 				Detector: "blue",
 			},
 		}
-		ctx, wg := alertchain.SetWaitGroupToCtx(context.Background())
-		alert, err := uc.RecvAlert(ctx, &input)
+
+		ctx.WaitGroup().Add(1)
+		alert, err := uc.HandleAlert(ctx, &input.Alert, nil)
+		ctx.WaitGroup().Wait()
 		require.NoError(t, err)
 		require.NotNil(t, alert)
 
-		wg.Wait()
 		assert.True(t, done)
 
-		got, err := clients.DB.GetAlert(context.Background(), alert.ID)
+		got, err := clients.DB.GetAlert(ctx, alert.ID)
 		require.NoError(t, err)
 		assert.Equal(t, alert.Title, got.Title)
 		assert.NotEqual(t, types.SevAffected, got.Severity)
@@ -113,8 +111,7 @@ func TestRecvAlertDoNotUpdate(t *testing.T) {
 func TestRecvAlertMassiveAnnotation(t *testing.T) {
 	const multiplex = 32
 
-	uc, clients, chain := setupAlertTest(t)
-
+	var chain alertchain.Chain
 	job := chain.NewJob()
 	job.Timeout = time.Second
 	for i := 0; i < multiplex; i++ {
@@ -124,7 +121,7 @@ func TestRecvAlertMassiveAnnotation(t *testing.T) {
 				alert.Attributes[0].Annotate(&alertchain.Annotation{
 					Annotation: ent.Annotation{
 						Source:    "x",
-						Timestamp: rand.Int63(), /* nosec */
+						Timestamp: rand.Int63(), // nosec
 						Name:      "y",
 						Value:     "z",
 					},
@@ -133,28 +130,26 @@ func TestRecvAlertMassiveAnnotation(t *testing.T) {
 			},
 		})
 	}
+	uc, clients, ctx := setupAlertTest(t, &chain)
 
-	ctx, wg := alertchain.SetWaitGroupToCtx(context.Background())
-	input := alertchain.Alert{
-		Alert: ent.Alert{
-			Title:    "five",
-			Detector: "blue",
-		},
-		Attributes: []*alertchain.Attribute{
-			{
-				Attribute: ent.Attribute{
-					Key:   "color",
-					Value: "red",
-					Type:  types.AttrUserID,
-				},
-			},
+	inputAlert := ent.Alert{
+		Title:    "five",
+		Detector: "blue",
+	}
+	inputAttrs := []*ent.Attribute{
+		{
+			Key:   "color",
+			Value: "red",
+			Type:  types.AttrUserID,
 		},
 	}
-	created, err := uc.RecvAlert(ctx, &input)
-	require.NoError(t, err)
-	wg.Wait()
 
-	alert, err := clients.DB.GetAlert(context.Background(), created.Alert.ID)
+	ctx.WaitGroup().Add(1)
+	created, err := uc.HandleAlert(ctx, &inputAlert, inputAttrs)
+	require.NoError(t, err)
+	ctx.WaitGroup().Wait()
+
+	alert, err := clients.DB.GetAlert(ctx, created.ID)
 	require.NoError(t, err)
 	require.Len(t, alert.Edges.Attributes[0].Edges.Annotations, multiplex)
 	for _, ann := range alert.Edges.Attributes[0].Edges.Annotations {
@@ -167,8 +162,7 @@ func TestRecvAlertMassiveAnnotation(t *testing.T) {
 
 func TestRecvAlertErrorHandling(t *testing.T) {
 	t.Run("exit on error", func(t *testing.T) {
-		uc, _, chain := setupAlertTest(t)
-
+		var chain alertchain.Chain
 		job := chain.NewJob()
 		job.ExitOnErr = true
 		job.AddTask(&mock{
@@ -186,21 +180,22 @@ func TestRecvAlertErrorHandling(t *testing.T) {
 			},
 		})
 
-		input := alertchain.Alert{
-			Alert: ent.Alert{
-				Title:    "five",
-				Detector: "blue",
-			},
+		uc, _, ctx := setupAlertTest(t, &chain)
+
+		input := ent.Alert{
+			Title:    "five",
+			Detector: "blue",
 		}
-		ctx, wg := alertchain.SetWaitGroupToCtx(context.Background())
-		_, err := uc.RecvAlert(ctx, &input)
+
+		ctx.WaitGroup().Add(1)
+		_, err := uc.HandleAlert(ctx, &input, nil)
 		require.NoError(t, err)
-		wg.Wait()
+		ctx.WaitGroup().Wait()
 		assert.False(t, done2ndJob)
 	})
 
 	t.Run("not exit on error", func(t *testing.T) {
-		uc, _, chain := setupAlertTest(t)
+		var chain alertchain.Chain
 
 		job := chain.NewJob()
 		// Default: job.ExitOnErr = false
@@ -219,16 +214,17 @@ func TestRecvAlertErrorHandling(t *testing.T) {
 			},
 		})
 
-		input := alertchain.Alert{
-			Alert: ent.Alert{
-				Title:    "five",
-				Detector: "blue",
-			},
+		uc, _, ctx := setupAlertTest(t, &chain)
+
+		input := ent.Alert{
+			Title:    "five",
+			Detector: "blue",
 		}
-		ctx, wg := alertchain.SetWaitGroupToCtx(context.Background())
-		_, err := uc.RecvAlert(ctx, &input)
+
+		ctx.WaitGroup().Add(1)
+		_, err := uc.HandleAlert(ctx, &input, nil)
 		require.NoError(t, err)
-		wg.Wait()
+		ctx.WaitGroup().Wait()
 		assert.True(t, done2ndJob)
 	})
 }

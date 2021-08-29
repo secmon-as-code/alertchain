@@ -1,8 +1,6 @@
 package main
 
 import (
-	"context"
-	"fmt"
 	"time"
 
 	"github.com/m-mizutani/alertchain"
@@ -15,9 +13,7 @@ type TaskExample struct{}
 
 func (x *TaskExample) Name() string { return "TaskExample" }
 
-func (x *TaskExample) Execute(ctx context.Context, alert *alertchain.Alert) error {
-	w := alertchain.LogWriter(ctx)
-
+func (x *TaskExample) Execute(ctx *types.Context, alert *alertchain.Alert) error {
 	// Update serverity
 	alert.UpdateSeverity(types.SevUnclassified)
 
@@ -41,7 +37,6 @@ func (x *TaskExample) Execute(ctx context.Context, alert *alertchain.Alert) erro
 		Comment: "test link",
 	})
 
-	fmt.Fprintf(w, "done")
 	return nil
 }
 

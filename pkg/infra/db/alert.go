@@ -1,7 +1,6 @@
 package db
 
 import (
-	"context"
 	"time"
 
 	"github.com/m-mizutani/alertchain/pkg/infra/ent"
@@ -12,7 +11,7 @@ import (
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/attribute"
 )
 
-func (x *Client) GetAlert(ctx context.Context, id types.AlertID) (*ent.Alert, error) {
+func (x *Client) GetAlert(ctx *types.Context, id types.AlertID) (*ent.Alert, error) {
 	if x.lock {
 		x.mutex.Lock()
 		defer x.mutex.Unlock()
@@ -33,7 +32,7 @@ func (x *Client) GetAlert(ctx context.Context, id types.AlertID) (*ent.Alert, er
 		WithReferences().
 		WithAttributes(func(q *ent.AttributeQuery) {
 			q.WithAnnotations()
-		}).Only(x.ctx)
+		}).Only(ctx)
 	if err != nil {
 		return nil, types.ErrDatabaseUnexpected.Wrap(err)
 	}
@@ -41,13 +40,13 @@ func (x *Client) GetAlert(ctx context.Context, id types.AlertID) (*ent.Alert, er
 	return fetched, nil
 }
 
-func (x *Client) GetAlerts(ctx context.Context) ([]*ent.Alert, error) {
+func (x *Client) GetAlerts(ctx *types.Context) ([]*ent.Alert, error) {
 	if x.lock {
 		x.mutex.Lock()
 		defer x.mutex.Unlock()
 	}
 
-	fetched, err := x.client.Alert.Query().Order(ent.Desc("created_at")).All(x.ctx)
+	fetched, err := x.client.Alert.Query().Order(ent.Desc("created_at")).All(ctx)
 	if err != nil {
 		return nil, types.ErrDatabaseUnexpected.Wrap(err)
 	}
@@ -55,7 +54,7 @@ func (x *Client) GetAlerts(ctx context.Context) ([]*ent.Alert, error) {
 	return fetched, nil
 }
 
-func (x *Client) NewAlert(ctx context.Context) (*ent.Alert, error) {
+func (x *Client) NewAlert(ctx *types.Context) (*ent.Alert, error) {
 	if x.lock {
 		x.mutex.Lock()
 		defer x.mutex.Unlock()
@@ -64,7 +63,7 @@ func (x *Client) NewAlert(ctx context.Context) (*ent.Alert, error) {
 	newAlert, err := x.client.Alert.Create().
 		SetID(types.NewAlertID()).
 		SetCreatedAt(time.Now().UTC().Unix()).
-		Save(x.ctx)
+		Save(ctx)
 	if err != nil {
 		return nil, types.ErrDatabaseUnexpected.Wrap(err)
 	}
@@ -72,7 +71,7 @@ func (x *Client) NewAlert(ctx context.Context) (*ent.Alert, error) {
 	return newAlert, nil
 }
 
-func (x *Client) UpdateAlert(ctx context.Context, id types.AlertID, alert *ent.Alert) error {
+func (x *Client) UpdateAlert(ctx *types.Context, id types.AlertID, alert *ent.Alert) error {
 	q := x.client.Alert.UpdateOneID(id).
 		SetTitle(alert.Title).
 		SetDescription(alert.Description).
@@ -89,14 +88,14 @@ func (x *Client) UpdateAlert(ctx context.Context, id types.AlertID, alert *ent.A
 		x.mutex.Lock()
 		defer x.mutex.Unlock()
 	}
-	if _, err := q.Save(x.ctx); err != nil {
+	if _, err := q.Save(ctx); err != nil {
 		return types.ErrDatabaseUnexpected.Wrap(err)
 	}
 
 	return nil
 }
 
-func (x *Client) UpdateAlertStatus(ctx context.Context, id types.AlertID, status types.AlertStatus, ts int64) error {
+func (x *Client) UpdateAlertStatus(ctx *types.Context, id types.AlertID, status types.AlertStatus, ts int64) error {
 	q := x.client.Alert.UpdateOneID(id).SetStatus(status)
 	if status == types.StatusClosed {
 		q = q.SetClosedAt(ts)
@@ -106,26 +105,26 @@ func (x *Client) UpdateAlertStatus(ctx context.Context, id types.AlertID, status
 		x.mutex.Lock()
 		defer x.mutex.Unlock()
 	}
-	if _, err := q.Save(x.ctx); err != nil {
+	if _, err := q.Save(ctx); err != nil {
 		return types.ErrDatabaseUnexpected.Wrap(err)
 	}
 
 	return nil
 }
 
-func (x *Client) UpdateAlertSeverity(ctx context.Context, id types.AlertID, sev types.Severity, ts int64) error {
+func (x *Client) UpdateAlertSeverity(ctx *types.Context, id types.AlertID, sev types.Severity, ts int64) error {
 	if x.lock {
 		x.mutex.Lock()
 		defer x.mutex.Unlock()
 	}
-	if _, err := x.client.Alert.UpdateOneID(id).SetSeverity(sev).Save(x.ctx); err != nil {
+	if _, err := x.client.Alert.UpdateOneID(id).SetSeverity(sev).Save(ctx); err != nil {
 		return types.ErrDatabaseUnexpected.Wrap(err)
 	}
 
 	return nil
 }
 
-func (x *Client) AddAttributes(ctx context.Context, id types.AlertID, newAttrs []*ent.Attribute) error {
+func (x *Client) AddAttributes(ctx *types.Context, id types.AlertID, newAttrs []*ent.Attribute) error {
 	if len(newAttrs) == 0 {
 		return nil // nothing to do
 	}
@@ -143,19 +142,19 @@ func (x *Client) AddAttributes(ctx context.Context, id types.AlertID, newAttrs [
 		x.mutex.Lock()
 		defer x.mutex.Unlock()
 	}
-	added, err := x.client.Attribute.CreateBulk(builders...).Save(x.ctx)
+	added, err := x.client.Attribute.CreateBulk(builders...).Save(ctx)
 	if err != nil {
 		return types.ErrDatabaseUnexpected.Wrap(err)
 	}
 
-	if _, err := x.client.Alert.UpdateOneID(id).AddAttributes(added...).Save(x.ctx); err != nil {
+	if _, err := x.client.Alert.UpdateOneID(id).AddAttributes(added...).Save(ctx); err != nil {
 		return types.ErrDatabaseUnexpected.Wrap(err)
 	}
 
 	return nil
 }
 
-func (x *Client) GetAttribute(ctx context.Context, id int) (*ent.Attribute, error) {
+func (x *Client) GetAttribute(ctx *types.Context, id int) (*ent.Attribute, error) {
 	if x.lock {
 		x.mutex.Lock()
 		defer x.mutex.Unlock()
@@ -169,7 +168,7 @@ func (x *Client) GetAttribute(ctx context.Context, id int) (*ent.Attribute, erro
 	return attr, nil
 }
 
-func (x *Client) AddAnnotation(ctx context.Context, attr *ent.Attribute, annotations []*ent.Annotation) error {
+func (x *Client) AddAnnotation(ctx *types.Context, attr *ent.Attribute, annotations []*ent.Annotation) error {
 	if len(annotations) == 0 {
 		return nil
 	}
@@ -187,19 +186,19 @@ func (x *Client) AddAnnotation(ctx context.Context, attr *ent.Attribute, annotat
 		x.mutex.Lock()
 		defer x.mutex.Unlock()
 	}
-	added, err := x.client.Annotation.CreateBulk(builders...).Save(x.ctx)
+	added, err := x.client.Annotation.CreateBulk(builders...).Save(ctx)
 	if err != nil {
 		return types.ErrDatabaseUnexpected.Wrap(err)
 	}
 
-	if _, err := attr.Update().AddAnnotations(added...).Save(x.ctx); err != nil {
+	if _, err := attr.Update().AddAnnotations(added...).Save(ctx); err != nil {
 		return types.ErrDatabaseUnexpected.Wrap(err)
 	}
 
 	return nil
 }
 
-func (x *Client) AddReference(ctx context.Context, id types.AlertID, ref *ent.Reference) error {
+func (x *Client) AddReference(ctx *types.Context, id types.AlertID, ref *ent.Reference) error {
 	if id == "" {
 		return goerr.Wrap(types.ErrInvalidInput, "AlertID is not set")
 	}

@@ -1,29 +1,26 @@
 package alertchain
 
 import (
-	"bytes"
-	"context"
-	"io"
-	"os"
 	"reflect"
 	"sync"
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/m-mizutani/alertchain/pkg/infra"
 	"github.com/m-mizutani/alertchain/pkg/infra/db"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent"
+	"github.com/m-mizutani/alertchain/pkg/usecase"
 	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/alertchain/types"
-	"github.com/m-mizutani/goerr"
 )
 
 var logger = utils.Logger
 
 type Chain struct {
-	Jobs    []*Job
+	Jobs    Jobs
 	Sources []Source
-	Actions []Action
+	Actions Actions
 }
 
 type Job struct {
@@ -34,7 +31,7 @@ type Job struct {
 
 type Task interface {
 	Name() string
-	Execute(ctx context.Context, alert *Alert) error
+	Execute(ctx *types.Context, alert *Alert) error
 }
 
 type Source interface {
@@ -45,22 +42,60 @@ type Source interface {
 type Action interface {
 	Name() string
 	Executable(attr *Attribute) bool
-	Execute(ctx context.Context, attr *Attribute) error
+	Execute(ctx *types.Context, attr *Attribute) error
 }
 
-type ActionEntry struct {
-	ID     string `json:"id"`
-	Name   string `json:"name"`
-	Action Action `json:"-"`
+type Jobs []*Job
+type Actions []Action
+
+func (x Jobs) Convert() []*usecase.Job {
+	resp := make([]*usecase.Job, len(x))
+	for i, j := range x {
+		job := &usecase.Job{
+			Timeout:   j.Timeout,
+			ExitOnErr: j.ExitOnErr,
+			Tasks:     make([]*usecase.Task, len(j.Tasks)),
+		}
+
+		for i, task := range j.Tasks {
+			job.Tasks[i] = &usecase.Task{
+				Name: task.Name(),
+				Execute: func(ctx *types.Context, alert *ent.Alert) (*usecase.ChangeRequest, error) {
+					newAlert := NewAlert(alert)
+					if err := task.Execute(ctx, newAlert); err != nil {
+						return nil, err
+					}
+					return &newAlert.ChangeRequest, nil
+				},
+			}
+		}
+
+		resp[i] = job
+	}
+	return resp
 }
 
-type ActionLog struct {
-	ent.ActionLog
+func (x Actions) Convert() []*usecase.Action {
+	resp := make([]*usecase.Action, len(x))
+	for i, action := range x {
+		resp[i] = &usecase.Action{
+			ID:   uuid.New().String(),
+			Name: action.Name(),
+			Executable: func(attr *ent.Attribute) bool {
+				return action.Executable(newAttribute(attr))
+			},
+			Execute: func(ctx *types.Context, attr *ent.Attribute) error {
+				return action.Execute(ctx, newAttribute(attr))
+			},
+		}
+	}
+	return resp
 }
 
 // TestInvokeTasks runs
 func (x *Chain) TestInvokeTasks(t *testing.T, recv *Alert) (*Alert, error) {
-	ctx, wg := setWaitGroupToCtx(context.Background())
+	var wg sync.WaitGroup
+	ctx := types.NewContext().InjectWaitGroup(&wg)
 
 	clients := &infra.Clients{
 		DB: db.NewDBMock(t),
@@ -72,12 +107,22 @@ func (x *Chain) TestInvokeTasks(t *testing.T, recv *Alert) (*Alert, error) {
 	}
 	wg.Wait()
 
-	created, err := clients.DB.GetAlert(context.Background(), alert.id)
+	created, err := clients.DB.GetAlert(types.NewContext(), alert.id)
 	if err != nil {
 		return nil, err
 	}
 
-	return NewAlert(created, nil), nil
+	return NewAlert(created), nil
+}
+
+func (x *Chain) InvokeTasks(ctx *types.Context, recv *Alert, clients *infra.Clients) (*Alert, error) {
+	uc := usecase.New(*clients, x.Jobs.Convert(), x.Actions.Convert())
+	created, err := uc.HandleAlert(ctx, &recv.Alert, recv.Attributes.toEnt())
+	if err != nil {
+		return nil, err
+	}
+
+	return NewAlert(created), nil
 }
 
 func (x *Chain) LookupTask(taskType interface{}) Task {
@@ -91,200 +136,6 @@ func (x *Chain) LookupTask(taskType interface{}) Task {
 	}
 
 	return nil
-}
-
-type ctxKey string
-
-const (
-	ctxKeyWaitGroup ctxKey = "WaitGroup"
-)
-
-func getWaitGroupFromCtx(ctx context.Context) *sync.WaitGroup {
-	obj := ctx.Value(ctxKeyWaitGroup)
-	if obj == nil {
-		return nil
-	}
-	wg, ok := obj.(*sync.WaitGroup)
-	if !ok {
-		return nil
-	}
-	return wg
-}
-
-func setWaitGroupToCtx(ctx context.Context) (context.Context, *sync.WaitGroup) {
-	wg := new(sync.WaitGroup)
-	resp := context.WithValue(ctx, ctxKeyWaitGroup, wg)
-	return resp, wg
-}
-
-func (x *Chain) InvokeTasks(ctx context.Context, recv *Alert, clients *infra.Clients) (*Alert, error) {
-	newAlert, err := saveAlert(ctx, clients.DB, recv)
-	if err != nil {
-		return nil, err
-	}
-
-	wg := getWaitGroupFromCtx(ctx)
-	if wg != nil {
-		wg.Add(1)
-	}
-
-	go func() {
-		if wg != nil {
-			defer wg.Done()
-		}
-
-		if err := x.executeJobs(ctx, newAlert.ID, clients); err != nil {
-			utils.HandleError(err)
-		}
-	}()
-
-	return NewAlert(newAlert, clients.DB), nil
-}
-
-func saveAlert(ctx context.Context, dbClient db.Interface, recv *Alert) (*ent.Alert, error) {
-	if err := recv.Validate(); err != nil {
-		return nil, goerr.Wrap(err)
-	}
-
-	created, err := dbClient.NewAlert(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := dbClient.UpdateAlert(ctx, created.ID, &recv.Alert); err != nil {
-		return nil, err
-	}
-
-	attrs := make([]*ent.Attribute, len(recv.Attributes))
-	for i, attr := range recv.Attributes {
-		attrs[i] = &attr.Attribute
-	}
-	if err := dbClient.AddAttributes(ctx, created.ID, attrs); err != nil {
-		return nil, err
-	}
-
-	newAlert, err := dbClient.GetAlert(ctx, created.ID)
-	if err != nil {
-		return nil, err
-	}
-
-	return newAlert, nil
-}
-
-func (x *Chain) executeJobs(ctx context.Context, alertID types.AlertID, clients *infra.Clients) error {
-	for idx, job := range x.Jobs {
-		if len(job.Tasks) == 0 {
-			continue
-		}
-		if job.Timeout > 0 {
-			newCtx, cancel := context.WithTimeout(ctx, job.Timeout)
-			defer cancel()
-			ctx = newCtx
-		}
-
-		alert, err := clients.DB.GetAlert(ctx, alertID)
-		if err != nil {
-			return err
-		}
-
-		var wg sync.WaitGroup
-		errCh := make(chan error, len(job.Tasks))
-
-		for _, task := range job.Tasks {
-			wg.Add(1)
-			go executeTask(ctx, &executeTaskInput{
-				stage:  int64(idx),
-				task:   task,
-				wg:     &wg,
-				alert:  alert,
-				client: clients.DB,
-				errCh:  errCh,
-			})
-		}
-		wg.Wait()
-
-		close(errCh)
-		for err := range errCh {
-			if err != nil && job.ExitOnErr {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
-type executeTaskInput struct {
-	stage  int64
-	task   Task
-	wg     *sync.WaitGroup
-	alert  *ent.Alert
-	client db.Interface
-	errCh  chan error
-}
-
-type logWriter struct {
-	bytes.Buffer
-}
-
-func (x *logWriter) Write(p []byte) (n int, err error) {
-	if n, err := x.Buffer.Write(p); err != nil {
-		return n, err
-	}
-	return os.Stdout.Write(p)
-}
-
-func executeTask(ctx context.Context, input *executeTaskInput) {
-	defer input.wg.Done()
-	var taskLog *ent.TaskLog
-	var execLog ent.ExecLog
-	var logW logWriter
-	ctx = utils.InjectLogWriter(ctx, &logW)
-
-	handlerError := func(err error) {
-		wrapped := goerr.Wrap(err).With("task.Name", input.task.Name())
-		utils.HandleError(wrapped)
-		input.errCh <- wrapped
-
-		if taskLog != nil {
-			utils.CopyErrorToExecLog(err, &execLog)
-		}
-	}
-
-	defer func() {
-		if taskLog != nil {
-			execLog.Log = logW.String()
-			execLog.Timestamp = time.Now().UTC().UnixNano()
-
-			if err := input.client.AppendTaskLog(ctx, taskLog.ID, &execLog); err != nil {
-				input.errCh <- err
-			}
-		}
-	}()
-
-	alert := NewAlert(input.alert, input.client)
-
-	taskLog, err := input.client.NewTaskLog(ctx, input.alert.ID, input.task.Name(), input.stage)
-	if err != nil {
-		handlerError(err)
-		return
-	}
-
-	if err := input.client.AppendTaskLog(ctx, taskLog.ID, &ent.ExecLog{
-		Status: types.ExecStart,
-	}); err != nil {
-		handlerError(err)
-		return
-	}
-
-	if err := input.task.Execute(ctx, alert); err != nil {
-		handlerError(err)
-		return
-	}
-
-	if err := alert.Commit(ctx); err != nil {
-		handlerError(err)
-		return
-	}
 }
 
 func (x *Chain) ActivateSources() chan *Alert {
@@ -303,9 +154,4 @@ func (x *Chain) NewJob() *Job {
 
 func (x *Job) AddTask(task Task) {
 	x.Tasks = append(x.Tasks, task)
-}
-
-// LogWriter returns io.Writer to output log message. Log message output via io.Writer will be stored into TaskLog and displayed in Web UI.
-func LogWriter(ctx context.Context) io.Writer {
-	return utils.LogWriter(ctx)
 }

@@ -1,27 +1,26 @@
 package usecase
 
 import (
-	"context"
+	"bytes"
 	"time"
 
-	"github.com/m-mizutani/alertchain"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent"
 	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/alertchain/types"
 	"github.com/m-mizutani/goerr"
 )
 
-func (x *usecase) GetExecutableActions(ctx context.Context, attr *alertchain.Attribute) ([]*alertchain.ActionEntry, error) {
-	var resp []*alertchain.ActionEntry
-	for _, entry := range x.actions {
-		if entry.Action.Executable(attr) {
-			resp = append(resp, entry)
+func (x *usecase) GetExecutableActions(ctx *types.Context, attr *ent.Attribute) ([]*Action, error) {
+	var resp []*Action
+	for _, action := range x.actions {
+		if action.Executable(attr) {
+			resp = append(resp, action)
 		}
 	}
 	return resp, nil
 }
 
-func (x *usecase) ExecuteAction(ctx context.Context, actionID string, attrID int) (*alertchain.ActionLog, error) {
+func (x *usecase) ExecuteAction(ctx *types.Context, actionID string, attrID int) (*ent.ActionLog, error) {
 	action, ok := x.actions[actionID]
 	if !ok {
 		return nil, goerr.Wrap(types.ErrInvalidInput, "invalid action ID")
@@ -31,7 +30,7 @@ func (x *usecase) ExecuteAction(ctx context.Context, actionID string, attrID int
 		return nil, err
 	}
 
-	actionLog, err := x.clients.DB.NewActionLog(ctx, attr.Edges.Alert.ID, action.Action.Name(), attrID)
+	actionLog, err := x.clients.DB.NewActionLog(ctx, attr.Edges.Alert.ID, action.Name, attrID)
 	if err != nil {
 		return nil, err
 	}
@@ -43,19 +42,20 @@ func (x *usecase) ExecuteAction(ctx context.Context, actionID string, attrID int
 	}
 
 	go func() {
-		ctx := context.Background()
+		logW := &bytes.Buffer{}
+		ctx := types.NewContext().InjectWriter(logW)
 		execLog := &ent.ExecLog{
 			Status: types.ExecSucceed,
 		}
 		defer func() {
 			execLog.Timestamp = time.Now().UnixNano()
-			// execLog.Log =
+			execLog.Log = logW.String()
 			if err := x.clients.DB.AppendActionLog(ctx, actionLog.ID, execLog); err != nil {
 				utils.HandleError(err)
 			}
 		}()
-		arg := &alertchain.Attribute{Attribute: *attr}
-		if err := action.Action.Execute(ctx, arg); err != nil {
+
+		if err := action.Execute(ctx, attr); err != nil {
 			utils.CopyErrorToExecLog(err, execLog)
 			utils.HandleError(err)
 			return
@@ -63,5 +63,5 @@ func (x *usecase) ExecuteAction(ctx context.Context, actionID string, attrID int
 		execLog.Timestamp = time.Now().UTC().UnixNano()
 	}()
 
-	return &alertchain.ActionLog{ActionLog: *actionLog}, nil
+	return actionLog, nil
 }

@@ -1,7 +1,6 @@
 package tasks
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -11,6 +10,7 @@ import (
 	"github.com/google/go-github/github"
 	"github.com/m-mizutani/alertchain"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent"
+	"github.com/m-mizutani/alertchain/types"
 	"github.com/m-mizutani/goerr"
 )
 
@@ -29,7 +29,7 @@ type CreateGitHubIssue struct {
 
 func (x *CreateGitHubIssue) Name() string { return "Create GitHub issue" }
 
-func (x *CreateGitHubIssue) Execute(ctx context.Context, alert *alertchain.Alert) error {
+func (x *CreateGitHubIssue) Execute(ctx *types.Context, alert *alertchain.Alert) error {
 	rt := http.DefaultTransport
 	if x.TestRoundTripper != nil {
 		rt = x.TestRoundTripper

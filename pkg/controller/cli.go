@@ -126,7 +126,7 @@ func cmdServe(cfg *config) *cli.Command {
 			}
 
 			// Setup usecase
-			uc := usecase.New(infra.Clients{DB: dbClient}, chain)
+			uc := usecase.New(infra.Clients{DB: dbClient}, chain.Jobs.Convert(), chain.Actions.Convert())
 
 			// Starting server
 			if err := server.New(uc, cfg.ServerAddr, cfg.ServerPort).Run(); err != nil {

@@ -16,28 +16,27 @@ import (
 type Interface interface {
 	Close() error
 
-	GetAlert(ctx context.Context, id types.AlertID) (*ent.Alert, error)
-	GetAlerts(ctx context.Context) ([]*ent.Alert, error)
-	NewAlert(ctx context.Context) (*ent.Alert, error)
-	UpdateAlert(ctx context.Context, id types.AlertID, alert *ent.Alert) error
-	UpdateAlertStatus(ctx context.Context, id types.AlertID, status types.AlertStatus, ts int64) error
-	UpdateAlertSeverity(ctx context.Context, id types.AlertID, status types.Severity, ts int64) error
+	GetAlert(ctx *types.Context, id types.AlertID) (*ent.Alert, error)
+	GetAlerts(ctx *types.Context) ([]*ent.Alert, error)
+	NewAlert(ctx *types.Context) (*ent.Alert, error)
+	UpdateAlert(ctx *types.Context, id types.AlertID, alert *ent.Alert) error
+	UpdateAlertStatus(ctx *types.Context, id types.AlertID, status types.AlertStatus, ts int64) error
+	UpdateAlertSeverity(ctx *types.Context, id types.AlertID, status types.Severity, ts int64) error
 
-	AddAttributes(ctx context.Context, id types.AlertID, newAttrs []*ent.Attribute) error
-	GetAttribute(ctx context.Context, id int) (*ent.Attribute, error)
+	AddAttributes(ctx *types.Context, id types.AlertID, newAttrs []*ent.Attribute) error
+	GetAttribute(ctx *types.Context, id int) (*ent.Attribute, error)
 
-	AddAnnotation(ctx context.Context, attr *ent.Attribute, ann []*ent.Annotation) error
-	AddReference(ctx context.Context, id types.AlertID, ref *ent.Reference) error
+	AddAnnotation(ctx *types.Context, attr *ent.Attribute, ann []*ent.Annotation) error
+	AddReference(ctx *types.Context, id types.AlertID, ref *ent.Reference) error
 
-	NewTaskLog(ctx context.Context, id types.AlertID, taskName string, stage int64) (*ent.TaskLog, error)
-	AppendTaskLog(ctx context.Context, taskID int, execLog *ent.ExecLog) error
+	NewTaskLog(ctx *types.Context, id types.AlertID, taskName string, stage int64) (*ent.TaskLog, error)
+	AppendTaskLog(ctx *types.Context, taskID int, execLog *ent.ExecLog) error
 
-	NewActionLog(ctx context.Context, id types.AlertID, name string, attrID int) (*ent.ActionLog, error)
-	AppendActionLog(ctx context.Context, actionID int, execLog *ent.ExecLog) error
+	NewActionLog(ctx *types.Context, id types.AlertID, name string, attrID int) (*ent.ActionLog, error)
+	AppendActionLog(ctx *types.Context, actionID int, execLog *ent.ExecLog) error
 }
 
 type Client struct {
-	ctx    context.Context
 	client *ent.Client
 
 	lock  bool
@@ -45,9 +44,7 @@ type Client struct {
 }
 
 func newClient() *Client {
-	return &Client{
-		ctx: context.Background(),
-	}
+	return &Client{}
 }
 
 func New(dbType, dbConfig string) (Interface, error) {

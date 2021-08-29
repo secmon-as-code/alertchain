@@ -1,13 +1,9 @@
 package alertchain
 
 import (
-	"context"
-	"time"
-
-	"github.com/m-mizutani/alertchain/pkg/infra/db"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent"
+	"github.com/m-mizutani/alertchain/pkg/usecase"
 	"github.com/m-mizutani/alertchain/types"
-	"github.com/m-mizutani/goerr"
 )
 
 type Alert struct {
@@ -16,143 +12,30 @@ type Alert struct {
 	TaskLogs   []*ent.TaskLog   `json:"task_logs"`
 	References []*ent.Reference `json:"references"`
 
-	id            types.AlertID // Immutable AlertID copied from ent.Alert.ID
-	db            db.Interface
-	newAttrs      []*Attribute
-	newReferences []*ent.Reference
-	newStatus     *types.AlertStatus
-	newSeverity   *types.Severity
+	id types.AlertID // Immutable AlertID copied from ent.Alert.ID
+
+	usecase.ChangeRequest
 
 	// To remove "edges" in JSON. DO NOT USE as data field
 	EdgesOverride interface{} `json:"edges,omitempty"`
 }
 
-func (x *Alert) UpdateStatus(status types.AlertStatus) {
-	x.newStatus = &status
-}
-
-func (x *Alert) UpdateSeverity(sev types.Severity) {
-	x.newSeverity = &sev
-}
-
-func (x *Alert) AddAttributes(attrs []*Attribute) {
-	x.newAttrs = append(x.newAttrs, attrs...)
-}
-
-func (x *Alert) AddReference(ref *ent.Reference) {
-	x.newReferences = append(x.newReferences, ref)
-}
-
-func (x *Alert) Validate() error {
-	if x.Title == "" {
-		return goerr.Wrap(types.ErrInvalidInput, "'title' field is required")
-	}
-	if x.Detector == "" {
-		return goerr.Wrap(types.ErrInvalidInput, "'detector' field is required")
+func NewAlert(alert *ent.Alert) *Alert {
+	if alert == nil {
+		return nil
 	}
 
-	for _, attr := range x.Attributes {
-		if attr.Key == "" {
-			return goerr.Wrap(types.ErrInvalidInput, "'key' field is required").With("attr", attr)
-		}
-		if attr.Value == "" {
-			return goerr.Wrap(types.ErrInvalidInput, "'value' field is required").With("attr", attr)
-		}
-
-		if err := attr.Type.IsValid(); err != nil {
-			return goerr.Wrap(err).With("attr", attr)
-		}
-
-		for _, s := range attr.Context {
-			ctx := types.AttrContext(s)
-			if err := ctx.IsValid(); err != nil {
-				return goerr.Wrap(err).With("attr", attr)
-			}
-		}
-	}
-
-	return nil
-}
-
-func NewAlert(alert *ent.Alert, dbClient db.Interface) *Alert {
 	newAlert := &Alert{
 		Alert: *alert,
 		id:    alert.ID,
-		db:    dbClient,
 
 		TaskLogs:   alert.Edges.TaskLogs,
 		References: alert.Edges.References,
 	}
-	if len(alert.Edges.Attributes) > 0 {
-		attrs := make(Attributes, len(alert.Edges.Attributes))
-		for i, attr := range alert.Edges.Attributes {
-			annotations := make([]*Annotation, len(attr.Edges.Annotations))
-			for j, ann := range attr.Edges.Annotations {
-				annotations[j] = &Annotation{Annotation: *ann}
-			}
 
-			attrs[i] = &Attribute{
-				Attribute:   *attr,
-				Alert:       newAlert,
-				Annotations: annotations,
-			}
-		}
-		newAlert.Attributes = attrs
+	for _, attr := range alert.Edges.Attributes {
+		newAlert.pushAttribute(attr)
 	}
 
 	return newAlert
-}
-
-func (x *Alert) Commit(ctx context.Context) error {
-	ts := time.Now().UTC().Unix()
-	if x.newStatus != nil {
-		if err := x.db.UpdateAlertStatus(ctx, x.id, *x.newStatus, ts); err != nil {
-			return err
-		}
-	}
-	if x.newSeverity != nil {
-		if err := x.db.UpdateAlertSeverity(ctx, x.id, *x.newSeverity, ts); err != nil {
-			return err
-		}
-	}
-
-	if len(x.newAttrs) > 0 {
-		attrs := make([]*ent.Attribute, len(x.newAttrs))
-		for i, a := range x.newAttrs {
-			attrs[i] = &a.Attribute
-		}
-		if err := x.db.AddAttributes(ctx, x.id, attrs); err != nil {
-			return err
-		}
-	}
-
-	for _, attr := range x.Attributes {
-		if len(attr.newAnnotations) == 0 {
-			continue
-		}
-
-		annotations := make([]*ent.Annotation, len(attr.newAnnotations))
-		for i, ann := range attr.newAnnotations {
-			annotations[i] = &ann.Annotation
-		}
-		if err := x.db.AddAnnotation(ctx, &attr.Attribute, annotations); err != nil {
-			return err
-		}
-	}
-
-	for _, ref := range x.newReferences {
-		if err := x.db.AddReference(ctx, x.id, ref); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (x *Alert) Abort() error {
-	return nil
-}
-
-func (x *Alert) Close() error {
-	return nil
 }

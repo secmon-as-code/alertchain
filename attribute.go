@@ -2,20 +2,45 @@ package alertchain
 
 import (
 	"github.com/m-mizutani/alertchain/pkg/infra/ent"
+	"github.com/m-mizutani/alertchain/pkg/usecase"
 	"github.com/m-mizutani/alertchain/types"
 )
 
 type Attribute struct {
 	ent.Attribute
-	Annotations []*Annotation  `json:"annotations"`
-	Actions     []*ActionEntry `json:"actions"`
+	Annotations []*Annotation `json:"annotations"`
 
 	Alert *Alert `json:"-"`
 
-	newAnnotations []*Annotation
+	changeRequest *usecase.ChangeRequest
 
 	// To remove "edges" in JSON. DO NOT USE as data field
 	EdgesOverride interface{} `json:"edges,omitempty"`
+}
+
+func (x *Alert) pushAttribute(attr *ent.Attribute) *Attribute {
+	created := newAttribute(attr)
+	x.Attributes = append(x.Attributes, created)
+
+	created.Alert = x
+	created.changeRequest = &x.ChangeRequest
+
+	return created
+}
+
+func newAttribute(attr *ent.Attribute) *Attribute {
+	annotations := make([]*Annotation, len(attr.Edges.Annotations))
+	for j, ann := range attr.Edges.Annotations {
+		annotations[j] = &Annotation{Annotation: *ann}
+	}
+
+	created := &Attribute{
+		Attribute:     *attr,
+		Alert:         NewAlert(attr.Edges.Alert),
+		Annotations:   annotations,
+		changeRequest: &usecase.ChangeRequest{},
+	}
+	return created
 }
 
 func (x *Attribute) HasContext(ctx types.AttrContext) bool {
@@ -28,6 +53,14 @@ func (x *Attribute) HasContext(ctx types.AttrContext) bool {
 }
 
 type Attributes []*Attribute
+
+func (x Attributes) toEnt() []*ent.Attribute {
+	resp := make([]*ent.Attribute, len(x))
+	for i := range x {
+		resp[i] = &x[i].Attribute
+	}
+	return resp
+}
 
 func (x Attributes) FindByKey(key string) Attributes {
 	var resp Attributes
@@ -71,7 +104,7 @@ func (x Attributes) FindByContext(ctx types.AttrContext) Attributes {
 }
 
 func (x *Attribute) Annotate(ann *Annotation) {
-	x.newAnnotations = append(x.newAnnotations, ann)
+	x.changeRequest.AddAnnotation(&x.Attribute, &ann.Annotation)
 }
 
 type Annotation struct {

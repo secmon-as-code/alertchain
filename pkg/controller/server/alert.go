@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/m-mizutani/alertchain"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent"
 	"github.com/m-mizutani/alertchain/types"
 	"github.com/m-mizutani/goerr"
 )
@@ -12,7 +13,7 @@ import (
 func getAlerts(c *gin.Context) {
 	uc := ctxUsecase(c)
 
-	alerts, err := uc.GetAlerts(c)
+	alerts, err := uc.GetAlerts(types.WrapContext(c))
 	if err != nil {
 		c.Error(err)
 		return
@@ -25,7 +26,8 @@ func getAlert(c *gin.Context) {
 	alertID := c.Param("id")
 	uc := ctxUsecase(c)
 
-	alert, err := uc.GetAlert(c, types.AlertID(alertID))
+	ctx := types.WrapContext(c)
+	alert, err := uc.GetAlert(ctx, types.AlertID(alertID))
 	if err != nil {
 		c.Error(err)
 		return
@@ -43,7 +45,12 @@ func postAlert(c *gin.Context) {
 	}
 
 	uc := ctxUsecase(c)
-	newAlert, err := uc.RecvAlert(c, &alert)
+	attrs := make([]*ent.Attribute, len(alert.Attributes))
+	for i := range alert.Attributes {
+		attrs[i] = &alert.Attributes[i].Attribute
+	}
+	ctx := types.WrapContext(c)
+	newAlert, err := uc.HandleAlert(ctx, &alert.Alert, attrs)
 	if err != nil {
 		c.Error(goerr.Wrap(err).With("alert", alert))
 		return

@@ -1,14 +1,12 @@
 package db
 
 import (
-	"context"
-
 	"github.com/m-mizutani/alertchain/pkg/infra/ent"
 	"github.com/m-mizutani/alertchain/types"
 	"github.com/m-mizutani/goerr"
 )
 
-func (x *Client) NewActionLog(ctx context.Context, id types.AlertID, name string, attrID int) (*ent.ActionLog, error) {
+func (x *Client) NewActionLog(ctx *types.Context, id types.AlertID, name string, attrID int) (*ent.ActionLog, error) {
 	if id == "" {
 		return nil, goerr.Wrap(types.ErrDatabaseInvalidInput, "AlertID is not set")
 	}
@@ -42,7 +40,7 @@ func (x *Client) NewActionLog(ctx context.Context, id types.AlertID, name string
 	return actionLog, nil
 }
 
-func (x *Client) AppendActionLog(ctx context.Context, actionID int, execLog *ent.ExecLog) error {
+func (x *Client) AppendActionLog(ctx *types.Context, actionID int, execLog *ent.ExecLog) error {
 	created, err := x.appendExecLog(ctx, execLog)
 	if err != nil {
 		return err
@@ -63,7 +61,7 @@ func (x *Client) AppendActionLog(ctx context.Context, actionID int, execLog *ent
 	return nil
 }
 
-func (x *Client) appendExecLog(ctx context.Context, execLog *ent.ExecLog) (*ent.ExecLog, error) {
+func (x *Client) appendExecLog(ctx *types.Context, execLog *ent.ExecLog) (*ent.ExecLog, error) {
 	if x.lock {
 		x.mutex.Lock()
 		defer x.mutex.Unlock()

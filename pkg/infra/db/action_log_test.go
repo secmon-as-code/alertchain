@@ -1,7 +1,6 @@
 package db_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/m-mizutani/alertchain/pkg/infra/ent"
@@ -11,7 +10,7 @@ import (
 )
 
 func TestActionLog(t *testing.T) {
-	ctx := context.Background()
+	ctx := types.NewContext()
 	t.Run("Add ActionLog", func(t *testing.T) {
 		client := setupDB(t)
 		created, _ := client.NewAlert(ctx)

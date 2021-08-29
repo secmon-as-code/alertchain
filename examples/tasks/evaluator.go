@@ -1,7 +1,6 @@
 package tasks
 
 import (
-	"context"
 	"net"
 
 	"github.com/m-mizutani/alertchain"
@@ -11,7 +10,7 @@ import (
 type Evaluator struct{}
 
 func (x *Evaluator) Name() string { return "Evaluator" }
-func (x *Evaluator) Execute(ctx context.Context, alert *alertchain.Alert) error {
+func (x *Evaluator) Execute(ctx *types.Context, alert *alertchain.Alert) error {
 	if alert.Title == "Suspicious Login" {
 		evalSuspiciousLogin(alert)
 	}

@@ -1,10 +1,10 @@
 package alertchain_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/m-mizutani/alertchain"
+	"github.com/m-mizutani/alertchain/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -14,14 +14,14 @@ type TaskBlue struct {
 }
 
 func (x *TaskBlue) Name() string { return "blue" }
-func (x *TaskBlue) Execute(ctx context.Context, alert *alertchain.Alert) error {
+func (x *TaskBlue) Execute(ctx *types.Context, alert *alertchain.Alert) error {
 	return nil
 }
 
 type TaskOrange struct{}
 
 func (x *TaskOrange) Name() string { return "orange" }
-func (x *TaskOrange) Execute(ctx context.Context, alert *alertchain.Alert) error {
+func (x *TaskOrange) Execute(ctx *types.Context, alert *alertchain.Alert) error {
 	return nil
 }
 

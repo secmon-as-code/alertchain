@@ -1,14 +1,12 @@
 package db
 
 import (
-	"context"
-
 	"github.com/m-mizutani/alertchain/pkg/infra/ent"
 	"github.com/m-mizutani/alertchain/types"
 	"github.com/m-mizutani/goerr"
 )
 
-func (x *Client) NewTaskLog(ctx context.Context, id types.AlertID, taskName string, stage int64) (*ent.TaskLog, error) {
+func (x *Client) NewTaskLog(ctx *types.Context, id types.AlertID, taskName string, stage int64) (*ent.TaskLog, error) {
 	if id == "" {
 		return nil, goerr.Wrap(types.ErrDatabaseInvalidInput, "AlertID is not set")
 	}
@@ -38,7 +36,7 @@ func (x *Client) NewTaskLog(ctx context.Context, id types.AlertID, taskName stri
 	return taskLog, nil
 }
 
-func (x *Client) AppendTaskLog(ctx context.Context, taskID int, execLog *ent.ExecLog) error {
+func (x *Client) AppendTaskLog(ctx *types.Context, taskID int, execLog *ent.ExecLog) error {
 	created, err := x.appendExecLog(ctx, execLog)
 	if err != nil {
 		return err
