@@ -1,7 +1,7 @@
 package server
 
 import (
-	"crypto/md5"
+	"crypto/sha256"
 	"fmt"
 	"net/http"
 	"strings"
@@ -33,12 +33,12 @@ func initAsset() {
 
 	assetCache["index.html"] = &cache{
 		data: indexHTML,
-		eTag: fmt.Sprintf("%x", md5.Sum(indexHTML)),
+		eTag: fmt.Sprintf("%x", sha256.Sum256(indexHTML)),
 	}
 
 	assetCache["bundle.js"] = &cache{
 		data: bundleJS,
-		eTag: fmt.Sprintf("%x", md5.Sum(bundleJS)),
+		eTag: fmt.Sprintf("%x", sha256.Sum256(bundleJS)),
 	}
 }
 
