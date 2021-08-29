@@ -46,8 +46,18 @@ type Source interface {
 
 type Action interface {
 	Name() string
-	Actionable(attr *Attribute) bool
-	Act(ctx context.Context, attr *Attribute) error
+	Executable(attr *Attribute) bool
+	Execute(ctx context.Context, attr *Attribute) error
+}
+
+type ActionEntry struct {
+	ID     string `json:"id"`
+	Name   string `json:"name"`
+	Action Action `json:"-"`
+}
+
+type ActionLog struct {
+	ent.ActionLog
 }
 
 // TestInvokeTasks runs
@@ -263,7 +273,7 @@ func executeTask(ctx context.Context, input *executeTaskInput) {
 	alert := NewAlert(input.alert, input.client)
 
 	now := time.Now().UTC().UnixNano()
-	taskLog, err := input.client.NewTaskLog(ctx, input.alert.ID, input.task.Name(), now, input.stage, false)
+	taskLog, err := input.client.NewTaskLog(ctx, input.alert.ID, input.task.Name(), now, input.stage)
 
 	if err != nil {
 		handlerError(err)

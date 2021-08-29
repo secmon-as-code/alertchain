@@ -22,8 +22,10 @@ type DBClient interface {
 	UpdateAlertSeverity(ctx context.Context, id types.AlertID, status types.Severity, ts int64) error
 
 	AddAttributes(ctx context.Context, id types.AlertID, newAttrs []*ent.Attribute) error
+	GetAttribute(ctx context.Context, id int) (*ent.Attribute, error)
+
 	AddAnnotation(ctx context.Context, attr *ent.Attribute, ann []*ent.Annotation) error
 	AddReference(ctx context.Context, id types.AlertID, ref *ent.Reference) error
-	NewTaskLog(ctx context.Context, id types.AlertID, taskName string, ts, stage int64, optional bool) (*ent.TaskLog, error)
+	NewTaskLog(ctx context.Context, id types.AlertID, taskName string, ts, stage int64) (*ent.TaskLog, error)
 	UpdateTaskLog(ctx context.Context, task *ent.TaskLog) error
 }

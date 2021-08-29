@@ -9,6 +9,19 @@ import (
 	"github.com/m-mizutani/alertchain/pkg/infra/ent"
 )
 
+// The ActionLogFunc type is an adapter to allow the use of ordinary
+// function as ActionLog mutator.
+type ActionLogFunc func(context.Context, *ent.ActionLogMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ActionLogFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.ActionLogMutation)
+	if !ok {
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ActionLogMutation", m)
+	}
+	return f(ctx, mv)
+}
+
 // The AlertFunc type is an adapter to allow the use of ordinary
 // function as Alert mutator.
 type AlertFunc func(context.Context, *ent.AlertMutation) (ent.Value, error)

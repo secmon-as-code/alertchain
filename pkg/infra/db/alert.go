@@ -12,6 +12,11 @@ import (
 )
 
 func (x *Client) GetAlert(ctx context.Context, id types.AlertID) (*ent.Alert, error) {
+	if x.lock {
+		x.mutex.Lock()
+		defer x.mutex.Unlock()
+	}
+
 	fetched, err := x.client.Alert.Query().
 		Where(entAlert.ID(id)).
 		WithTaskLogs().
@@ -27,6 +32,11 @@ func (x *Client) GetAlert(ctx context.Context, id types.AlertID) (*ent.Alert, er
 }
 
 func (x *Client) GetAlerts(ctx context.Context) ([]*ent.Alert, error) {
+	if x.lock {
+		x.mutex.Lock()
+		defer x.mutex.Unlock()
+	}
+
 	fetched, err := x.client.Alert.Query().Order(ent.Desc("created_at")).All(x.ctx)
 	if err != nil {
 		return nil, types.ErrDatabaseUnexpected.Wrap(err)
@@ -135,6 +145,20 @@ func (x *Client) AddAttributes(ctx context.Context, id types.AlertID, newAttrs [
 	return nil
 }
 
+func (x *Client) GetAttribute(ctx context.Context, id int) (*ent.Attribute, error) {
+	if x.lock {
+		x.mutex.Lock()
+		defer x.mutex.Unlock()
+	}
+
+	attr, err := x.client.Attribute.Get(ctx, id)
+	if err != nil {
+		return nil, types.ErrDatabaseUnexpected.Wrap(err)
+	}
+
+	return attr, nil
+}
+
 func (x *Client) AddAnnotation(ctx context.Context, attr *ent.Attribute, annotations []*ent.Annotation) error {
 	if len(annotations) == 0 {
 		return nil
@@ -200,7 +224,7 @@ func (x *Client) AddReference(ctx context.Context, id types.AlertID, ref *ent.Re
 	return nil
 }
 
-func (x *Client) NewTaskLog(ctx context.Context, id types.AlertID, taskName string, ts, stage int64, optional bool) (*ent.TaskLog, error) {
+func (x *Client) NewTaskLog(ctx context.Context, id types.AlertID, taskName string, ts, stage int64) (*ent.TaskLog, error) {
 	if id == "" {
 		return nil, goerr.Wrap(types.ErrInvalidInput, "AlertID is not set")
 	}
@@ -216,7 +240,6 @@ func (x *Client) NewTaskLog(ctx context.Context, id types.AlertID, taskName stri
 		SetTaskName(taskName).
 		SetStage(stage).
 		SetStartedAt(ts).
-		SetOptional(optional).
 		Save(ctx)
 	if err != nil {
 		return nil, types.ErrDatabaseUnexpected.Wrap(err)

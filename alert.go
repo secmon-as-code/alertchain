@@ -12,7 +12,7 @@ import (
 
 type Alert struct {
 	ent.Alert
-	Attributes []*Attribute     `json:"attributes"`
+	Attributes Attributes       `json:"attributes"`
 	TaskLogs   []*ent.TaskLog   `json:"task_logs"`
 	References []*ent.Reference `json:"references"`
 

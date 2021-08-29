@@ -19,8 +19,6 @@ type TaskLog struct {
 	ID int `json:"id,omitempty"`
 	// TaskName holds the value of the "task_name" field.
 	TaskName string `json:"task_name,omitempty"`
-	// Optional holds the value of the "optional" field.
-	Optional bool `json:"optional,omitempty"`
 	// Stage holds the value of the "stage" field.
 	Stage int64 `json:"stage,omitempty"`
 	// StartedAt holds the value of the "started_at" field.
@@ -68,8 +66,6 @@ func (*TaskLog) scanValues(columns []string) ([]interface{}, error) {
 		switch columns[i] {
 		case tasklog.FieldErrValues, tasklog.FieldStackTrace:
 			values[i] = new([]byte)
-		case tasklog.FieldOptional:
-			values[i] = new(sql.NullBool)
 		case tasklog.FieldID, tasklog.FieldStage, tasklog.FieldStartedAt, tasklog.FieldExitedAt:
 			values[i] = new(sql.NullInt64)
 		case tasklog.FieldTaskName, tasklog.FieldLog, tasklog.FieldErrmsg, tasklog.FieldStatus:
@@ -102,12 +98,6 @@ func (tl *TaskLog) assignValues(columns []string, values []interface{}) error {
 				return fmt.Errorf("unexpected type %T for field task_name", values[i])
 			} else if value.Valid {
 				tl.TaskName = value.String
-			}
-		case tasklog.FieldOptional:
-			if value, ok := values[i].(*sql.NullBool); !ok {
-				return fmt.Errorf("unexpected type %T for field optional", values[i])
-			} else if value.Valid {
-				tl.Optional = value.Bool
 			}
 		case tasklog.FieldStage:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -203,8 +193,6 @@ func (tl *TaskLog) String() string {
 	builder.WriteString(fmt.Sprintf("id=%v", tl.ID))
 	builder.WriteString(", task_name=")
 	builder.WriteString(tl.TaskName)
-	builder.WriteString(", optional=")
-	builder.WriteString(fmt.Sprintf("%v", tl.Optional))
 	builder.WriteString(", stage=")
 	builder.WriteString(fmt.Sprintf("%v", tl.Stage))
 	builder.WriteString(", started_at=")

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/m-mizutani/alertchain"
+	"github.com/m-mizutani/alertchain/examples/tasks"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent"
 	"github.com/m-mizutani/alertchain/types"
 )
@@ -49,7 +50,7 @@ func Chain() (*alertchain.Chain, error) {
 		Jobs: []*alertchain.Job{
 			{
 				Tasks: []alertchain.Task{
-					&TaskExample{},
+					&tasks.Evaluator{},
 				},
 			},
 		},

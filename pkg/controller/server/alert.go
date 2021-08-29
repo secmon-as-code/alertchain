@@ -18,11 +18,7 @@ func getAlerts(c *gin.Context) {
 		return
 	}
 
-	newAlerts := make([]*alertchain.Alert, len(alerts))
-	for i, alert := range alerts {
-		newAlerts[i] = alertchain.NewAlert(alert, nil)
-	}
-	resp(c, http.StatusOK, newAlerts)
+	resp(c, http.StatusOK, alerts)
 }
 
 func getAlert(c *gin.Context) {
@@ -35,7 +31,7 @@ func getAlert(c *gin.Context) {
 		return
 	}
 
-	resp(c, http.StatusOK, alertchain.NewAlert(alert, nil))
+	resp(c, http.StatusOK, alert)
 }
 
 func postAlert(c *gin.Context) {

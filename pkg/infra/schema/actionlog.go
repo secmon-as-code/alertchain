@@ -7,16 +7,15 @@ import (
 	"github.com/m-mizutani/alertchain/types"
 )
 
-// TaskLog holds the schema definition for the TaskLog entity.
-type TaskLog struct {
+// ActionLog holds the schema definition for the ActionLog entity.
+type ActionLog struct {
 	ent.Schema
 }
 
-// Fields of the TaskLog.
-func (TaskLog) Fields() []ent.Field {
+// Fields of the ActionLog.
+func (ActionLog) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("task_name").Immutable(),
-		field.Int64("stage").Immutable(),
+		field.String("name").Immutable(),
 		field.Int64("started_at").Immutable(),
 		field.Int64("exited_at").Optional(),
 		field.String("log").Optional(),
@@ -27,9 +26,9 @@ func (TaskLog) Fields() []ent.Field {
 	}
 }
 
-// Edges of the TaskLog.
-func (TaskLog) Edges() []ent.Edge {
+// Edges of the ActionLog.
+func (ActionLog) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("annotated", Annotation.Type),
+		edge.To("argument", Attribute.Type),
 	}
 }

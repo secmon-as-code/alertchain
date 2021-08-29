@@ -6,6 +6,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 )
 
+// ActionLog is the predicate function for actionlog builders.
+type ActionLog func(*sql.Selector)
+
 // Alert is the predicate function for alert builders.
 type Alert func(*sql.Selector)
 

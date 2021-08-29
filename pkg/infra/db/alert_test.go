@@ -143,11 +143,11 @@ func TestTaskLog(t *testing.T) {
 		client := setupDB(t)
 		alert, _ := client.NewAlert(context.Background())
 
-		t1, err := client.NewTaskLog(ctx, alert.ID, "blue", 1000, 0, false)
+		t1, err := client.NewTaskLog(ctx, alert.ID, "blue", 1000, 0)
 		require.NoError(t, err)
-		t2, err := client.NewTaskLog(ctx, alert.ID, "orange", 1001, 0, false)
+		t2, err := client.NewTaskLog(ctx, alert.ID, "orange", 1001, 0)
 		require.NoError(t, err)
-		t3, err := client.NewTaskLog(ctx, alert.ID, "red", 1002, 0, false)
+		t3, err := client.NewTaskLog(ctx, alert.ID, "red", 1002, 0)
 		require.NoError(t, err)
 
 		t1.Log = "timeless"

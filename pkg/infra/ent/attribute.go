@@ -27,8 +27,9 @@ type Attribute struct {
 	Context []string `json:"context,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the AttributeQuery when eager-loading is set.
-	Edges            AttributeEdges `json:"edges"`
-	alert_attributes *types.AlertID
+	Edges               AttributeEdges `json:"edges"`
+	action_log_argument *int
+	alert_attributes    *types.AlertID
 }
 
 // AttributeEdges holds the relations/edges for other nodes in the graph.
@@ -60,7 +61,9 @@ func (*Attribute) scanValues(columns []string) ([]interface{}, error) {
 			values[i] = new(sql.NullInt64)
 		case attribute.FieldKey, attribute.FieldValue, attribute.FieldType:
 			values[i] = new(sql.NullString)
-		case attribute.ForeignKeys[0]: // alert_attributes
+		case attribute.ForeignKeys[0]: // action_log_argument
+			values[i] = new(sql.NullInt64)
+		case attribute.ForeignKeys[1]: // alert_attributes
 			values[i] = new(sql.NullString)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Attribute", columns[i])
@@ -110,6 +113,13 @@ func (a *Attribute) assignValues(columns []string, values []interface{}) error {
 				}
 			}
 		case attribute.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field action_log_argument", value)
+			} else if value.Valid {
+				a.action_log_argument = new(int)
+				*a.action_log_argument = int(value.Int64)
+			}
+		case attribute.ForeignKeys[1]:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field alert_attributes", values[i])
 			} else if value.Valid {

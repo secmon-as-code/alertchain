@@ -27,20 +27,6 @@ func (tlc *TaskLogCreate) SetTaskName(s string) *TaskLogCreate {
 	return tlc
 }
 
-// SetOptional sets the "optional" field.
-func (tlc *TaskLogCreate) SetOptional(b bool) *TaskLogCreate {
-	tlc.mutation.SetOptional(b)
-	return tlc
-}
-
-// SetNillableOptional sets the "optional" field if the given value is not nil.
-func (tlc *TaskLogCreate) SetNillableOptional(b *bool) *TaskLogCreate {
-	if b != nil {
-		tlc.SetOptional(*b)
-	}
-	return tlc
-}
-
 // SetStage sets the "stage" field.
 func (tlc *TaskLogCreate) SetStage(i int64) *TaskLogCreate {
 	tlc.mutation.SetStage(i)
@@ -207,10 +193,6 @@ func (tlc *TaskLogCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (tlc *TaskLogCreate) defaults() {
-	if _, ok := tlc.mutation.Optional(); !ok {
-		v := tasklog.DefaultOptional
-		tlc.mutation.SetOptional(v)
-	}
 	if _, ok := tlc.mutation.Status(); !ok {
 		v := tasklog.DefaultStatus
 		tlc.mutation.SetStatus(v)
@@ -221,9 +203,6 @@ func (tlc *TaskLogCreate) defaults() {
 func (tlc *TaskLogCreate) check() error {
 	if _, ok := tlc.mutation.TaskName(); !ok {
 		return &ValidationError{Name: "task_name", err: errors.New(`ent: missing required field "task_name"`)}
-	}
-	if _, ok := tlc.mutation.Optional(); !ok {
-		return &ValidationError{Name: "optional", err: errors.New(`ent: missing required field "optional"`)}
 	}
 	if _, ok := tlc.mutation.Stage(); !ok {
 		return &ValidationError{Name: "stage", err: errors.New(`ent: missing required field "stage"`)}
@@ -268,14 +247,6 @@ func (tlc *TaskLogCreate) createSpec() (*TaskLog, *sqlgraph.CreateSpec) {
 			Column: tasklog.FieldTaskName,
 		})
 		_node.TaskName = value
-	}
-	if value, ok := tlc.mutation.Optional(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeBool,
-			Value:  value,
-			Column: tasklog.FieldOptional,
-		})
-		_node.Optional = value
 	}
 	if value, ok := tlc.mutation.Stage(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
