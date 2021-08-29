@@ -56,7 +56,7 @@ func (x *Controller) CLI(args []string) {
 	}
 
 	if err := app.Run(args); err != nil {
-		utils.OutputError(logger, err)
+		utils.HandleError(err)
 		os.Exit(1)
 	}
 }

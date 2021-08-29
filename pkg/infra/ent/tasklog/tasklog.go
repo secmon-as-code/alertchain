@@ -2,35 +2,19 @@
 
 package tasklog
 
-import (
-	"github.com/m-mizutani/alertchain/types"
-)
-
 const (
 	// Label holds the string label denoting the tasklog type in the database.
 	Label = "task_log"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
-	// FieldTaskName holds the string denoting the task_name field in the database.
-	FieldTaskName = "task_name"
+	// FieldName holds the string denoting the name field in the database.
+	FieldName = "name"
 	// FieldStage holds the string denoting the stage field in the database.
 	FieldStage = "stage"
-	// FieldStartedAt holds the string denoting the started_at field in the database.
-	FieldStartedAt = "started_at"
-	// FieldExitedAt holds the string denoting the exited_at field in the database.
-	FieldExitedAt = "exited_at"
-	// FieldLog holds the string denoting the log field in the database.
-	FieldLog = "log"
-	// FieldErrmsg holds the string denoting the errmsg field in the database.
-	FieldErrmsg = "errmsg"
-	// FieldErrValues holds the string denoting the err_values field in the database.
-	FieldErrValues = "err_values"
-	// FieldStackTrace holds the string denoting the stack_trace field in the database.
-	FieldStackTrace = "stack_trace"
-	// FieldStatus holds the string denoting the status field in the database.
-	FieldStatus = "status"
 	// EdgeAnnotated holds the string denoting the annotated edge name in mutations.
 	EdgeAnnotated = "annotated"
+	// EdgeExecLogs holds the string denoting the exec_logs edge name in mutations.
+	EdgeExecLogs = "exec_logs"
 	// Table holds the table name of the tasklog in the database.
 	Table = "task_logs"
 	// AnnotatedTable is the table that holds the annotated relation/edge.
@@ -40,20 +24,20 @@ const (
 	AnnotatedInverseTable = "annotations"
 	// AnnotatedColumn is the table column denoting the annotated relation/edge.
 	AnnotatedColumn = "task_log_annotated"
+	// ExecLogsTable is the table that holds the exec_logs relation/edge.
+	ExecLogsTable = "exec_logs"
+	// ExecLogsInverseTable is the table name for the ExecLog entity.
+	// It exists in this package in order to avoid circular dependency with the "execlog" package.
+	ExecLogsInverseTable = "exec_logs"
+	// ExecLogsColumn is the table column denoting the exec_logs relation/edge.
+	ExecLogsColumn = "task_log_exec_logs"
 )
 
 // Columns holds all SQL columns for tasklog fields.
 var Columns = []string{
 	FieldID,
-	FieldTaskName,
+	FieldName,
 	FieldStage,
-	FieldStartedAt,
-	FieldExitedAt,
-	FieldLog,
-	FieldErrmsg,
-	FieldErrValues,
-	FieldStackTrace,
-	FieldStatus,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "task_logs"
@@ -76,8 +60,3 @@ func ValidColumn(column string) bool {
 	}
 	return false
 }
-
-var (
-	// DefaultStatus holds the default value on creation for the "status" field.
-	DefaultStatus types.TaskStatus
-)

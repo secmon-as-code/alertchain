@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/annotation"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/execlog"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/predicate"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/tasklog"
 )
@@ -28,6 +29,7 @@ type TaskLogQuery struct {
 	predicates []predicate.TaskLog
 	// eager-loading edges.
 	withAnnotated *AnnotationQuery
+	withExecLogs  *ExecLogQuery
 	withFKs       bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -80,6 +82,28 @@ func (tlq *TaskLogQuery) QueryAnnotated() *AnnotationQuery {
 			sqlgraph.From(tasklog.Table, tasklog.FieldID, selector),
 			sqlgraph.To(annotation.Table, annotation.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, tasklog.AnnotatedTable, tasklog.AnnotatedColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(tlq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryExecLogs chains the current query on the "exec_logs" edge.
+func (tlq *TaskLogQuery) QueryExecLogs() *ExecLogQuery {
+	query := &ExecLogQuery{config: tlq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := tlq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := tlq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tasklog.Table, tasklog.FieldID, selector),
+			sqlgraph.To(execlog.Table, execlog.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, tasklog.ExecLogsTable, tasklog.ExecLogsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(tlq.driver.Dialect(), step)
 		return fromU, nil
@@ -269,6 +293,7 @@ func (tlq *TaskLogQuery) Clone() *TaskLogQuery {
 		order:         append([]OrderFunc{}, tlq.order...),
 		predicates:    append([]predicate.TaskLog{}, tlq.predicates...),
 		withAnnotated: tlq.withAnnotated.Clone(),
+		withExecLogs:  tlq.withExecLogs.Clone(),
 		// clone intermediate query.
 		sql:  tlq.sql.Clone(),
 		path: tlq.path,
@@ -286,18 +311,29 @@ func (tlq *TaskLogQuery) WithAnnotated(opts ...func(*AnnotationQuery)) *TaskLogQ
 	return tlq
 }
 
+// WithExecLogs tells the query-builder to eager-load the nodes that are connected to
+// the "exec_logs" edge. The optional arguments are used to configure the query builder of the edge.
+func (tlq *TaskLogQuery) WithExecLogs(opts ...func(*ExecLogQuery)) *TaskLogQuery {
+	query := &ExecLogQuery{config: tlq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	tlq.withExecLogs = query
+	return tlq
+}
+
 // GroupBy is used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
 //
 // Example:
 //
 //	var v []struct {
-//		TaskName string `json:"task_name,omitempty"`
+//		Name string `json:"name,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.TaskLog.Query().
-//		GroupBy(tasklog.FieldTaskName).
+//		GroupBy(tasklog.FieldName).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 //
@@ -319,11 +355,11 @@ func (tlq *TaskLogQuery) GroupBy(field string, fields ...string) *TaskLogGroupBy
 // Example:
 //
 //	var v []struct {
-//		TaskName string `json:"task_name,omitempty"`
+//		Name string `json:"name,omitempty"`
 //	}
 //
 //	client.TaskLog.Query().
-//		Select(tasklog.FieldTaskName).
+//		Select(tasklog.FieldName).
 //		Scan(ctx, &v)
 //
 func (tlq *TaskLogQuery) Select(fields ...string) *TaskLogSelect {
@@ -352,8 +388,9 @@ func (tlq *TaskLogQuery) sqlAll(ctx context.Context) ([]*TaskLog, error) {
 		nodes       = []*TaskLog{}
 		withFKs     = tlq.withFKs
 		_spec       = tlq.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
 			tlq.withAnnotated != nil,
+			tlq.withExecLogs != nil,
 		}
 	)
 	if withFKs {
@@ -405,6 +442,35 @@ func (tlq *TaskLogQuery) sqlAll(ctx context.Context) ([]*TaskLog, error) {
 				return nil, fmt.Errorf(`unexpected foreign-key "task_log_annotated" returned %v for node %v`, *fk, n.ID)
 			}
 			node.Edges.Annotated = append(node.Edges.Annotated, n)
+		}
+	}
+
+	if query := tlq.withExecLogs; query != nil {
+		fks := make([]driver.Value, 0, len(nodes))
+		nodeids := make(map[int]*TaskLog)
+		for i := range nodes {
+			fks = append(fks, nodes[i].ID)
+			nodeids[nodes[i].ID] = nodes[i]
+			nodes[i].Edges.ExecLogs = []*ExecLog{}
+		}
+		query.withFKs = true
+		query.Where(predicate.ExecLog(func(s *sql.Selector) {
+			s.Where(sql.InValues(tasklog.ExecLogsColumn, fks...))
+		}))
+		neighbors, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, n := range neighbors {
+			fk := n.task_log_exec_logs
+			if fk == nil {
+				return nil, fmt.Errorf(`foreign-key "task_log_exec_logs" is nil for node %v`, n.ID)
+			}
+			node, ok := nodeids[*fk]
+			if !ok {
+				return nil, fmt.Errorf(`unexpected foreign-key "task_log_exec_logs" returned %v for node %v`, *fk, n.ID)
+			}
+			node.Edges.ExecLogs = append(node.Edges.ExecLogs, n)
 		}
 	}
 

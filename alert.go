@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/m-mizutani/alertchain/pkg/infra"
+	"github.com/m-mizutani/alertchain/pkg/infra/db"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent"
 	"github.com/m-mizutani/alertchain/types"
 	"github.com/m-mizutani/goerr"
@@ -17,7 +17,7 @@ type Alert struct {
 	References []*ent.Reference `json:"references"`
 
 	id            types.AlertID // Immutable AlertID copied from ent.Alert.ID
-	db            infra.DBClient
+	db            db.Interface
 	newAttrs      []*Attribute
 	newReferences []*ent.Reference
 	newStatus     *types.AlertStatus
@@ -74,11 +74,11 @@ func (x *Alert) Validate() error {
 	return nil
 }
 
-func NewAlert(alert *ent.Alert, db infra.DBClient) *Alert {
+func NewAlert(alert *ent.Alert, dbClient db.Interface) *Alert {
 	newAlert := &Alert{
 		Alert: *alert,
 		id:    alert.ID,
-		db:    db,
+		db:    dbClient,
 
 		TaskLogs:   alert.Edges.TaskLogs,
 		References: alert.Edges.References,

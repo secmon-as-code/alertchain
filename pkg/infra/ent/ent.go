@@ -12,6 +12,7 @@ import (
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/alert"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/annotation"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/attribute"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/execlog"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/reference"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/tasklog"
 )
@@ -38,6 +39,7 @@ func columnChecker(table string) func(string) error {
 		alert.Table:      alert.ValidColumn,
 		annotation.Table: annotation.ValidColumn,
 		attribute.Table:  attribute.ValidColumn,
+		execlog.Table:    execlog.ValidColumn,
 		reference.Table:  reference.ValidColumn,
 		tasklog.Table:    tasklog.ValidColumn,
 	}

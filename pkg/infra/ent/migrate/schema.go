@@ -12,19 +12,21 @@ var (
 	ActionLogsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "name", Type: field.TypeString},
-		{Name: "started_at", Type: field.TypeInt64},
-		{Name: "exited_at", Type: field.TypeInt64, Nullable: true},
-		{Name: "log", Type: field.TypeString, Nullable: true},
-		{Name: "errmsg", Type: field.TypeString, Nullable: true},
-		{Name: "err_values", Type: field.TypeJSON, Nullable: true},
-		{Name: "stack_trace", Type: field.TypeJSON, Nullable: true},
-		{Name: "status", Type: field.TypeString, Default: "running"},
+		{Name: "alert_action_logs", Type: field.TypeString, Nullable: true},
 	}
 	// ActionLogsTable holds the schema information for the "action_logs" table.
 	ActionLogsTable = &schema.Table{
 		Name:       "action_logs",
 		Columns:    ActionLogsColumns,
 		PrimaryKey: []*schema.Column{ActionLogsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "action_logs_alerts_action_logs",
+				Columns:    []*schema.Column{ActionLogsColumns[2]},
+				RefColumns: []*schema.Column{AlertsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
 	}
 	// AlertsColumns holds the columns for the "alerts" table.
 	AlertsColumns = []*schema.Column{
@@ -83,6 +85,7 @@ var (
 		{Name: "context", Type: field.TypeJSON},
 		{Name: "action_log_argument", Type: field.TypeInt, Nullable: true},
 		{Name: "alert_attributes", Type: field.TypeString, Nullable: true},
+		{Name: "attribute_alert", Type: field.TypeString, Nullable: true},
 	}
 	// AttributesTable holds the schema information for the "attributes" table.
 	AttributesTable = &schema.Table{
@@ -100,6 +103,44 @@ var (
 				Symbol:     "attributes_alerts_attributes",
 				Columns:    []*schema.Column{AttributesColumns[6]},
 				RefColumns: []*schema.Column{AlertsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "attributes_alerts_alert",
+				Columns:    []*schema.Column{AttributesColumns[7]},
+				RefColumns: []*schema.Column{AlertsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+		},
+	}
+	// ExecLogsColumns holds the columns for the "exec_logs" table.
+	ExecLogsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "timestamp", Type: field.TypeInt64},
+		{Name: "log", Type: field.TypeString, Nullable: true},
+		{Name: "errmsg", Type: field.TypeString, Nullable: true},
+		{Name: "err_values", Type: field.TypeJSON, Nullable: true},
+		{Name: "stack_trace", Type: field.TypeJSON, Nullable: true},
+		{Name: "status", Type: field.TypeString},
+		{Name: "action_log_exec_logs", Type: field.TypeInt, Nullable: true},
+		{Name: "task_log_exec_logs", Type: field.TypeInt, Nullable: true},
+	}
+	// ExecLogsTable holds the schema information for the "exec_logs" table.
+	ExecLogsTable = &schema.Table{
+		Name:       "exec_logs",
+		Columns:    ExecLogsColumns,
+		PrimaryKey: []*schema.Column{ExecLogsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "exec_logs_action_logs_exec_logs",
+				Columns:    []*schema.Column{ExecLogsColumns[7]},
+				RefColumns: []*schema.Column{ActionLogsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "exec_logs_task_logs_exec_logs",
+				Columns:    []*schema.Column{ExecLogsColumns[8]},
+				RefColumns: []*schema.Column{TaskLogsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 		},
@@ -130,15 +171,8 @@ var (
 	// TaskLogsColumns holds the columns for the "task_logs" table.
 	TaskLogsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "task_name", Type: field.TypeString},
+		{Name: "name", Type: field.TypeString},
 		{Name: "stage", Type: field.TypeInt64},
-		{Name: "started_at", Type: field.TypeInt64},
-		{Name: "exited_at", Type: field.TypeInt64, Nullable: true},
-		{Name: "log", Type: field.TypeString, Nullable: true},
-		{Name: "errmsg", Type: field.TypeString, Nullable: true},
-		{Name: "err_values", Type: field.TypeJSON, Nullable: true},
-		{Name: "stack_trace", Type: field.TypeJSON, Nullable: true},
-		{Name: "status", Type: field.TypeString, Default: "running"},
 		{Name: "alert_task_logs", Type: field.TypeString, Nullable: true},
 	}
 	// TaskLogsTable holds the schema information for the "task_logs" table.
@@ -149,7 +183,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "task_logs_alerts_task_logs",
-				Columns:    []*schema.Column{TaskLogsColumns[10]},
+				Columns:    []*schema.Column{TaskLogsColumns[3]},
 				RefColumns: []*schema.Column{AlertsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -161,16 +195,21 @@ var (
 		AlertsTable,
 		AnnotationsTable,
 		AttributesTable,
+		ExecLogsTable,
 		ReferencesTable,
 		TaskLogsTable,
 	}
 )
 
 func init() {
+	ActionLogsTable.ForeignKeys[0].RefTable = AlertsTable
 	AnnotationsTable.ForeignKeys[0].RefTable = AttributesTable
 	AnnotationsTable.ForeignKeys[1].RefTable = TaskLogsTable
 	AttributesTable.ForeignKeys[0].RefTable = ActionLogsTable
 	AttributesTable.ForeignKeys[1].RefTable = AlertsTable
+	AttributesTable.ForeignKeys[2].RefTable = AlertsTable
+	ExecLogsTable.ForeignKeys[0].RefTable = ActionLogsTable
+	ExecLogsTable.ForeignKeys[1].RefTable = TaskLogsTable
 	ReferencesTable.ForeignKeys[0].RefTable = AlertsTable
 	TaskLogsTable.ForeignKeys[0].RefTable = AlertsTable
 }

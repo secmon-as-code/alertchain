@@ -33,6 +33,8 @@ const (
 	EdgeReferences = "references"
 	// EdgeTaskLogs holds the string denoting the task_logs edge name in mutations.
 	EdgeTaskLogs = "task_logs"
+	// EdgeActionLogs holds the string denoting the action_logs edge name in mutations.
+	EdgeActionLogs = "action_logs"
 	// Table holds the table name of the alert in the database.
 	Table = "alerts"
 	// AttributesTable is the table that holds the attributes relation/edge.
@@ -56,6 +58,13 @@ const (
 	TaskLogsInverseTable = "task_logs"
 	// TaskLogsColumn is the table column denoting the task_logs relation/edge.
 	TaskLogsColumn = "alert_task_logs"
+	// ActionLogsTable is the table that holds the action_logs relation/edge.
+	ActionLogsTable = "action_logs"
+	// ActionLogsInverseTable is the table name for the ActionLog entity.
+	// It exists in this package in order to avoid circular dependency with the "actionlog" package.
+	ActionLogsInverseTable = "action_logs"
+	// ActionLogsColumn is the table column denoting the action_logs relation/edge.
+	ActionLogsColumn = "alert_action_logs"
 )
 
 // Columns holds all SQL columns for alert fields.

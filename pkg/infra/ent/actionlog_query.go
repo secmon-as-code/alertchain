@@ -14,6 +14,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/actionlog"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/attribute"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/execlog"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/predicate"
 )
 
@@ -28,6 +29,8 @@ type ActionLogQuery struct {
 	predicates []predicate.ActionLog
 	// eager-loading edges.
 	withArgument *AttributeQuery
+	withExecLogs *ExecLogQuery
+	withFKs      bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -79,6 +82,28 @@ func (alq *ActionLogQuery) QueryArgument() *AttributeQuery {
 			sqlgraph.From(actionlog.Table, actionlog.FieldID, selector),
 			sqlgraph.To(attribute.Table, attribute.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, actionlog.ArgumentTable, actionlog.ArgumentColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(alq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryExecLogs chains the current query on the "exec_logs" edge.
+func (alq *ActionLogQuery) QueryExecLogs() *ExecLogQuery {
+	query := &ExecLogQuery{config: alq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := alq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := alq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(actionlog.Table, actionlog.FieldID, selector),
+			sqlgraph.To(execlog.Table, execlog.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, actionlog.ExecLogsTable, actionlog.ExecLogsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(alq.driver.Dialect(), step)
 		return fromU, nil
@@ -268,6 +293,7 @@ func (alq *ActionLogQuery) Clone() *ActionLogQuery {
 		order:        append([]OrderFunc{}, alq.order...),
 		predicates:   append([]predicate.ActionLog{}, alq.predicates...),
 		withArgument: alq.withArgument.Clone(),
+		withExecLogs: alq.withExecLogs.Clone(),
 		// clone intermediate query.
 		sql:  alq.sql.Clone(),
 		path: alq.path,
@@ -282,6 +308,17 @@ func (alq *ActionLogQuery) WithArgument(opts ...func(*AttributeQuery)) *ActionLo
 		opt(query)
 	}
 	alq.withArgument = query
+	return alq
+}
+
+// WithExecLogs tells the query-builder to eager-load the nodes that are connected to
+// the "exec_logs" edge. The optional arguments are used to configure the query builder of the edge.
+func (alq *ActionLogQuery) WithExecLogs(opts ...func(*ExecLogQuery)) *ActionLogQuery {
+	query := &ExecLogQuery{config: alq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	alq.withExecLogs = query
 	return alq
 }
 
@@ -349,11 +386,16 @@ func (alq *ActionLogQuery) prepareQuery(ctx context.Context) error {
 func (alq *ActionLogQuery) sqlAll(ctx context.Context) ([]*ActionLog, error) {
 	var (
 		nodes       = []*ActionLog{}
+		withFKs     = alq.withFKs
 		_spec       = alq.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
 			alq.withArgument != nil,
+			alq.withExecLogs != nil,
 		}
 	)
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, actionlog.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]interface{}, error) {
 		node := &ActionLog{config: alq.config}
 		nodes = append(nodes, node)
@@ -400,6 +442,35 @@ func (alq *ActionLogQuery) sqlAll(ctx context.Context) ([]*ActionLog, error) {
 				return nil, fmt.Errorf(`unexpected foreign-key "action_log_argument" returned %v for node %v`, *fk, n.ID)
 			}
 			node.Edges.Argument = append(node.Edges.Argument, n)
+		}
+	}
+
+	if query := alq.withExecLogs; query != nil {
+		fks := make([]driver.Value, 0, len(nodes))
+		nodeids := make(map[int]*ActionLog)
+		for i := range nodes {
+			fks = append(fks, nodes[i].ID)
+			nodeids[nodes[i].ID] = nodes[i]
+			nodes[i].Edges.ExecLogs = []*ExecLog{}
+		}
+		query.withFKs = true
+		query.Where(predicate.ExecLog(func(s *sql.Selector) {
+			s.Where(sql.InValues(actionlog.ExecLogsColumn, fks...))
+		}))
+		neighbors, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, n := range neighbors {
+			fk := n.action_log_exec_logs
+			if fk == nil {
+				return nil, fmt.Errorf(`foreign-key "action_log_exec_logs" is nil for node %v`, n.ID)
+			}
+			node, ok := nodeids[*fk]
+			if !ok {
+				return nil, fmt.Errorf(`unexpected foreign-key "action_log_exec_logs" returned %v for node %v`, *fk, n.ID)
+			}
+			node.Edges.ExecLogs = append(node.Edges.ExecLogs, n)
 		}
 	}
 

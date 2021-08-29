@@ -14,6 +14,7 @@ import (
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/alert"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/annotation"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/attribute"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/execlog"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/reference"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/tasklog"
 
@@ -35,6 +36,8 @@ type Client struct {
 	Annotation *AnnotationClient
 	// Attribute is the client for interacting with the Attribute builders.
 	Attribute *AttributeClient
+	// ExecLog is the client for interacting with the ExecLog builders.
+	ExecLog *ExecLogClient
 	// Reference is the client for interacting with the Reference builders.
 	Reference *ReferenceClient
 	// TaskLog is the client for interacting with the TaskLog builders.
@@ -56,6 +59,7 @@ func (c *Client) init() {
 	c.Alert = NewAlertClient(c.config)
 	c.Annotation = NewAnnotationClient(c.config)
 	c.Attribute = NewAttributeClient(c.config)
+	c.ExecLog = NewExecLogClient(c.config)
 	c.Reference = NewReferenceClient(c.config)
 	c.TaskLog = NewTaskLogClient(c.config)
 }
@@ -95,6 +99,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		Alert:      NewAlertClient(cfg),
 		Annotation: NewAnnotationClient(cfg),
 		Attribute:  NewAttributeClient(cfg),
+		ExecLog:    NewExecLogClient(cfg),
 		Reference:  NewReferenceClient(cfg),
 		TaskLog:    NewTaskLogClient(cfg),
 	}, nil
@@ -119,6 +124,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		Alert:      NewAlertClient(cfg),
 		Annotation: NewAnnotationClient(cfg),
 		Attribute:  NewAttributeClient(cfg),
+		ExecLog:    NewExecLogClient(cfg),
 		Reference:  NewReferenceClient(cfg),
 		TaskLog:    NewTaskLogClient(cfg),
 	}, nil
@@ -154,6 +160,7 @@ func (c *Client) Use(hooks ...Hook) {
 	c.Alert.Use(hooks...)
 	c.Annotation.Use(hooks...)
 	c.Attribute.Use(hooks...)
+	c.ExecLog.Use(hooks...)
 	c.Reference.Use(hooks...)
 	c.TaskLog.Use(hooks...)
 }
@@ -252,6 +259,22 @@ func (c *ActionLogClient) QueryArgument(al *ActionLog) *AttributeQuery {
 			sqlgraph.From(actionlog.Table, actionlog.FieldID, id),
 			sqlgraph.To(attribute.Table, attribute.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, actionlog.ArgumentTable, actionlog.ArgumentColumn),
+		)
+		fromV = sqlgraph.Neighbors(al.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryExecLogs queries the exec_logs edge of a ActionLog.
+func (c *ActionLogClient) QueryExecLogs(al *ActionLog) *ExecLogQuery {
+	query := &ExecLogQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := al.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(actionlog.Table, actionlog.FieldID, id),
+			sqlgraph.To(execlog.Table, execlog.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, actionlog.ExecLogsTable, actionlog.ExecLogsColumn),
 		)
 		fromV = sqlgraph.Neighbors(al.driver.Dialect(), step)
 		return fromV, nil
@@ -390,6 +413,22 @@ func (c *AlertClient) QueryTaskLogs(a *Alert) *TaskLogQuery {
 			sqlgraph.From(alert.Table, alert.FieldID, id),
 			sqlgraph.To(tasklog.Table, tasklog.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, alert.TaskLogsTable, alert.TaskLogsColumn),
+		)
+		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryActionLogs queries the action_logs edge of a Alert.
+func (c *AlertClient) QueryActionLogs(a *Alert) *ActionLogQuery {
+	query := &ActionLogQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := a.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(alert.Table, alert.FieldID, id),
+			sqlgraph.To(actionlog.Table, actionlog.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, alert.ActionLogsTable, alert.ActionLogsColumn),
 		)
 		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
 		return fromV, nil
@@ -593,9 +632,115 @@ func (c *AttributeClient) QueryAnnotations(a *Attribute) *AnnotationQuery {
 	return query
 }
 
+// QueryAlert queries the alert edge of a Attribute.
+func (c *AttributeClient) QueryAlert(a *Attribute) *AlertQuery {
+	query := &AlertQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := a.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(attribute.Table, attribute.FieldID, id),
+			sqlgraph.To(alert.Table, alert.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, attribute.AlertTable, attribute.AlertColumn),
+		)
+		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *AttributeClient) Hooks() []Hook {
 	return c.hooks.Attribute
+}
+
+// ExecLogClient is a client for the ExecLog schema.
+type ExecLogClient struct {
+	config
+}
+
+// NewExecLogClient returns a client for the ExecLog from the given config.
+func NewExecLogClient(c config) *ExecLogClient {
+	return &ExecLogClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `execlog.Hooks(f(g(h())))`.
+func (c *ExecLogClient) Use(hooks ...Hook) {
+	c.hooks.ExecLog = append(c.hooks.ExecLog, hooks...)
+}
+
+// Create returns a create builder for ExecLog.
+func (c *ExecLogClient) Create() *ExecLogCreate {
+	mutation := newExecLogMutation(c.config, OpCreate)
+	return &ExecLogCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ExecLog entities.
+func (c *ExecLogClient) CreateBulk(builders ...*ExecLogCreate) *ExecLogCreateBulk {
+	return &ExecLogCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ExecLog.
+func (c *ExecLogClient) Update() *ExecLogUpdate {
+	mutation := newExecLogMutation(c.config, OpUpdate)
+	return &ExecLogUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ExecLogClient) UpdateOne(el *ExecLog) *ExecLogUpdateOne {
+	mutation := newExecLogMutation(c.config, OpUpdateOne, withExecLog(el))
+	return &ExecLogUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ExecLogClient) UpdateOneID(id int) *ExecLogUpdateOne {
+	mutation := newExecLogMutation(c.config, OpUpdateOne, withExecLogID(id))
+	return &ExecLogUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ExecLog.
+func (c *ExecLogClient) Delete() *ExecLogDelete {
+	mutation := newExecLogMutation(c.config, OpDelete)
+	return &ExecLogDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *ExecLogClient) DeleteOne(el *ExecLog) *ExecLogDeleteOne {
+	return c.DeleteOneID(el.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *ExecLogClient) DeleteOneID(id int) *ExecLogDeleteOne {
+	builder := c.Delete().Where(execlog.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ExecLogDeleteOne{builder}
+}
+
+// Query returns a query builder for ExecLog.
+func (c *ExecLogClient) Query() *ExecLogQuery {
+	return &ExecLogQuery{
+		config: c.config,
+	}
+}
+
+// Get returns a ExecLog entity by its id.
+func (c *ExecLogClient) Get(ctx context.Context, id int) (*ExecLog, error) {
+	return c.Query().Where(execlog.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ExecLogClient) GetX(ctx context.Context, id int) *ExecLog {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// Hooks returns the client hooks.
+func (c *ExecLogClient) Hooks() []Hook {
+	return c.hooks.ExecLog
 }
 
 // ReferenceClient is a client for the Reference schema.
@@ -782,6 +927,22 @@ func (c *TaskLogClient) QueryAnnotated(tl *TaskLog) *AnnotationQuery {
 			sqlgraph.From(tasklog.Table, tasklog.FieldID, id),
 			sqlgraph.To(annotation.Table, annotation.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, tasklog.AnnotatedTable, tasklog.AnnotatedColumn),
+		)
+		fromV = sqlgraph.Neighbors(tl.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryExecLogs queries the exec_logs edge of a TaskLog.
+func (c *TaskLogClient) QueryExecLogs(tl *TaskLog) *ExecLogQuery {
+	query := &ExecLogQuery{config: c.config}
+	query.path = func(ctx context.Context) (fromV *sql.Selector, _ error) {
+		id := tl.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(tasklog.Table, tasklog.FieldID, id),
+			sqlgraph.To(execlog.Table, execlog.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, tasklog.ExecLogsTable, tasklog.ExecLogsColumn),
 		)
 		fromV = sqlgraph.Neighbors(tl.driver.Dialect(), step)
 		return fromV, nil

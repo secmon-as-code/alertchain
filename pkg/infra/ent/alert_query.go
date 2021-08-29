@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/actionlog"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/alert"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/attribute"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/predicate"
@@ -33,6 +34,7 @@ type AlertQuery struct {
 	withAttributes *AttributeQuery
 	withReferences *ReferenceQuery
 	withTaskLogs   *TaskLogQuery
+	withActionLogs *ActionLogQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -128,6 +130,28 @@ func (aq *AlertQuery) QueryTaskLogs() *TaskLogQuery {
 			sqlgraph.From(alert.Table, alert.FieldID, selector),
 			sqlgraph.To(tasklog.Table, tasklog.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, alert.TaskLogsTable, alert.TaskLogsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(aq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryActionLogs chains the current query on the "action_logs" edge.
+func (aq *AlertQuery) QueryActionLogs() *ActionLogQuery {
+	query := &ActionLogQuery{config: aq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := aq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := aq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(alert.Table, alert.FieldID, selector),
+			sqlgraph.To(actionlog.Table, actionlog.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, alert.ActionLogsTable, alert.ActionLogsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(aq.driver.Dialect(), step)
 		return fromU, nil
@@ -319,6 +343,7 @@ func (aq *AlertQuery) Clone() *AlertQuery {
 		withAttributes: aq.withAttributes.Clone(),
 		withReferences: aq.withReferences.Clone(),
 		withTaskLogs:   aq.withTaskLogs.Clone(),
+		withActionLogs: aq.withActionLogs.Clone(),
 		// clone intermediate query.
 		sql:  aq.sql.Clone(),
 		path: aq.path,
@@ -355,6 +380,17 @@ func (aq *AlertQuery) WithTaskLogs(opts ...func(*TaskLogQuery)) *AlertQuery {
 		opt(query)
 	}
 	aq.withTaskLogs = query
+	return aq
+}
+
+// WithActionLogs tells the query-builder to eager-load the nodes that are connected to
+// the "action_logs" edge. The optional arguments are used to configure the query builder of the edge.
+func (aq *AlertQuery) WithActionLogs(opts ...func(*ActionLogQuery)) *AlertQuery {
+	query := &ActionLogQuery{config: aq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	aq.withActionLogs = query
 	return aq
 }
 
@@ -423,10 +459,11 @@ func (aq *AlertQuery) sqlAll(ctx context.Context) ([]*Alert, error) {
 	var (
 		nodes       = []*Alert{}
 		_spec       = aq.querySpec()
-		loadedTypes = [3]bool{
+		loadedTypes = [4]bool{
 			aq.withAttributes != nil,
 			aq.withReferences != nil,
 			aq.withTaskLogs != nil,
+			aq.withActionLogs != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]interface{}, error) {
@@ -533,6 +570,35 @@ func (aq *AlertQuery) sqlAll(ctx context.Context) ([]*Alert, error) {
 				return nil, fmt.Errorf(`unexpected foreign-key "alert_task_logs" returned %v for node %v`, *fk, n.ID)
 			}
 			node.Edges.TaskLogs = append(node.Edges.TaskLogs, n)
+		}
+	}
+
+	if query := aq.withActionLogs; query != nil {
+		fks := make([]driver.Value, 0, len(nodes))
+		nodeids := make(map[types.AlertID]*Alert)
+		for i := range nodes {
+			fks = append(fks, nodes[i].ID)
+			nodeids[nodes[i].ID] = nodes[i]
+			nodes[i].Edges.ActionLogs = []*ActionLog{}
+		}
+		query.withFKs = true
+		query.Where(predicate.ActionLog(func(s *sql.Selector) {
+			s.Where(sql.InValues(alert.ActionLogsColumn, fks...))
+		}))
+		neighbors, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, n := range neighbors {
+			fk := n.alert_action_logs
+			if fk == nil {
+				return nil, fmt.Errorf(`foreign-key "alert_action_logs" is nil for node %v`, n.ID)
+			}
+			node, ok := nodeids[*fk]
+			if !ok {
+				return nil, fmt.Errorf(`unexpected foreign-key "alert_action_logs" returned %v for node %v`, *fk, n.ID)
+			}
+			node.Edges.ActionLogs = append(node.Edges.ActionLogs, n)
 		}
 	}
 

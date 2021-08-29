@@ -9,6 +9,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/actionlog"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/alert"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/attribute"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/predicate"
@@ -223,6 +224,21 @@ func (au *AlertUpdate) AddTaskLogs(t ...*TaskLog) *AlertUpdate {
 	return au.AddTaskLogIDs(ids...)
 }
 
+// AddActionLogIDs adds the "action_logs" edge to the ActionLog entity by IDs.
+func (au *AlertUpdate) AddActionLogIDs(ids ...int) *AlertUpdate {
+	au.mutation.AddActionLogIDs(ids...)
+	return au
+}
+
+// AddActionLogs adds the "action_logs" edges to the ActionLog entity.
+func (au *AlertUpdate) AddActionLogs(a ...*ActionLog) *AlertUpdate {
+	ids := make([]int, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return au.AddActionLogIDs(ids...)
+}
+
 // Mutation returns the AlertMutation object of the builder.
 func (au *AlertUpdate) Mutation() *AlertMutation {
 	return au.mutation
@@ -289,6 +305,27 @@ func (au *AlertUpdate) RemoveTaskLogs(t ...*TaskLog) *AlertUpdate {
 		ids[i] = t[i].ID
 	}
 	return au.RemoveTaskLogIDs(ids...)
+}
+
+// ClearActionLogs clears all "action_logs" edges to the ActionLog entity.
+func (au *AlertUpdate) ClearActionLogs() *AlertUpdate {
+	au.mutation.ClearActionLogs()
+	return au
+}
+
+// RemoveActionLogIDs removes the "action_logs" edge to ActionLog entities by IDs.
+func (au *AlertUpdate) RemoveActionLogIDs(ids ...int) *AlertUpdate {
+	au.mutation.RemoveActionLogIDs(ids...)
+	return au
+}
+
+// RemoveActionLogs removes "action_logs" edges to ActionLog entities.
+func (au *AlertUpdate) RemoveActionLogs(a ...*ActionLog) *AlertUpdate {
+	ids := make([]int, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return au.RemoveActionLogIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -624,6 +661,60 @@ func (au *AlertUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if au.mutation.ActionLogsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   alert.ActionLogsTable,
+			Columns: []string{alert.ActionLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: actionlog.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := au.mutation.RemovedActionLogsIDs(); len(nodes) > 0 && !au.mutation.ActionLogsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   alert.ActionLogsTable,
+			Columns: []string{alert.ActionLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: actionlog.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := au.mutation.ActionLogsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   alert.ActionLogsTable,
+			Columns: []string{alert.ActionLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: actionlog.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, au.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{alert.Label}
@@ -836,6 +927,21 @@ func (auo *AlertUpdateOne) AddTaskLogs(t ...*TaskLog) *AlertUpdateOne {
 	return auo.AddTaskLogIDs(ids...)
 }
 
+// AddActionLogIDs adds the "action_logs" edge to the ActionLog entity by IDs.
+func (auo *AlertUpdateOne) AddActionLogIDs(ids ...int) *AlertUpdateOne {
+	auo.mutation.AddActionLogIDs(ids...)
+	return auo
+}
+
+// AddActionLogs adds the "action_logs" edges to the ActionLog entity.
+func (auo *AlertUpdateOne) AddActionLogs(a ...*ActionLog) *AlertUpdateOne {
+	ids := make([]int, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return auo.AddActionLogIDs(ids...)
+}
+
 // Mutation returns the AlertMutation object of the builder.
 func (auo *AlertUpdateOne) Mutation() *AlertMutation {
 	return auo.mutation
@@ -902,6 +1008,27 @@ func (auo *AlertUpdateOne) RemoveTaskLogs(t ...*TaskLog) *AlertUpdateOne {
 		ids[i] = t[i].ID
 	}
 	return auo.RemoveTaskLogIDs(ids...)
+}
+
+// ClearActionLogs clears all "action_logs" edges to the ActionLog entity.
+func (auo *AlertUpdateOne) ClearActionLogs() *AlertUpdateOne {
+	auo.mutation.ClearActionLogs()
+	return auo
+}
+
+// RemoveActionLogIDs removes the "action_logs" edge to ActionLog entities by IDs.
+func (auo *AlertUpdateOne) RemoveActionLogIDs(ids ...int) *AlertUpdateOne {
+	auo.mutation.RemoveActionLogIDs(ids...)
+	return auo
+}
+
+// RemoveActionLogs removes "action_logs" edges to ActionLog entities.
+func (auo *AlertUpdateOne) RemoveActionLogs(a ...*ActionLog) *AlertUpdateOne {
+	ids := make([]int, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return auo.RemoveActionLogIDs(ids...)
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
@@ -1253,6 +1380,60 @@ func (auo *AlertUpdateOne) sqlSave(ctx context.Context) (_node *Alert, err error
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: tasklog.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if auo.mutation.ActionLogsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   alert.ActionLogsTable,
+			Columns: []string{alert.ActionLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: actionlog.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := auo.mutation.RemovedActionLogsIDs(); len(nodes) > 0 && !auo.mutation.ActionLogsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   alert.ActionLogsTable,
+			Columns: []string{alert.ActionLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: actionlog.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := auo.mutation.ActionLogsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   alert.ActionLogsTable,
+			Columns: []string{alert.ActionLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: actionlog.FieldID,
 				},
 			},
 		}

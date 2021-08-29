@@ -17,6 +17,8 @@ const (
 	FieldContext = "context"
 	// EdgeAnnotations holds the string denoting the annotations edge name in mutations.
 	EdgeAnnotations = "annotations"
+	// EdgeAlert holds the string denoting the alert edge name in mutations.
+	EdgeAlert = "alert"
 	// Table holds the table name of the attribute in the database.
 	Table = "attributes"
 	// AnnotationsTable is the table that holds the annotations relation/edge.
@@ -26,6 +28,13 @@ const (
 	AnnotationsInverseTable = "annotations"
 	// AnnotationsColumn is the table column denoting the annotations relation/edge.
 	AnnotationsColumn = "attribute_annotations"
+	// AlertTable is the table that holds the alert relation/edge.
+	AlertTable = "attributes"
+	// AlertInverseTable is the table name for the Alert entity.
+	// It exists in this package in order to avoid circular dependency with the "alert" package.
+	AlertInverseTable = "alerts"
+	// AlertColumn is the table column denoting the alert relation/edge.
+	AlertColumn = "attribute_alert"
 )
 
 // Columns holds all SQL columns for attribute fields.
@@ -42,6 +51,7 @@ var Columns = []string{
 var ForeignKeys = []string{
 	"action_log_argument",
 	"alert_attributes",
+	"attribute_alert",
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).

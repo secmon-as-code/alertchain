@@ -3,9 +3,7 @@
 package ent
 
 import (
-	"github.com/m-mizutani/alertchain/pkg/infra/ent/actionlog"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/alert"
-	"github.com/m-mizutani/alertchain/pkg/infra/ent/tasklog"
 	"github.com/m-mizutani/alertchain/pkg/infra/schema"
 	"github.com/m-mizutani/alertchain/types"
 )
@@ -14,22 +12,10 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
-	actionlogFields := schema.ActionLog{}.Fields()
-	_ = actionlogFields
-	// actionlogDescStatus is the schema descriptor for status field.
-	actionlogDescStatus := actionlogFields[7].Descriptor()
-	// actionlog.DefaultStatus holds the default value on creation for the status field.
-	actionlog.DefaultStatus = types.TaskStatus(actionlogDescStatus.Default.(string))
 	alertFields := schema.Alert{}.Fields()
 	_ = alertFields
 	// alertDescStatus is the schema descriptor for status field.
 	alertDescStatus := alertFields[4].Descriptor()
 	// alert.DefaultStatus holds the default value on creation for the status field.
 	alert.DefaultStatus = types.AlertStatus(alertDescStatus.Default.(string))
-	tasklogFields := schema.TaskLog{}.Fields()
-	_ = tasklogFields
-	// tasklogDescStatus is the schema descriptor for status field.
-	tasklogDescStatus := tasklogFields[8].Descriptor()
-	// tasklog.DefaultStatus holds the default value on creation for the status field.
-	tasklog.DefaultStatus = types.TaskStatus(tasklogDescStatus.Default.(string))
 }

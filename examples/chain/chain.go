@@ -16,7 +16,7 @@ type TaskExample struct{}
 func (x *TaskExample) Name() string { return "TaskExample" }
 
 func (x *TaskExample) Execute(ctx context.Context, alert *alertchain.Alert) error {
-	w := alertchain.LogOutput(ctx)
+	w := alertchain.LogWriter(ctx)
 
 	// Update serverity
 	alert.UpdateSeverity(types.SevUnclassified)

@@ -6,7 +6,6 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/predicate"
-	"github.com/m-mizutani/alertchain/types"
 )
 
 // ID filters vertices based on their ID field.
@@ -92,10 +91,10 @@ func IDLTE(id int) predicate.TaskLog {
 	})
 }
 
-// TaskName applies equality check predicate on the "task_name" field. It's identical to TaskNameEQ.
-func TaskName(v string) predicate.TaskLog {
+// Name applies equality check predicate on the "name" field. It's identical to NameEQ.
+func Name(v string) predicate.TaskLog {
 	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldTaskName), v))
+		s.Where(sql.EQ(s.C(FieldName), v))
 	})
 }
 
@@ -106,58 +105,22 @@ func Stage(v int64) predicate.TaskLog {
 	})
 }
 
-// StartedAt applies equality check predicate on the "started_at" field. It's identical to StartedAtEQ.
-func StartedAt(v int64) predicate.TaskLog {
+// NameEQ applies the EQ predicate on the "name" field.
+func NameEQ(v string) predicate.TaskLog {
 	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldStartedAt), v))
+		s.Where(sql.EQ(s.C(FieldName), v))
 	})
 }
 
-// ExitedAt applies equality check predicate on the "exited_at" field. It's identical to ExitedAtEQ.
-func ExitedAt(v int64) predicate.TaskLog {
+// NameNEQ applies the NEQ predicate on the "name" field.
+func NameNEQ(v string) predicate.TaskLog {
 	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldExitedAt), v))
+		s.Where(sql.NEQ(s.C(FieldName), v))
 	})
 }
 
-// Log applies equality check predicate on the "log" field. It's identical to LogEQ.
-func Log(v string) predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldLog), v))
-	})
-}
-
-// Errmsg applies equality check predicate on the "errmsg" field. It's identical to ErrmsgEQ.
-func Errmsg(v string) predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldErrmsg), v))
-	})
-}
-
-// Status applies equality check predicate on the "status" field. It's identical to StatusEQ.
-func Status(v types.TaskStatus) predicate.TaskLog {
-	vc := string(v)
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldStatus), vc))
-	})
-}
-
-// TaskNameEQ applies the EQ predicate on the "task_name" field.
-func TaskNameEQ(v string) predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldTaskName), v))
-	})
-}
-
-// TaskNameNEQ applies the NEQ predicate on the "task_name" field.
-func TaskNameNEQ(v string) predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldTaskName), v))
-	})
-}
-
-// TaskNameIn applies the In predicate on the "task_name" field.
-func TaskNameIn(vs ...string) predicate.TaskLog {
+// NameIn applies the In predicate on the "name" field.
+func NameIn(vs ...string) predicate.TaskLog {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -169,12 +132,12 @@ func TaskNameIn(vs ...string) predicate.TaskLog {
 			s.Where(sql.False())
 			return
 		}
-		s.Where(sql.In(s.C(FieldTaskName), v...))
+		s.Where(sql.In(s.C(FieldName), v...))
 	})
 }
 
-// TaskNameNotIn applies the NotIn predicate on the "task_name" field.
-func TaskNameNotIn(vs ...string) predicate.TaskLog {
+// NameNotIn applies the NotIn predicate on the "name" field.
+func NameNotIn(vs ...string) predicate.TaskLog {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -186,70 +149,70 @@ func TaskNameNotIn(vs ...string) predicate.TaskLog {
 			s.Where(sql.False())
 			return
 		}
-		s.Where(sql.NotIn(s.C(FieldTaskName), v...))
+		s.Where(sql.NotIn(s.C(FieldName), v...))
 	})
 }
 
-// TaskNameGT applies the GT predicate on the "task_name" field.
-func TaskNameGT(v string) predicate.TaskLog {
+// NameGT applies the GT predicate on the "name" field.
+func NameGT(v string) predicate.TaskLog {
 	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldTaskName), v))
+		s.Where(sql.GT(s.C(FieldName), v))
 	})
 }
 
-// TaskNameGTE applies the GTE predicate on the "task_name" field.
-func TaskNameGTE(v string) predicate.TaskLog {
+// NameGTE applies the GTE predicate on the "name" field.
+func NameGTE(v string) predicate.TaskLog {
 	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldTaskName), v))
+		s.Where(sql.GTE(s.C(FieldName), v))
 	})
 }
 
-// TaskNameLT applies the LT predicate on the "task_name" field.
-func TaskNameLT(v string) predicate.TaskLog {
+// NameLT applies the LT predicate on the "name" field.
+func NameLT(v string) predicate.TaskLog {
 	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldTaskName), v))
+		s.Where(sql.LT(s.C(FieldName), v))
 	})
 }
 
-// TaskNameLTE applies the LTE predicate on the "task_name" field.
-func TaskNameLTE(v string) predicate.TaskLog {
+// NameLTE applies the LTE predicate on the "name" field.
+func NameLTE(v string) predicate.TaskLog {
 	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldTaskName), v))
+		s.Where(sql.LTE(s.C(FieldName), v))
 	})
 }
 
-// TaskNameContains applies the Contains predicate on the "task_name" field.
-func TaskNameContains(v string) predicate.TaskLog {
+// NameContains applies the Contains predicate on the "name" field.
+func NameContains(v string) predicate.TaskLog {
 	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.Contains(s.C(FieldTaskName), v))
+		s.Where(sql.Contains(s.C(FieldName), v))
 	})
 }
 
-// TaskNameHasPrefix applies the HasPrefix predicate on the "task_name" field.
-func TaskNameHasPrefix(v string) predicate.TaskLog {
+// NameHasPrefix applies the HasPrefix predicate on the "name" field.
+func NameHasPrefix(v string) predicate.TaskLog {
 	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.HasPrefix(s.C(FieldTaskName), v))
+		s.Where(sql.HasPrefix(s.C(FieldName), v))
 	})
 }
 
-// TaskNameHasSuffix applies the HasSuffix predicate on the "task_name" field.
-func TaskNameHasSuffix(v string) predicate.TaskLog {
+// NameHasSuffix applies the HasSuffix predicate on the "name" field.
+func NameHasSuffix(v string) predicate.TaskLog {
 	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.HasSuffix(s.C(FieldTaskName), v))
+		s.Where(sql.HasSuffix(s.C(FieldName), v))
 	})
 }
 
-// TaskNameEqualFold applies the EqualFold predicate on the "task_name" field.
-func TaskNameEqualFold(v string) predicate.TaskLog {
+// NameEqualFold applies the EqualFold predicate on the "name" field.
+func NameEqualFold(v string) predicate.TaskLog {
 	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.EqualFold(s.C(FieldTaskName), v))
+		s.Where(sql.EqualFold(s.C(FieldName), v))
 	})
 }
 
-// TaskNameContainsFold applies the ContainsFold predicate on the "task_name" field.
-func TaskNameContainsFold(v string) predicate.TaskLog {
+// NameContainsFold applies the ContainsFold predicate on the "name" field.
+func NameContainsFold(v string) predicate.TaskLog {
 	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.ContainsFold(s.C(FieldTaskName), v))
+		s.Where(sql.ContainsFold(s.C(FieldName), v))
 	})
 }
 
@@ -329,572 +292,6 @@ func StageLTE(v int64) predicate.TaskLog {
 	})
 }
 
-// StartedAtEQ applies the EQ predicate on the "started_at" field.
-func StartedAtEQ(v int64) predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldStartedAt), v))
-	})
-}
-
-// StartedAtNEQ applies the NEQ predicate on the "started_at" field.
-func StartedAtNEQ(v int64) predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldStartedAt), v))
-	})
-}
-
-// StartedAtIn applies the In predicate on the "started_at" field.
-func StartedAtIn(vs ...int64) predicate.TaskLog {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.TaskLog(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.In(s.C(FieldStartedAt), v...))
-	})
-}
-
-// StartedAtNotIn applies the NotIn predicate on the "started_at" field.
-func StartedAtNotIn(vs ...int64) predicate.TaskLog {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.TaskLog(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.NotIn(s.C(FieldStartedAt), v...))
-	})
-}
-
-// StartedAtGT applies the GT predicate on the "started_at" field.
-func StartedAtGT(v int64) predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldStartedAt), v))
-	})
-}
-
-// StartedAtGTE applies the GTE predicate on the "started_at" field.
-func StartedAtGTE(v int64) predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldStartedAt), v))
-	})
-}
-
-// StartedAtLT applies the LT predicate on the "started_at" field.
-func StartedAtLT(v int64) predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldStartedAt), v))
-	})
-}
-
-// StartedAtLTE applies the LTE predicate on the "started_at" field.
-func StartedAtLTE(v int64) predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldStartedAt), v))
-	})
-}
-
-// ExitedAtEQ applies the EQ predicate on the "exited_at" field.
-func ExitedAtEQ(v int64) predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldExitedAt), v))
-	})
-}
-
-// ExitedAtNEQ applies the NEQ predicate on the "exited_at" field.
-func ExitedAtNEQ(v int64) predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldExitedAt), v))
-	})
-}
-
-// ExitedAtIn applies the In predicate on the "exited_at" field.
-func ExitedAtIn(vs ...int64) predicate.TaskLog {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.TaskLog(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.In(s.C(FieldExitedAt), v...))
-	})
-}
-
-// ExitedAtNotIn applies the NotIn predicate on the "exited_at" field.
-func ExitedAtNotIn(vs ...int64) predicate.TaskLog {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.TaskLog(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.NotIn(s.C(FieldExitedAt), v...))
-	})
-}
-
-// ExitedAtGT applies the GT predicate on the "exited_at" field.
-func ExitedAtGT(v int64) predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldExitedAt), v))
-	})
-}
-
-// ExitedAtGTE applies the GTE predicate on the "exited_at" field.
-func ExitedAtGTE(v int64) predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldExitedAt), v))
-	})
-}
-
-// ExitedAtLT applies the LT predicate on the "exited_at" field.
-func ExitedAtLT(v int64) predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldExitedAt), v))
-	})
-}
-
-// ExitedAtLTE applies the LTE predicate on the "exited_at" field.
-func ExitedAtLTE(v int64) predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldExitedAt), v))
-	})
-}
-
-// ExitedAtIsNil applies the IsNil predicate on the "exited_at" field.
-func ExitedAtIsNil() predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.IsNull(s.C(FieldExitedAt)))
-	})
-}
-
-// ExitedAtNotNil applies the NotNil predicate on the "exited_at" field.
-func ExitedAtNotNil() predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.NotNull(s.C(FieldExitedAt)))
-	})
-}
-
-// LogEQ applies the EQ predicate on the "log" field.
-func LogEQ(v string) predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldLog), v))
-	})
-}
-
-// LogNEQ applies the NEQ predicate on the "log" field.
-func LogNEQ(v string) predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldLog), v))
-	})
-}
-
-// LogIn applies the In predicate on the "log" field.
-func LogIn(vs ...string) predicate.TaskLog {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.TaskLog(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.In(s.C(FieldLog), v...))
-	})
-}
-
-// LogNotIn applies the NotIn predicate on the "log" field.
-func LogNotIn(vs ...string) predicate.TaskLog {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.TaskLog(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.NotIn(s.C(FieldLog), v...))
-	})
-}
-
-// LogGT applies the GT predicate on the "log" field.
-func LogGT(v string) predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldLog), v))
-	})
-}
-
-// LogGTE applies the GTE predicate on the "log" field.
-func LogGTE(v string) predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldLog), v))
-	})
-}
-
-// LogLT applies the LT predicate on the "log" field.
-func LogLT(v string) predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldLog), v))
-	})
-}
-
-// LogLTE applies the LTE predicate on the "log" field.
-func LogLTE(v string) predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldLog), v))
-	})
-}
-
-// LogContains applies the Contains predicate on the "log" field.
-func LogContains(v string) predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.Contains(s.C(FieldLog), v))
-	})
-}
-
-// LogHasPrefix applies the HasPrefix predicate on the "log" field.
-func LogHasPrefix(v string) predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.HasPrefix(s.C(FieldLog), v))
-	})
-}
-
-// LogHasSuffix applies the HasSuffix predicate on the "log" field.
-func LogHasSuffix(v string) predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.HasSuffix(s.C(FieldLog), v))
-	})
-}
-
-// LogIsNil applies the IsNil predicate on the "log" field.
-func LogIsNil() predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.IsNull(s.C(FieldLog)))
-	})
-}
-
-// LogNotNil applies the NotNil predicate on the "log" field.
-func LogNotNil() predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.NotNull(s.C(FieldLog)))
-	})
-}
-
-// LogEqualFold applies the EqualFold predicate on the "log" field.
-func LogEqualFold(v string) predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.EqualFold(s.C(FieldLog), v))
-	})
-}
-
-// LogContainsFold applies the ContainsFold predicate on the "log" field.
-func LogContainsFold(v string) predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.ContainsFold(s.C(FieldLog), v))
-	})
-}
-
-// ErrmsgEQ applies the EQ predicate on the "errmsg" field.
-func ErrmsgEQ(v string) predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldErrmsg), v))
-	})
-}
-
-// ErrmsgNEQ applies the NEQ predicate on the "errmsg" field.
-func ErrmsgNEQ(v string) predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldErrmsg), v))
-	})
-}
-
-// ErrmsgIn applies the In predicate on the "errmsg" field.
-func ErrmsgIn(vs ...string) predicate.TaskLog {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.TaskLog(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.In(s.C(FieldErrmsg), v...))
-	})
-}
-
-// ErrmsgNotIn applies the NotIn predicate on the "errmsg" field.
-func ErrmsgNotIn(vs ...string) predicate.TaskLog {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.TaskLog(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.NotIn(s.C(FieldErrmsg), v...))
-	})
-}
-
-// ErrmsgGT applies the GT predicate on the "errmsg" field.
-func ErrmsgGT(v string) predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldErrmsg), v))
-	})
-}
-
-// ErrmsgGTE applies the GTE predicate on the "errmsg" field.
-func ErrmsgGTE(v string) predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldErrmsg), v))
-	})
-}
-
-// ErrmsgLT applies the LT predicate on the "errmsg" field.
-func ErrmsgLT(v string) predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldErrmsg), v))
-	})
-}
-
-// ErrmsgLTE applies the LTE predicate on the "errmsg" field.
-func ErrmsgLTE(v string) predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldErrmsg), v))
-	})
-}
-
-// ErrmsgContains applies the Contains predicate on the "errmsg" field.
-func ErrmsgContains(v string) predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.Contains(s.C(FieldErrmsg), v))
-	})
-}
-
-// ErrmsgHasPrefix applies the HasPrefix predicate on the "errmsg" field.
-func ErrmsgHasPrefix(v string) predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.HasPrefix(s.C(FieldErrmsg), v))
-	})
-}
-
-// ErrmsgHasSuffix applies the HasSuffix predicate on the "errmsg" field.
-func ErrmsgHasSuffix(v string) predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.HasSuffix(s.C(FieldErrmsg), v))
-	})
-}
-
-// ErrmsgIsNil applies the IsNil predicate on the "errmsg" field.
-func ErrmsgIsNil() predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.IsNull(s.C(FieldErrmsg)))
-	})
-}
-
-// ErrmsgNotNil applies the NotNil predicate on the "errmsg" field.
-func ErrmsgNotNil() predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.NotNull(s.C(FieldErrmsg)))
-	})
-}
-
-// ErrmsgEqualFold applies the EqualFold predicate on the "errmsg" field.
-func ErrmsgEqualFold(v string) predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.EqualFold(s.C(FieldErrmsg), v))
-	})
-}
-
-// ErrmsgContainsFold applies the ContainsFold predicate on the "errmsg" field.
-func ErrmsgContainsFold(v string) predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.ContainsFold(s.C(FieldErrmsg), v))
-	})
-}
-
-// ErrValuesIsNil applies the IsNil predicate on the "err_values" field.
-func ErrValuesIsNil() predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.IsNull(s.C(FieldErrValues)))
-	})
-}
-
-// ErrValuesNotNil applies the NotNil predicate on the "err_values" field.
-func ErrValuesNotNil() predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.NotNull(s.C(FieldErrValues)))
-	})
-}
-
-// StackTraceIsNil applies the IsNil predicate on the "stack_trace" field.
-func StackTraceIsNil() predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.IsNull(s.C(FieldStackTrace)))
-	})
-}
-
-// StackTraceNotNil applies the NotNil predicate on the "stack_trace" field.
-func StackTraceNotNil() predicate.TaskLog {
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.NotNull(s.C(FieldStackTrace)))
-	})
-}
-
-// StatusEQ applies the EQ predicate on the "status" field.
-func StatusEQ(v types.TaskStatus) predicate.TaskLog {
-	vc := string(v)
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldStatus), vc))
-	})
-}
-
-// StatusNEQ applies the NEQ predicate on the "status" field.
-func StatusNEQ(v types.TaskStatus) predicate.TaskLog {
-	vc := string(v)
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldStatus), vc))
-	})
-}
-
-// StatusIn applies the In predicate on the "status" field.
-func StatusIn(vs ...types.TaskStatus) predicate.TaskLog {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = string(vs[i])
-	}
-	return predicate.TaskLog(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.In(s.C(FieldStatus), v...))
-	})
-}
-
-// StatusNotIn applies the NotIn predicate on the "status" field.
-func StatusNotIn(vs ...types.TaskStatus) predicate.TaskLog {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = string(vs[i])
-	}
-	return predicate.TaskLog(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.NotIn(s.C(FieldStatus), v...))
-	})
-}
-
-// StatusGT applies the GT predicate on the "status" field.
-func StatusGT(v types.TaskStatus) predicate.TaskLog {
-	vc := string(v)
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldStatus), vc))
-	})
-}
-
-// StatusGTE applies the GTE predicate on the "status" field.
-func StatusGTE(v types.TaskStatus) predicate.TaskLog {
-	vc := string(v)
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldStatus), vc))
-	})
-}
-
-// StatusLT applies the LT predicate on the "status" field.
-func StatusLT(v types.TaskStatus) predicate.TaskLog {
-	vc := string(v)
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldStatus), vc))
-	})
-}
-
-// StatusLTE applies the LTE predicate on the "status" field.
-func StatusLTE(v types.TaskStatus) predicate.TaskLog {
-	vc := string(v)
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldStatus), vc))
-	})
-}
-
-// StatusContains applies the Contains predicate on the "status" field.
-func StatusContains(v types.TaskStatus) predicate.TaskLog {
-	vc := string(v)
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.Contains(s.C(FieldStatus), vc))
-	})
-}
-
-// StatusHasPrefix applies the HasPrefix predicate on the "status" field.
-func StatusHasPrefix(v types.TaskStatus) predicate.TaskLog {
-	vc := string(v)
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.HasPrefix(s.C(FieldStatus), vc))
-	})
-}
-
-// StatusHasSuffix applies the HasSuffix predicate on the "status" field.
-func StatusHasSuffix(v types.TaskStatus) predicate.TaskLog {
-	vc := string(v)
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.HasSuffix(s.C(FieldStatus), vc))
-	})
-}
-
-// StatusEqualFold applies the EqualFold predicate on the "status" field.
-func StatusEqualFold(v types.TaskStatus) predicate.TaskLog {
-	vc := string(v)
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.EqualFold(s.C(FieldStatus), vc))
-	})
-}
-
-// StatusContainsFold applies the ContainsFold predicate on the "status" field.
-func StatusContainsFold(v types.TaskStatus) predicate.TaskLog {
-	vc := string(v)
-	return predicate.TaskLog(func(s *sql.Selector) {
-		s.Where(sql.ContainsFold(s.C(FieldStatus), vc))
-	})
-}
-
 // HasAnnotated applies the HasEdge predicate on the "annotated" edge.
 func HasAnnotated() predicate.TaskLog {
 	return predicate.TaskLog(func(s *sql.Selector) {
@@ -914,6 +311,34 @@ func HasAnnotatedWith(preds ...predicate.Annotation) predicate.TaskLog {
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.To(AnnotatedInverseTable, FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, AnnotatedTable, AnnotatedColumn),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasExecLogs applies the HasEdge predicate on the "exec_logs" edge.
+func HasExecLogs() predicate.TaskLog {
+	return predicate.TaskLog(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(ExecLogsTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ExecLogsTable, ExecLogsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasExecLogsWith applies the HasEdge predicate on the "exec_logs" edge with a given conditions (other predicates).
+func HasExecLogsWith(preds ...predicate.ExecLog) predicate.TaskLog {
+	return predicate.TaskLog(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(ExecLogsInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ExecLogsTable, ExecLogsColumn),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {

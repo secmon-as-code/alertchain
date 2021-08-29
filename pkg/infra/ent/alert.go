@@ -45,9 +45,11 @@ type AlertEdges struct {
 	References []*Reference `json:"references,omitempty"`
 	// TaskLogs holds the value of the task_logs edge.
 	TaskLogs []*TaskLog `json:"task_logs,omitempty"`
+	// ActionLogs holds the value of the action_logs edge.
+	ActionLogs []*ActionLog `json:"action_logs,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [4]bool
 }
 
 // AttributesOrErr returns the Attributes value or an error if the edge
@@ -75,6 +77,15 @@ func (e AlertEdges) TaskLogsOrErr() ([]*TaskLog, error) {
 		return e.TaskLogs, nil
 	}
 	return nil, &NotLoadedError{edge: "task_logs"}
+}
+
+// ActionLogsOrErr returns the ActionLogs value or an error if the edge
+// was not loaded in eager-loading.
+func (e AlertEdges) ActionLogsOrErr() ([]*ActionLog, error) {
+	if e.loadedTypes[3] {
+		return e.ActionLogs, nil
+	}
+	return nil, &NotLoadedError{edge: "action_logs"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -175,6 +186,11 @@ func (a *Alert) QueryReferences() *ReferenceQuery {
 // QueryTaskLogs queries the "task_logs" edge of the Alert entity.
 func (a *Alert) QueryTaskLogs() *TaskLogQuery {
 	return (&AlertClient{config: a.config}).QueryTaskLogs(a)
+}
+
+// QueryActionLogs queries the "action_logs" edge of the Alert entity.
+func (a *Alert) QueryActionLogs() *ActionLogQuery {
+	return (&AlertClient{config: a.config}).QueryActionLogs(a)
 }
 
 // Update returns a builder for updating this Alert.

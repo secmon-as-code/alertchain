@@ -10,8 +10,8 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/annotation"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/execlog"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/tasklog"
-	"github.com/m-mizutani/alertchain/types"
 )
 
 // TaskLogCreate is the builder for creating a TaskLog entity.
@@ -21,89 +21,15 @@ type TaskLogCreate struct {
 	hooks    []Hook
 }
 
-// SetTaskName sets the "task_name" field.
-func (tlc *TaskLogCreate) SetTaskName(s string) *TaskLogCreate {
-	tlc.mutation.SetTaskName(s)
+// SetName sets the "name" field.
+func (tlc *TaskLogCreate) SetName(s string) *TaskLogCreate {
+	tlc.mutation.SetName(s)
 	return tlc
 }
 
 // SetStage sets the "stage" field.
 func (tlc *TaskLogCreate) SetStage(i int64) *TaskLogCreate {
 	tlc.mutation.SetStage(i)
-	return tlc
-}
-
-// SetStartedAt sets the "started_at" field.
-func (tlc *TaskLogCreate) SetStartedAt(i int64) *TaskLogCreate {
-	tlc.mutation.SetStartedAt(i)
-	return tlc
-}
-
-// SetExitedAt sets the "exited_at" field.
-func (tlc *TaskLogCreate) SetExitedAt(i int64) *TaskLogCreate {
-	tlc.mutation.SetExitedAt(i)
-	return tlc
-}
-
-// SetNillableExitedAt sets the "exited_at" field if the given value is not nil.
-func (tlc *TaskLogCreate) SetNillableExitedAt(i *int64) *TaskLogCreate {
-	if i != nil {
-		tlc.SetExitedAt(*i)
-	}
-	return tlc
-}
-
-// SetLog sets the "log" field.
-func (tlc *TaskLogCreate) SetLog(s string) *TaskLogCreate {
-	tlc.mutation.SetLog(s)
-	return tlc
-}
-
-// SetNillableLog sets the "log" field if the given value is not nil.
-func (tlc *TaskLogCreate) SetNillableLog(s *string) *TaskLogCreate {
-	if s != nil {
-		tlc.SetLog(*s)
-	}
-	return tlc
-}
-
-// SetErrmsg sets the "errmsg" field.
-func (tlc *TaskLogCreate) SetErrmsg(s string) *TaskLogCreate {
-	tlc.mutation.SetErrmsg(s)
-	return tlc
-}
-
-// SetNillableErrmsg sets the "errmsg" field if the given value is not nil.
-func (tlc *TaskLogCreate) SetNillableErrmsg(s *string) *TaskLogCreate {
-	if s != nil {
-		tlc.SetErrmsg(*s)
-	}
-	return tlc
-}
-
-// SetErrValues sets the "err_values" field.
-func (tlc *TaskLogCreate) SetErrValues(s []string) *TaskLogCreate {
-	tlc.mutation.SetErrValues(s)
-	return tlc
-}
-
-// SetStackTrace sets the "stack_trace" field.
-func (tlc *TaskLogCreate) SetStackTrace(s []string) *TaskLogCreate {
-	tlc.mutation.SetStackTrace(s)
-	return tlc
-}
-
-// SetStatus sets the "status" field.
-func (tlc *TaskLogCreate) SetStatus(ts types.TaskStatus) *TaskLogCreate {
-	tlc.mutation.SetStatus(ts)
-	return tlc
-}
-
-// SetNillableStatus sets the "status" field if the given value is not nil.
-func (tlc *TaskLogCreate) SetNillableStatus(ts *types.TaskStatus) *TaskLogCreate {
-	if ts != nil {
-		tlc.SetStatus(*ts)
-	}
 	return tlc
 }
 
@@ -122,6 +48,21 @@ func (tlc *TaskLogCreate) AddAnnotated(a ...*Annotation) *TaskLogCreate {
 	return tlc.AddAnnotatedIDs(ids...)
 }
 
+// AddExecLogIDs adds the "exec_logs" edge to the ExecLog entity by IDs.
+func (tlc *TaskLogCreate) AddExecLogIDs(ids ...int) *TaskLogCreate {
+	tlc.mutation.AddExecLogIDs(ids...)
+	return tlc
+}
+
+// AddExecLogs adds the "exec_logs" edges to the ExecLog entity.
+func (tlc *TaskLogCreate) AddExecLogs(e ...*ExecLog) *TaskLogCreate {
+	ids := make([]int, len(e))
+	for i := range e {
+		ids[i] = e[i].ID
+	}
+	return tlc.AddExecLogIDs(ids...)
+}
+
 // Mutation returns the TaskLogMutation object of the builder.
 func (tlc *TaskLogCreate) Mutation() *TaskLogMutation {
 	return tlc.mutation
@@ -133,7 +74,6 @@ func (tlc *TaskLogCreate) Save(ctx context.Context) (*TaskLog, error) {
 		err  error
 		node *TaskLog
 	)
-	tlc.defaults()
 	if len(tlc.hooks) == 0 {
 		if err = tlc.check(); err != nil {
 			return nil, err
@@ -191,27 +131,13 @@ func (tlc *TaskLogCreate) ExecX(ctx context.Context) {
 	}
 }
 
-// defaults sets the default values of the builder before save.
-func (tlc *TaskLogCreate) defaults() {
-	if _, ok := tlc.mutation.Status(); !ok {
-		v := tasklog.DefaultStatus
-		tlc.mutation.SetStatus(v)
-	}
-}
-
 // check runs all checks and user-defined validators on the builder.
 func (tlc *TaskLogCreate) check() error {
-	if _, ok := tlc.mutation.TaskName(); !ok {
-		return &ValidationError{Name: "task_name", err: errors.New(`ent: missing required field "task_name"`)}
+	if _, ok := tlc.mutation.Name(); !ok {
+		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "name"`)}
 	}
 	if _, ok := tlc.mutation.Stage(); !ok {
 		return &ValidationError{Name: "stage", err: errors.New(`ent: missing required field "stage"`)}
-	}
-	if _, ok := tlc.mutation.StartedAt(); !ok {
-		return &ValidationError{Name: "started_at", err: errors.New(`ent: missing required field "started_at"`)}
-	}
-	if _, ok := tlc.mutation.Status(); !ok {
-		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "status"`)}
 	}
 	return nil
 }
@@ -240,13 +166,13 @@ func (tlc *TaskLogCreate) createSpec() (*TaskLog, *sqlgraph.CreateSpec) {
 			},
 		}
 	)
-	if value, ok := tlc.mutation.TaskName(); ok {
+	if value, ok := tlc.mutation.Name(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: tasklog.FieldTaskName,
+			Column: tasklog.FieldName,
 		})
-		_node.TaskName = value
+		_node.Name = value
 	}
 	if value, ok := tlc.mutation.Stage(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
@@ -255,62 +181,6 @@ func (tlc *TaskLogCreate) createSpec() (*TaskLog, *sqlgraph.CreateSpec) {
 			Column: tasklog.FieldStage,
 		})
 		_node.Stage = value
-	}
-	if value, ok := tlc.mutation.StartedAt(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeInt64,
-			Value:  value,
-			Column: tasklog.FieldStartedAt,
-		})
-		_node.StartedAt = value
-	}
-	if value, ok := tlc.mutation.ExitedAt(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeInt64,
-			Value:  value,
-			Column: tasklog.FieldExitedAt,
-		})
-		_node.ExitedAt = value
-	}
-	if value, ok := tlc.mutation.Log(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: tasklog.FieldLog,
-		})
-		_node.Log = value
-	}
-	if value, ok := tlc.mutation.Errmsg(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: tasklog.FieldErrmsg,
-		})
-		_node.Errmsg = value
-	}
-	if value, ok := tlc.mutation.ErrValues(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeJSON,
-			Value:  value,
-			Column: tasklog.FieldErrValues,
-		})
-		_node.ErrValues = value
-	}
-	if value, ok := tlc.mutation.StackTrace(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeJSON,
-			Value:  value,
-			Column: tasklog.FieldStackTrace,
-		})
-		_node.StackTrace = value
-	}
-	if value, ok := tlc.mutation.Status(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: tasklog.FieldStatus,
-		})
-		_node.Status = value
 	}
 	if nodes := tlc.mutation.AnnotatedIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
@@ -323,6 +193,25 @@ func (tlc *TaskLogCreate) createSpec() (*TaskLog, *sqlgraph.CreateSpec) {
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: annotation.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := tlc.mutation.ExecLogsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tasklog.ExecLogsTable,
+			Columns: []string{tasklog.ExecLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: execlog.FieldID,
 				},
 			},
 		}
@@ -348,7 +237,6 @@ func (tlcb *TaskLogCreateBulk) Save(ctx context.Context) ([]*TaskLog, error) {
 	for i := range tlcb.builders {
 		func(i int, root context.Context) {
 			builder := tlcb.builders[i]
-			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 				mutation, ok := m.(*TaskLogMutation)
 				if !ok {

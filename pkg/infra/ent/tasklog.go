@@ -3,7 +3,6 @@
 package ent
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -17,24 +16,10 @@ type TaskLog struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
-	// TaskName holds the value of the "task_name" field.
-	TaskName string `json:"task_name,omitempty"`
+	// Name holds the value of the "name" field.
+	Name string `json:"name,omitempty"`
 	// Stage holds the value of the "stage" field.
 	Stage int64 `json:"stage,omitempty"`
-	// StartedAt holds the value of the "started_at" field.
-	StartedAt int64 `json:"started_at,omitempty"`
-	// ExitedAt holds the value of the "exited_at" field.
-	ExitedAt int64 `json:"exited_at,omitempty"`
-	// Log holds the value of the "log" field.
-	Log string `json:"log,omitempty"`
-	// Errmsg holds the value of the "errmsg" field.
-	Errmsg string `json:"errmsg,omitempty"`
-	// ErrValues holds the value of the "err_values" field.
-	ErrValues []string `json:"err_values,omitempty"`
-	// StackTrace holds the value of the "stack_trace" field.
-	StackTrace []string `json:"stack_trace,omitempty"`
-	// Status holds the value of the "status" field.
-	Status types.TaskStatus `json:"status,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the TaskLogQuery when eager-loading is set.
 	Edges           TaskLogEdges `json:"edges"`
@@ -45,9 +30,11 @@ type TaskLog struct {
 type TaskLogEdges struct {
 	// Annotated holds the value of the annotated edge.
 	Annotated []*Annotation `json:"annotated,omitempty"`
+	// ExecLogs holds the value of the exec_logs edge.
+	ExecLogs []*ExecLog `json:"exec_logs,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // AnnotatedOrErr returns the Annotated value or an error if the edge
@@ -59,16 +46,23 @@ func (e TaskLogEdges) AnnotatedOrErr() ([]*Annotation, error) {
 	return nil, &NotLoadedError{edge: "annotated"}
 }
 
+// ExecLogsOrErr returns the ExecLogs value or an error if the edge
+// was not loaded in eager-loading.
+func (e TaskLogEdges) ExecLogsOrErr() ([]*ExecLog, error) {
+	if e.loadedTypes[1] {
+		return e.ExecLogs, nil
+	}
+	return nil, &NotLoadedError{edge: "exec_logs"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*TaskLog) scanValues(columns []string) ([]interface{}, error) {
 	values := make([]interface{}, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case tasklog.FieldErrValues, tasklog.FieldStackTrace:
-			values[i] = new([]byte)
-		case tasklog.FieldID, tasklog.FieldStage, tasklog.FieldStartedAt, tasklog.FieldExitedAt:
+		case tasklog.FieldID, tasklog.FieldStage:
 			values[i] = new(sql.NullInt64)
-		case tasklog.FieldTaskName, tasklog.FieldLog, tasklog.FieldErrmsg, tasklog.FieldStatus:
+		case tasklog.FieldName:
 			values[i] = new(sql.NullString)
 		case tasklog.ForeignKeys[0]: // alert_task_logs
 			values[i] = new(sql.NullString)
@@ -93,63 +87,17 @@ func (tl *TaskLog) assignValues(columns []string, values []interface{}) error {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
 			tl.ID = int(value.Int64)
-		case tasklog.FieldTaskName:
+		case tasklog.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field task_name", values[i])
+				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
-				tl.TaskName = value.String
+				tl.Name = value.String
 			}
 		case tasklog.FieldStage:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field stage", values[i])
 			} else if value.Valid {
 				tl.Stage = value.Int64
-			}
-		case tasklog.FieldStartedAt:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field started_at", values[i])
-			} else if value.Valid {
-				tl.StartedAt = value.Int64
-			}
-		case tasklog.FieldExitedAt:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field exited_at", values[i])
-			} else if value.Valid {
-				tl.ExitedAt = value.Int64
-			}
-		case tasklog.FieldLog:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field log", values[i])
-			} else if value.Valid {
-				tl.Log = value.String
-			}
-		case tasklog.FieldErrmsg:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field errmsg", values[i])
-			} else if value.Valid {
-				tl.Errmsg = value.String
-			}
-		case tasklog.FieldErrValues:
-			if value, ok := values[i].(*[]byte); !ok {
-				return fmt.Errorf("unexpected type %T for field err_values", values[i])
-			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &tl.ErrValues); err != nil {
-					return fmt.Errorf("unmarshal field err_values: %w", err)
-				}
-			}
-		case tasklog.FieldStackTrace:
-			if value, ok := values[i].(*[]byte); !ok {
-				return fmt.Errorf("unexpected type %T for field stack_trace", values[i])
-			} else if value != nil && len(*value) > 0 {
-				if err := json.Unmarshal(*value, &tl.StackTrace); err != nil {
-					return fmt.Errorf("unmarshal field stack_trace: %w", err)
-				}
-			}
-		case tasklog.FieldStatus:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field status", values[i])
-			} else if value.Valid {
-				tl.Status = types.TaskStatus(value.String)
 			}
 		case tasklog.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -166,6 +114,11 @@ func (tl *TaskLog) assignValues(columns []string, values []interface{}) error {
 // QueryAnnotated queries the "annotated" edge of the TaskLog entity.
 func (tl *TaskLog) QueryAnnotated() *AnnotationQuery {
 	return (&TaskLogClient{config: tl.config}).QueryAnnotated(tl)
+}
+
+// QueryExecLogs queries the "exec_logs" edge of the TaskLog entity.
+func (tl *TaskLog) QueryExecLogs() *ExecLogQuery {
+	return (&TaskLogClient{config: tl.config}).QueryExecLogs(tl)
 }
 
 // Update returns a builder for updating this TaskLog.
@@ -191,24 +144,10 @@ func (tl *TaskLog) String() string {
 	var builder strings.Builder
 	builder.WriteString("TaskLog(")
 	builder.WriteString(fmt.Sprintf("id=%v", tl.ID))
-	builder.WriteString(", task_name=")
-	builder.WriteString(tl.TaskName)
+	builder.WriteString(", name=")
+	builder.WriteString(tl.Name)
 	builder.WriteString(", stage=")
 	builder.WriteString(fmt.Sprintf("%v", tl.Stage))
-	builder.WriteString(", started_at=")
-	builder.WriteString(fmt.Sprintf("%v", tl.StartedAt))
-	builder.WriteString(", exited_at=")
-	builder.WriteString(fmt.Sprintf("%v", tl.ExitedAt))
-	builder.WriteString(", log=")
-	builder.WriteString(tl.Log)
-	builder.WriteString(", errmsg=")
-	builder.WriteString(tl.Errmsg)
-	builder.WriteString(", err_values=")
-	builder.WriteString(fmt.Sprintf("%v", tl.ErrValues))
-	builder.WriteString(", stack_trace=")
-	builder.WriteString(fmt.Sprintf("%v", tl.StackTrace))
-	builder.WriteString(", status=")
-	builder.WriteString(fmt.Sprintf("%v", tl.Status))
 	builder.WriteByte(')')
 	return builder.String()
 }

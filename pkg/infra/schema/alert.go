@@ -33,5 +33,6 @@ func (Alert) Edges() []ent.Edge {
 		edge.To("attributes", Attribute.Type),
 		edge.To("references", Reference.Type),
 		edge.To("task_logs", TaskLog.Type),
+		edge.To("action_logs", ActionLog.Type),
 	}
 }

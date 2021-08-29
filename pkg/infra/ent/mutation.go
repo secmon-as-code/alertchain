@@ -11,6 +11,7 @@ import (
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/alert"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/annotation"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/attribute"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/execlog"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/predicate"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/reference"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/tasklog"
@@ -32,6 +33,7 @@ const (
 	TypeAlert      = "Alert"
 	TypeAnnotation = "Annotation"
 	TypeAttribute  = "Attribute"
+	TypeExecLog    = "ExecLog"
 	TypeReference  = "Reference"
 	TypeTaskLog    = "TaskLog"
 )
@@ -39,26 +41,20 @@ const (
 // ActionLogMutation represents an operation that mutates the ActionLog nodes in the graph.
 type ActionLogMutation struct {
 	config
-	op              Op
-	typ             string
-	id              *int
-	name            *string
-	started_at      *int64
-	addstarted_at   *int64
-	exited_at       *int64
-	addexited_at    *int64
-	log             *string
-	errmsg          *string
-	err_values      *[]string
-	stack_trace     *[]string
-	status          *types.TaskStatus
-	clearedFields   map[string]struct{}
-	argument        map[int]struct{}
-	removedargument map[int]struct{}
-	clearedargument bool
-	done            bool
-	oldValue        func(context.Context) (*ActionLog, error)
-	predicates      []predicate.ActionLog
+	op               Op
+	typ              string
+	id               *int
+	name             *string
+	clearedFields    map[string]struct{}
+	argument         map[int]struct{}
+	removedargument  map[int]struct{}
+	clearedargument  bool
+	exec_logs        map[int]struct{}
+	removedexec_logs map[int]struct{}
+	clearedexec_logs bool
+	done             bool
+	oldValue         func(context.Context) (*ActionLog, error)
+	predicates       []predicate.ActionLog
 }
 
 var _ ent.Mutation = (*ActionLogMutation)(nil)
@@ -176,364 +172,6 @@ func (m *ActionLogMutation) ResetName() {
 	m.name = nil
 }
 
-// SetStartedAt sets the "started_at" field.
-func (m *ActionLogMutation) SetStartedAt(i int64) {
-	m.started_at = &i
-	m.addstarted_at = nil
-}
-
-// StartedAt returns the value of the "started_at" field in the mutation.
-func (m *ActionLogMutation) StartedAt() (r int64, exists bool) {
-	v := m.started_at
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldStartedAt returns the old "started_at" field's value of the ActionLog entity.
-// If the ActionLog object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ActionLogMutation) OldStartedAt(ctx context.Context) (v int64, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldStartedAt is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldStartedAt requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldStartedAt: %w", err)
-	}
-	return oldValue.StartedAt, nil
-}
-
-// AddStartedAt adds i to the "started_at" field.
-func (m *ActionLogMutation) AddStartedAt(i int64) {
-	if m.addstarted_at != nil {
-		*m.addstarted_at += i
-	} else {
-		m.addstarted_at = &i
-	}
-}
-
-// AddedStartedAt returns the value that was added to the "started_at" field in this mutation.
-func (m *ActionLogMutation) AddedStartedAt() (r int64, exists bool) {
-	v := m.addstarted_at
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// ResetStartedAt resets all changes to the "started_at" field.
-func (m *ActionLogMutation) ResetStartedAt() {
-	m.started_at = nil
-	m.addstarted_at = nil
-}
-
-// SetExitedAt sets the "exited_at" field.
-func (m *ActionLogMutation) SetExitedAt(i int64) {
-	m.exited_at = &i
-	m.addexited_at = nil
-}
-
-// ExitedAt returns the value of the "exited_at" field in the mutation.
-func (m *ActionLogMutation) ExitedAt() (r int64, exists bool) {
-	v := m.exited_at
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldExitedAt returns the old "exited_at" field's value of the ActionLog entity.
-// If the ActionLog object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ActionLogMutation) OldExitedAt(ctx context.Context) (v int64, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldExitedAt is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldExitedAt requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldExitedAt: %w", err)
-	}
-	return oldValue.ExitedAt, nil
-}
-
-// AddExitedAt adds i to the "exited_at" field.
-func (m *ActionLogMutation) AddExitedAt(i int64) {
-	if m.addexited_at != nil {
-		*m.addexited_at += i
-	} else {
-		m.addexited_at = &i
-	}
-}
-
-// AddedExitedAt returns the value that was added to the "exited_at" field in this mutation.
-func (m *ActionLogMutation) AddedExitedAt() (r int64, exists bool) {
-	v := m.addexited_at
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// ClearExitedAt clears the value of the "exited_at" field.
-func (m *ActionLogMutation) ClearExitedAt() {
-	m.exited_at = nil
-	m.addexited_at = nil
-	m.clearedFields[actionlog.FieldExitedAt] = struct{}{}
-}
-
-// ExitedAtCleared returns if the "exited_at" field was cleared in this mutation.
-func (m *ActionLogMutation) ExitedAtCleared() bool {
-	_, ok := m.clearedFields[actionlog.FieldExitedAt]
-	return ok
-}
-
-// ResetExitedAt resets all changes to the "exited_at" field.
-func (m *ActionLogMutation) ResetExitedAt() {
-	m.exited_at = nil
-	m.addexited_at = nil
-	delete(m.clearedFields, actionlog.FieldExitedAt)
-}
-
-// SetLog sets the "log" field.
-func (m *ActionLogMutation) SetLog(s string) {
-	m.log = &s
-}
-
-// Log returns the value of the "log" field in the mutation.
-func (m *ActionLogMutation) Log() (r string, exists bool) {
-	v := m.log
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldLog returns the old "log" field's value of the ActionLog entity.
-// If the ActionLog object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ActionLogMutation) OldLog(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldLog is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldLog requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldLog: %w", err)
-	}
-	return oldValue.Log, nil
-}
-
-// ClearLog clears the value of the "log" field.
-func (m *ActionLogMutation) ClearLog() {
-	m.log = nil
-	m.clearedFields[actionlog.FieldLog] = struct{}{}
-}
-
-// LogCleared returns if the "log" field was cleared in this mutation.
-func (m *ActionLogMutation) LogCleared() bool {
-	_, ok := m.clearedFields[actionlog.FieldLog]
-	return ok
-}
-
-// ResetLog resets all changes to the "log" field.
-func (m *ActionLogMutation) ResetLog() {
-	m.log = nil
-	delete(m.clearedFields, actionlog.FieldLog)
-}
-
-// SetErrmsg sets the "errmsg" field.
-func (m *ActionLogMutation) SetErrmsg(s string) {
-	m.errmsg = &s
-}
-
-// Errmsg returns the value of the "errmsg" field in the mutation.
-func (m *ActionLogMutation) Errmsg() (r string, exists bool) {
-	v := m.errmsg
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldErrmsg returns the old "errmsg" field's value of the ActionLog entity.
-// If the ActionLog object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ActionLogMutation) OldErrmsg(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldErrmsg is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldErrmsg requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldErrmsg: %w", err)
-	}
-	return oldValue.Errmsg, nil
-}
-
-// ClearErrmsg clears the value of the "errmsg" field.
-func (m *ActionLogMutation) ClearErrmsg() {
-	m.errmsg = nil
-	m.clearedFields[actionlog.FieldErrmsg] = struct{}{}
-}
-
-// ErrmsgCleared returns if the "errmsg" field was cleared in this mutation.
-func (m *ActionLogMutation) ErrmsgCleared() bool {
-	_, ok := m.clearedFields[actionlog.FieldErrmsg]
-	return ok
-}
-
-// ResetErrmsg resets all changes to the "errmsg" field.
-func (m *ActionLogMutation) ResetErrmsg() {
-	m.errmsg = nil
-	delete(m.clearedFields, actionlog.FieldErrmsg)
-}
-
-// SetErrValues sets the "err_values" field.
-func (m *ActionLogMutation) SetErrValues(s []string) {
-	m.err_values = &s
-}
-
-// ErrValues returns the value of the "err_values" field in the mutation.
-func (m *ActionLogMutation) ErrValues() (r []string, exists bool) {
-	v := m.err_values
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldErrValues returns the old "err_values" field's value of the ActionLog entity.
-// If the ActionLog object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ActionLogMutation) OldErrValues(ctx context.Context) (v []string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldErrValues is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldErrValues requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldErrValues: %w", err)
-	}
-	return oldValue.ErrValues, nil
-}
-
-// ClearErrValues clears the value of the "err_values" field.
-func (m *ActionLogMutation) ClearErrValues() {
-	m.err_values = nil
-	m.clearedFields[actionlog.FieldErrValues] = struct{}{}
-}
-
-// ErrValuesCleared returns if the "err_values" field was cleared in this mutation.
-func (m *ActionLogMutation) ErrValuesCleared() bool {
-	_, ok := m.clearedFields[actionlog.FieldErrValues]
-	return ok
-}
-
-// ResetErrValues resets all changes to the "err_values" field.
-func (m *ActionLogMutation) ResetErrValues() {
-	m.err_values = nil
-	delete(m.clearedFields, actionlog.FieldErrValues)
-}
-
-// SetStackTrace sets the "stack_trace" field.
-func (m *ActionLogMutation) SetStackTrace(s []string) {
-	m.stack_trace = &s
-}
-
-// StackTrace returns the value of the "stack_trace" field in the mutation.
-func (m *ActionLogMutation) StackTrace() (r []string, exists bool) {
-	v := m.stack_trace
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldStackTrace returns the old "stack_trace" field's value of the ActionLog entity.
-// If the ActionLog object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ActionLogMutation) OldStackTrace(ctx context.Context) (v []string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldStackTrace is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldStackTrace requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldStackTrace: %w", err)
-	}
-	return oldValue.StackTrace, nil
-}
-
-// ClearStackTrace clears the value of the "stack_trace" field.
-func (m *ActionLogMutation) ClearStackTrace() {
-	m.stack_trace = nil
-	m.clearedFields[actionlog.FieldStackTrace] = struct{}{}
-}
-
-// StackTraceCleared returns if the "stack_trace" field was cleared in this mutation.
-func (m *ActionLogMutation) StackTraceCleared() bool {
-	_, ok := m.clearedFields[actionlog.FieldStackTrace]
-	return ok
-}
-
-// ResetStackTrace resets all changes to the "stack_trace" field.
-func (m *ActionLogMutation) ResetStackTrace() {
-	m.stack_trace = nil
-	delete(m.clearedFields, actionlog.FieldStackTrace)
-}
-
-// SetStatus sets the "status" field.
-func (m *ActionLogMutation) SetStatus(ts types.TaskStatus) {
-	m.status = &ts
-}
-
-// Status returns the value of the "status" field in the mutation.
-func (m *ActionLogMutation) Status() (r types.TaskStatus, exists bool) {
-	v := m.status
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldStatus returns the old "status" field's value of the ActionLog entity.
-// If the ActionLog object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *ActionLogMutation) OldStatus(ctx context.Context) (v types.TaskStatus, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldStatus is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldStatus requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
-	}
-	return oldValue.Status, nil
-}
-
-// ResetStatus resets all changes to the "status" field.
-func (m *ActionLogMutation) ResetStatus() {
-	m.status = nil
-}
-
 // AddArgumentIDs adds the "argument" edge to the Attribute entity by ids.
 func (m *ActionLogMutation) AddArgumentIDs(ids ...int) {
 	if m.argument == nil {
@@ -588,6 +226,60 @@ func (m *ActionLogMutation) ResetArgument() {
 	m.removedargument = nil
 }
 
+// AddExecLogIDs adds the "exec_logs" edge to the ExecLog entity by ids.
+func (m *ActionLogMutation) AddExecLogIDs(ids ...int) {
+	if m.exec_logs == nil {
+		m.exec_logs = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.exec_logs[ids[i]] = struct{}{}
+	}
+}
+
+// ClearExecLogs clears the "exec_logs" edge to the ExecLog entity.
+func (m *ActionLogMutation) ClearExecLogs() {
+	m.clearedexec_logs = true
+}
+
+// ExecLogsCleared reports if the "exec_logs" edge to the ExecLog entity was cleared.
+func (m *ActionLogMutation) ExecLogsCleared() bool {
+	return m.clearedexec_logs
+}
+
+// RemoveExecLogIDs removes the "exec_logs" edge to the ExecLog entity by IDs.
+func (m *ActionLogMutation) RemoveExecLogIDs(ids ...int) {
+	if m.removedexec_logs == nil {
+		m.removedexec_logs = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.exec_logs, ids[i])
+		m.removedexec_logs[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedExecLogs returns the removed IDs of the "exec_logs" edge to the ExecLog entity.
+func (m *ActionLogMutation) RemovedExecLogsIDs() (ids []int) {
+	for id := range m.removedexec_logs {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ExecLogsIDs returns the "exec_logs" edge IDs in the mutation.
+func (m *ActionLogMutation) ExecLogsIDs() (ids []int) {
+	for id := range m.exec_logs {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetExecLogs resets all changes to the "exec_logs" edge.
+func (m *ActionLogMutation) ResetExecLogs() {
+	m.exec_logs = nil
+	m.clearedexec_logs = false
+	m.removedexec_logs = nil
+}
+
 // Where appends a list predicates to the ActionLogMutation builder.
 func (m *ActionLogMutation) Where(ps ...predicate.ActionLog) {
 	m.predicates = append(m.predicates, ps...)
@@ -607,30 +299,9 @@ func (m *ActionLogMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ActionLogMutation) Fields() []string {
-	fields := make([]string, 0, 8)
+	fields := make([]string, 0, 1)
 	if m.name != nil {
 		fields = append(fields, actionlog.FieldName)
-	}
-	if m.started_at != nil {
-		fields = append(fields, actionlog.FieldStartedAt)
-	}
-	if m.exited_at != nil {
-		fields = append(fields, actionlog.FieldExitedAt)
-	}
-	if m.log != nil {
-		fields = append(fields, actionlog.FieldLog)
-	}
-	if m.errmsg != nil {
-		fields = append(fields, actionlog.FieldErrmsg)
-	}
-	if m.err_values != nil {
-		fields = append(fields, actionlog.FieldErrValues)
-	}
-	if m.stack_trace != nil {
-		fields = append(fields, actionlog.FieldStackTrace)
-	}
-	if m.status != nil {
-		fields = append(fields, actionlog.FieldStatus)
 	}
 	return fields
 }
@@ -642,20 +313,6 @@ func (m *ActionLogMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case actionlog.FieldName:
 		return m.Name()
-	case actionlog.FieldStartedAt:
-		return m.StartedAt()
-	case actionlog.FieldExitedAt:
-		return m.ExitedAt()
-	case actionlog.FieldLog:
-		return m.Log()
-	case actionlog.FieldErrmsg:
-		return m.Errmsg()
-	case actionlog.FieldErrValues:
-		return m.ErrValues()
-	case actionlog.FieldStackTrace:
-		return m.StackTrace()
-	case actionlog.FieldStatus:
-		return m.Status()
 	}
 	return nil, false
 }
@@ -667,20 +324,6 @@ func (m *ActionLogMutation) OldField(ctx context.Context, name string) (ent.Valu
 	switch name {
 	case actionlog.FieldName:
 		return m.OldName(ctx)
-	case actionlog.FieldStartedAt:
-		return m.OldStartedAt(ctx)
-	case actionlog.FieldExitedAt:
-		return m.OldExitedAt(ctx)
-	case actionlog.FieldLog:
-		return m.OldLog(ctx)
-	case actionlog.FieldErrmsg:
-		return m.OldErrmsg(ctx)
-	case actionlog.FieldErrValues:
-		return m.OldErrValues(ctx)
-	case actionlog.FieldStackTrace:
-		return m.OldStackTrace(ctx)
-	case actionlog.FieldStatus:
-		return m.OldStatus(ctx)
 	}
 	return nil, fmt.Errorf("unknown ActionLog field %s", name)
 }
@@ -697,55 +340,6 @@ func (m *ActionLogMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetName(v)
 		return nil
-	case actionlog.FieldStartedAt:
-		v, ok := value.(int64)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetStartedAt(v)
-		return nil
-	case actionlog.FieldExitedAt:
-		v, ok := value.(int64)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetExitedAt(v)
-		return nil
-	case actionlog.FieldLog:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetLog(v)
-		return nil
-	case actionlog.FieldErrmsg:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetErrmsg(v)
-		return nil
-	case actionlog.FieldErrValues:
-		v, ok := value.([]string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetErrValues(v)
-		return nil
-	case actionlog.FieldStackTrace:
-		v, ok := value.([]string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetStackTrace(v)
-		return nil
-	case actionlog.FieldStatus:
-		v, ok := value.(types.TaskStatus)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetStatus(v)
-		return nil
 	}
 	return fmt.Errorf("unknown ActionLog field %s", name)
 }
@@ -753,26 +347,13 @@ func (m *ActionLogMutation) SetField(name string, value ent.Value) error {
 // AddedFields returns all numeric fields that were incremented/decremented during
 // this mutation.
 func (m *ActionLogMutation) AddedFields() []string {
-	var fields []string
-	if m.addstarted_at != nil {
-		fields = append(fields, actionlog.FieldStartedAt)
-	}
-	if m.addexited_at != nil {
-		fields = append(fields, actionlog.FieldExitedAt)
-	}
-	return fields
+	return nil
 }
 
 // AddedField returns the numeric value that was incremented/decremented on a field
 // with the given name. The second boolean return value indicates that this field
 // was not set, or was not defined in the schema.
 func (m *ActionLogMutation) AddedField(name string) (ent.Value, bool) {
-	switch name {
-	case actionlog.FieldStartedAt:
-		return m.AddedStartedAt()
-	case actionlog.FieldExitedAt:
-		return m.AddedExitedAt()
-	}
 	return nil, false
 }
 
@@ -781,20 +362,6 @@ func (m *ActionLogMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *ActionLogMutation) AddField(name string, value ent.Value) error {
 	switch name {
-	case actionlog.FieldStartedAt:
-		v, ok := value.(int64)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.AddStartedAt(v)
-		return nil
-	case actionlog.FieldExitedAt:
-		v, ok := value.(int64)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.AddExitedAt(v)
-		return nil
 	}
 	return fmt.Errorf("unknown ActionLog numeric field %s", name)
 }
@@ -802,23 +369,7 @@ func (m *ActionLogMutation) AddField(name string, value ent.Value) error {
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
 func (m *ActionLogMutation) ClearedFields() []string {
-	var fields []string
-	if m.FieldCleared(actionlog.FieldExitedAt) {
-		fields = append(fields, actionlog.FieldExitedAt)
-	}
-	if m.FieldCleared(actionlog.FieldLog) {
-		fields = append(fields, actionlog.FieldLog)
-	}
-	if m.FieldCleared(actionlog.FieldErrmsg) {
-		fields = append(fields, actionlog.FieldErrmsg)
-	}
-	if m.FieldCleared(actionlog.FieldErrValues) {
-		fields = append(fields, actionlog.FieldErrValues)
-	}
-	if m.FieldCleared(actionlog.FieldStackTrace) {
-		fields = append(fields, actionlog.FieldStackTrace)
-	}
-	return fields
+	return nil
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
@@ -831,23 +382,6 @@ func (m *ActionLogMutation) FieldCleared(name string) bool {
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *ActionLogMutation) ClearField(name string) error {
-	switch name {
-	case actionlog.FieldExitedAt:
-		m.ClearExitedAt()
-		return nil
-	case actionlog.FieldLog:
-		m.ClearLog()
-		return nil
-	case actionlog.FieldErrmsg:
-		m.ClearErrmsg()
-		return nil
-	case actionlog.FieldErrValues:
-		m.ClearErrValues()
-		return nil
-	case actionlog.FieldStackTrace:
-		m.ClearStackTrace()
-		return nil
-	}
 	return fmt.Errorf("unknown ActionLog nullable field %s", name)
 }
 
@@ -858,36 +392,18 @@ func (m *ActionLogMutation) ResetField(name string) error {
 	case actionlog.FieldName:
 		m.ResetName()
 		return nil
-	case actionlog.FieldStartedAt:
-		m.ResetStartedAt()
-		return nil
-	case actionlog.FieldExitedAt:
-		m.ResetExitedAt()
-		return nil
-	case actionlog.FieldLog:
-		m.ResetLog()
-		return nil
-	case actionlog.FieldErrmsg:
-		m.ResetErrmsg()
-		return nil
-	case actionlog.FieldErrValues:
-		m.ResetErrValues()
-		return nil
-	case actionlog.FieldStackTrace:
-		m.ResetStackTrace()
-		return nil
-	case actionlog.FieldStatus:
-		m.ResetStatus()
-		return nil
 	}
 	return fmt.Errorf("unknown ActionLog field %s", name)
 }
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ActionLogMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.argument != nil {
 		edges = append(edges, actionlog.EdgeArgument)
+	}
+	if m.exec_logs != nil {
+		edges = append(edges, actionlog.EdgeExecLogs)
 	}
 	return edges
 }
@@ -902,15 +418,24 @@ func (m *ActionLogMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case actionlog.EdgeExecLogs:
+		ids := make([]ent.Value, 0, len(m.exec_logs))
+		for id := range m.exec_logs {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ActionLogMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.removedargument != nil {
 		edges = append(edges, actionlog.EdgeArgument)
+	}
+	if m.removedexec_logs != nil {
+		edges = append(edges, actionlog.EdgeExecLogs)
 	}
 	return edges
 }
@@ -925,15 +450,24 @@ func (m *ActionLogMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case actionlog.EdgeExecLogs:
+		ids := make([]ent.Value, 0, len(m.removedexec_logs))
+		for id := range m.removedexec_logs {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ActionLogMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.clearedargument {
 		edges = append(edges, actionlog.EdgeArgument)
+	}
+	if m.clearedexec_logs {
+		edges = append(edges, actionlog.EdgeExecLogs)
 	}
 	return edges
 }
@@ -944,6 +478,8 @@ func (m *ActionLogMutation) EdgeCleared(name string) bool {
 	switch name {
 	case actionlog.EdgeArgument:
 		return m.clearedargument
+	case actionlog.EdgeExecLogs:
+		return m.clearedexec_logs
 	}
 	return false
 }
@@ -963,6 +499,9 @@ func (m *ActionLogMutation) ResetEdge(name string) error {
 	case actionlog.EdgeArgument:
 		m.ResetArgument()
 		return nil
+	case actionlog.EdgeExecLogs:
+		m.ResetExecLogs()
+		return nil
 	}
 	return fmt.Errorf("unknown ActionLog edge %s", name)
 }
@@ -970,33 +509,36 @@ func (m *ActionLogMutation) ResetEdge(name string) error {
 // AlertMutation represents an operation that mutates the Alert nodes in the graph.
 type AlertMutation struct {
 	config
-	op                Op
-	typ               string
-	id                *types.AlertID
-	title             *string
-	description       *string
-	detector          *string
-	status            *types.AlertStatus
-	severity          *types.Severity
-	created_at        *int64
-	addcreated_at     *int64
-	detected_at       *int64
-	adddetected_at    *int64
-	closed_at         *int64
-	addclosed_at      *int64
-	clearedFields     map[string]struct{}
-	attributes        map[int]struct{}
-	removedattributes map[int]struct{}
-	clearedattributes bool
-	references        map[int]struct{}
-	removedreferences map[int]struct{}
-	clearedreferences bool
-	task_logs         map[int]struct{}
-	removedtask_logs  map[int]struct{}
-	clearedtask_logs  bool
-	done              bool
-	oldValue          func(context.Context) (*Alert, error)
-	predicates        []predicate.Alert
+	op                 Op
+	typ                string
+	id                 *types.AlertID
+	title              *string
+	description        *string
+	detector           *string
+	status             *types.AlertStatus
+	severity           *types.Severity
+	created_at         *int64
+	addcreated_at      *int64
+	detected_at        *int64
+	adddetected_at     *int64
+	closed_at          *int64
+	addclosed_at       *int64
+	clearedFields      map[string]struct{}
+	attributes         map[int]struct{}
+	removedattributes  map[int]struct{}
+	clearedattributes  bool
+	references         map[int]struct{}
+	removedreferences  map[int]struct{}
+	clearedreferences  bool
+	task_logs          map[int]struct{}
+	removedtask_logs   map[int]struct{}
+	clearedtask_logs   bool
+	action_logs        map[int]struct{}
+	removedaction_logs map[int]struct{}
+	clearedaction_logs bool
+	done               bool
+	oldValue           func(context.Context) (*Alert, error)
+	predicates         []predicate.Alert
 }
 
 var _ ent.Mutation = (*AlertMutation)(nil)
@@ -1674,6 +1216,60 @@ func (m *AlertMutation) ResetTaskLogs() {
 	m.removedtask_logs = nil
 }
 
+// AddActionLogIDs adds the "action_logs" edge to the ActionLog entity by ids.
+func (m *AlertMutation) AddActionLogIDs(ids ...int) {
+	if m.action_logs == nil {
+		m.action_logs = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.action_logs[ids[i]] = struct{}{}
+	}
+}
+
+// ClearActionLogs clears the "action_logs" edge to the ActionLog entity.
+func (m *AlertMutation) ClearActionLogs() {
+	m.clearedaction_logs = true
+}
+
+// ActionLogsCleared reports if the "action_logs" edge to the ActionLog entity was cleared.
+func (m *AlertMutation) ActionLogsCleared() bool {
+	return m.clearedaction_logs
+}
+
+// RemoveActionLogIDs removes the "action_logs" edge to the ActionLog entity by IDs.
+func (m *AlertMutation) RemoveActionLogIDs(ids ...int) {
+	if m.removedaction_logs == nil {
+		m.removedaction_logs = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.action_logs, ids[i])
+		m.removedaction_logs[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedActionLogs returns the removed IDs of the "action_logs" edge to the ActionLog entity.
+func (m *AlertMutation) RemovedActionLogsIDs() (ids []int) {
+	for id := range m.removedaction_logs {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ActionLogsIDs returns the "action_logs" edge IDs in the mutation.
+func (m *AlertMutation) ActionLogsIDs() (ids []int) {
+	for id := range m.action_logs {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetActionLogs resets all changes to the "action_logs" edge.
+func (m *AlertMutation) ResetActionLogs() {
+	m.action_logs = nil
+	m.clearedaction_logs = false
+	m.removedaction_logs = nil
+}
+
 // Where appends a list predicates to the AlertMutation builder.
 func (m *AlertMutation) Where(ps ...predicate.Alert) {
 	m.predicates = append(m.predicates, ps...)
@@ -1989,7 +1585,7 @@ func (m *AlertMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *AlertMutation) AddedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.attributes != nil {
 		edges = append(edges, alert.EdgeAttributes)
 	}
@@ -1998,6 +1594,9 @@ func (m *AlertMutation) AddedEdges() []string {
 	}
 	if m.task_logs != nil {
 		edges = append(edges, alert.EdgeTaskLogs)
+	}
+	if m.action_logs != nil {
+		edges = append(edges, alert.EdgeActionLogs)
 	}
 	return edges
 }
@@ -2024,13 +1623,19 @@ func (m *AlertMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case alert.EdgeActionLogs:
+		ids := make([]ent.Value, 0, len(m.action_logs))
+		for id := range m.action_logs {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *AlertMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.removedattributes != nil {
 		edges = append(edges, alert.EdgeAttributes)
 	}
@@ -2039,6 +1644,9 @@ func (m *AlertMutation) RemovedEdges() []string {
 	}
 	if m.removedtask_logs != nil {
 		edges = append(edges, alert.EdgeTaskLogs)
+	}
+	if m.removedaction_logs != nil {
+		edges = append(edges, alert.EdgeActionLogs)
 	}
 	return edges
 }
@@ -2065,13 +1673,19 @@ func (m *AlertMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case alert.EdgeActionLogs:
+		ids := make([]ent.Value, 0, len(m.removedaction_logs))
+		for id := range m.removedaction_logs {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *AlertMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.clearedattributes {
 		edges = append(edges, alert.EdgeAttributes)
 	}
@@ -2080,6 +1694,9 @@ func (m *AlertMutation) ClearedEdges() []string {
 	}
 	if m.clearedtask_logs {
 		edges = append(edges, alert.EdgeTaskLogs)
+	}
+	if m.clearedaction_logs {
+		edges = append(edges, alert.EdgeActionLogs)
 	}
 	return edges
 }
@@ -2094,6 +1711,8 @@ func (m *AlertMutation) EdgeCleared(name string) bool {
 		return m.clearedreferences
 	case alert.EdgeTaskLogs:
 		return m.clearedtask_logs
+	case alert.EdgeActionLogs:
+		return m.clearedaction_logs
 	}
 	return false
 }
@@ -2118,6 +1737,9 @@ func (m *AlertMutation) ResetEdge(name string) error {
 		return nil
 	case alert.EdgeTaskLogs:
 		m.ResetTaskLogs()
+		return nil
+	case alert.EdgeActionLogs:
+		m.ResetActionLogs()
 		return nil
 	}
 	return fmt.Errorf("unknown Alert edge %s", name)
@@ -2627,6 +2249,8 @@ type AttributeMutation struct {
 	annotations        map[int]struct{}
 	removedannotations map[int]struct{}
 	clearedannotations bool
+	alert              *types.AlertID
+	clearedalert       bool
 	done               bool
 	oldValue           func(context.Context) (*Attribute, error)
 	predicates         []predicate.Attribute
@@ -2909,6 +2533,45 @@ func (m *AttributeMutation) ResetAnnotations() {
 	m.removedannotations = nil
 }
 
+// SetAlertID sets the "alert" edge to the Alert entity by id.
+func (m *AttributeMutation) SetAlertID(id types.AlertID) {
+	m.alert = &id
+}
+
+// ClearAlert clears the "alert" edge to the Alert entity.
+func (m *AttributeMutation) ClearAlert() {
+	m.clearedalert = true
+}
+
+// AlertCleared reports if the "alert" edge to the Alert entity was cleared.
+func (m *AttributeMutation) AlertCleared() bool {
+	return m.clearedalert
+}
+
+// AlertID returns the "alert" edge ID in the mutation.
+func (m *AttributeMutation) AlertID() (id types.AlertID, exists bool) {
+	if m.alert != nil {
+		return *m.alert, true
+	}
+	return
+}
+
+// AlertIDs returns the "alert" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// AlertID instead. It exists only for internal usage by the builders.
+func (m *AttributeMutation) AlertIDs() (ids []types.AlertID) {
+	if id := m.alert; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetAlert resets all changes to the "alert" edge.
+func (m *AttributeMutation) ResetAlert() {
+	m.alert = nil
+	m.clearedalert = false
+}
+
 // Where appends a list predicates to the AttributeMutation builder.
 func (m *AttributeMutation) Where(ps ...predicate.Attribute) {
 	m.predicates = append(m.predicates, ps...)
@@ -3078,9 +2741,12 @@ func (m *AttributeMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *AttributeMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.annotations != nil {
 		edges = append(edges, attribute.EdgeAnnotations)
+	}
+	if m.alert != nil {
+		edges = append(edges, attribute.EdgeAlert)
 	}
 	return edges
 }
@@ -3095,13 +2761,17 @@ func (m *AttributeMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case attribute.EdgeAlert:
+		if id := m.alert; id != nil {
+			return []ent.Value{*id}
+		}
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *AttributeMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.removedannotations != nil {
 		edges = append(edges, attribute.EdgeAnnotations)
 	}
@@ -3124,9 +2794,12 @@ func (m *AttributeMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *AttributeMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.clearedannotations {
 		edges = append(edges, attribute.EdgeAnnotations)
+	}
+	if m.clearedalert {
+		edges = append(edges, attribute.EdgeAlert)
 	}
 	return edges
 }
@@ -3137,6 +2810,8 @@ func (m *AttributeMutation) EdgeCleared(name string) bool {
 	switch name {
 	case attribute.EdgeAnnotations:
 		return m.clearedannotations
+	case attribute.EdgeAlert:
+		return m.clearedalert
 	}
 	return false
 }
@@ -3145,6 +2820,9 @@ func (m *AttributeMutation) EdgeCleared(name string) bool {
 // if that edge is not defined in the schema.
 func (m *AttributeMutation) ClearEdge(name string) error {
 	switch name {
+	case attribute.EdgeAlert:
+		m.ClearAlert()
+		return nil
 	}
 	return fmt.Errorf("unknown Attribute unique edge %s", name)
 }
@@ -3156,8 +2834,688 @@ func (m *AttributeMutation) ResetEdge(name string) error {
 	case attribute.EdgeAnnotations:
 		m.ResetAnnotations()
 		return nil
+	case attribute.EdgeAlert:
+		m.ResetAlert()
+		return nil
 	}
 	return fmt.Errorf("unknown Attribute edge %s", name)
+}
+
+// ExecLogMutation represents an operation that mutates the ExecLog nodes in the graph.
+type ExecLogMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *int
+	timestamp     *int64
+	addtimestamp  *int64
+	log           *string
+	errmsg        *string
+	err_values    *[]string
+	stack_trace   *[]string
+	status        *types.ExecStatus
+	clearedFields map[string]struct{}
+	done          bool
+	oldValue      func(context.Context) (*ExecLog, error)
+	predicates    []predicate.ExecLog
+}
+
+var _ ent.Mutation = (*ExecLogMutation)(nil)
+
+// execlogOption allows management of the mutation configuration using functional options.
+type execlogOption func(*ExecLogMutation)
+
+// newExecLogMutation creates new mutation for the ExecLog entity.
+func newExecLogMutation(c config, op Op, opts ...execlogOption) *ExecLogMutation {
+	m := &ExecLogMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeExecLog,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withExecLogID sets the ID field of the mutation.
+func withExecLogID(id int) execlogOption {
+	return func(m *ExecLogMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *ExecLog
+		)
+		m.oldValue = func(ctx context.Context) (*ExecLog, error) {
+			once.Do(func() {
+				if m.done {
+					err = fmt.Errorf("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().ExecLog.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withExecLog sets the old ExecLog of the mutation.
+func withExecLog(node *ExecLog) execlogOption {
+	return func(m *ExecLogMutation) {
+		m.oldValue = func(context.Context) (*ExecLog, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ExecLogMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ExecLogMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, fmt.Errorf("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *ExecLogMutation) ID() (id int, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// SetTimestamp sets the "timestamp" field.
+func (m *ExecLogMutation) SetTimestamp(i int64) {
+	m.timestamp = &i
+	m.addtimestamp = nil
+}
+
+// Timestamp returns the value of the "timestamp" field in the mutation.
+func (m *ExecLogMutation) Timestamp() (r int64, exists bool) {
+	v := m.timestamp
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTimestamp returns the old "timestamp" field's value of the ExecLog entity.
+// If the ExecLog object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ExecLogMutation) OldTimestamp(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldTimestamp is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldTimestamp requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTimestamp: %w", err)
+	}
+	return oldValue.Timestamp, nil
+}
+
+// AddTimestamp adds i to the "timestamp" field.
+func (m *ExecLogMutation) AddTimestamp(i int64) {
+	if m.addtimestamp != nil {
+		*m.addtimestamp += i
+	} else {
+		m.addtimestamp = &i
+	}
+}
+
+// AddedTimestamp returns the value that was added to the "timestamp" field in this mutation.
+func (m *ExecLogMutation) AddedTimestamp() (r int64, exists bool) {
+	v := m.addtimestamp
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetTimestamp resets all changes to the "timestamp" field.
+func (m *ExecLogMutation) ResetTimestamp() {
+	m.timestamp = nil
+	m.addtimestamp = nil
+}
+
+// SetLog sets the "log" field.
+func (m *ExecLogMutation) SetLog(s string) {
+	m.log = &s
+}
+
+// Log returns the value of the "log" field in the mutation.
+func (m *ExecLogMutation) Log() (r string, exists bool) {
+	v := m.log
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLog returns the old "log" field's value of the ExecLog entity.
+// If the ExecLog object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ExecLogMutation) OldLog(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldLog is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldLog requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLog: %w", err)
+	}
+	return oldValue.Log, nil
+}
+
+// ClearLog clears the value of the "log" field.
+func (m *ExecLogMutation) ClearLog() {
+	m.log = nil
+	m.clearedFields[execlog.FieldLog] = struct{}{}
+}
+
+// LogCleared returns if the "log" field was cleared in this mutation.
+func (m *ExecLogMutation) LogCleared() bool {
+	_, ok := m.clearedFields[execlog.FieldLog]
+	return ok
+}
+
+// ResetLog resets all changes to the "log" field.
+func (m *ExecLogMutation) ResetLog() {
+	m.log = nil
+	delete(m.clearedFields, execlog.FieldLog)
+}
+
+// SetErrmsg sets the "errmsg" field.
+func (m *ExecLogMutation) SetErrmsg(s string) {
+	m.errmsg = &s
+}
+
+// Errmsg returns the value of the "errmsg" field in the mutation.
+func (m *ExecLogMutation) Errmsg() (r string, exists bool) {
+	v := m.errmsg
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldErrmsg returns the old "errmsg" field's value of the ExecLog entity.
+// If the ExecLog object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ExecLogMutation) OldErrmsg(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldErrmsg is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldErrmsg requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldErrmsg: %w", err)
+	}
+	return oldValue.Errmsg, nil
+}
+
+// ClearErrmsg clears the value of the "errmsg" field.
+func (m *ExecLogMutation) ClearErrmsg() {
+	m.errmsg = nil
+	m.clearedFields[execlog.FieldErrmsg] = struct{}{}
+}
+
+// ErrmsgCleared returns if the "errmsg" field was cleared in this mutation.
+func (m *ExecLogMutation) ErrmsgCleared() bool {
+	_, ok := m.clearedFields[execlog.FieldErrmsg]
+	return ok
+}
+
+// ResetErrmsg resets all changes to the "errmsg" field.
+func (m *ExecLogMutation) ResetErrmsg() {
+	m.errmsg = nil
+	delete(m.clearedFields, execlog.FieldErrmsg)
+}
+
+// SetErrValues sets the "err_values" field.
+func (m *ExecLogMutation) SetErrValues(s []string) {
+	m.err_values = &s
+}
+
+// ErrValues returns the value of the "err_values" field in the mutation.
+func (m *ExecLogMutation) ErrValues() (r []string, exists bool) {
+	v := m.err_values
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldErrValues returns the old "err_values" field's value of the ExecLog entity.
+// If the ExecLog object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ExecLogMutation) OldErrValues(ctx context.Context) (v []string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldErrValues is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldErrValues requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldErrValues: %w", err)
+	}
+	return oldValue.ErrValues, nil
+}
+
+// ClearErrValues clears the value of the "err_values" field.
+func (m *ExecLogMutation) ClearErrValues() {
+	m.err_values = nil
+	m.clearedFields[execlog.FieldErrValues] = struct{}{}
+}
+
+// ErrValuesCleared returns if the "err_values" field was cleared in this mutation.
+func (m *ExecLogMutation) ErrValuesCleared() bool {
+	_, ok := m.clearedFields[execlog.FieldErrValues]
+	return ok
+}
+
+// ResetErrValues resets all changes to the "err_values" field.
+func (m *ExecLogMutation) ResetErrValues() {
+	m.err_values = nil
+	delete(m.clearedFields, execlog.FieldErrValues)
+}
+
+// SetStackTrace sets the "stack_trace" field.
+func (m *ExecLogMutation) SetStackTrace(s []string) {
+	m.stack_trace = &s
+}
+
+// StackTrace returns the value of the "stack_trace" field in the mutation.
+func (m *ExecLogMutation) StackTrace() (r []string, exists bool) {
+	v := m.stack_trace
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStackTrace returns the old "stack_trace" field's value of the ExecLog entity.
+// If the ExecLog object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ExecLogMutation) OldStackTrace(ctx context.Context) (v []string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldStackTrace is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldStackTrace requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStackTrace: %w", err)
+	}
+	return oldValue.StackTrace, nil
+}
+
+// ClearStackTrace clears the value of the "stack_trace" field.
+func (m *ExecLogMutation) ClearStackTrace() {
+	m.stack_trace = nil
+	m.clearedFields[execlog.FieldStackTrace] = struct{}{}
+}
+
+// StackTraceCleared returns if the "stack_trace" field was cleared in this mutation.
+func (m *ExecLogMutation) StackTraceCleared() bool {
+	_, ok := m.clearedFields[execlog.FieldStackTrace]
+	return ok
+}
+
+// ResetStackTrace resets all changes to the "stack_trace" field.
+func (m *ExecLogMutation) ResetStackTrace() {
+	m.stack_trace = nil
+	delete(m.clearedFields, execlog.FieldStackTrace)
+}
+
+// SetStatus sets the "status" field.
+func (m *ExecLogMutation) SetStatus(ts types.ExecStatus) {
+	m.status = &ts
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *ExecLogMutation) Status() (r types.ExecStatus, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the ExecLog entity.
+// If the ExecLog object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ExecLogMutation) OldStatus(ctx context.Context) (v types.ExecStatus, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *ExecLogMutation) ResetStatus() {
+	m.status = nil
+}
+
+// Where appends a list predicates to the ExecLogMutation builder.
+func (m *ExecLogMutation) Where(ps ...predicate.ExecLog) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// Op returns the operation name.
+func (m *ExecLogMutation) Op() Op {
+	return m.op
+}
+
+// Type returns the node type of this mutation (ExecLog).
+func (m *ExecLogMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ExecLogMutation) Fields() []string {
+	fields := make([]string, 0, 6)
+	if m.timestamp != nil {
+		fields = append(fields, execlog.FieldTimestamp)
+	}
+	if m.log != nil {
+		fields = append(fields, execlog.FieldLog)
+	}
+	if m.errmsg != nil {
+		fields = append(fields, execlog.FieldErrmsg)
+	}
+	if m.err_values != nil {
+		fields = append(fields, execlog.FieldErrValues)
+	}
+	if m.stack_trace != nil {
+		fields = append(fields, execlog.FieldStackTrace)
+	}
+	if m.status != nil {
+		fields = append(fields, execlog.FieldStatus)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ExecLogMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case execlog.FieldTimestamp:
+		return m.Timestamp()
+	case execlog.FieldLog:
+		return m.Log()
+	case execlog.FieldErrmsg:
+		return m.Errmsg()
+	case execlog.FieldErrValues:
+		return m.ErrValues()
+	case execlog.FieldStackTrace:
+		return m.StackTrace()
+	case execlog.FieldStatus:
+		return m.Status()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ExecLogMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case execlog.FieldTimestamp:
+		return m.OldTimestamp(ctx)
+	case execlog.FieldLog:
+		return m.OldLog(ctx)
+	case execlog.FieldErrmsg:
+		return m.OldErrmsg(ctx)
+	case execlog.FieldErrValues:
+		return m.OldErrValues(ctx)
+	case execlog.FieldStackTrace:
+		return m.OldStackTrace(ctx)
+	case execlog.FieldStatus:
+		return m.OldStatus(ctx)
+	}
+	return nil, fmt.Errorf("unknown ExecLog field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ExecLogMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case execlog.FieldTimestamp:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTimestamp(v)
+		return nil
+	case execlog.FieldLog:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLog(v)
+		return nil
+	case execlog.FieldErrmsg:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetErrmsg(v)
+		return nil
+	case execlog.FieldErrValues:
+		v, ok := value.([]string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetErrValues(v)
+		return nil
+	case execlog.FieldStackTrace:
+		v, ok := value.([]string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStackTrace(v)
+		return nil
+	case execlog.FieldStatus:
+		v, ok := value.(types.ExecStatus)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ExecLog field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ExecLogMutation) AddedFields() []string {
+	var fields []string
+	if m.addtimestamp != nil {
+		fields = append(fields, execlog.FieldTimestamp)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ExecLogMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case execlog.FieldTimestamp:
+		return m.AddedTimestamp()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ExecLogMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case execlog.FieldTimestamp:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddTimestamp(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ExecLog numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ExecLogMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(execlog.FieldLog) {
+		fields = append(fields, execlog.FieldLog)
+	}
+	if m.FieldCleared(execlog.FieldErrmsg) {
+		fields = append(fields, execlog.FieldErrmsg)
+	}
+	if m.FieldCleared(execlog.FieldErrValues) {
+		fields = append(fields, execlog.FieldErrValues)
+	}
+	if m.FieldCleared(execlog.FieldStackTrace) {
+		fields = append(fields, execlog.FieldStackTrace)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ExecLogMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ExecLogMutation) ClearField(name string) error {
+	switch name {
+	case execlog.FieldLog:
+		m.ClearLog()
+		return nil
+	case execlog.FieldErrmsg:
+		m.ClearErrmsg()
+		return nil
+	case execlog.FieldErrValues:
+		m.ClearErrValues()
+		return nil
+	case execlog.FieldStackTrace:
+		m.ClearStackTrace()
+		return nil
+	}
+	return fmt.Errorf("unknown ExecLog nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ExecLogMutation) ResetField(name string) error {
+	switch name {
+	case execlog.FieldTimestamp:
+		m.ResetTimestamp()
+		return nil
+	case execlog.FieldLog:
+		m.ResetLog()
+		return nil
+	case execlog.FieldErrmsg:
+		m.ResetErrmsg()
+		return nil
+	case execlog.FieldErrValues:
+		m.ResetErrValues()
+		return nil
+	case execlog.FieldStackTrace:
+		m.ResetStackTrace()
+		return nil
+	case execlog.FieldStatus:
+		m.ResetStatus()
+		return nil
+	}
+	return fmt.Errorf("unknown ExecLog field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ExecLogMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ExecLogMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ExecLogMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ExecLogMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ExecLogMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ExecLogMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ExecLogMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown ExecLog unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ExecLogMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown ExecLog edge %s", name)
 }
 
 // ReferenceMutation represents an operation that mutates the Reference nodes in the graph.
@@ -3642,22 +4000,16 @@ type TaskLogMutation struct {
 	op               Op
 	typ              string
 	id               *int
-	task_name        *string
+	name             *string
 	stage            *int64
 	addstage         *int64
-	started_at       *int64
-	addstarted_at    *int64
-	exited_at        *int64
-	addexited_at     *int64
-	log              *string
-	errmsg           *string
-	err_values       *[]string
-	stack_trace      *[]string
-	status           *types.TaskStatus
 	clearedFields    map[string]struct{}
 	annotated        map[int]struct{}
 	removedannotated map[int]struct{}
 	clearedannotated bool
+	exec_logs        map[int]struct{}
+	removedexec_logs map[int]struct{}
+	clearedexec_logs bool
 	done             bool
 	oldValue         func(context.Context) (*TaskLog, error)
 	predicates       []predicate.TaskLog
@@ -3742,40 +4094,40 @@ func (m *TaskLogMutation) ID() (id int, exists bool) {
 	return *m.id, true
 }
 
-// SetTaskName sets the "task_name" field.
-func (m *TaskLogMutation) SetTaskName(s string) {
-	m.task_name = &s
+// SetName sets the "name" field.
+func (m *TaskLogMutation) SetName(s string) {
+	m.name = &s
 }
 
-// TaskName returns the value of the "task_name" field in the mutation.
-func (m *TaskLogMutation) TaskName() (r string, exists bool) {
-	v := m.task_name
+// Name returns the value of the "name" field in the mutation.
+func (m *TaskLogMutation) Name() (r string, exists bool) {
+	v := m.name
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldTaskName returns the old "task_name" field's value of the TaskLog entity.
+// OldName returns the old "name" field's value of the TaskLog entity.
 // If the TaskLog object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *TaskLogMutation) OldTaskName(ctx context.Context) (v string, err error) {
+func (m *TaskLogMutation) OldName(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldTaskName is only allowed on UpdateOne operations")
+		return v, fmt.Errorf("OldName is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldTaskName requires an ID field in the mutation")
+		return v, fmt.Errorf("OldName requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldTaskName: %w", err)
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
 	}
-	return oldValue.TaskName, nil
+	return oldValue.Name, nil
 }
 
-// ResetTaskName resets all changes to the "task_name" field.
-func (m *TaskLogMutation) ResetTaskName() {
-	m.task_name = nil
+// ResetName resets all changes to the "name" field.
+func (m *TaskLogMutation) ResetName() {
+	m.name = nil
 }
 
 // SetStage sets the "stage" field.
@@ -3834,364 +4186,6 @@ func (m *TaskLogMutation) ResetStage() {
 	m.addstage = nil
 }
 
-// SetStartedAt sets the "started_at" field.
-func (m *TaskLogMutation) SetStartedAt(i int64) {
-	m.started_at = &i
-	m.addstarted_at = nil
-}
-
-// StartedAt returns the value of the "started_at" field in the mutation.
-func (m *TaskLogMutation) StartedAt() (r int64, exists bool) {
-	v := m.started_at
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldStartedAt returns the old "started_at" field's value of the TaskLog entity.
-// If the TaskLog object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *TaskLogMutation) OldStartedAt(ctx context.Context) (v int64, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldStartedAt is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldStartedAt requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldStartedAt: %w", err)
-	}
-	return oldValue.StartedAt, nil
-}
-
-// AddStartedAt adds i to the "started_at" field.
-func (m *TaskLogMutation) AddStartedAt(i int64) {
-	if m.addstarted_at != nil {
-		*m.addstarted_at += i
-	} else {
-		m.addstarted_at = &i
-	}
-}
-
-// AddedStartedAt returns the value that was added to the "started_at" field in this mutation.
-func (m *TaskLogMutation) AddedStartedAt() (r int64, exists bool) {
-	v := m.addstarted_at
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// ResetStartedAt resets all changes to the "started_at" field.
-func (m *TaskLogMutation) ResetStartedAt() {
-	m.started_at = nil
-	m.addstarted_at = nil
-}
-
-// SetExitedAt sets the "exited_at" field.
-func (m *TaskLogMutation) SetExitedAt(i int64) {
-	m.exited_at = &i
-	m.addexited_at = nil
-}
-
-// ExitedAt returns the value of the "exited_at" field in the mutation.
-func (m *TaskLogMutation) ExitedAt() (r int64, exists bool) {
-	v := m.exited_at
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldExitedAt returns the old "exited_at" field's value of the TaskLog entity.
-// If the TaskLog object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *TaskLogMutation) OldExitedAt(ctx context.Context) (v int64, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldExitedAt is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldExitedAt requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldExitedAt: %w", err)
-	}
-	return oldValue.ExitedAt, nil
-}
-
-// AddExitedAt adds i to the "exited_at" field.
-func (m *TaskLogMutation) AddExitedAt(i int64) {
-	if m.addexited_at != nil {
-		*m.addexited_at += i
-	} else {
-		m.addexited_at = &i
-	}
-}
-
-// AddedExitedAt returns the value that was added to the "exited_at" field in this mutation.
-func (m *TaskLogMutation) AddedExitedAt() (r int64, exists bool) {
-	v := m.addexited_at
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// ClearExitedAt clears the value of the "exited_at" field.
-func (m *TaskLogMutation) ClearExitedAt() {
-	m.exited_at = nil
-	m.addexited_at = nil
-	m.clearedFields[tasklog.FieldExitedAt] = struct{}{}
-}
-
-// ExitedAtCleared returns if the "exited_at" field was cleared in this mutation.
-func (m *TaskLogMutation) ExitedAtCleared() bool {
-	_, ok := m.clearedFields[tasklog.FieldExitedAt]
-	return ok
-}
-
-// ResetExitedAt resets all changes to the "exited_at" field.
-func (m *TaskLogMutation) ResetExitedAt() {
-	m.exited_at = nil
-	m.addexited_at = nil
-	delete(m.clearedFields, tasklog.FieldExitedAt)
-}
-
-// SetLog sets the "log" field.
-func (m *TaskLogMutation) SetLog(s string) {
-	m.log = &s
-}
-
-// Log returns the value of the "log" field in the mutation.
-func (m *TaskLogMutation) Log() (r string, exists bool) {
-	v := m.log
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldLog returns the old "log" field's value of the TaskLog entity.
-// If the TaskLog object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *TaskLogMutation) OldLog(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldLog is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldLog requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldLog: %w", err)
-	}
-	return oldValue.Log, nil
-}
-
-// ClearLog clears the value of the "log" field.
-func (m *TaskLogMutation) ClearLog() {
-	m.log = nil
-	m.clearedFields[tasklog.FieldLog] = struct{}{}
-}
-
-// LogCleared returns if the "log" field was cleared in this mutation.
-func (m *TaskLogMutation) LogCleared() bool {
-	_, ok := m.clearedFields[tasklog.FieldLog]
-	return ok
-}
-
-// ResetLog resets all changes to the "log" field.
-func (m *TaskLogMutation) ResetLog() {
-	m.log = nil
-	delete(m.clearedFields, tasklog.FieldLog)
-}
-
-// SetErrmsg sets the "errmsg" field.
-func (m *TaskLogMutation) SetErrmsg(s string) {
-	m.errmsg = &s
-}
-
-// Errmsg returns the value of the "errmsg" field in the mutation.
-func (m *TaskLogMutation) Errmsg() (r string, exists bool) {
-	v := m.errmsg
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldErrmsg returns the old "errmsg" field's value of the TaskLog entity.
-// If the TaskLog object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *TaskLogMutation) OldErrmsg(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldErrmsg is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldErrmsg requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldErrmsg: %w", err)
-	}
-	return oldValue.Errmsg, nil
-}
-
-// ClearErrmsg clears the value of the "errmsg" field.
-func (m *TaskLogMutation) ClearErrmsg() {
-	m.errmsg = nil
-	m.clearedFields[tasklog.FieldErrmsg] = struct{}{}
-}
-
-// ErrmsgCleared returns if the "errmsg" field was cleared in this mutation.
-func (m *TaskLogMutation) ErrmsgCleared() bool {
-	_, ok := m.clearedFields[tasklog.FieldErrmsg]
-	return ok
-}
-
-// ResetErrmsg resets all changes to the "errmsg" field.
-func (m *TaskLogMutation) ResetErrmsg() {
-	m.errmsg = nil
-	delete(m.clearedFields, tasklog.FieldErrmsg)
-}
-
-// SetErrValues sets the "err_values" field.
-func (m *TaskLogMutation) SetErrValues(s []string) {
-	m.err_values = &s
-}
-
-// ErrValues returns the value of the "err_values" field in the mutation.
-func (m *TaskLogMutation) ErrValues() (r []string, exists bool) {
-	v := m.err_values
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldErrValues returns the old "err_values" field's value of the TaskLog entity.
-// If the TaskLog object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *TaskLogMutation) OldErrValues(ctx context.Context) (v []string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldErrValues is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldErrValues requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldErrValues: %w", err)
-	}
-	return oldValue.ErrValues, nil
-}
-
-// ClearErrValues clears the value of the "err_values" field.
-func (m *TaskLogMutation) ClearErrValues() {
-	m.err_values = nil
-	m.clearedFields[tasklog.FieldErrValues] = struct{}{}
-}
-
-// ErrValuesCleared returns if the "err_values" field was cleared in this mutation.
-func (m *TaskLogMutation) ErrValuesCleared() bool {
-	_, ok := m.clearedFields[tasklog.FieldErrValues]
-	return ok
-}
-
-// ResetErrValues resets all changes to the "err_values" field.
-func (m *TaskLogMutation) ResetErrValues() {
-	m.err_values = nil
-	delete(m.clearedFields, tasklog.FieldErrValues)
-}
-
-// SetStackTrace sets the "stack_trace" field.
-func (m *TaskLogMutation) SetStackTrace(s []string) {
-	m.stack_trace = &s
-}
-
-// StackTrace returns the value of the "stack_trace" field in the mutation.
-func (m *TaskLogMutation) StackTrace() (r []string, exists bool) {
-	v := m.stack_trace
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldStackTrace returns the old "stack_trace" field's value of the TaskLog entity.
-// If the TaskLog object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *TaskLogMutation) OldStackTrace(ctx context.Context) (v []string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldStackTrace is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldStackTrace requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldStackTrace: %w", err)
-	}
-	return oldValue.StackTrace, nil
-}
-
-// ClearStackTrace clears the value of the "stack_trace" field.
-func (m *TaskLogMutation) ClearStackTrace() {
-	m.stack_trace = nil
-	m.clearedFields[tasklog.FieldStackTrace] = struct{}{}
-}
-
-// StackTraceCleared returns if the "stack_trace" field was cleared in this mutation.
-func (m *TaskLogMutation) StackTraceCleared() bool {
-	_, ok := m.clearedFields[tasklog.FieldStackTrace]
-	return ok
-}
-
-// ResetStackTrace resets all changes to the "stack_trace" field.
-func (m *TaskLogMutation) ResetStackTrace() {
-	m.stack_trace = nil
-	delete(m.clearedFields, tasklog.FieldStackTrace)
-}
-
-// SetStatus sets the "status" field.
-func (m *TaskLogMutation) SetStatus(ts types.TaskStatus) {
-	m.status = &ts
-}
-
-// Status returns the value of the "status" field in the mutation.
-func (m *TaskLogMutation) Status() (r types.TaskStatus, exists bool) {
-	v := m.status
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldStatus returns the old "status" field's value of the TaskLog entity.
-// If the TaskLog object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *TaskLogMutation) OldStatus(ctx context.Context) (v types.TaskStatus, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldStatus is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldStatus requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
-	}
-	return oldValue.Status, nil
-}
-
-// ResetStatus resets all changes to the "status" field.
-func (m *TaskLogMutation) ResetStatus() {
-	m.status = nil
-}
-
 // AddAnnotatedIDs adds the "annotated" edge to the Annotation entity by ids.
 func (m *TaskLogMutation) AddAnnotatedIDs(ids ...int) {
 	if m.annotated == nil {
@@ -4246,6 +4240,60 @@ func (m *TaskLogMutation) ResetAnnotated() {
 	m.removedannotated = nil
 }
 
+// AddExecLogIDs adds the "exec_logs" edge to the ExecLog entity by ids.
+func (m *TaskLogMutation) AddExecLogIDs(ids ...int) {
+	if m.exec_logs == nil {
+		m.exec_logs = make(map[int]struct{})
+	}
+	for i := range ids {
+		m.exec_logs[ids[i]] = struct{}{}
+	}
+}
+
+// ClearExecLogs clears the "exec_logs" edge to the ExecLog entity.
+func (m *TaskLogMutation) ClearExecLogs() {
+	m.clearedexec_logs = true
+}
+
+// ExecLogsCleared reports if the "exec_logs" edge to the ExecLog entity was cleared.
+func (m *TaskLogMutation) ExecLogsCleared() bool {
+	return m.clearedexec_logs
+}
+
+// RemoveExecLogIDs removes the "exec_logs" edge to the ExecLog entity by IDs.
+func (m *TaskLogMutation) RemoveExecLogIDs(ids ...int) {
+	if m.removedexec_logs == nil {
+		m.removedexec_logs = make(map[int]struct{})
+	}
+	for i := range ids {
+		delete(m.exec_logs, ids[i])
+		m.removedexec_logs[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedExecLogs returns the removed IDs of the "exec_logs" edge to the ExecLog entity.
+func (m *TaskLogMutation) RemovedExecLogsIDs() (ids []int) {
+	for id := range m.removedexec_logs {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ExecLogsIDs returns the "exec_logs" edge IDs in the mutation.
+func (m *TaskLogMutation) ExecLogsIDs() (ids []int) {
+	for id := range m.exec_logs {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetExecLogs resets all changes to the "exec_logs" edge.
+func (m *TaskLogMutation) ResetExecLogs() {
+	m.exec_logs = nil
+	m.clearedexec_logs = false
+	m.removedexec_logs = nil
+}
+
 // Where appends a list predicates to the TaskLogMutation builder.
 func (m *TaskLogMutation) Where(ps ...predicate.TaskLog) {
 	m.predicates = append(m.predicates, ps...)
@@ -4265,33 +4313,12 @@ func (m *TaskLogMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *TaskLogMutation) Fields() []string {
-	fields := make([]string, 0, 9)
-	if m.task_name != nil {
-		fields = append(fields, tasklog.FieldTaskName)
+	fields := make([]string, 0, 2)
+	if m.name != nil {
+		fields = append(fields, tasklog.FieldName)
 	}
 	if m.stage != nil {
 		fields = append(fields, tasklog.FieldStage)
-	}
-	if m.started_at != nil {
-		fields = append(fields, tasklog.FieldStartedAt)
-	}
-	if m.exited_at != nil {
-		fields = append(fields, tasklog.FieldExitedAt)
-	}
-	if m.log != nil {
-		fields = append(fields, tasklog.FieldLog)
-	}
-	if m.errmsg != nil {
-		fields = append(fields, tasklog.FieldErrmsg)
-	}
-	if m.err_values != nil {
-		fields = append(fields, tasklog.FieldErrValues)
-	}
-	if m.stack_trace != nil {
-		fields = append(fields, tasklog.FieldStackTrace)
-	}
-	if m.status != nil {
-		fields = append(fields, tasklog.FieldStatus)
 	}
 	return fields
 }
@@ -4301,24 +4328,10 @@ func (m *TaskLogMutation) Fields() []string {
 // schema.
 func (m *TaskLogMutation) Field(name string) (ent.Value, bool) {
 	switch name {
-	case tasklog.FieldTaskName:
-		return m.TaskName()
+	case tasklog.FieldName:
+		return m.Name()
 	case tasklog.FieldStage:
 		return m.Stage()
-	case tasklog.FieldStartedAt:
-		return m.StartedAt()
-	case tasklog.FieldExitedAt:
-		return m.ExitedAt()
-	case tasklog.FieldLog:
-		return m.Log()
-	case tasklog.FieldErrmsg:
-		return m.Errmsg()
-	case tasklog.FieldErrValues:
-		return m.ErrValues()
-	case tasklog.FieldStackTrace:
-		return m.StackTrace()
-	case tasklog.FieldStatus:
-		return m.Status()
 	}
 	return nil, false
 }
@@ -4328,24 +4341,10 @@ func (m *TaskLogMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *TaskLogMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
-	case tasklog.FieldTaskName:
-		return m.OldTaskName(ctx)
+	case tasklog.FieldName:
+		return m.OldName(ctx)
 	case tasklog.FieldStage:
 		return m.OldStage(ctx)
-	case tasklog.FieldStartedAt:
-		return m.OldStartedAt(ctx)
-	case tasklog.FieldExitedAt:
-		return m.OldExitedAt(ctx)
-	case tasklog.FieldLog:
-		return m.OldLog(ctx)
-	case tasklog.FieldErrmsg:
-		return m.OldErrmsg(ctx)
-	case tasklog.FieldErrValues:
-		return m.OldErrValues(ctx)
-	case tasklog.FieldStackTrace:
-		return m.OldStackTrace(ctx)
-	case tasklog.FieldStatus:
-		return m.OldStatus(ctx)
 	}
 	return nil, fmt.Errorf("unknown TaskLog field %s", name)
 }
@@ -4355,12 +4354,12 @@ func (m *TaskLogMutation) OldField(ctx context.Context, name string) (ent.Value,
 // type.
 func (m *TaskLogMutation) SetField(name string, value ent.Value) error {
 	switch name {
-	case tasklog.FieldTaskName:
+	case tasklog.FieldName:
 		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetTaskName(v)
+		m.SetName(v)
 		return nil
 	case tasklog.FieldStage:
 		v, ok := value.(int64)
@@ -4368,55 +4367,6 @@ func (m *TaskLogMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetStage(v)
-		return nil
-	case tasklog.FieldStartedAt:
-		v, ok := value.(int64)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetStartedAt(v)
-		return nil
-	case tasklog.FieldExitedAt:
-		v, ok := value.(int64)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetExitedAt(v)
-		return nil
-	case tasklog.FieldLog:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetLog(v)
-		return nil
-	case tasklog.FieldErrmsg:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetErrmsg(v)
-		return nil
-	case tasklog.FieldErrValues:
-		v, ok := value.([]string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetErrValues(v)
-		return nil
-	case tasklog.FieldStackTrace:
-		v, ok := value.([]string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetStackTrace(v)
-		return nil
-	case tasklog.FieldStatus:
-		v, ok := value.(types.TaskStatus)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetStatus(v)
 		return nil
 	}
 	return fmt.Errorf("unknown TaskLog field %s", name)
@@ -4429,12 +4379,6 @@ func (m *TaskLogMutation) AddedFields() []string {
 	if m.addstage != nil {
 		fields = append(fields, tasklog.FieldStage)
 	}
-	if m.addstarted_at != nil {
-		fields = append(fields, tasklog.FieldStartedAt)
-	}
-	if m.addexited_at != nil {
-		fields = append(fields, tasklog.FieldExitedAt)
-	}
 	return fields
 }
 
@@ -4445,10 +4389,6 @@ func (m *TaskLogMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
 	case tasklog.FieldStage:
 		return m.AddedStage()
-	case tasklog.FieldStartedAt:
-		return m.AddedStartedAt()
-	case tasklog.FieldExitedAt:
-		return m.AddedExitedAt()
 	}
 	return nil, false
 }
@@ -4465,20 +4405,6 @@ func (m *TaskLogMutation) AddField(name string, value ent.Value) error {
 		}
 		m.AddStage(v)
 		return nil
-	case tasklog.FieldStartedAt:
-		v, ok := value.(int64)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.AddStartedAt(v)
-		return nil
-	case tasklog.FieldExitedAt:
-		v, ok := value.(int64)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.AddExitedAt(v)
-		return nil
 	}
 	return fmt.Errorf("unknown TaskLog numeric field %s", name)
 }
@@ -4486,23 +4412,7 @@ func (m *TaskLogMutation) AddField(name string, value ent.Value) error {
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
 func (m *TaskLogMutation) ClearedFields() []string {
-	var fields []string
-	if m.FieldCleared(tasklog.FieldExitedAt) {
-		fields = append(fields, tasklog.FieldExitedAt)
-	}
-	if m.FieldCleared(tasklog.FieldLog) {
-		fields = append(fields, tasklog.FieldLog)
-	}
-	if m.FieldCleared(tasklog.FieldErrmsg) {
-		fields = append(fields, tasklog.FieldErrmsg)
-	}
-	if m.FieldCleared(tasklog.FieldErrValues) {
-		fields = append(fields, tasklog.FieldErrValues)
-	}
-	if m.FieldCleared(tasklog.FieldStackTrace) {
-		fields = append(fields, tasklog.FieldStackTrace)
-	}
-	return fields
+	return nil
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
@@ -4515,23 +4425,6 @@ func (m *TaskLogMutation) FieldCleared(name string) bool {
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *TaskLogMutation) ClearField(name string) error {
-	switch name {
-	case tasklog.FieldExitedAt:
-		m.ClearExitedAt()
-		return nil
-	case tasklog.FieldLog:
-		m.ClearLog()
-		return nil
-	case tasklog.FieldErrmsg:
-		m.ClearErrmsg()
-		return nil
-	case tasklog.FieldErrValues:
-		m.ClearErrValues()
-		return nil
-	case tasklog.FieldStackTrace:
-		m.ClearStackTrace()
-		return nil
-	}
 	return fmt.Errorf("unknown TaskLog nullable field %s", name)
 }
 
@@ -4539,32 +4432,11 @@ func (m *TaskLogMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *TaskLogMutation) ResetField(name string) error {
 	switch name {
-	case tasklog.FieldTaskName:
-		m.ResetTaskName()
+	case tasklog.FieldName:
+		m.ResetName()
 		return nil
 	case tasklog.FieldStage:
 		m.ResetStage()
-		return nil
-	case tasklog.FieldStartedAt:
-		m.ResetStartedAt()
-		return nil
-	case tasklog.FieldExitedAt:
-		m.ResetExitedAt()
-		return nil
-	case tasklog.FieldLog:
-		m.ResetLog()
-		return nil
-	case tasklog.FieldErrmsg:
-		m.ResetErrmsg()
-		return nil
-	case tasklog.FieldErrValues:
-		m.ResetErrValues()
-		return nil
-	case tasklog.FieldStackTrace:
-		m.ResetStackTrace()
-		return nil
-	case tasklog.FieldStatus:
-		m.ResetStatus()
 		return nil
 	}
 	return fmt.Errorf("unknown TaskLog field %s", name)
@@ -4572,9 +4444,12 @@ func (m *TaskLogMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *TaskLogMutation) AddedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.annotated != nil {
 		edges = append(edges, tasklog.EdgeAnnotated)
+	}
+	if m.exec_logs != nil {
+		edges = append(edges, tasklog.EdgeExecLogs)
 	}
 	return edges
 }
@@ -4589,15 +4464,24 @@ func (m *TaskLogMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case tasklog.EdgeExecLogs:
+		ids := make([]ent.Value, 0, len(m.exec_logs))
+		for id := range m.exec_logs {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *TaskLogMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.removedannotated != nil {
 		edges = append(edges, tasklog.EdgeAnnotated)
+	}
+	if m.removedexec_logs != nil {
+		edges = append(edges, tasklog.EdgeExecLogs)
 	}
 	return edges
 }
@@ -4612,15 +4496,24 @@ func (m *TaskLogMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case tasklog.EdgeExecLogs:
+		ids := make([]ent.Value, 0, len(m.removedexec_logs))
+		for id := range m.removedexec_logs {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *TaskLogMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 1)
+	edges := make([]string, 0, 2)
 	if m.clearedannotated {
 		edges = append(edges, tasklog.EdgeAnnotated)
+	}
+	if m.clearedexec_logs {
+		edges = append(edges, tasklog.EdgeExecLogs)
 	}
 	return edges
 }
@@ -4631,6 +4524,8 @@ func (m *TaskLogMutation) EdgeCleared(name string) bool {
 	switch name {
 	case tasklog.EdgeAnnotated:
 		return m.clearedannotated
+	case tasklog.EdgeExecLogs:
+		return m.clearedexec_logs
 	}
 	return false
 }
@@ -4649,6 +4544,9 @@ func (m *TaskLogMutation) ResetEdge(name string) error {
 	switch name {
 	case tasklog.EdgeAnnotated:
 		m.ResetAnnotated()
+		return nil
+	case tasklog.EdgeExecLogs:
+		m.ResetExecLogs()
 		return nil
 	}
 	return fmt.Errorf("unknown TaskLog edge %s", name)

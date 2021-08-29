@@ -3,13 +3,12 @@ package db_test
 import (
 	"testing"
 
-	"github.com/m-mizutani/alertchain/pkg/infra"
 	"github.com/m-mizutani/alertchain/pkg/infra/db"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent"
 	"github.com/stretchr/testify/assert"
 )
 
-func setupDB(t *testing.T) infra.DBClient {
+func setupDB(t *testing.T) db.Interface {
 	client := db.NewDBMock(t)
 	t.Cleanup(func() {
 		if err := client.Close(); err != nil {

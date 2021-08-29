@@ -28,6 +28,7 @@ type hooks struct {
 	Alert      []ent.Hook
 	Annotation []ent.Hook
 	Attribute  []ent.Hook
+	ExecLog    []ent.Hook
 	Reference  []ent.Hook
 	TaskLog    []ent.Hook
 }

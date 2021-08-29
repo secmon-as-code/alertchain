@@ -18,6 +18,9 @@ type Annotation func(*sql.Selector)
 // Attribute is the predicate function for attribute builders.
 type Attribute func(*sql.Selector)
 
+// ExecLog is the predicate function for execlog builders.
+type ExecLog func(*sql.Selector)
+
 // Reference is the predicate function for reference builders.
 type Reference func(*sql.Selector)
 

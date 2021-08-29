@@ -9,6 +9,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/alert"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/annotation"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/attribute"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/predicate"
@@ -67,6 +68,25 @@ func (au *AttributeUpdate) AddAnnotations(a ...*Annotation) *AttributeUpdate {
 	return au.AddAnnotationIDs(ids...)
 }
 
+// SetAlertID sets the "alert" edge to the Alert entity by ID.
+func (au *AttributeUpdate) SetAlertID(id types.AlertID) *AttributeUpdate {
+	au.mutation.SetAlertID(id)
+	return au
+}
+
+// SetNillableAlertID sets the "alert" edge to the Alert entity by ID if the given value is not nil.
+func (au *AttributeUpdate) SetNillableAlertID(id *types.AlertID) *AttributeUpdate {
+	if id != nil {
+		au = au.SetAlertID(*id)
+	}
+	return au
+}
+
+// SetAlert sets the "alert" edge to the Alert entity.
+func (au *AttributeUpdate) SetAlert(a *Alert) *AttributeUpdate {
+	return au.SetAlertID(a.ID)
+}
+
 // Mutation returns the AttributeMutation object of the builder.
 func (au *AttributeUpdate) Mutation() *AttributeMutation {
 	return au.mutation
@@ -91,6 +111,12 @@ func (au *AttributeUpdate) RemoveAnnotations(a ...*Annotation) *AttributeUpdate 
 		ids[i] = a[i].ID
 	}
 	return au.RemoveAnnotationIDs(ids...)
+}
+
+// ClearAlert clears the "alert" edge to the Alert entity.
+func (au *AttributeUpdate) ClearAlert() *AttributeUpdate {
+	au.mutation.ClearAlert()
+	return au
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -247,6 +273,41 @@ func (au *AttributeUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if au.mutation.AlertCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   attribute.AlertTable,
+			Columns: []string{attribute.AlertColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeString,
+					Column: alert.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := au.mutation.AlertIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   attribute.AlertTable,
+			Columns: []string{attribute.AlertColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeString,
+					Column: alert.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, au.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{attribute.Label}
@@ -305,6 +366,25 @@ func (auo *AttributeUpdateOne) AddAnnotations(a ...*Annotation) *AttributeUpdate
 	return auo.AddAnnotationIDs(ids...)
 }
 
+// SetAlertID sets the "alert" edge to the Alert entity by ID.
+func (auo *AttributeUpdateOne) SetAlertID(id types.AlertID) *AttributeUpdateOne {
+	auo.mutation.SetAlertID(id)
+	return auo
+}
+
+// SetNillableAlertID sets the "alert" edge to the Alert entity by ID if the given value is not nil.
+func (auo *AttributeUpdateOne) SetNillableAlertID(id *types.AlertID) *AttributeUpdateOne {
+	if id != nil {
+		auo = auo.SetAlertID(*id)
+	}
+	return auo
+}
+
+// SetAlert sets the "alert" edge to the Alert entity.
+func (auo *AttributeUpdateOne) SetAlert(a *Alert) *AttributeUpdateOne {
+	return auo.SetAlertID(a.ID)
+}
+
 // Mutation returns the AttributeMutation object of the builder.
 func (auo *AttributeUpdateOne) Mutation() *AttributeMutation {
 	return auo.mutation
@@ -329,6 +409,12 @@ func (auo *AttributeUpdateOne) RemoveAnnotations(a ...*Annotation) *AttributeUpd
 		ids[i] = a[i].ID
 	}
 	return auo.RemoveAnnotationIDs(ids...)
+}
+
+// ClearAlert clears the "alert" edge to the Alert entity.
+func (auo *AttributeUpdateOne) ClearAlert() *AttributeUpdateOne {
+	auo.mutation.ClearAlert()
+	return auo
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
@@ -501,6 +587,41 @@ func (auo *AttributeUpdateOne) sqlSave(ctx context.Context) (_node *Attribute, e
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: annotation.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if auo.mutation.AlertCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   attribute.AlertTable,
+			Columns: []string{attribute.AlertColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeString,
+					Column: alert.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := auo.mutation.AlertIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   attribute.AlertTable,
+			Columns: []string{attribute.AlertColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeString,
+					Column: alert.FieldID,
 				},
 			},
 		}

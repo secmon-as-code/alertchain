@@ -1123,6 +1123,34 @@ func HasTaskLogsWith(preds ...predicate.TaskLog) predicate.Alert {
 	})
 }
 
+// HasActionLogs applies the HasEdge predicate on the "action_logs" edge.
+func HasActionLogs() predicate.Alert {
+	return predicate.Alert(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(ActionLogsTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ActionLogsTable, ActionLogsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasActionLogsWith applies the HasEdge predicate on the "action_logs" edge with a given conditions (other predicates).
+func HasActionLogsWith(preds ...predicate.ActionLog) predicate.Alert {
+	return predicate.Alert(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(ActionLogsInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ActionLogsTable, ActionLogsColumn),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Alert) predicate.Alert {
 	return predicate.Alert(func(s *sql.Selector) {

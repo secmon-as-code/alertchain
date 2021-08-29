@@ -1,9 +1,9 @@
 package types
 
-type TaskStatus string
+type ExecStatus string
 
 const (
-	TaskRunning   TaskStatus = "running"
-	TaskSucceeded TaskStatus = "succeeded"
-	TaskFailure   TaskStatus = "failure"
+	ExecStart   ExecStatus = "start"
+	ExecSucceed ExecStatus = "succeed"
+	ExecFailure ExecStatus = "failure"
 )

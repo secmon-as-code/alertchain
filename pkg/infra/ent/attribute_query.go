@@ -12,9 +12,11 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/alert"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/annotation"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/attribute"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/predicate"
+	"github.com/m-mizutani/alertchain/types"
 )
 
 // AttributeQuery is the builder for querying Attribute entities.
@@ -28,6 +30,7 @@ type AttributeQuery struct {
 	predicates []predicate.Attribute
 	// eager-loading edges.
 	withAnnotations *AnnotationQuery
+	withAlert       *AlertQuery
 	withFKs         bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -80,6 +83,28 @@ func (aq *AttributeQuery) QueryAnnotations() *AnnotationQuery {
 			sqlgraph.From(attribute.Table, attribute.FieldID, selector),
 			sqlgraph.To(annotation.Table, annotation.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, attribute.AnnotationsTable, attribute.AnnotationsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(aq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryAlert chains the current query on the "alert" edge.
+func (aq *AttributeQuery) QueryAlert() *AlertQuery {
+	query := &AlertQuery{config: aq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := aq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := aq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(attribute.Table, attribute.FieldID, selector),
+			sqlgraph.To(alert.Table, alert.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, attribute.AlertTable, attribute.AlertColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(aq.driver.Dialect(), step)
 		return fromU, nil
@@ -269,6 +294,7 @@ func (aq *AttributeQuery) Clone() *AttributeQuery {
 		order:           append([]OrderFunc{}, aq.order...),
 		predicates:      append([]predicate.Attribute{}, aq.predicates...),
 		withAnnotations: aq.withAnnotations.Clone(),
+		withAlert:       aq.withAlert.Clone(),
 		// clone intermediate query.
 		sql:  aq.sql.Clone(),
 		path: aq.path,
@@ -283,6 +309,17 @@ func (aq *AttributeQuery) WithAnnotations(opts ...func(*AnnotationQuery)) *Attri
 		opt(query)
 	}
 	aq.withAnnotations = query
+	return aq
+}
+
+// WithAlert tells the query-builder to eager-load the nodes that are connected to
+// the "alert" edge. The optional arguments are used to configure the query builder of the edge.
+func (aq *AttributeQuery) WithAlert(opts ...func(*AlertQuery)) *AttributeQuery {
+	query := &AlertQuery{config: aq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	aq.withAlert = query
 	return aq
 }
 
@@ -352,10 +389,14 @@ func (aq *AttributeQuery) sqlAll(ctx context.Context) ([]*Attribute, error) {
 		nodes       = []*Attribute{}
 		withFKs     = aq.withFKs
 		_spec       = aq.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
 			aq.withAnnotations != nil,
+			aq.withAlert != nil,
 		}
 	)
+	if aq.withAlert != nil {
+		withFKs = true
+	}
 	if withFKs {
 		_spec.Node.Columns = append(_spec.Node.Columns, attribute.ForeignKeys...)
 	}
@@ -405,6 +446,35 @@ func (aq *AttributeQuery) sqlAll(ctx context.Context) ([]*Attribute, error) {
 				return nil, fmt.Errorf(`unexpected foreign-key "attribute_annotations" returned %v for node %v`, *fk, n.ID)
 			}
 			node.Edges.Annotations = append(node.Edges.Annotations, n)
+		}
+	}
+
+	if query := aq.withAlert; query != nil {
+		ids := make([]types.AlertID, 0, len(nodes))
+		nodeids := make(map[types.AlertID][]*Attribute)
+		for i := range nodes {
+			if nodes[i].attribute_alert == nil {
+				continue
+			}
+			fk := *nodes[i].attribute_alert
+			if _, ok := nodeids[fk]; !ok {
+				ids = append(ids, fk)
+			}
+			nodeids[fk] = append(nodeids[fk], nodes[i])
+		}
+		query.Where(alert.IDIn(ids...))
+		neighbors, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, n := range neighbors {
+			nodes, ok := nodeids[n.ID]
+			if !ok {
+				return nil, fmt.Errorf(`unexpected foreign-key "attribute_alert" returned %v`, n.ID)
+			}
+			for i := range nodes {
+				nodes[i].Edges.Alert = n
+			}
 		}
 	}
 

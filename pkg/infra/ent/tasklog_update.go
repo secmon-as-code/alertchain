@@ -10,9 +10,9 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/annotation"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/execlog"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/predicate"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/tasklog"
-	"github.com/m-mizutani/alertchain/types"
 )
 
 // TaskLogUpdate is the builder for updating TaskLog entities.
@@ -25,111 +25,6 @@ type TaskLogUpdate struct {
 // Where appends a list predicates to the TaskLogUpdate builder.
 func (tlu *TaskLogUpdate) Where(ps ...predicate.TaskLog) *TaskLogUpdate {
 	tlu.mutation.Where(ps...)
-	return tlu
-}
-
-// SetExitedAt sets the "exited_at" field.
-func (tlu *TaskLogUpdate) SetExitedAt(i int64) *TaskLogUpdate {
-	tlu.mutation.ResetExitedAt()
-	tlu.mutation.SetExitedAt(i)
-	return tlu
-}
-
-// SetNillableExitedAt sets the "exited_at" field if the given value is not nil.
-func (tlu *TaskLogUpdate) SetNillableExitedAt(i *int64) *TaskLogUpdate {
-	if i != nil {
-		tlu.SetExitedAt(*i)
-	}
-	return tlu
-}
-
-// AddExitedAt adds i to the "exited_at" field.
-func (tlu *TaskLogUpdate) AddExitedAt(i int64) *TaskLogUpdate {
-	tlu.mutation.AddExitedAt(i)
-	return tlu
-}
-
-// ClearExitedAt clears the value of the "exited_at" field.
-func (tlu *TaskLogUpdate) ClearExitedAt() *TaskLogUpdate {
-	tlu.mutation.ClearExitedAt()
-	return tlu
-}
-
-// SetLog sets the "log" field.
-func (tlu *TaskLogUpdate) SetLog(s string) *TaskLogUpdate {
-	tlu.mutation.SetLog(s)
-	return tlu
-}
-
-// SetNillableLog sets the "log" field if the given value is not nil.
-func (tlu *TaskLogUpdate) SetNillableLog(s *string) *TaskLogUpdate {
-	if s != nil {
-		tlu.SetLog(*s)
-	}
-	return tlu
-}
-
-// ClearLog clears the value of the "log" field.
-func (tlu *TaskLogUpdate) ClearLog() *TaskLogUpdate {
-	tlu.mutation.ClearLog()
-	return tlu
-}
-
-// SetErrmsg sets the "errmsg" field.
-func (tlu *TaskLogUpdate) SetErrmsg(s string) *TaskLogUpdate {
-	tlu.mutation.SetErrmsg(s)
-	return tlu
-}
-
-// SetNillableErrmsg sets the "errmsg" field if the given value is not nil.
-func (tlu *TaskLogUpdate) SetNillableErrmsg(s *string) *TaskLogUpdate {
-	if s != nil {
-		tlu.SetErrmsg(*s)
-	}
-	return tlu
-}
-
-// ClearErrmsg clears the value of the "errmsg" field.
-func (tlu *TaskLogUpdate) ClearErrmsg() *TaskLogUpdate {
-	tlu.mutation.ClearErrmsg()
-	return tlu
-}
-
-// SetErrValues sets the "err_values" field.
-func (tlu *TaskLogUpdate) SetErrValues(s []string) *TaskLogUpdate {
-	tlu.mutation.SetErrValues(s)
-	return tlu
-}
-
-// ClearErrValues clears the value of the "err_values" field.
-func (tlu *TaskLogUpdate) ClearErrValues() *TaskLogUpdate {
-	tlu.mutation.ClearErrValues()
-	return tlu
-}
-
-// SetStackTrace sets the "stack_trace" field.
-func (tlu *TaskLogUpdate) SetStackTrace(s []string) *TaskLogUpdate {
-	tlu.mutation.SetStackTrace(s)
-	return tlu
-}
-
-// ClearStackTrace clears the value of the "stack_trace" field.
-func (tlu *TaskLogUpdate) ClearStackTrace() *TaskLogUpdate {
-	tlu.mutation.ClearStackTrace()
-	return tlu
-}
-
-// SetStatus sets the "status" field.
-func (tlu *TaskLogUpdate) SetStatus(ts types.TaskStatus) *TaskLogUpdate {
-	tlu.mutation.SetStatus(ts)
-	return tlu
-}
-
-// SetNillableStatus sets the "status" field if the given value is not nil.
-func (tlu *TaskLogUpdate) SetNillableStatus(ts *types.TaskStatus) *TaskLogUpdate {
-	if ts != nil {
-		tlu.SetStatus(*ts)
-	}
 	return tlu
 }
 
@@ -146,6 +41,21 @@ func (tlu *TaskLogUpdate) AddAnnotated(a ...*Annotation) *TaskLogUpdate {
 		ids[i] = a[i].ID
 	}
 	return tlu.AddAnnotatedIDs(ids...)
+}
+
+// AddExecLogIDs adds the "exec_logs" edge to the ExecLog entity by IDs.
+func (tlu *TaskLogUpdate) AddExecLogIDs(ids ...int) *TaskLogUpdate {
+	tlu.mutation.AddExecLogIDs(ids...)
+	return tlu
+}
+
+// AddExecLogs adds the "exec_logs" edges to the ExecLog entity.
+func (tlu *TaskLogUpdate) AddExecLogs(e ...*ExecLog) *TaskLogUpdate {
+	ids := make([]int, len(e))
+	for i := range e {
+		ids[i] = e[i].ID
+	}
+	return tlu.AddExecLogIDs(ids...)
 }
 
 // Mutation returns the TaskLogMutation object of the builder.
@@ -172,6 +82,27 @@ func (tlu *TaskLogUpdate) RemoveAnnotated(a ...*Annotation) *TaskLogUpdate {
 		ids[i] = a[i].ID
 	}
 	return tlu.RemoveAnnotatedIDs(ids...)
+}
+
+// ClearExecLogs clears all "exec_logs" edges to the ExecLog entity.
+func (tlu *TaskLogUpdate) ClearExecLogs() *TaskLogUpdate {
+	tlu.mutation.ClearExecLogs()
+	return tlu
+}
+
+// RemoveExecLogIDs removes the "exec_logs" edge to ExecLog entities by IDs.
+func (tlu *TaskLogUpdate) RemoveExecLogIDs(ids ...int) *TaskLogUpdate {
+	tlu.mutation.RemoveExecLogIDs(ids...)
+	return tlu
+}
+
+// RemoveExecLogs removes "exec_logs" edges to ExecLog entities.
+func (tlu *TaskLogUpdate) RemoveExecLogs(e ...*ExecLog) *TaskLogUpdate {
+	ids := make([]int, len(e))
+	for i := range e {
+		ids[i] = e[i].ID
+	}
+	return tlu.RemoveExecLogIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -246,85 +177,6 @@ func (tlu *TaskLogUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
-	if value, ok := tlu.mutation.ExitedAt(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeInt64,
-			Value:  value,
-			Column: tasklog.FieldExitedAt,
-		})
-	}
-	if value, ok := tlu.mutation.AddedExitedAt(); ok {
-		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
-			Type:   field.TypeInt64,
-			Value:  value,
-			Column: tasklog.FieldExitedAt,
-		})
-	}
-	if tlu.mutation.ExitedAtCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeInt64,
-			Column: tasklog.FieldExitedAt,
-		})
-	}
-	if value, ok := tlu.mutation.Log(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: tasklog.FieldLog,
-		})
-	}
-	if tlu.mutation.LogCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Column: tasklog.FieldLog,
-		})
-	}
-	if value, ok := tlu.mutation.Errmsg(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: tasklog.FieldErrmsg,
-		})
-	}
-	if tlu.mutation.ErrmsgCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Column: tasklog.FieldErrmsg,
-		})
-	}
-	if value, ok := tlu.mutation.ErrValues(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeJSON,
-			Value:  value,
-			Column: tasklog.FieldErrValues,
-		})
-	}
-	if tlu.mutation.ErrValuesCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeJSON,
-			Column: tasklog.FieldErrValues,
-		})
-	}
-	if value, ok := tlu.mutation.StackTrace(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeJSON,
-			Value:  value,
-			Column: tasklog.FieldStackTrace,
-		})
-	}
-	if tlu.mutation.StackTraceCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeJSON,
-			Column: tasklog.FieldStackTrace,
-		})
-	}
-	if value, ok := tlu.mutation.Status(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: tasklog.FieldStatus,
-		})
-	}
 	if tlu.mutation.AnnotatedCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -379,6 +231,60 @@ func (tlu *TaskLogUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if tlu.mutation.ExecLogsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tasklog.ExecLogsTable,
+			Columns: []string{tasklog.ExecLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: execlog.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tlu.mutation.RemovedExecLogsIDs(); len(nodes) > 0 && !tlu.mutation.ExecLogsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tasklog.ExecLogsTable,
+			Columns: []string{tasklog.ExecLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: execlog.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tlu.mutation.ExecLogsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tasklog.ExecLogsTable,
+			Columns: []string{tasklog.ExecLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: execlog.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, tlu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{tasklog.Label}
@@ -398,111 +304,6 @@ type TaskLogUpdateOne struct {
 	mutation *TaskLogMutation
 }
 
-// SetExitedAt sets the "exited_at" field.
-func (tluo *TaskLogUpdateOne) SetExitedAt(i int64) *TaskLogUpdateOne {
-	tluo.mutation.ResetExitedAt()
-	tluo.mutation.SetExitedAt(i)
-	return tluo
-}
-
-// SetNillableExitedAt sets the "exited_at" field if the given value is not nil.
-func (tluo *TaskLogUpdateOne) SetNillableExitedAt(i *int64) *TaskLogUpdateOne {
-	if i != nil {
-		tluo.SetExitedAt(*i)
-	}
-	return tluo
-}
-
-// AddExitedAt adds i to the "exited_at" field.
-func (tluo *TaskLogUpdateOne) AddExitedAt(i int64) *TaskLogUpdateOne {
-	tluo.mutation.AddExitedAt(i)
-	return tluo
-}
-
-// ClearExitedAt clears the value of the "exited_at" field.
-func (tluo *TaskLogUpdateOne) ClearExitedAt() *TaskLogUpdateOne {
-	tluo.mutation.ClearExitedAt()
-	return tluo
-}
-
-// SetLog sets the "log" field.
-func (tluo *TaskLogUpdateOne) SetLog(s string) *TaskLogUpdateOne {
-	tluo.mutation.SetLog(s)
-	return tluo
-}
-
-// SetNillableLog sets the "log" field if the given value is not nil.
-func (tluo *TaskLogUpdateOne) SetNillableLog(s *string) *TaskLogUpdateOne {
-	if s != nil {
-		tluo.SetLog(*s)
-	}
-	return tluo
-}
-
-// ClearLog clears the value of the "log" field.
-func (tluo *TaskLogUpdateOne) ClearLog() *TaskLogUpdateOne {
-	tluo.mutation.ClearLog()
-	return tluo
-}
-
-// SetErrmsg sets the "errmsg" field.
-func (tluo *TaskLogUpdateOne) SetErrmsg(s string) *TaskLogUpdateOne {
-	tluo.mutation.SetErrmsg(s)
-	return tluo
-}
-
-// SetNillableErrmsg sets the "errmsg" field if the given value is not nil.
-func (tluo *TaskLogUpdateOne) SetNillableErrmsg(s *string) *TaskLogUpdateOne {
-	if s != nil {
-		tluo.SetErrmsg(*s)
-	}
-	return tluo
-}
-
-// ClearErrmsg clears the value of the "errmsg" field.
-func (tluo *TaskLogUpdateOne) ClearErrmsg() *TaskLogUpdateOne {
-	tluo.mutation.ClearErrmsg()
-	return tluo
-}
-
-// SetErrValues sets the "err_values" field.
-func (tluo *TaskLogUpdateOne) SetErrValues(s []string) *TaskLogUpdateOne {
-	tluo.mutation.SetErrValues(s)
-	return tluo
-}
-
-// ClearErrValues clears the value of the "err_values" field.
-func (tluo *TaskLogUpdateOne) ClearErrValues() *TaskLogUpdateOne {
-	tluo.mutation.ClearErrValues()
-	return tluo
-}
-
-// SetStackTrace sets the "stack_trace" field.
-func (tluo *TaskLogUpdateOne) SetStackTrace(s []string) *TaskLogUpdateOne {
-	tluo.mutation.SetStackTrace(s)
-	return tluo
-}
-
-// ClearStackTrace clears the value of the "stack_trace" field.
-func (tluo *TaskLogUpdateOne) ClearStackTrace() *TaskLogUpdateOne {
-	tluo.mutation.ClearStackTrace()
-	return tluo
-}
-
-// SetStatus sets the "status" field.
-func (tluo *TaskLogUpdateOne) SetStatus(ts types.TaskStatus) *TaskLogUpdateOne {
-	tluo.mutation.SetStatus(ts)
-	return tluo
-}
-
-// SetNillableStatus sets the "status" field if the given value is not nil.
-func (tluo *TaskLogUpdateOne) SetNillableStatus(ts *types.TaskStatus) *TaskLogUpdateOne {
-	if ts != nil {
-		tluo.SetStatus(*ts)
-	}
-	return tluo
-}
-
 // AddAnnotatedIDs adds the "annotated" edge to the Annotation entity by IDs.
 func (tluo *TaskLogUpdateOne) AddAnnotatedIDs(ids ...int) *TaskLogUpdateOne {
 	tluo.mutation.AddAnnotatedIDs(ids...)
@@ -516,6 +317,21 @@ func (tluo *TaskLogUpdateOne) AddAnnotated(a ...*Annotation) *TaskLogUpdateOne {
 		ids[i] = a[i].ID
 	}
 	return tluo.AddAnnotatedIDs(ids...)
+}
+
+// AddExecLogIDs adds the "exec_logs" edge to the ExecLog entity by IDs.
+func (tluo *TaskLogUpdateOne) AddExecLogIDs(ids ...int) *TaskLogUpdateOne {
+	tluo.mutation.AddExecLogIDs(ids...)
+	return tluo
+}
+
+// AddExecLogs adds the "exec_logs" edges to the ExecLog entity.
+func (tluo *TaskLogUpdateOne) AddExecLogs(e ...*ExecLog) *TaskLogUpdateOne {
+	ids := make([]int, len(e))
+	for i := range e {
+		ids[i] = e[i].ID
+	}
+	return tluo.AddExecLogIDs(ids...)
 }
 
 // Mutation returns the TaskLogMutation object of the builder.
@@ -542,6 +358,27 @@ func (tluo *TaskLogUpdateOne) RemoveAnnotated(a ...*Annotation) *TaskLogUpdateOn
 		ids[i] = a[i].ID
 	}
 	return tluo.RemoveAnnotatedIDs(ids...)
+}
+
+// ClearExecLogs clears all "exec_logs" edges to the ExecLog entity.
+func (tluo *TaskLogUpdateOne) ClearExecLogs() *TaskLogUpdateOne {
+	tluo.mutation.ClearExecLogs()
+	return tluo
+}
+
+// RemoveExecLogIDs removes the "exec_logs" edge to ExecLog entities by IDs.
+func (tluo *TaskLogUpdateOne) RemoveExecLogIDs(ids ...int) *TaskLogUpdateOne {
+	tluo.mutation.RemoveExecLogIDs(ids...)
+	return tluo
+}
+
+// RemoveExecLogs removes "exec_logs" edges to ExecLog entities.
+func (tluo *TaskLogUpdateOne) RemoveExecLogs(e ...*ExecLog) *TaskLogUpdateOne {
+	ids := make([]int, len(e))
+	for i := range e {
+		ids[i] = e[i].ID
+	}
+	return tluo.RemoveExecLogIDs(ids...)
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
@@ -640,85 +477,6 @@ func (tluo *TaskLogUpdateOne) sqlSave(ctx context.Context) (_node *TaskLog, err 
 			}
 		}
 	}
-	if value, ok := tluo.mutation.ExitedAt(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeInt64,
-			Value:  value,
-			Column: tasklog.FieldExitedAt,
-		})
-	}
-	if value, ok := tluo.mutation.AddedExitedAt(); ok {
-		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
-			Type:   field.TypeInt64,
-			Value:  value,
-			Column: tasklog.FieldExitedAt,
-		})
-	}
-	if tluo.mutation.ExitedAtCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeInt64,
-			Column: tasklog.FieldExitedAt,
-		})
-	}
-	if value, ok := tluo.mutation.Log(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: tasklog.FieldLog,
-		})
-	}
-	if tluo.mutation.LogCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Column: tasklog.FieldLog,
-		})
-	}
-	if value, ok := tluo.mutation.Errmsg(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: tasklog.FieldErrmsg,
-		})
-	}
-	if tluo.mutation.ErrmsgCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Column: tasklog.FieldErrmsg,
-		})
-	}
-	if value, ok := tluo.mutation.ErrValues(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeJSON,
-			Value:  value,
-			Column: tasklog.FieldErrValues,
-		})
-	}
-	if tluo.mutation.ErrValuesCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeJSON,
-			Column: tasklog.FieldErrValues,
-		})
-	}
-	if value, ok := tluo.mutation.StackTrace(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeJSON,
-			Value:  value,
-			Column: tasklog.FieldStackTrace,
-		})
-	}
-	if tluo.mutation.StackTraceCleared() {
-		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeJSON,
-			Column: tasklog.FieldStackTrace,
-		})
-	}
-	if value, ok := tluo.mutation.Status(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: tasklog.FieldStatus,
-		})
-	}
 	if tluo.mutation.AnnotatedCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -765,6 +523,60 @@ func (tluo *TaskLogUpdateOne) sqlSave(ctx context.Context) (_node *TaskLog, err 
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: annotation.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if tluo.mutation.ExecLogsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tasklog.ExecLogsTable,
+			Columns: []string{tasklog.ExecLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: execlog.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tluo.mutation.RemovedExecLogsIDs(); len(nodes) > 0 && !tluo.mutation.ExecLogsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tasklog.ExecLogsTable,
+			Columns: []string{tasklog.ExecLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: execlog.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := tluo.mutation.ExecLogsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   tasklog.ExecLogsTable,
+			Columns: []string{tasklog.ExecLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: execlog.FieldID,
 				},
 			},
 		}

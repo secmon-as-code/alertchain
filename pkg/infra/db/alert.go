@@ -9,6 +9,7 @@ import (
 	"github.com/m-mizutani/goerr"
 
 	entAlert "github.com/m-mizutani/alertchain/pkg/infra/ent/alert"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/attribute"
 )
 
 func (x *Client) GetAlert(ctx context.Context, id types.AlertID) (*ent.Alert, error) {
@@ -19,10 +20,19 @@ func (x *Client) GetAlert(ctx context.Context, id types.AlertID) (*ent.Alert, er
 
 	fetched, err := x.client.Alert.Query().
 		Where(entAlert.ID(id)).
-		WithTaskLogs().
+		WithTaskLogs(func(q *ent.TaskLogQuery) {
+			q.WithExecLogs(func(q *ent.ExecLogQuery) {
+				q.Order(ent.Desc("timestamp"))
+			})
+		}).
+		WithActionLogs(func(q *ent.ActionLogQuery) {
+			q.WithExecLogs(func(q *ent.ExecLogQuery) {
+				q.Order(ent.Desc("timestamp"))
+			})
+		}).
 		WithReferences().
-		WithAttributes(func(aq *ent.AttributeQuery) {
-			aq.WithAnnotations()
+		WithAttributes(func(q *ent.AttributeQuery) {
+			q.WithAnnotations()
 		}).Only(x.ctx)
 	if err != nil {
 		return nil, types.ErrDatabaseUnexpected.Wrap(err)
@@ -151,7 +161,7 @@ func (x *Client) GetAttribute(ctx context.Context, id int) (*ent.Attribute, erro
 		defer x.mutex.Unlock()
 	}
 
-	attr, err := x.client.Attribute.Get(ctx, id)
+	attr, err := x.client.Attribute.Query().Where(attribute.ID(id)).WithAlert().First(ctx)
 	if err != nil {
 		return nil, types.ErrDatabaseUnexpected.Wrap(err)
 	}
@@ -218,58 +228,6 @@ func (x *Client) AddReference(ctx context.Context, id types.AlertID, ref *ent.Re
 	}
 
 	if _, err := x.client.Alert.UpdateOneID(id).AddReferenceIDs(added.ID).Save(ctx); err != nil {
-		return types.ErrDatabaseUnexpected.Wrap(err)
-	}
-
-	return nil
-}
-
-func (x *Client) NewTaskLog(ctx context.Context, id types.AlertID, taskName string, ts, stage int64) (*ent.TaskLog, error) {
-	if id == "" {
-		return nil, goerr.Wrap(types.ErrInvalidInput, "AlertID is not set")
-	}
-	if taskName == "" {
-		return nil, goerr.Wrap(types.ErrInvalidInput, "Reference.Source is not set")
-	}
-
-	if x.lock {
-		x.mutex.Lock()
-		defer x.mutex.Unlock()
-	}
-	taskLog, err := x.client.TaskLog.Create().
-		SetTaskName(taskName).
-		SetStage(stage).
-		SetStartedAt(ts).
-		Save(ctx)
-	if err != nil {
-		return nil, types.ErrDatabaseUnexpected.Wrap(err)
-	}
-
-	if _, err := x.client.Alert.UpdateOneID(id).AddTaskLogIDs(taskLog.ID).Save(ctx); err != nil {
-		return nil, types.ErrDatabaseUnexpected.Wrap(err)
-	}
-
-	return taskLog, nil
-}
-
-func (x *Client) UpdateTaskLog(ctx context.Context, task *ent.TaskLog) error {
-	if task.ID == 0 {
-		return goerr.Wrap(types.ErrInvalidInput, "task.ID is not set")
-	}
-
-	q := x.client.TaskLog.UpdateOneID(task.ID).
-		SetExitedAt(task.ExitedAt).
-		SetLog(task.Log).
-		SetErrmsg(task.Errmsg).
-		SetErrValues(task.ErrValues).
-		SetStackTrace(task.StackTrace).
-		SetStatus(task.Status)
-
-	if x.lock {
-		x.mutex.Lock()
-		defer x.mutex.Unlock()
-	}
-	if _, err := q.Save(ctx); err != nil {
 		return types.ErrDatabaseUnexpected.Wrap(err)
 	}
 

@@ -9,6 +9,7 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/actionlog"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/alert"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/attribute"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/reference"
@@ -176,6 +177,21 @@ func (ac *AlertCreate) AddTaskLogs(t ...*TaskLog) *AlertCreate {
 		ids[i] = t[i].ID
 	}
 	return ac.AddTaskLogIDs(ids...)
+}
+
+// AddActionLogIDs adds the "action_logs" edge to the ActionLog entity by IDs.
+func (ac *AlertCreate) AddActionLogIDs(ids ...int) *AlertCreate {
+	ac.mutation.AddActionLogIDs(ids...)
+	return ac
+}
+
+// AddActionLogs adds the "action_logs" edges to the ActionLog entity.
+func (ac *AlertCreate) AddActionLogs(a ...*ActionLog) *AlertCreate {
+	ids := make([]int, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return ac.AddActionLogIDs(ids...)
 }
 
 // Mutation returns the AlertMutation object of the builder.
@@ -405,6 +421,25 @@ func (ac *AlertCreate) createSpec() (*Alert, *sqlgraph.CreateSpec) {
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: tasklog.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := ac.mutation.ActionLogsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   alert.ActionLogsTable,
+			Columns: []string{alert.ActionLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: actionlog.FieldID,
 				},
 			},
 		}

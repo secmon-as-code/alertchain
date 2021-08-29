@@ -486,6 +486,34 @@ func HasAnnotationsWith(preds ...predicate.Annotation) predicate.Attribute {
 	})
 }
 
+// HasAlert applies the HasEdge predicate on the "alert" edge.
+func HasAlert() predicate.Attribute {
+	return predicate.Attribute(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(AlertTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, AlertTable, AlertColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasAlertWith applies the HasEdge predicate on the "alert" edge with a given conditions (other predicates).
+func HasAlertWith(preds ...predicate.Alert) predicate.Attribute {
+	return predicate.Attribute(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(AlertInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, AlertTable, AlertColumn),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Attribute) predicate.Attribute {
 	return predicate.Attribute(func(s *sql.Selector) {

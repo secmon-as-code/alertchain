@@ -61,6 +61,19 @@ func (f AttributeFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, e
 	return f(ctx, mv)
 }
 
+// The ExecLogFunc type is an adapter to allow the use of ordinary
+// function as ExecLog mutator.
+type ExecLogFunc func(context.Context, *ent.ExecLogMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ExecLogFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.ExecLogMutation)
+	if !ok {
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ExecLogMutation", m)
+	}
+	return f(ctx, mv)
+}
+
 // The ReferenceFunc type is an adapter to allow the use of ordinary
 // function as Reference mutator.
 type ReferenceFunc func(context.Context, *ent.ReferenceMutation) (ent.Value, error)
