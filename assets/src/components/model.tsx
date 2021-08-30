@@ -15,13 +15,19 @@ export interface alert {
 }
 
 export interface attribute {
-  id: string;
+  id: number;
   key: string;
   value: string;
   type: string;
   context: string[];
 
   annotations: annotation[];
+  actions: action[];
+}
+
+export interface action {
+  id: string;
+  name: string;
 }
 
 export interface annotation {

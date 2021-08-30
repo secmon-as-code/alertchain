@@ -12,6 +12,11 @@ type Interface interface {
 	GetAlerts(ctx *types.Context) ([]*ent.Alert, error)
 	GetAlert(ctx *types.Context, id types.AlertID) (*ent.Alert, error)
 	HandleAlert(ctx *types.Context, alert *ent.Alert, attrs []*ent.Attribute) (*ent.Alert, error)
+
+	// Action
+	GetExecutableActions(attr *ent.Attribute) []*Action
+	GetActionLog(ctx *types.Context, actionLogID int) (*ent.ActionLog, error)
+	ExecuteAction(ctx *types.Context, actionID string, attrID int) (*ent.ActionLog, error)
 }
 
 type usecase struct {

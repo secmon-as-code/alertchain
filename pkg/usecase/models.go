@@ -19,10 +19,11 @@ type Task struct {
 }
 
 type Action struct {
-	ID         string
-	Name       string
-	Executable func(attr *ent.Attribute) bool
-	Execute    func(ctx *types.Context, attr *ent.Attribute) error
+	ID   string `json:"id"`
+	Name string `json:"name"`
+
+	Executable func(attr *ent.Attribute) bool                      `json:"-"`
+	Execute    func(ctx *types.Context, attr *ent.Attribute) error `json:"-"`
 }
 
 type newAnnotationRequest struct {

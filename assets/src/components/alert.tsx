@@ -10,6 +10,7 @@ import List from "@material-ui/core/List";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemIcon from "@material-ui/core/ListItemIcon";
 import ListItemText from "@material-ui/core/ListItemText";
+import Button from "@material-ui/core/Button";
 
 import DnsIcon from "@material-ui/icons/Dns";
 import SettingsEthernetIcon from "@material-ui/icons/SettingsEthernet";
@@ -167,29 +168,7 @@ export function AlertView(props: alertProps) {
       </Grid>
 
       <Grid>
-        <Paper>
-          <Grid>
-            <Typography variant="h5">Attributes</Typography>
-          </Grid>
-
-          <Grid>
-            <List dense={true}>
-              {state.alert.attributes ? (
-                state.alert.attributes.map((attr) => {
-                  const icon = attrIconMap[attr.type] || <NoteIcon />;
-                  return (
-                    <ListItem key={attr.id}>
-                      <ListItemIcon>{icon}</ListItemIcon>
-                      <ListItemText primary={attr.value} secondary={attr.key} />
-                    </ListItem>
-                  );
-                })
-              ) : (
-                <div>No attributes</div>
-              )}
-            </List>
-          </Grid>
-        </Paper>
+        <Attributes attrs={state.alert.attributes} />
       </Grid>
 
       <Grid>
@@ -211,5 +190,72 @@ export function AlertView(props: alertProps) {
         </Paper>
       </Grid>
     </div>
+  );
+}
+
+type AttributesProps = {
+  attrs: model.attribute[];
+};
+
+function Attributes(props: AttributesProps) {
+  const execAction = (actionID: string, attrID: number) => {
+    const data = { action_id: actionID, attr_id: attrID };
+    fetch(`/api/v1/action/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    })
+      .then((res) => res.json())
+      .then(
+        (result) => {
+          console.log({ result });
+        },
+        (error) => {
+          console.log({ error });
+        }
+      );
+  };
+
+  return (
+    <Paper>
+      <Grid>
+        <Typography variant="h5">Attributes</Typography>
+      </Grid>
+
+      <Grid>
+        <List dense={true}>
+          {props.attrs ? (
+            props.attrs.map((attr) => {
+              const icon = attrIconMap[attr.type] || <NoteIcon />;
+              return (
+                <ListItem key={attr.id} style={{ width: 500 }}>
+                  <ListItemIcon>{icon}</ListItemIcon>
+                  <ListItemText primary={attr.value} secondary={attr.key} />
+                  <div>
+                    {(attr.actions || []).map((action, idx) => {
+                      return (
+                        <Button
+                          key={idx}
+                          variant="contained"
+                          onClick={() => {
+                            execAction(action.id, attr.id);
+                          }}
+                          color="primary">
+                          {action.name}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                </ListItem>
+              );
+            })
+          ) : (
+            <div>No attributes</div>
+          )}
+        </List>
+      </Grid>
+    </Paper>
   );
 }

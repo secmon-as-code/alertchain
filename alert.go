@@ -14,7 +14,7 @@ type Alert struct {
 
 	id types.AlertID // Immutable AlertID copied from ent.Alert.ID
 
-	usecase.ChangeRequest
+	usecase.ChangeRequest `json:"-"`
 
 	// To remove "edges" in JSON. DO NOT USE as data field
 	EdgesOverride interface{} `json:"edges,omitempty"`

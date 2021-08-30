@@ -8,7 +8,8 @@ import (
 
 type Attribute struct {
 	ent.Attribute
-	Annotations []*Annotation `json:"annotations"`
+	Annotations []*Annotation     `json:"annotations"`
+	Actions     []*usecase.Action `json:"actions"`
 
 	Alert *Alert `json:"-"`
 

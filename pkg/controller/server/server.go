@@ -63,6 +63,9 @@ func (x *Server) Run() error {
 	r.GET("/alert/:id", getAlert)
 	r.POST("/alert", postAlert)
 
+	r.GET("/action/:id", getAction)
+	r.POST("/action", postAction)
+
 	if err := engine.Run(fmt.Sprintf("%s:%d", x.addr, x.port)); err != nil {
 		return err
 	}

@@ -32,8 +32,9 @@ type Interface interface {
 	NewTaskLog(ctx *types.Context, id types.AlertID, taskName string, stage int64) (*ent.TaskLog, error)
 	AppendTaskLog(ctx *types.Context, taskID int, execLog *ent.ExecLog) error
 
-	NewActionLog(ctx *types.Context, id types.AlertID, name string, attrID int) (*ent.ActionLog, error)
+	NewActionLog(ctx *types.Context, name string, attrID int) (*ent.ActionLog, error)
 	AppendActionLog(ctx *types.Context, actionID int, execLog *ent.ExecLog) error
+	GetActionLog(ctx *types.Context, actionLogID int) (*ent.ActionLog, error)
 }
 
 type Client struct {

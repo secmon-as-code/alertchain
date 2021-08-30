@@ -1,9 +1,10 @@
-package tasks
+package main
 
 import (
 	"net"
 
 	"github.com/m-mizutani/alertchain"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent"
 	"github.com/m-mizutani/alertchain/types"
 )
 
@@ -29,4 +30,17 @@ func evalSuspiciousLogin(alert *alertchain.Alert) {
 	if internal.Contains(addr) {
 		alert.UpdateSeverity(types.SevSafe)
 	}
+}
+
+type CreateTicket struct{}
+
+func (x *CreateTicket) Name() string { return "Create a ticket" }
+func (x *CreateTicket) Execute(ctx *types.Context, alert *alertchain.Alert) error {
+	alert.AddReference(&ent.Reference{
+		Source: "ticket",
+		Title:  "Link to ticket",
+		URL:    "https://github.com/m-mizutani/alertchain/issues",
+	})
+
+	return nil
 }

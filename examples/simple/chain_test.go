@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/m-mizutani/alertchain"
-	. "github.com/m-mizutani/alertchain/examples/chain"
+	. "github.com/m-mizutani/alertchain/examples"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

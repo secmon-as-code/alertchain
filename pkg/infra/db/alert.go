@@ -135,7 +135,8 @@ func (x *Client) AddAttributes(ctx *types.Context, id types.AlertID, newAttrs []
 			SetKey(attr.Key).
 			SetValue(attr.Value).
 			SetType(attr.Type).
-			SetContext(attr.Context)
+			SetContext(attr.Context).
+			SetAlertID(id)
 	}
 
 	if x.lock {

@@ -2,14 +2,13 @@ package db
 
 import (
 	"github.com/m-mizutani/alertchain/pkg/infra/ent"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/actionlog"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/attribute"
 	"github.com/m-mizutani/alertchain/types"
 	"github.com/m-mizutani/goerr"
 )
 
-func (x *Client) NewActionLog(ctx *types.Context, id types.AlertID, name string, attrID int) (*ent.ActionLog, error) {
-	if id == "" {
-		return nil, goerr.Wrap(types.ErrDatabaseInvalidInput, "AlertID is not set")
-	}
+func (x *Client) NewActionLog(ctx *types.Context, name string, attrID int) (*ent.ActionLog, error) {
 	if name == "" {
 		return nil, goerr.Wrap(types.ErrDatabaseInvalidInput, "Name is not set")
 	}
@@ -17,6 +16,15 @@ func (x *Client) NewActionLog(ctx *types.Context, id types.AlertID, name string,
 	if x.lock {
 		x.mutex.Lock()
 		defer x.mutex.Unlock()
+	}
+
+	got, err := x.client.Attribute.Query().
+		Where(attribute.ID(attrID)).WithAlert().Only(ctx)
+	if err != nil {
+		if ent.IsConstraintError(err) {
+			return nil, types.ErrDatabaseInvalidInput.Wrap(err)
+		}
+		return nil, types.ErrDatabaseUnexpected.Wrap(err)
 	}
 
 	actionLog, err := x.client.ActionLog.Create().
@@ -30,7 +38,7 @@ func (x *Client) NewActionLog(ctx *types.Context, id types.AlertID, name string,
 		return nil, types.ErrDatabaseUnexpected.Wrap(err)
 	}
 
-	if _, err := x.client.Alert.UpdateOneID(id).AddActionLogIDs(actionLog.ID).Save(ctx); err != nil {
+	if _, err := x.client.Alert.UpdateOneID(got.Edges.Alert.ID).AddActionLogIDs(actionLog.ID).Save(ctx); err != nil {
 		if ent.IsConstraintError(err) {
 			return nil, types.ErrDatabaseInvalidInput.Wrap(err)
 		}
@@ -79,4 +87,23 @@ func (x *Client) appendExecLog(ctx *types.Context, execLog *ent.ExecLog) (*ent.E
 
 	}
 	return created, nil
+}
+
+func (x *Client) GetActionLog(ctx *types.Context, actionLogID int) (*ent.ActionLog, error) {
+	if x.lock {
+		x.mutex.Lock()
+		defer x.mutex.Unlock()
+	}
+
+	got, err := x.client.ActionLog.Query().
+		Where(actionlog.ID(actionLogID)).
+		WithExecLogs().Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, types.ErrItemNotFound.Wrap(err)
+		}
+		return nil, types.ErrDatabaseUnexpected.Wrap(err)
+	}
+
+	return got, nil
 }

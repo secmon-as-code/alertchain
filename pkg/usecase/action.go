@@ -10,27 +10,31 @@ import (
 	"github.com/m-mizutani/goerr"
 )
 
-func (x *usecase) GetExecutableActions(ctx *types.Context, attr *ent.Attribute) ([]*Action, error) {
+func (x *usecase) GetExecutableActions(attr *ent.Attribute) []*Action {
 	var resp []*Action
 	for _, action := range x.actions {
 		if action.Executable(attr) {
 			resp = append(resp, action)
 		}
 	}
-	return resp, nil
+	return resp
+}
+
+func (x *usecase) GetActionLog(ctx *types.Context, actionLogID int) (*ent.ActionLog, error) {
+	return x.clients.DB.GetActionLog(ctx, actionLogID)
 }
 
 func (x *usecase) ExecuteAction(ctx *types.Context, actionID string, attrID int) (*ent.ActionLog, error) {
 	action, ok := x.actions[actionID]
 	if !ok {
-		return nil, goerr.Wrap(types.ErrInvalidInput, "invalid action ID")
+		return nil, goerr.Wrap(types.ErrInvalidInput, "no such action ID")
 	}
 	attr, err := x.clients.DB.GetAttribute(ctx, attrID)
 	if err != nil {
 		return nil, err
 	}
 
-	actionLog, err := x.clients.DB.NewActionLog(ctx, attr.Edges.Alert.ID, action.Name, attrID)
+	actionLog, err := x.clients.DB.NewActionLog(ctx, action.Name, attrID)
 	if err != nil {
 		return nil, err
 	}

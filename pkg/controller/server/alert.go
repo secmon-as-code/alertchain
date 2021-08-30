@@ -27,10 +27,15 @@ func getAlert(c *gin.Context) {
 	uc := ctxUsecase(c)
 
 	ctx := types.WrapContext(c)
-	alert, err := uc.GetAlert(ctx, types.AlertID(alertID))
+	got, err := uc.GetAlert(ctx, types.AlertID(alertID))
 	if err != nil {
 		c.Error(err)
 		return
+	}
+	alert := alertchain.NewAlert(got)
+
+	for _, attr := range alert.Attributes {
+		attr.Actions = uc.GetExecutableActions(&attr.Attribute)
 	}
 
 	resp(c, http.StatusOK, alert)
