@@ -24,7 +24,7 @@ func TestActionLog(t *testing.T) {
 		require.NoError(t, err)
 
 		alert, _ := client.GetAlert(ctx, created.ID)
-		log1, err := client.NewActionLog(ctx, created.ID, "blue", alert.Edges.Attributes[0].ID)
+		log1, err := client.NewActionLog(ctx, "blue", alert.Edges.Attributes[0].ID)
 		require.NoError(t, err)
 
 		require.NoError(t, client.AppendActionLog(ctx, log1.ID, &ent.ExecLog{
@@ -45,7 +45,7 @@ func TestActionLog(t *testing.T) {
 
 	t.Run("AlertID not found", func(t *testing.T) {
 		client := setupDB(t)
-		_, err := client.NewActionLog(ctx, "xxx", "blue", 0)
+		_, err := client.NewActionLog(ctx, "blue", 0)
 		assert.ErrorIs(t, err, types.ErrDatabaseInvalidInput)
 	})
 

@@ -21,7 +21,7 @@ func (x *Client) NewActionLog(ctx *types.Context, name string, attrID int) (*ent
 	got, err := x.client.Attribute.Query().
 		Where(attribute.ID(attrID)).WithAlert().Only(ctx)
 	if err != nil {
-		if ent.IsConstraintError(err) {
+		if ent.IsNotFound(err) {
 			return nil, types.ErrDatabaseInvalidInput.Wrap(err)
 		}
 		return nil, types.ErrDatabaseUnexpected.Wrap(err)

@@ -23,7 +23,9 @@ Build binary with `go >= 1.16` and `npm >= 7.18.1`.
 
 ## Usage
 
-Write your workflow in your github project.
+### 1) Create your workflow in your repository
+
+- Workflow
 
 ```go
 package main
@@ -36,9 +38,6 @@ import (
 type myEvaluator struct{}
 
 func (x *myEvaluator) Name() string                              { return "myEvaluator" }
-func (x *myEvaluator) Description() string                       { return "Eval alert" }
-func (x *myEvaluator) IsExecutable(alert *alertchain.Alert) bool { return false }
-
 func (x *myEvaluator) Execute(alert *alertchain.Alert) error {
 	if alert.Title == "Something wrong" {
 		alert.Severity = types.SevAffected
