@@ -14,7 +14,7 @@ ENT_SRC=$(ENT_DIR)/ent.go
 ENT_SCHEMA_DIR=./pkg/infra/schema
 
 CHAIN=chain.so
-EXAMPLE_SRC_DIR=./examples/simple
+EXAMPLE_SRC_DIR=./examples/basic
 
 all: alertchain
 
