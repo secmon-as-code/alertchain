@@ -1,13 +1,3 @@
-const devServer = {
-  contentBase: "dist",
-  proxy: {
-    "/api": "http://localhost:9080",
-    "/auth": "http://localhost:9080",
-  },
-  contentBase: "dist",
-  hot: true,
-};
-
 module.exports = {
   mode: "development",
   module: {
@@ -29,12 +19,11 @@ module.exports = {
     filename: "bundle.js",
   },
   devServer: {
-    contentBase: "dist",
+    static: "dist",
     proxy: {
       "/api": "http://localhost:9080",
       "/auth": "http://localhost:9080",
     },
-    contentBase: "dist",
     hot: true,
     historyApiFallback: {
       rewrites: [{ from: /^\/*/, to: "/index.html" }],
