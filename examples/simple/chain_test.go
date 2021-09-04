@@ -4,10 +4,9 @@ import (
 	"testing"
 
 	"github.com/m-mizutani/alertchain"
+	. "github.com/m-mizutani/alertchain/examples/simple"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	. "github.com/m-mizutani/alertchain/examples/basic"
 )
 
 func TestChain(t *testing.T) {
