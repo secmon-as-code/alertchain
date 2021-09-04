@@ -9,8 +9,9 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/alert"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/annotation"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/attribute"
-	"github.com/m-mizutani/alertchain/pkg/infra/ent/finding"
 	"github.com/m-mizutani/alertchain/types"
 )
 
@@ -45,19 +46,38 @@ func (ac *AttributeCreate) SetContext(s []string) *AttributeCreate {
 	return ac
 }
 
-// AddFindingIDs adds the "findings" edge to the Finding entity by IDs.
-func (ac *AttributeCreate) AddFindingIDs(ids ...int) *AttributeCreate {
-	ac.mutation.AddFindingIDs(ids...)
+// AddAnnotationIDs adds the "annotations" edge to the Annotation entity by IDs.
+func (ac *AttributeCreate) AddAnnotationIDs(ids ...int) *AttributeCreate {
+	ac.mutation.AddAnnotationIDs(ids...)
 	return ac
 }
 
-// AddFindings adds the "findings" edges to the Finding entity.
-func (ac *AttributeCreate) AddFindings(f ...*Finding) *AttributeCreate {
-	ids := make([]int, len(f))
-	for i := range f {
-		ids[i] = f[i].ID
+// AddAnnotations adds the "annotations" edges to the Annotation entity.
+func (ac *AttributeCreate) AddAnnotations(a ...*Annotation) *AttributeCreate {
+	ids := make([]int, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
 	}
-	return ac.AddFindingIDs(ids...)
+	return ac.AddAnnotationIDs(ids...)
+}
+
+// SetAlertID sets the "alert" edge to the Alert entity by ID.
+func (ac *AttributeCreate) SetAlertID(id types.AlertID) *AttributeCreate {
+	ac.mutation.SetAlertID(id)
+	return ac
+}
+
+// SetNillableAlertID sets the "alert" edge to the Alert entity by ID if the given value is not nil.
+func (ac *AttributeCreate) SetNillableAlertID(id *types.AlertID) *AttributeCreate {
+	if id != nil {
+		ac = ac.SetAlertID(*id)
+	}
+	return ac
+}
+
+// SetAlert sets the "alert" edge to the Alert entity.
+func (ac *AttributeCreate) SetAlert(a *Alert) *AttributeCreate {
+	return ac.SetAlertID(a.ID)
 }
 
 // Mutation returns the AttributeMutation object of the builder.
@@ -201,23 +221,43 @@ func (ac *AttributeCreate) createSpec() (*Attribute, *sqlgraph.CreateSpec) {
 		})
 		_node.Context = value
 	}
-	if nodes := ac.mutation.FindingsIDs(); len(nodes) > 0 {
+	if nodes := ac.mutation.AnnotationsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   attribute.FindingsTable,
-			Columns: []string{attribute.FindingsColumn},
+			Table:   attribute.AnnotationsTable,
+			Columns: []string{attribute.AnnotationsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: finding.FieldID,
+					Column: annotation.FieldID,
 				},
 			},
 		}
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := ac.mutation.AlertIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   attribute.AlertTable,
+			Columns: []string{attribute.AlertColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeString,
+					Column: alert.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.attribute_alert = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

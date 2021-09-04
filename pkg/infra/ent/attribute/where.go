@@ -458,25 +458,53 @@ func TypeContainsFold(v types.AttrType) predicate.Attribute {
 	})
 }
 
-// HasFindings applies the HasEdge predicate on the "findings" edge.
-func HasFindings() predicate.Attribute {
+// HasAnnotations applies the HasEdge predicate on the "annotations" edge.
+func HasAnnotations() predicate.Attribute {
 	return predicate.Attribute(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(FindingsTable, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, FindingsTable, FindingsColumn),
+			sqlgraph.To(AnnotationsTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, AnnotationsTable, AnnotationsColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
 }
 
-// HasFindingsWith applies the HasEdge predicate on the "findings" edge with a given conditions (other predicates).
-func HasFindingsWith(preds ...predicate.Finding) predicate.Attribute {
+// HasAnnotationsWith applies the HasEdge predicate on the "annotations" edge with a given conditions (other predicates).
+func HasAnnotationsWith(preds ...predicate.Annotation) predicate.Attribute {
 	return predicate.Attribute(func(s *sql.Selector) {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
-			sqlgraph.To(FindingsInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, FindingsTable, FindingsColumn),
+			sqlgraph.To(AnnotationsInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, AnnotationsTable, AnnotationsColumn),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasAlert applies the HasEdge predicate on the "alert" edge.
+func HasAlert() predicate.Attribute {
+	return predicate.Attribute(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(AlertTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, AlertTable, AlertColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasAlertWith applies the HasEdge predicate on the "alert" edge with a given conditions (other predicates).
+func HasAlertWith(preds ...predicate.Alert) predicate.Attribute {
+	return predicate.Attribute(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(AlertInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, AlertTable, AlertColumn),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {

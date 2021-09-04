@@ -6,12 +6,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/actionlog"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/alert"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/attribute"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/reference"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/tasklog"
 	"github.com/m-mizutani/alertchain/types"
 )
 
@@ -78,30 +80,50 @@ func (ac *AlertCreate) SetNillableStatus(ts *types.AlertStatus) *AlertCreate {
 	return ac
 }
 
-// SetCreatedAt sets the "created_at" field.
-func (ac *AlertCreate) SetCreatedAt(t time.Time) *AlertCreate {
-	ac.mutation.SetCreatedAt(t)
+// SetSeverity sets the "severity" field.
+func (ac *AlertCreate) SetSeverity(t types.Severity) *AlertCreate {
+	ac.mutation.SetSeverity(t)
 	return ac
 }
 
-// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (ac *AlertCreate) SetNillableCreatedAt(t *time.Time) *AlertCreate {
+// SetNillableSeverity sets the "severity" field if the given value is not nil.
+func (ac *AlertCreate) SetNillableSeverity(t *types.Severity) *AlertCreate {
 	if t != nil {
-		ac.SetCreatedAt(*t)
+		ac.SetSeverity(*t)
+	}
+	return ac
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (ac *AlertCreate) SetCreatedAt(i int64) *AlertCreate {
+	ac.mutation.SetCreatedAt(i)
+	return ac
+}
+
+// SetDetectedAt sets the "detected_at" field.
+func (ac *AlertCreate) SetDetectedAt(i int64) *AlertCreate {
+	ac.mutation.SetDetectedAt(i)
+	return ac
+}
+
+// SetNillableDetectedAt sets the "detected_at" field if the given value is not nil.
+func (ac *AlertCreate) SetNillableDetectedAt(i *int64) *AlertCreate {
+	if i != nil {
+		ac.SetDetectedAt(*i)
 	}
 	return ac
 }
 
 // SetClosedAt sets the "closed_at" field.
-func (ac *AlertCreate) SetClosedAt(t time.Time) *AlertCreate {
-	ac.mutation.SetClosedAt(t)
+func (ac *AlertCreate) SetClosedAt(i int64) *AlertCreate {
+	ac.mutation.SetClosedAt(i)
 	return ac
 }
 
 // SetNillableClosedAt sets the "closed_at" field if the given value is not nil.
-func (ac *AlertCreate) SetNillableClosedAt(t *time.Time) *AlertCreate {
-	if t != nil {
-		ac.SetClosedAt(*t)
+func (ac *AlertCreate) SetNillableClosedAt(i *int64) *AlertCreate {
+	if i != nil {
+		ac.SetClosedAt(*i)
 	}
 	return ac
 }
@@ -125,6 +147,51 @@ func (ac *AlertCreate) AddAttributes(a ...*Attribute) *AlertCreate {
 		ids[i] = a[i].ID
 	}
 	return ac.AddAttributeIDs(ids...)
+}
+
+// AddReferenceIDs adds the "references" edge to the Reference entity by IDs.
+func (ac *AlertCreate) AddReferenceIDs(ids ...int) *AlertCreate {
+	ac.mutation.AddReferenceIDs(ids...)
+	return ac
+}
+
+// AddReferences adds the "references" edges to the Reference entity.
+func (ac *AlertCreate) AddReferences(r ...*Reference) *AlertCreate {
+	ids := make([]int, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return ac.AddReferenceIDs(ids...)
+}
+
+// AddTaskLogIDs adds the "task_logs" edge to the TaskLog entity by IDs.
+func (ac *AlertCreate) AddTaskLogIDs(ids ...int) *AlertCreate {
+	ac.mutation.AddTaskLogIDs(ids...)
+	return ac
+}
+
+// AddTaskLogs adds the "task_logs" edges to the TaskLog entity.
+func (ac *AlertCreate) AddTaskLogs(t ...*TaskLog) *AlertCreate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return ac.AddTaskLogIDs(ids...)
+}
+
+// AddActionLogIDs adds the "action_logs" edge to the ActionLog entity by IDs.
+func (ac *AlertCreate) AddActionLogIDs(ids ...int) *AlertCreate {
+	ac.mutation.AddActionLogIDs(ids...)
+	return ac
+}
+
+// AddActionLogs adds the "action_logs" edges to the ActionLog entity.
+func (ac *AlertCreate) AddActionLogs(a ...*ActionLog) *AlertCreate {
+	ids := make([]int, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return ac.AddActionLogIDs(ids...)
 }
 
 // Mutation returns the AlertMutation object of the builder.
@@ -202,10 +269,6 @@ func (ac *AlertCreate) defaults() {
 		v := alert.DefaultStatus
 		ac.mutation.SetStatus(v)
 	}
-	if _, ok := ac.mutation.CreatedAt(); !ok {
-		v := alert.DefaultCreatedAt()
-		ac.mutation.SetCreatedAt(v)
-	}
 }
 
 // check runs all checks and user-defined validators on the builder.
@@ -277,17 +340,33 @@ func (ac *AlertCreate) createSpec() (*Alert, *sqlgraph.CreateSpec) {
 		})
 		_node.Status = value
 	}
+	if value, ok := ac.mutation.Severity(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: alert.FieldSeverity,
+		})
+		_node.Severity = value
+	}
 	if value, ok := ac.mutation.CreatedAt(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
+			Type:   field.TypeInt64,
 			Value:  value,
 			Column: alert.FieldCreatedAt,
 		})
 		_node.CreatedAt = value
 	}
+	if value, ok := ac.mutation.DetectedAt(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt64,
+			Value:  value,
+			Column: alert.FieldDetectedAt,
+		})
+		_node.DetectedAt = &value
+	}
 	if value, ok := ac.mutation.ClosedAt(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
+			Type:   field.TypeInt64,
 			Value:  value,
 			Column: alert.FieldClosedAt,
 		})
@@ -304,6 +383,63 @@ func (ac *AlertCreate) createSpec() (*Alert, *sqlgraph.CreateSpec) {
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: attribute.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := ac.mutation.ReferencesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   alert.ReferencesTable,
+			Columns: []string{alert.ReferencesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: reference.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := ac.mutation.TaskLogsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   alert.TaskLogsTable,
+			Columns: []string{alert.TaskLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tasklog.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := ac.mutation.ActionLogsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   alert.ActionLogsTable,
+			Columns: []string{alert.ActionLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: actionlog.FieldID,
 				},
 			},
 		}

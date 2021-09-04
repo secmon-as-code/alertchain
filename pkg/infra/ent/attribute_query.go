@@ -12,9 +12,11 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/alert"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/annotation"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/attribute"
-	"github.com/m-mizutani/alertchain/pkg/infra/ent/finding"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/predicate"
+	"github.com/m-mizutani/alertchain/types"
 )
 
 // AttributeQuery is the builder for querying Attribute entities.
@@ -27,8 +29,9 @@ type AttributeQuery struct {
 	fields     []string
 	predicates []predicate.Attribute
 	// eager-loading edges.
-	withFindings *FindingQuery
-	withFKs      bool
+	withAnnotations *AnnotationQuery
+	withAlert       *AlertQuery
+	withFKs         bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -65,9 +68,9 @@ func (aq *AttributeQuery) Order(o ...OrderFunc) *AttributeQuery {
 	return aq
 }
 
-// QueryFindings chains the current query on the "findings" edge.
-func (aq *AttributeQuery) QueryFindings() *FindingQuery {
-	query := &FindingQuery{config: aq.config}
+// QueryAnnotations chains the current query on the "annotations" edge.
+func (aq *AttributeQuery) QueryAnnotations() *AnnotationQuery {
+	query := &AnnotationQuery{config: aq.config}
 	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
 		if err := aq.prepareQuery(ctx); err != nil {
 			return nil, err
@@ -78,8 +81,30 @@ func (aq *AttributeQuery) QueryFindings() *FindingQuery {
 		}
 		step := sqlgraph.NewStep(
 			sqlgraph.From(attribute.Table, attribute.FieldID, selector),
-			sqlgraph.To(finding.Table, finding.FieldID),
-			sqlgraph.Edge(sqlgraph.O2M, false, attribute.FindingsTable, attribute.FindingsColumn),
+			sqlgraph.To(annotation.Table, annotation.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, attribute.AnnotationsTable, attribute.AnnotationsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(aq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryAlert chains the current query on the "alert" edge.
+func (aq *AttributeQuery) QueryAlert() *AlertQuery {
+	query := &AlertQuery{config: aq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := aq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := aq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(attribute.Table, attribute.FieldID, selector),
+			sqlgraph.To(alert.Table, alert.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, attribute.AlertTable, attribute.AlertColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(aq.driver.Dialect(), step)
 		return fromU, nil
@@ -263,26 +288,38 @@ func (aq *AttributeQuery) Clone() *AttributeQuery {
 		return nil
 	}
 	return &AttributeQuery{
-		config:       aq.config,
-		limit:        aq.limit,
-		offset:       aq.offset,
-		order:        append([]OrderFunc{}, aq.order...),
-		predicates:   append([]predicate.Attribute{}, aq.predicates...),
-		withFindings: aq.withFindings.Clone(),
+		config:          aq.config,
+		limit:           aq.limit,
+		offset:          aq.offset,
+		order:           append([]OrderFunc{}, aq.order...),
+		predicates:      append([]predicate.Attribute{}, aq.predicates...),
+		withAnnotations: aq.withAnnotations.Clone(),
+		withAlert:       aq.withAlert.Clone(),
 		// clone intermediate query.
 		sql:  aq.sql.Clone(),
 		path: aq.path,
 	}
 }
 
-// WithFindings tells the query-builder to eager-load the nodes that are connected to
-// the "findings" edge. The optional arguments are used to configure the query builder of the edge.
-func (aq *AttributeQuery) WithFindings(opts ...func(*FindingQuery)) *AttributeQuery {
-	query := &FindingQuery{config: aq.config}
+// WithAnnotations tells the query-builder to eager-load the nodes that are connected to
+// the "annotations" edge. The optional arguments are used to configure the query builder of the edge.
+func (aq *AttributeQuery) WithAnnotations(opts ...func(*AnnotationQuery)) *AttributeQuery {
+	query := &AnnotationQuery{config: aq.config}
 	for _, opt := range opts {
 		opt(query)
 	}
-	aq.withFindings = query
+	aq.withAnnotations = query
+	return aq
+}
+
+// WithAlert tells the query-builder to eager-load the nodes that are connected to
+// the "alert" edge. The optional arguments are used to configure the query builder of the edge.
+func (aq *AttributeQuery) WithAlert(opts ...func(*AlertQuery)) *AttributeQuery {
+	query := &AlertQuery{config: aq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	aq.withAlert = query
 	return aq
 }
 
@@ -352,10 +389,14 @@ func (aq *AttributeQuery) sqlAll(ctx context.Context) ([]*Attribute, error) {
 		nodes       = []*Attribute{}
 		withFKs     = aq.withFKs
 		_spec       = aq.querySpec()
-		loadedTypes = [1]bool{
-			aq.withFindings != nil,
+		loadedTypes = [2]bool{
+			aq.withAnnotations != nil,
+			aq.withAlert != nil,
 		}
 	)
+	if aq.withAlert != nil {
+		withFKs = true
+	}
 	if withFKs {
 		_spec.Node.Columns = append(_spec.Node.Columns, attribute.ForeignKeys...)
 	}
@@ -379,32 +420,61 @@ func (aq *AttributeQuery) sqlAll(ctx context.Context) ([]*Attribute, error) {
 		return nodes, nil
 	}
 
-	if query := aq.withFindings; query != nil {
+	if query := aq.withAnnotations; query != nil {
 		fks := make([]driver.Value, 0, len(nodes))
 		nodeids := make(map[int]*Attribute)
 		for i := range nodes {
 			fks = append(fks, nodes[i].ID)
 			nodeids[nodes[i].ID] = nodes[i]
-			nodes[i].Edges.Findings = []*Finding{}
+			nodes[i].Edges.Annotations = []*Annotation{}
 		}
 		query.withFKs = true
-		query.Where(predicate.Finding(func(s *sql.Selector) {
-			s.Where(sql.InValues(attribute.FindingsColumn, fks...))
+		query.Where(predicate.Annotation(func(s *sql.Selector) {
+			s.Where(sql.InValues(attribute.AnnotationsColumn, fks...))
 		}))
 		neighbors, err := query.All(ctx)
 		if err != nil {
 			return nil, err
 		}
 		for _, n := range neighbors {
-			fk := n.attribute_findings
+			fk := n.attribute_annotations
 			if fk == nil {
-				return nil, fmt.Errorf(`foreign-key "attribute_findings" is nil for node %v`, n.ID)
+				return nil, fmt.Errorf(`foreign-key "attribute_annotations" is nil for node %v`, n.ID)
 			}
 			node, ok := nodeids[*fk]
 			if !ok {
-				return nil, fmt.Errorf(`unexpected foreign-key "attribute_findings" returned %v for node %v`, *fk, n.ID)
+				return nil, fmt.Errorf(`unexpected foreign-key "attribute_annotations" returned %v for node %v`, *fk, n.ID)
 			}
-			node.Edges.Findings = append(node.Edges.Findings, n)
+			node.Edges.Annotations = append(node.Edges.Annotations, n)
+		}
+	}
+
+	if query := aq.withAlert; query != nil {
+		ids := make([]types.AlertID, 0, len(nodes))
+		nodeids := make(map[types.AlertID][]*Attribute)
+		for i := range nodes {
+			if nodes[i].attribute_alert == nil {
+				continue
+			}
+			fk := *nodes[i].attribute_alert
+			if _, ok := nodeids[fk]; !ok {
+				ids = append(ids, fk)
+			}
+			nodeids[fk] = append(nodeids[fk], nodes[i])
+		}
+		query.Where(alert.IDIn(ids...))
+		neighbors, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, n := range neighbors {
+			nodes, ok := nodeids[n.ID]
+			if !ok {
+				return nil, fmt.Errorf(`unexpected foreign-key "attribute_alert" returned %v`, n.ID)
+			}
+			for i := range nodes {
+				nodes[i].Edges.Alert = n
+			}
 		}
 	}
 

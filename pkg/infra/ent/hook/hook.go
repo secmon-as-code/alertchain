@@ -9,6 +9,19 @@ import (
 	"github.com/m-mizutani/alertchain/pkg/infra/ent"
 )
 
+// The ActionLogFunc type is an adapter to allow the use of ordinary
+// function as ActionLog mutator.
+type ActionLogFunc func(context.Context, *ent.ActionLogMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ActionLogFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.ActionLogMutation)
+	if !ok {
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ActionLogMutation", m)
+	}
+	return f(ctx, mv)
+}
+
 // The AlertFunc type is an adapter to allow the use of ordinary
 // function as Alert mutator.
 type AlertFunc func(context.Context, *ent.AlertMutation) (ent.Value, error)
@@ -18,6 +31,19 @@ func (f AlertFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error
 	mv, ok := m.(*ent.AlertMutation)
 	if !ok {
 		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AlertMutation", m)
+	}
+	return f(ctx, mv)
+}
+
+// The AnnotationFunc type is an adapter to allow the use of ordinary
+// function as Annotation mutator.
+type AnnotationFunc func(context.Context, *ent.AnnotationMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f AnnotationFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.AnnotationMutation)
+	if !ok {
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AnnotationMutation", m)
 	}
 	return f(ctx, mv)
 }
@@ -35,15 +61,41 @@ func (f AttributeFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, e
 	return f(ctx, mv)
 }
 
-// The FindingFunc type is an adapter to allow the use of ordinary
-// function as Finding mutator.
-type FindingFunc func(context.Context, *ent.FindingMutation) (ent.Value, error)
+// The ExecLogFunc type is an adapter to allow the use of ordinary
+// function as ExecLog mutator.
+type ExecLogFunc func(context.Context, *ent.ExecLogMutation) (ent.Value, error)
 
 // Mutate calls f(ctx, m).
-func (f FindingFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	mv, ok := m.(*ent.FindingMutation)
+func (f ExecLogFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.ExecLogMutation)
 	if !ok {
-		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.FindingMutation", m)
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ExecLogMutation", m)
+	}
+	return f(ctx, mv)
+}
+
+// The ReferenceFunc type is an adapter to allow the use of ordinary
+// function as Reference mutator.
+type ReferenceFunc func(context.Context, *ent.ReferenceMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ReferenceFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.ReferenceMutation)
+	if !ok {
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ReferenceMutation", m)
+	}
+	return f(ctx, mv)
+}
+
+// The TaskLogFunc type is an adapter to allow the use of ordinary
+// function as TaskLog mutator.
+type TaskLogFunc func(context.Context, *ent.TaskLogMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f TaskLogFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	mv, ok := m.(*ent.TaskLogMutation)
+	if !ok {
+		return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.TaskLogMutation", m)
 	}
 	return f(ctx, mv)
 }

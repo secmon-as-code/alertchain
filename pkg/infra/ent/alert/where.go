@@ -3,8 +3,6 @@
 package alert
 
 import (
-	"time"
-
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/predicate"
@@ -123,15 +121,30 @@ func Status(v types.AlertStatus) predicate.Alert {
 	})
 }
 
+// Severity applies equality check predicate on the "severity" field. It's identical to SeverityEQ.
+func Severity(v types.Severity) predicate.Alert {
+	vc := string(v)
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldSeverity), vc))
+	})
+}
+
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
-func CreatedAt(v time.Time) predicate.Alert {
+func CreatedAt(v int64) predicate.Alert {
 	return predicate.Alert(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldCreatedAt), v))
 	})
 }
 
+// DetectedAt applies equality check predicate on the "detected_at" field. It's identical to DetectedAtEQ.
+func DetectedAt(v int64) predicate.Alert {
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldDetectedAt), v))
+	})
+}
+
 // ClosedAt applies equality check predicate on the "closed_at" field. It's identical to ClosedAtEQ.
-func ClosedAt(v time.Time) predicate.Alert {
+func ClosedAt(v int64) predicate.Alert {
 	return predicate.Alert(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldClosedAt), v))
 	})
@@ -634,22 +647,158 @@ func StatusContainsFold(v types.AlertStatus) predicate.Alert {
 	})
 }
 
+// SeverityEQ applies the EQ predicate on the "severity" field.
+func SeverityEQ(v types.Severity) predicate.Alert {
+	vc := string(v)
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldSeverity), vc))
+	})
+}
+
+// SeverityNEQ applies the NEQ predicate on the "severity" field.
+func SeverityNEQ(v types.Severity) predicate.Alert {
+	vc := string(v)
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldSeverity), vc))
+	})
+}
+
+// SeverityIn applies the In predicate on the "severity" field.
+func SeverityIn(vs ...types.Severity) predicate.Alert {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = string(vs[i])
+	}
+	return predicate.Alert(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldSeverity), v...))
+	})
+}
+
+// SeverityNotIn applies the NotIn predicate on the "severity" field.
+func SeverityNotIn(vs ...types.Severity) predicate.Alert {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = string(vs[i])
+	}
+	return predicate.Alert(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldSeverity), v...))
+	})
+}
+
+// SeverityGT applies the GT predicate on the "severity" field.
+func SeverityGT(v types.Severity) predicate.Alert {
+	vc := string(v)
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldSeverity), vc))
+	})
+}
+
+// SeverityGTE applies the GTE predicate on the "severity" field.
+func SeverityGTE(v types.Severity) predicate.Alert {
+	vc := string(v)
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldSeverity), vc))
+	})
+}
+
+// SeverityLT applies the LT predicate on the "severity" field.
+func SeverityLT(v types.Severity) predicate.Alert {
+	vc := string(v)
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldSeverity), vc))
+	})
+}
+
+// SeverityLTE applies the LTE predicate on the "severity" field.
+func SeverityLTE(v types.Severity) predicate.Alert {
+	vc := string(v)
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldSeverity), vc))
+	})
+}
+
+// SeverityContains applies the Contains predicate on the "severity" field.
+func SeverityContains(v types.Severity) predicate.Alert {
+	vc := string(v)
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldSeverity), vc))
+	})
+}
+
+// SeverityHasPrefix applies the HasPrefix predicate on the "severity" field.
+func SeverityHasPrefix(v types.Severity) predicate.Alert {
+	vc := string(v)
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldSeverity), vc))
+	})
+}
+
+// SeverityHasSuffix applies the HasSuffix predicate on the "severity" field.
+func SeverityHasSuffix(v types.Severity) predicate.Alert {
+	vc := string(v)
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldSeverity), vc))
+	})
+}
+
+// SeverityIsNil applies the IsNil predicate on the "severity" field.
+func SeverityIsNil() predicate.Alert {
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.IsNull(s.C(FieldSeverity)))
+	})
+}
+
+// SeverityNotNil applies the NotNil predicate on the "severity" field.
+func SeverityNotNil() predicate.Alert {
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.NotNull(s.C(FieldSeverity)))
+	})
+}
+
+// SeverityEqualFold applies the EqualFold predicate on the "severity" field.
+func SeverityEqualFold(v types.Severity) predicate.Alert {
+	vc := string(v)
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldSeverity), vc))
+	})
+}
+
+// SeverityContainsFold applies the ContainsFold predicate on the "severity" field.
+func SeverityContainsFold(v types.Severity) predicate.Alert {
+	vc := string(v)
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldSeverity), vc))
+	})
+}
+
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.
-func CreatedAtEQ(v time.Time) predicate.Alert {
+func CreatedAtEQ(v int64) predicate.Alert {
 	return predicate.Alert(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldCreatedAt), v))
 	})
 }
 
 // CreatedAtNEQ applies the NEQ predicate on the "created_at" field.
-func CreatedAtNEQ(v time.Time) predicate.Alert {
+func CreatedAtNEQ(v int64) predicate.Alert {
 	return predicate.Alert(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldCreatedAt), v))
 	})
 }
 
 // CreatedAtIn applies the In predicate on the "created_at" field.
-func CreatedAtIn(vs ...time.Time) predicate.Alert {
+func CreatedAtIn(vs ...int64) predicate.Alert {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -666,7 +815,7 @@ func CreatedAtIn(vs ...time.Time) predicate.Alert {
 }
 
 // CreatedAtNotIn applies the NotIn predicate on the "created_at" field.
-func CreatedAtNotIn(vs ...time.Time) predicate.Alert {
+func CreatedAtNotIn(vs ...int64) predicate.Alert {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -683,49 +832,139 @@ func CreatedAtNotIn(vs ...time.Time) predicate.Alert {
 }
 
 // CreatedAtGT applies the GT predicate on the "created_at" field.
-func CreatedAtGT(v time.Time) predicate.Alert {
+func CreatedAtGT(v int64) predicate.Alert {
 	return predicate.Alert(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldCreatedAt), v))
 	})
 }
 
 // CreatedAtGTE applies the GTE predicate on the "created_at" field.
-func CreatedAtGTE(v time.Time) predicate.Alert {
+func CreatedAtGTE(v int64) predicate.Alert {
 	return predicate.Alert(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldCreatedAt), v))
 	})
 }
 
 // CreatedAtLT applies the LT predicate on the "created_at" field.
-func CreatedAtLT(v time.Time) predicate.Alert {
+func CreatedAtLT(v int64) predicate.Alert {
 	return predicate.Alert(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldCreatedAt), v))
 	})
 }
 
 // CreatedAtLTE applies the LTE predicate on the "created_at" field.
-func CreatedAtLTE(v time.Time) predicate.Alert {
+func CreatedAtLTE(v int64) predicate.Alert {
 	return predicate.Alert(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldCreatedAt), v))
 	})
 }
 
+// DetectedAtEQ applies the EQ predicate on the "detected_at" field.
+func DetectedAtEQ(v int64) predicate.Alert {
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldDetectedAt), v))
+	})
+}
+
+// DetectedAtNEQ applies the NEQ predicate on the "detected_at" field.
+func DetectedAtNEQ(v int64) predicate.Alert {
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldDetectedAt), v))
+	})
+}
+
+// DetectedAtIn applies the In predicate on the "detected_at" field.
+func DetectedAtIn(vs ...int64) predicate.Alert {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Alert(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldDetectedAt), v...))
+	})
+}
+
+// DetectedAtNotIn applies the NotIn predicate on the "detected_at" field.
+func DetectedAtNotIn(vs ...int64) predicate.Alert {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Alert(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldDetectedAt), v...))
+	})
+}
+
+// DetectedAtGT applies the GT predicate on the "detected_at" field.
+func DetectedAtGT(v int64) predicate.Alert {
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldDetectedAt), v))
+	})
+}
+
+// DetectedAtGTE applies the GTE predicate on the "detected_at" field.
+func DetectedAtGTE(v int64) predicate.Alert {
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldDetectedAt), v))
+	})
+}
+
+// DetectedAtLT applies the LT predicate on the "detected_at" field.
+func DetectedAtLT(v int64) predicate.Alert {
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldDetectedAt), v))
+	})
+}
+
+// DetectedAtLTE applies the LTE predicate on the "detected_at" field.
+func DetectedAtLTE(v int64) predicate.Alert {
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldDetectedAt), v))
+	})
+}
+
+// DetectedAtIsNil applies the IsNil predicate on the "detected_at" field.
+func DetectedAtIsNil() predicate.Alert {
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.IsNull(s.C(FieldDetectedAt)))
+	})
+}
+
+// DetectedAtNotNil applies the NotNil predicate on the "detected_at" field.
+func DetectedAtNotNil() predicate.Alert {
+	return predicate.Alert(func(s *sql.Selector) {
+		s.Where(sql.NotNull(s.C(FieldDetectedAt)))
+	})
+}
+
 // ClosedAtEQ applies the EQ predicate on the "closed_at" field.
-func ClosedAtEQ(v time.Time) predicate.Alert {
+func ClosedAtEQ(v int64) predicate.Alert {
 	return predicate.Alert(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldClosedAt), v))
 	})
 }
 
 // ClosedAtNEQ applies the NEQ predicate on the "closed_at" field.
-func ClosedAtNEQ(v time.Time) predicate.Alert {
+func ClosedAtNEQ(v int64) predicate.Alert {
 	return predicate.Alert(func(s *sql.Selector) {
 		s.Where(sql.NEQ(s.C(FieldClosedAt), v))
 	})
 }
 
 // ClosedAtIn applies the In predicate on the "closed_at" field.
-func ClosedAtIn(vs ...time.Time) predicate.Alert {
+func ClosedAtIn(vs ...int64) predicate.Alert {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -742,7 +981,7 @@ func ClosedAtIn(vs ...time.Time) predicate.Alert {
 }
 
 // ClosedAtNotIn applies the NotIn predicate on the "closed_at" field.
-func ClosedAtNotIn(vs ...time.Time) predicate.Alert {
+func ClosedAtNotIn(vs ...int64) predicate.Alert {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -759,28 +998,28 @@ func ClosedAtNotIn(vs ...time.Time) predicate.Alert {
 }
 
 // ClosedAtGT applies the GT predicate on the "closed_at" field.
-func ClosedAtGT(v time.Time) predicate.Alert {
+func ClosedAtGT(v int64) predicate.Alert {
 	return predicate.Alert(func(s *sql.Selector) {
 		s.Where(sql.GT(s.C(FieldClosedAt), v))
 	})
 }
 
 // ClosedAtGTE applies the GTE predicate on the "closed_at" field.
-func ClosedAtGTE(v time.Time) predicate.Alert {
+func ClosedAtGTE(v int64) predicate.Alert {
 	return predicate.Alert(func(s *sql.Selector) {
 		s.Where(sql.GTE(s.C(FieldClosedAt), v))
 	})
 }
 
 // ClosedAtLT applies the LT predicate on the "closed_at" field.
-func ClosedAtLT(v time.Time) predicate.Alert {
+func ClosedAtLT(v int64) predicate.Alert {
 	return predicate.Alert(func(s *sql.Selector) {
 		s.Where(sql.LT(s.C(FieldClosedAt), v))
 	})
 }
 
 // ClosedAtLTE applies the LTE predicate on the "closed_at" field.
-func ClosedAtLTE(v time.Time) predicate.Alert {
+func ClosedAtLTE(v int64) predicate.Alert {
 	return predicate.Alert(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldClosedAt), v))
 	})
@@ -819,6 +1058,90 @@ func HasAttributesWith(preds ...predicate.Attribute) predicate.Alert {
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.To(AttributesInverseTable, FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, AttributesTable, AttributesColumn),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasReferences applies the HasEdge predicate on the "references" edge.
+func HasReferences() predicate.Alert {
+	return predicate.Alert(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(ReferencesTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ReferencesTable, ReferencesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasReferencesWith applies the HasEdge predicate on the "references" edge with a given conditions (other predicates).
+func HasReferencesWith(preds ...predicate.Reference) predicate.Alert {
+	return predicate.Alert(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(ReferencesInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ReferencesTable, ReferencesColumn),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasTaskLogs applies the HasEdge predicate on the "task_logs" edge.
+func HasTaskLogs() predicate.Alert {
+	return predicate.Alert(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(TaskLogsTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, TaskLogsTable, TaskLogsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasTaskLogsWith applies the HasEdge predicate on the "task_logs" edge with a given conditions (other predicates).
+func HasTaskLogsWith(preds ...predicate.TaskLog) predicate.Alert {
+	return predicate.Alert(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(TaskLogsInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, TaskLogsTable, TaskLogsColumn),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasActionLogs applies the HasEdge predicate on the "action_logs" edge.
+func HasActionLogs() predicate.Alert {
+	return predicate.Alert(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(ActionLogsTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ActionLogsTable, ActionLogsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasActionLogsWith applies the HasEdge predicate on the "action_logs" edge with a given conditions (other predicates).
+func HasActionLogsWith(preds ...predicate.ActionLog) predicate.Alert {
+	return predicate.Alert(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(ActionLogsInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ActionLogsTable, ActionLogsColumn),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {

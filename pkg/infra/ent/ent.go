@@ -8,9 +8,13 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/actionlog"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/alert"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/annotation"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/attribute"
-	"github.com/m-mizutani/alertchain/pkg/infra/ent/finding"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/execlog"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/reference"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/tasklog"
 )
 
 // ent aliases to avoid import conflicts in user's code.
@@ -31,9 +35,13 @@ type OrderFunc func(*sql.Selector)
 // columnChecker returns a function indicates if the column exists in the given column.
 func columnChecker(table string) func(string) error {
 	checks := map[string]func(string) bool{
-		alert.Table:     alert.ValidColumn,
-		attribute.Table: attribute.ValidColumn,
-		finding.Table:   finding.ValidColumn,
+		actionlog.Table:  actionlog.ValidColumn,
+		alert.Table:      alert.ValidColumn,
+		annotation.Table: annotation.ValidColumn,
+		attribute.Table:  attribute.ValidColumn,
+		execlog.Table:    execlog.ValidColumn,
+		reference.Table:  reference.ValidColumn,
+		tasklog.Table:    tasklog.ValidColumn,
 	}
 	check, ok := checks[table]
 	if !ok {

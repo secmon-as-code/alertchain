@@ -9,8 +9,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/alert"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/annotation"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/attribute"
-	"github.com/m-mizutani/alertchain/pkg/infra/ent/finding"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/predicate"
 	"github.com/m-mizutani/alertchain/types"
 )
@@ -52,19 +53,38 @@ func (au *AttributeUpdate) SetContext(s []string) *AttributeUpdate {
 	return au
 }
 
-// AddFindingIDs adds the "findings" edge to the Finding entity by IDs.
-func (au *AttributeUpdate) AddFindingIDs(ids ...int) *AttributeUpdate {
-	au.mutation.AddFindingIDs(ids...)
+// AddAnnotationIDs adds the "annotations" edge to the Annotation entity by IDs.
+func (au *AttributeUpdate) AddAnnotationIDs(ids ...int) *AttributeUpdate {
+	au.mutation.AddAnnotationIDs(ids...)
 	return au
 }
 
-// AddFindings adds the "findings" edges to the Finding entity.
-func (au *AttributeUpdate) AddFindings(f ...*Finding) *AttributeUpdate {
-	ids := make([]int, len(f))
-	for i := range f {
-		ids[i] = f[i].ID
+// AddAnnotations adds the "annotations" edges to the Annotation entity.
+func (au *AttributeUpdate) AddAnnotations(a ...*Annotation) *AttributeUpdate {
+	ids := make([]int, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
 	}
-	return au.AddFindingIDs(ids...)
+	return au.AddAnnotationIDs(ids...)
+}
+
+// SetAlertID sets the "alert" edge to the Alert entity by ID.
+func (au *AttributeUpdate) SetAlertID(id types.AlertID) *AttributeUpdate {
+	au.mutation.SetAlertID(id)
+	return au
+}
+
+// SetNillableAlertID sets the "alert" edge to the Alert entity by ID if the given value is not nil.
+func (au *AttributeUpdate) SetNillableAlertID(id *types.AlertID) *AttributeUpdate {
+	if id != nil {
+		au = au.SetAlertID(*id)
+	}
+	return au
+}
+
+// SetAlert sets the "alert" edge to the Alert entity.
+func (au *AttributeUpdate) SetAlert(a *Alert) *AttributeUpdate {
+	return au.SetAlertID(a.ID)
 }
 
 // Mutation returns the AttributeMutation object of the builder.
@@ -72,25 +92,31 @@ func (au *AttributeUpdate) Mutation() *AttributeMutation {
 	return au.mutation
 }
 
-// ClearFindings clears all "findings" edges to the Finding entity.
-func (au *AttributeUpdate) ClearFindings() *AttributeUpdate {
-	au.mutation.ClearFindings()
+// ClearAnnotations clears all "annotations" edges to the Annotation entity.
+func (au *AttributeUpdate) ClearAnnotations() *AttributeUpdate {
+	au.mutation.ClearAnnotations()
 	return au
 }
 
-// RemoveFindingIDs removes the "findings" edge to Finding entities by IDs.
-func (au *AttributeUpdate) RemoveFindingIDs(ids ...int) *AttributeUpdate {
-	au.mutation.RemoveFindingIDs(ids...)
+// RemoveAnnotationIDs removes the "annotations" edge to Annotation entities by IDs.
+func (au *AttributeUpdate) RemoveAnnotationIDs(ids ...int) *AttributeUpdate {
+	au.mutation.RemoveAnnotationIDs(ids...)
 	return au
 }
 
-// RemoveFindings removes "findings" edges to Finding entities.
-func (au *AttributeUpdate) RemoveFindings(f ...*Finding) *AttributeUpdate {
-	ids := make([]int, len(f))
-	for i := range f {
-		ids[i] = f[i].ID
+// RemoveAnnotations removes "annotations" edges to Annotation entities.
+func (au *AttributeUpdate) RemoveAnnotations(a ...*Annotation) *AttributeUpdate {
+	ids := make([]int, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
 	}
-	return au.RemoveFindingIDs(ids...)
+	return au.RemoveAnnotationIDs(ids...)
+}
+
+// ClearAlert clears the "alert" edge to the Alert entity.
+func (au *AttributeUpdate) ClearAlert() *AttributeUpdate {
+	au.mutation.ClearAlert()
+	return au
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -193,33 +219,33 @@ func (au *AttributeUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: attribute.FieldContext,
 		})
 	}
-	if au.mutation.FindingsCleared() {
+	if au.mutation.AnnotationsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   attribute.FindingsTable,
-			Columns: []string{attribute.FindingsColumn},
+			Table:   attribute.AnnotationsTable,
+			Columns: []string{attribute.AnnotationsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: finding.FieldID,
+					Column: annotation.FieldID,
 				},
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := au.mutation.RemovedFindingsIDs(); len(nodes) > 0 && !au.mutation.FindingsCleared() {
+	if nodes := au.mutation.RemovedAnnotationsIDs(); len(nodes) > 0 && !au.mutation.AnnotationsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   attribute.FindingsTable,
-			Columns: []string{attribute.FindingsColumn},
+			Table:   attribute.AnnotationsTable,
+			Columns: []string{attribute.AnnotationsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: finding.FieldID,
+					Column: annotation.FieldID,
 				},
 			},
 		}
@@ -228,17 +254,52 @@ func (au *AttributeUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := au.mutation.FindingsIDs(); len(nodes) > 0 {
+	if nodes := au.mutation.AnnotationsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   attribute.FindingsTable,
-			Columns: []string{attribute.FindingsColumn},
+			Table:   attribute.AnnotationsTable,
+			Columns: []string{attribute.AnnotationsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: finding.FieldID,
+					Column: annotation.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if au.mutation.AlertCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   attribute.AlertTable,
+			Columns: []string{attribute.AlertColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeString,
+					Column: alert.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := au.mutation.AlertIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   attribute.AlertTable,
+			Columns: []string{attribute.AlertColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeString,
+					Column: alert.FieldID,
 				},
 			},
 		}
@@ -290,19 +351,38 @@ func (auo *AttributeUpdateOne) SetContext(s []string) *AttributeUpdateOne {
 	return auo
 }
 
-// AddFindingIDs adds the "findings" edge to the Finding entity by IDs.
-func (auo *AttributeUpdateOne) AddFindingIDs(ids ...int) *AttributeUpdateOne {
-	auo.mutation.AddFindingIDs(ids...)
+// AddAnnotationIDs adds the "annotations" edge to the Annotation entity by IDs.
+func (auo *AttributeUpdateOne) AddAnnotationIDs(ids ...int) *AttributeUpdateOne {
+	auo.mutation.AddAnnotationIDs(ids...)
 	return auo
 }
 
-// AddFindings adds the "findings" edges to the Finding entity.
-func (auo *AttributeUpdateOne) AddFindings(f ...*Finding) *AttributeUpdateOne {
-	ids := make([]int, len(f))
-	for i := range f {
-		ids[i] = f[i].ID
+// AddAnnotations adds the "annotations" edges to the Annotation entity.
+func (auo *AttributeUpdateOne) AddAnnotations(a ...*Annotation) *AttributeUpdateOne {
+	ids := make([]int, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
 	}
-	return auo.AddFindingIDs(ids...)
+	return auo.AddAnnotationIDs(ids...)
+}
+
+// SetAlertID sets the "alert" edge to the Alert entity by ID.
+func (auo *AttributeUpdateOne) SetAlertID(id types.AlertID) *AttributeUpdateOne {
+	auo.mutation.SetAlertID(id)
+	return auo
+}
+
+// SetNillableAlertID sets the "alert" edge to the Alert entity by ID if the given value is not nil.
+func (auo *AttributeUpdateOne) SetNillableAlertID(id *types.AlertID) *AttributeUpdateOne {
+	if id != nil {
+		auo = auo.SetAlertID(*id)
+	}
+	return auo
+}
+
+// SetAlert sets the "alert" edge to the Alert entity.
+func (auo *AttributeUpdateOne) SetAlert(a *Alert) *AttributeUpdateOne {
+	return auo.SetAlertID(a.ID)
 }
 
 // Mutation returns the AttributeMutation object of the builder.
@@ -310,25 +390,31 @@ func (auo *AttributeUpdateOne) Mutation() *AttributeMutation {
 	return auo.mutation
 }
 
-// ClearFindings clears all "findings" edges to the Finding entity.
-func (auo *AttributeUpdateOne) ClearFindings() *AttributeUpdateOne {
-	auo.mutation.ClearFindings()
+// ClearAnnotations clears all "annotations" edges to the Annotation entity.
+func (auo *AttributeUpdateOne) ClearAnnotations() *AttributeUpdateOne {
+	auo.mutation.ClearAnnotations()
 	return auo
 }
 
-// RemoveFindingIDs removes the "findings" edge to Finding entities by IDs.
-func (auo *AttributeUpdateOne) RemoveFindingIDs(ids ...int) *AttributeUpdateOne {
-	auo.mutation.RemoveFindingIDs(ids...)
+// RemoveAnnotationIDs removes the "annotations" edge to Annotation entities by IDs.
+func (auo *AttributeUpdateOne) RemoveAnnotationIDs(ids ...int) *AttributeUpdateOne {
+	auo.mutation.RemoveAnnotationIDs(ids...)
 	return auo
 }
 
-// RemoveFindings removes "findings" edges to Finding entities.
-func (auo *AttributeUpdateOne) RemoveFindings(f ...*Finding) *AttributeUpdateOne {
-	ids := make([]int, len(f))
-	for i := range f {
-		ids[i] = f[i].ID
+// RemoveAnnotations removes "annotations" edges to Annotation entities.
+func (auo *AttributeUpdateOne) RemoveAnnotations(a ...*Annotation) *AttributeUpdateOne {
+	ids := make([]int, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
 	}
-	return auo.RemoveFindingIDs(ids...)
+	return auo.RemoveAnnotationIDs(ids...)
+}
+
+// ClearAlert clears the "alert" edge to the Alert entity.
+func (auo *AttributeUpdateOne) ClearAlert() *AttributeUpdateOne {
+	auo.mutation.ClearAlert()
+	return auo
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
@@ -455,33 +541,33 @@ func (auo *AttributeUpdateOne) sqlSave(ctx context.Context) (_node *Attribute, e
 			Column: attribute.FieldContext,
 		})
 	}
-	if auo.mutation.FindingsCleared() {
+	if auo.mutation.AnnotationsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   attribute.FindingsTable,
-			Columns: []string{attribute.FindingsColumn},
+			Table:   attribute.AnnotationsTable,
+			Columns: []string{attribute.AnnotationsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: finding.FieldID,
+					Column: annotation.FieldID,
 				},
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := auo.mutation.RemovedFindingsIDs(); len(nodes) > 0 && !auo.mutation.FindingsCleared() {
+	if nodes := auo.mutation.RemovedAnnotationsIDs(); len(nodes) > 0 && !auo.mutation.AnnotationsCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   attribute.FindingsTable,
-			Columns: []string{attribute.FindingsColumn},
+			Table:   attribute.AnnotationsTable,
+			Columns: []string{attribute.AnnotationsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: finding.FieldID,
+					Column: annotation.FieldID,
 				},
 			},
 		}
@@ -490,17 +576,52 @@ func (auo *AttributeUpdateOne) sqlSave(ctx context.Context) (_node *Attribute, e
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := auo.mutation.FindingsIDs(); len(nodes) > 0 {
+	if nodes := auo.mutation.AnnotationsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   attribute.FindingsTable,
-			Columns: []string{attribute.FindingsColumn},
+			Table:   attribute.AnnotationsTable,
+			Columns: []string{attribute.AnnotationsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: finding.FieldID,
+					Column: annotation.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if auo.mutation.AlertCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   attribute.AlertTable,
+			Columns: []string{attribute.AlertColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeString,
+					Column: alert.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := auo.mutation.AlertIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   attribute.AlertTable,
+			Columns: []string{attribute.AlertColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeString,
+					Column: alert.FieldID,
 				},
 			},
 		}

@@ -36,5 +36,8 @@ module.exports = {
     },
     contentBase: "dist",
     hot: true,
+    historyApiFallback: {
+      rewrites: [{ from: /^\/*/, to: "/index.html" }],
+    },
   },
 };

@@ -1,2 +1,4 @@
 node_modules
 assets/dist/bundle.js
+*.so
+.env

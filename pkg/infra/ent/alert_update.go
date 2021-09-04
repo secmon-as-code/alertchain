@@ -5,14 +5,16 @@ package ent
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/actionlog"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/alert"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/attribute"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/predicate"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/reference"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/tasklog"
 	"github.com/m-mizutani/alertchain/types"
 )
 
@@ -103,17 +105,71 @@ func (au *AlertUpdate) SetNillableStatus(ts *types.AlertStatus) *AlertUpdate {
 	return au
 }
 
+// SetSeverity sets the "severity" field.
+func (au *AlertUpdate) SetSeverity(t types.Severity) *AlertUpdate {
+	au.mutation.SetSeverity(t)
+	return au
+}
+
+// SetNillableSeverity sets the "severity" field if the given value is not nil.
+func (au *AlertUpdate) SetNillableSeverity(t *types.Severity) *AlertUpdate {
+	if t != nil {
+		au.SetSeverity(*t)
+	}
+	return au
+}
+
+// ClearSeverity clears the value of the "severity" field.
+func (au *AlertUpdate) ClearSeverity() *AlertUpdate {
+	au.mutation.ClearSeverity()
+	return au
+}
+
+// SetDetectedAt sets the "detected_at" field.
+func (au *AlertUpdate) SetDetectedAt(i int64) *AlertUpdate {
+	au.mutation.ResetDetectedAt()
+	au.mutation.SetDetectedAt(i)
+	return au
+}
+
+// SetNillableDetectedAt sets the "detected_at" field if the given value is not nil.
+func (au *AlertUpdate) SetNillableDetectedAt(i *int64) *AlertUpdate {
+	if i != nil {
+		au.SetDetectedAt(*i)
+	}
+	return au
+}
+
+// AddDetectedAt adds i to the "detected_at" field.
+func (au *AlertUpdate) AddDetectedAt(i int64) *AlertUpdate {
+	au.mutation.AddDetectedAt(i)
+	return au
+}
+
+// ClearDetectedAt clears the value of the "detected_at" field.
+func (au *AlertUpdate) ClearDetectedAt() *AlertUpdate {
+	au.mutation.ClearDetectedAt()
+	return au
+}
+
 // SetClosedAt sets the "closed_at" field.
-func (au *AlertUpdate) SetClosedAt(t time.Time) *AlertUpdate {
-	au.mutation.SetClosedAt(t)
+func (au *AlertUpdate) SetClosedAt(i int64) *AlertUpdate {
+	au.mutation.ResetClosedAt()
+	au.mutation.SetClosedAt(i)
 	return au
 }
 
 // SetNillableClosedAt sets the "closed_at" field if the given value is not nil.
-func (au *AlertUpdate) SetNillableClosedAt(t *time.Time) *AlertUpdate {
-	if t != nil {
-		au.SetClosedAt(*t)
+func (au *AlertUpdate) SetNillableClosedAt(i *int64) *AlertUpdate {
+	if i != nil {
+		au.SetClosedAt(*i)
 	}
+	return au
+}
+
+// AddClosedAt adds i to the "closed_at" field.
+func (au *AlertUpdate) AddClosedAt(i int64) *AlertUpdate {
+	au.mutation.AddClosedAt(i)
 	return au
 }
 
@@ -136,6 +192,51 @@ func (au *AlertUpdate) AddAttributes(a ...*Attribute) *AlertUpdate {
 		ids[i] = a[i].ID
 	}
 	return au.AddAttributeIDs(ids...)
+}
+
+// AddReferenceIDs adds the "references" edge to the Reference entity by IDs.
+func (au *AlertUpdate) AddReferenceIDs(ids ...int) *AlertUpdate {
+	au.mutation.AddReferenceIDs(ids...)
+	return au
+}
+
+// AddReferences adds the "references" edges to the Reference entity.
+func (au *AlertUpdate) AddReferences(r ...*Reference) *AlertUpdate {
+	ids := make([]int, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return au.AddReferenceIDs(ids...)
+}
+
+// AddTaskLogIDs adds the "task_logs" edge to the TaskLog entity by IDs.
+func (au *AlertUpdate) AddTaskLogIDs(ids ...int) *AlertUpdate {
+	au.mutation.AddTaskLogIDs(ids...)
+	return au
+}
+
+// AddTaskLogs adds the "task_logs" edges to the TaskLog entity.
+func (au *AlertUpdate) AddTaskLogs(t ...*TaskLog) *AlertUpdate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return au.AddTaskLogIDs(ids...)
+}
+
+// AddActionLogIDs adds the "action_logs" edge to the ActionLog entity by IDs.
+func (au *AlertUpdate) AddActionLogIDs(ids ...int) *AlertUpdate {
+	au.mutation.AddActionLogIDs(ids...)
+	return au
+}
+
+// AddActionLogs adds the "action_logs" edges to the ActionLog entity.
+func (au *AlertUpdate) AddActionLogs(a ...*ActionLog) *AlertUpdate {
+	ids := make([]int, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return au.AddActionLogIDs(ids...)
 }
 
 // Mutation returns the AlertMutation object of the builder.
@@ -162,6 +263,69 @@ func (au *AlertUpdate) RemoveAttributes(a ...*Attribute) *AlertUpdate {
 		ids[i] = a[i].ID
 	}
 	return au.RemoveAttributeIDs(ids...)
+}
+
+// ClearReferences clears all "references" edges to the Reference entity.
+func (au *AlertUpdate) ClearReferences() *AlertUpdate {
+	au.mutation.ClearReferences()
+	return au
+}
+
+// RemoveReferenceIDs removes the "references" edge to Reference entities by IDs.
+func (au *AlertUpdate) RemoveReferenceIDs(ids ...int) *AlertUpdate {
+	au.mutation.RemoveReferenceIDs(ids...)
+	return au
+}
+
+// RemoveReferences removes "references" edges to Reference entities.
+func (au *AlertUpdate) RemoveReferences(r ...*Reference) *AlertUpdate {
+	ids := make([]int, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return au.RemoveReferenceIDs(ids...)
+}
+
+// ClearTaskLogs clears all "task_logs" edges to the TaskLog entity.
+func (au *AlertUpdate) ClearTaskLogs() *AlertUpdate {
+	au.mutation.ClearTaskLogs()
+	return au
+}
+
+// RemoveTaskLogIDs removes the "task_logs" edge to TaskLog entities by IDs.
+func (au *AlertUpdate) RemoveTaskLogIDs(ids ...int) *AlertUpdate {
+	au.mutation.RemoveTaskLogIDs(ids...)
+	return au
+}
+
+// RemoveTaskLogs removes "task_logs" edges to TaskLog entities.
+func (au *AlertUpdate) RemoveTaskLogs(t ...*TaskLog) *AlertUpdate {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return au.RemoveTaskLogIDs(ids...)
+}
+
+// ClearActionLogs clears all "action_logs" edges to the ActionLog entity.
+func (au *AlertUpdate) ClearActionLogs() *AlertUpdate {
+	au.mutation.ClearActionLogs()
+	return au
+}
+
+// RemoveActionLogIDs removes the "action_logs" edge to ActionLog entities by IDs.
+func (au *AlertUpdate) RemoveActionLogIDs(ids ...int) *AlertUpdate {
+	au.mutation.RemoveActionLogIDs(ids...)
+	return au
+}
+
+// RemoveActionLogs removes "action_logs" edges to ActionLog entities.
+func (au *AlertUpdate) RemoveActionLogs(a ...*ActionLog) *AlertUpdate {
+	ids := make([]int, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return au.RemoveActionLogIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -282,16 +446,56 @@ func (au *AlertUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: alert.FieldStatus,
 		})
 	}
+	if value, ok := au.mutation.Severity(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: alert.FieldSeverity,
+		})
+	}
+	if au.mutation.SeverityCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Column: alert.FieldSeverity,
+		})
+	}
+	if value, ok := au.mutation.DetectedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt64,
+			Value:  value,
+			Column: alert.FieldDetectedAt,
+		})
+	}
+	if value, ok := au.mutation.AddedDetectedAt(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt64,
+			Value:  value,
+			Column: alert.FieldDetectedAt,
+		})
+	}
+	if au.mutation.DetectedAtCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt64,
+			Column: alert.FieldDetectedAt,
+		})
+	}
 	if value, ok := au.mutation.ClosedAt(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
+			Type:   field.TypeInt64,
+			Value:  value,
+			Column: alert.FieldClosedAt,
+		})
+	}
+	if value, ok := au.mutation.AddedClosedAt(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt64,
 			Value:  value,
 			Column: alert.FieldClosedAt,
 		})
 	}
 	if au.mutation.ClosedAtCleared() {
 		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
+			Type:   field.TypeInt64,
 			Column: alert.FieldClosedAt,
 		})
 	}
@@ -341,6 +545,168 @@ func (au *AlertUpdate) sqlSave(ctx context.Context) (n int, err error) {
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: attribute.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if au.mutation.ReferencesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   alert.ReferencesTable,
+			Columns: []string{alert.ReferencesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: reference.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := au.mutation.RemovedReferencesIDs(); len(nodes) > 0 && !au.mutation.ReferencesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   alert.ReferencesTable,
+			Columns: []string{alert.ReferencesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: reference.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := au.mutation.ReferencesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   alert.ReferencesTable,
+			Columns: []string{alert.ReferencesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: reference.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if au.mutation.TaskLogsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   alert.TaskLogsTable,
+			Columns: []string{alert.TaskLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tasklog.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := au.mutation.RemovedTaskLogsIDs(); len(nodes) > 0 && !au.mutation.TaskLogsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   alert.TaskLogsTable,
+			Columns: []string{alert.TaskLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tasklog.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := au.mutation.TaskLogsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   alert.TaskLogsTable,
+			Columns: []string{alert.TaskLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tasklog.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if au.mutation.ActionLogsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   alert.ActionLogsTable,
+			Columns: []string{alert.ActionLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: actionlog.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := au.mutation.RemovedActionLogsIDs(); len(nodes) > 0 && !au.mutation.ActionLogsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   alert.ActionLogsTable,
+			Columns: []string{alert.ActionLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: actionlog.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := au.mutation.ActionLogsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   alert.ActionLogsTable,
+			Columns: []string{alert.ActionLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: actionlog.FieldID,
 				},
 			},
 		}
@@ -442,17 +808,71 @@ func (auo *AlertUpdateOne) SetNillableStatus(ts *types.AlertStatus) *AlertUpdate
 	return auo
 }
 
+// SetSeverity sets the "severity" field.
+func (auo *AlertUpdateOne) SetSeverity(t types.Severity) *AlertUpdateOne {
+	auo.mutation.SetSeverity(t)
+	return auo
+}
+
+// SetNillableSeverity sets the "severity" field if the given value is not nil.
+func (auo *AlertUpdateOne) SetNillableSeverity(t *types.Severity) *AlertUpdateOne {
+	if t != nil {
+		auo.SetSeverity(*t)
+	}
+	return auo
+}
+
+// ClearSeverity clears the value of the "severity" field.
+func (auo *AlertUpdateOne) ClearSeverity() *AlertUpdateOne {
+	auo.mutation.ClearSeverity()
+	return auo
+}
+
+// SetDetectedAt sets the "detected_at" field.
+func (auo *AlertUpdateOne) SetDetectedAt(i int64) *AlertUpdateOne {
+	auo.mutation.ResetDetectedAt()
+	auo.mutation.SetDetectedAt(i)
+	return auo
+}
+
+// SetNillableDetectedAt sets the "detected_at" field if the given value is not nil.
+func (auo *AlertUpdateOne) SetNillableDetectedAt(i *int64) *AlertUpdateOne {
+	if i != nil {
+		auo.SetDetectedAt(*i)
+	}
+	return auo
+}
+
+// AddDetectedAt adds i to the "detected_at" field.
+func (auo *AlertUpdateOne) AddDetectedAt(i int64) *AlertUpdateOne {
+	auo.mutation.AddDetectedAt(i)
+	return auo
+}
+
+// ClearDetectedAt clears the value of the "detected_at" field.
+func (auo *AlertUpdateOne) ClearDetectedAt() *AlertUpdateOne {
+	auo.mutation.ClearDetectedAt()
+	return auo
+}
+
 // SetClosedAt sets the "closed_at" field.
-func (auo *AlertUpdateOne) SetClosedAt(t time.Time) *AlertUpdateOne {
-	auo.mutation.SetClosedAt(t)
+func (auo *AlertUpdateOne) SetClosedAt(i int64) *AlertUpdateOne {
+	auo.mutation.ResetClosedAt()
+	auo.mutation.SetClosedAt(i)
 	return auo
 }
 
 // SetNillableClosedAt sets the "closed_at" field if the given value is not nil.
-func (auo *AlertUpdateOne) SetNillableClosedAt(t *time.Time) *AlertUpdateOne {
-	if t != nil {
-		auo.SetClosedAt(*t)
+func (auo *AlertUpdateOne) SetNillableClosedAt(i *int64) *AlertUpdateOne {
+	if i != nil {
+		auo.SetClosedAt(*i)
 	}
+	return auo
+}
+
+// AddClosedAt adds i to the "closed_at" field.
+func (auo *AlertUpdateOne) AddClosedAt(i int64) *AlertUpdateOne {
+	auo.mutation.AddClosedAt(i)
 	return auo
 }
 
@@ -475,6 +895,51 @@ func (auo *AlertUpdateOne) AddAttributes(a ...*Attribute) *AlertUpdateOne {
 		ids[i] = a[i].ID
 	}
 	return auo.AddAttributeIDs(ids...)
+}
+
+// AddReferenceIDs adds the "references" edge to the Reference entity by IDs.
+func (auo *AlertUpdateOne) AddReferenceIDs(ids ...int) *AlertUpdateOne {
+	auo.mutation.AddReferenceIDs(ids...)
+	return auo
+}
+
+// AddReferences adds the "references" edges to the Reference entity.
+func (auo *AlertUpdateOne) AddReferences(r ...*Reference) *AlertUpdateOne {
+	ids := make([]int, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return auo.AddReferenceIDs(ids...)
+}
+
+// AddTaskLogIDs adds the "task_logs" edge to the TaskLog entity by IDs.
+func (auo *AlertUpdateOne) AddTaskLogIDs(ids ...int) *AlertUpdateOne {
+	auo.mutation.AddTaskLogIDs(ids...)
+	return auo
+}
+
+// AddTaskLogs adds the "task_logs" edges to the TaskLog entity.
+func (auo *AlertUpdateOne) AddTaskLogs(t ...*TaskLog) *AlertUpdateOne {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return auo.AddTaskLogIDs(ids...)
+}
+
+// AddActionLogIDs adds the "action_logs" edge to the ActionLog entity by IDs.
+func (auo *AlertUpdateOne) AddActionLogIDs(ids ...int) *AlertUpdateOne {
+	auo.mutation.AddActionLogIDs(ids...)
+	return auo
+}
+
+// AddActionLogs adds the "action_logs" edges to the ActionLog entity.
+func (auo *AlertUpdateOne) AddActionLogs(a ...*ActionLog) *AlertUpdateOne {
+	ids := make([]int, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return auo.AddActionLogIDs(ids...)
 }
 
 // Mutation returns the AlertMutation object of the builder.
@@ -501,6 +966,69 @@ func (auo *AlertUpdateOne) RemoveAttributes(a ...*Attribute) *AlertUpdateOne {
 		ids[i] = a[i].ID
 	}
 	return auo.RemoveAttributeIDs(ids...)
+}
+
+// ClearReferences clears all "references" edges to the Reference entity.
+func (auo *AlertUpdateOne) ClearReferences() *AlertUpdateOne {
+	auo.mutation.ClearReferences()
+	return auo
+}
+
+// RemoveReferenceIDs removes the "references" edge to Reference entities by IDs.
+func (auo *AlertUpdateOne) RemoveReferenceIDs(ids ...int) *AlertUpdateOne {
+	auo.mutation.RemoveReferenceIDs(ids...)
+	return auo
+}
+
+// RemoveReferences removes "references" edges to Reference entities.
+func (auo *AlertUpdateOne) RemoveReferences(r ...*Reference) *AlertUpdateOne {
+	ids := make([]int, len(r))
+	for i := range r {
+		ids[i] = r[i].ID
+	}
+	return auo.RemoveReferenceIDs(ids...)
+}
+
+// ClearTaskLogs clears all "task_logs" edges to the TaskLog entity.
+func (auo *AlertUpdateOne) ClearTaskLogs() *AlertUpdateOne {
+	auo.mutation.ClearTaskLogs()
+	return auo
+}
+
+// RemoveTaskLogIDs removes the "task_logs" edge to TaskLog entities by IDs.
+func (auo *AlertUpdateOne) RemoveTaskLogIDs(ids ...int) *AlertUpdateOne {
+	auo.mutation.RemoveTaskLogIDs(ids...)
+	return auo
+}
+
+// RemoveTaskLogs removes "task_logs" edges to TaskLog entities.
+func (auo *AlertUpdateOne) RemoveTaskLogs(t ...*TaskLog) *AlertUpdateOne {
+	ids := make([]int, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return auo.RemoveTaskLogIDs(ids...)
+}
+
+// ClearActionLogs clears all "action_logs" edges to the ActionLog entity.
+func (auo *AlertUpdateOne) ClearActionLogs() *AlertUpdateOne {
+	auo.mutation.ClearActionLogs()
+	return auo
+}
+
+// RemoveActionLogIDs removes the "action_logs" edge to ActionLog entities by IDs.
+func (auo *AlertUpdateOne) RemoveActionLogIDs(ids ...int) *AlertUpdateOne {
+	auo.mutation.RemoveActionLogIDs(ids...)
+	return auo
+}
+
+// RemoveActionLogs removes "action_logs" edges to ActionLog entities.
+func (auo *AlertUpdateOne) RemoveActionLogs(a ...*ActionLog) *AlertUpdateOne {
+	ids := make([]int, len(a))
+	for i := range a {
+		ids[i] = a[i].ID
+	}
+	return auo.RemoveActionLogIDs(ids...)
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
@@ -645,16 +1173,56 @@ func (auo *AlertUpdateOne) sqlSave(ctx context.Context) (_node *Alert, err error
 			Column: alert.FieldStatus,
 		})
 	}
+	if value, ok := auo.mutation.Severity(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: alert.FieldSeverity,
+		})
+	}
+	if auo.mutation.SeverityCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Column: alert.FieldSeverity,
+		})
+	}
+	if value, ok := auo.mutation.DetectedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt64,
+			Value:  value,
+			Column: alert.FieldDetectedAt,
+		})
+	}
+	if value, ok := auo.mutation.AddedDetectedAt(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt64,
+			Value:  value,
+			Column: alert.FieldDetectedAt,
+		})
+	}
+	if auo.mutation.DetectedAtCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt64,
+			Column: alert.FieldDetectedAt,
+		})
+	}
 	if value, ok := auo.mutation.ClosedAt(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
+			Type:   field.TypeInt64,
+			Value:  value,
+			Column: alert.FieldClosedAt,
+		})
+	}
+	if value, ok := auo.mutation.AddedClosedAt(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt64,
 			Value:  value,
 			Column: alert.FieldClosedAt,
 		})
 	}
 	if auo.mutation.ClosedAtCleared() {
 		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
-			Type:   field.TypeTime,
+			Type:   field.TypeInt64,
 			Column: alert.FieldClosedAt,
 		})
 	}
@@ -704,6 +1272,168 @@ func (auo *AlertUpdateOne) sqlSave(ctx context.Context) (_node *Alert, err error
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
 					Column: attribute.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if auo.mutation.ReferencesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   alert.ReferencesTable,
+			Columns: []string{alert.ReferencesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: reference.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := auo.mutation.RemovedReferencesIDs(); len(nodes) > 0 && !auo.mutation.ReferencesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   alert.ReferencesTable,
+			Columns: []string{alert.ReferencesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: reference.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := auo.mutation.ReferencesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   alert.ReferencesTable,
+			Columns: []string{alert.ReferencesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: reference.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if auo.mutation.TaskLogsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   alert.TaskLogsTable,
+			Columns: []string{alert.TaskLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tasklog.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := auo.mutation.RemovedTaskLogsIDs(); len(nodes) > 0 && !auo.mutation.TaskLogsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   alert.TaskLogsTable,
+			Columns: []string{alert.TaskLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tasklog.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := auo.mutation.TaskLogsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   alert.TaskLogsTable,
+			Columns: []string{alert.TaskLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: tasklog.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if auo.mutation.ActionLogsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   alert.ActionLogsTable,
+			Columns: []string{alert.ActionLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: actionlog.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := auo.mutation.RemovedActionLogsIDs(); len(nodes) > 0 && !auo.mutation.ActionLogsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   alert.ActionLogsTable,
+			Columns: []string{alert.ActionLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: actionlog.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := auo.mutation.ActionLogsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   alert.ActionLogsTable,
+			Columns: []string{alert.ActionLogsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: actionlog.FieldID,
 				},
 			},
 		}

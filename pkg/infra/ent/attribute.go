@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"entgo.io/ent/dialect/sql"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/alert"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/attribute"
 	"github.com/m-mizutani/alertchain/types"
 )
@@ -27,26 +28,44 @@ type Attribute struct {
 	Context []string `json:"context,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the AttributeQuery when eager-loading is set.
-	Edges            AttributeEdges `json:"edges"`
-	alert_attributes *types.AlertID
+	Edges               AttributeEdges `json:"edges"`
+	action_log_argument *int
+	alert_attributes    *types.AlertID
+	attribute_alert     *types.AlertID
 }
 
 // AttributeEdges holds the relations/edges for other nodes in the graph.
 type AttributeEdges struct {
-	// Findings holds the value of the findings edge.
-	Findings []*Finding `json:"findings,omitempty"`
+	// Annotations holds the value of the annotations edge.
+	Annotations []*Annotation `json:"annotations,omitempty"`
+	// Alert holds the value of the alert edge.
+	Alert *Alert `json:"alert,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
-// FindingsOrErr returns the Findings value or an error if the edge
+// AnnotationsOrErr returns the Annotations value or an error if the edge
 // was not loaded in eager-loading.
-func (e AttributeEdges) FindingsOrErr() ([]*Finding, error) {
+func (e AttributeEdges) AnnotationsOrErr() ([]*Annotation, error) {
 	if e.loadedTypes[0] {
-		return e.Findings, nil
+		return e.Annotations, nil
 	}
-	return nil, &NotLoadedError{edge: "findings"}
+	return nil, &NotLoadedError{edge: "annotations"}
+}
+
+// AlertOrErr returns the Alert value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e AttributeEdges) AlertOrErr() (*Alert, error) {
+	if e.loadedTypes[1] {
+		if e.Alert == nil {
+			// The edge alert was loaded in eager-loading,
+			// but was not found.
+			return nil, &NotFoundError{label: alert.Label}
+		}
+		return e.Alert, nil
+	}
+	return nil, &NotLoadedError{edge: "alert"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -60,7 +79,11 @@ func (*Attribute) scanValues(columns []string) ([]interface{}, error) {
 			values[i] = new(sql.NullInt64)
 		case attribute.FieldKey, attribute.FieldValue, attribute.FieldType:
 			values[i] = new(sql.NullString)
-		case attribute.ForeignKeys[0]: // alert_attributes
+		case attribute.ForeignKeys[0]: // action_log_argument
+			values[i] = new(sql.NullInt64)
+		case attribute.ForeignKeys[1]: // alert_attributes
+			values[i] = new(sql.NullString)
+		case attribute.ForeignKeys[2]: // attribute_alert
 			values[i] = new(sql.NullString)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Attribute", columns[i])
@@ -110,20 +133,39 @@ func (a *Attribute) assignValues(columns []string, values []interface{}) error {
 				}
 			}
 		case attribute.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for edge-field action_log_argument", value)
+			} else if value.Valid {
+				a.action_log_argument = new(int)
+				*a.action_log_argument = int(value.Int64)
+			}
+		case attribute.ForeignKeys[1]:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field alert_attributes", values[i])
 			} else if value.Valid {
 				a.alert_attributes = new(types.AlertID)
 				*a.alert_attributes = types.AlertID(value.String)
 			}
+		case attribute.ForeignKeys[2]:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field attribute_alert", values[i])
+			} else if value.Valid {
+				a.attribute_alert = new(types.AlertID)
+				*a.attribute_alert = types.AlertID(value.String)
+			}
 		}
 	}
 	return nil
 }
 
-// QueryFindings queries the "findings" edge of the Attribute entity.
-func (a *Attribute) QueryFindings() *FindingQuery {
-	return (&AttributeClient{config: a.config}).QueryFindings(a)
+// QueryAnnotations queries the "annotations" edge of the Attribute entity.
+func (a *Attribute) QueryAnnotations() *AnnotationQuery {
+	return (&AttributeClient{config: a.config}).QueryAnnotations(a)
+}
+
+// QueryAlert queries the "alert" edge of the Attribute entity.
+func (a *Attribute) QueryAlert() *AlertQuery {
+	return (&AttributeClient{config: a.config}).QueryAlert(a)
 }
 
 // Update returns a builder for updating this Attribute.

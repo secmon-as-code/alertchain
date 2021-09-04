@@ -12,12 +12,20 @@ import (
 // Tx is a transactional client that is created by calling Client.Tx().
 type Tx struct {
 	config
+	// ActionLog is the client for interacting with the ActionLog builders.
+	ActionLog *ActionLogClient
 	// Alert is the client for interacting with the Alert builders.
 	Alert *AlertClient
+	// Annotation is the client for interacting with the Annotation builders.
+	Annotation *AnnotationClient
 	// Attribute is the client for interacting with the Attribute builders.
 	Attribute *AttributeClient
-	// Finding is the client for interacting with the Finding builders.
-	Finding *FindingClient
+	// ExecLog is the client for interacting with the ExecLog builders.
+	ExecLog *ExecLogClient
+	// Reference is the client for interacting with the Reference builders.
+	Reference *ReferenceClient
+	// TaskLog is the client for interacting with the TaskLog builders.
+	TaskLog *TaskLogClient
 
 	// lazily loaded.
 	client     *Client
@@ -153,9 +161,13 @@ func (tx *Tx) Client() *Client {
 }
 
 func (tx *Tx) init() {
+	tx.ActionLog = NewActionLogClient(tx.config)
 	tx.Alert = NewAlertClient(tx.config)
+	tx.Annotation = NewAnnotationClient(tx.config)
 	tx.Attribute = NewAttributeClient(tx.config)
-	tx.Finding = NewFindingClient(tx.config)
+	tx.ExecLog = NewExecLogClient(tx.config)
+	tx.Reference = NewReferenceClient(tx.config)
+	tx.TaskLog = NewTaskLogClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.
@@ -165,7 +177,7 @@ func (tx *Tx) init() {
 // of them in order to commit or rollback the transaction.
 //
 // If a closed transaction is embedded in one of the generated entities, and the entity
-// applies a query, for example: Alert.QueryXXX(), the query will be executed
+// applies a query, for example: ActionLog.QueryXXX(), the query will be executed
 // through the driver which created this transaction.
 //
 // Note that txDriver is not goroutine safe.

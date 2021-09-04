@@ -5,7 +5,6 @@ package ent
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/alert"
@@ -25,10 +24,14 @@ type Alert struct {
 	Detector string `json:"detector,omitempty"`
 	// Status holds the value of the "status" field.
 	Status types.AlertStatus `json:"status,omitempty"`
+	// Severity holds the value of the "severity" field.
+	Severity types.Severity `json:"severity,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
-	CreatedAt time.Time `json:"created_at,omitempty"`
+	CreatedAt int64 `json:"created_at,omitempty"`
+	// DetectedAt holds the value of the "detected_at" field.
+	DetectedAt *int64 `json:"detected_at,omitempty"`
 	// ClosedAt holds the value of the "closed_at" field.
-	ClosedAt *time.Time `json:"closed_at,omitempty"`
+	ClosedAt *int64 `json:"closed_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the AlertQuery when eager-loading is set.
 	Edges AlertEdges `json:"edges"`
@@ -38,9 +41,15 @@ type Alert struct {
 type AlertEdges struct {
 	// Attributes holds the value of the attributes edge.
 	Attributes []*Attribute `json:"attributes,omitempty"`
+	// References holds the value of the references edge.
+	References []*Reference `json:"references,omitempty"`
+	// TaskLogs holds the value of the task_logs edge.
+	TaskLogs []*TaskLog `json:"task_logs,omitempty"`
+	// ActionLogs holds the value of the action_logs edge.
+	ActionLogs []*ActionLog `json:"action_logs,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [4]bool
 }
 
 // AttributesOrErr returns the Attributes value or an error if the edge
@@ -52,15 +61,42 @@ func (e AlertEdges) AttributesOrErr() ([]*Attribute, error) {
 	return nil, &NotLoadedError{edge: "attributes"}
 }
 
+// ReferencesOrErr returns the References value or an error if the edge
+// was not loaded in eager-loading.
+func (e AlertEdges) ReferencesOrErr() ([]*Reference, error) {
+	if e.loadedTypes[1] {
+		return e.References, nil
+	}
+	return nil, &NotLoadedError{edge: "references"}
+}
+
+// TaskLogsOrErr returns the TaskLogs value or an error if the edge
+// was not loaded in eager-loading.
+func (e AlertEdges) TaskLogsOrErr() ([]*TaskLog, error) {
+	if e.loadedTypes[2] {
+		return e.TaskLogs, nil
+	}
+	return nil, &NotLoadedError{edge: "task_logs"}
+}
+
+// ActionLogsOrErr returns the ActionLogs value or an error if the edge
+// was not loaded in eager-loading.
+func (e AlertEdges) ActionLogsOrErr() ([]*ActionLog, error) {
+	if e.loadedTypes[3] {
+		return e.ActionLogs, nil
+	}
+	return nil, &NotLoadedError{edge: "action_logs"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Alert) scanValues(columns []string) ([]interface{}, error) {
 	values := make([]interface{}, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case alert.FieldID, alert.FieldTitle, alert.FieldDescription, alert.FieldDetector, alert.FieldStatus:
+		case alert.FieldCreatedAt, alert.FieldDetectedAt, alert.FieldClosedAt:
+			values[i] = new(sql.NullInt64)
+		case alert.FieldID, alert.FieldTitle, alert.FieldDescription, alert.FieldDetector, alert.FieldStatus, alert.FieldSeverity:
 			values[i] = new(sql.NullString)
-		case alert.FieldCreatedAt, alert.FieldClosedAt:
-			values[i] = new(sql.NullTime)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Alert", columns[i])
 		}
@@ -106,18 +142,31 @@ func (a *Alert) assignValues(columns []string, values []interface{}) error {
 			} else if value.Valid {
 				a.Status = types.AlertStatus(value.String)
 			}
+		case alert.FieldSeverity:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field severity", values[i])
+			} else if value.Valid {
+				a.Severity = types.Severity(value.String)
+			}
 		case alert.FieldCreatedAt:
-			if value, ok := values[i].(*sql.NullTime); !ok {
+			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
-				a.CreatedAt = value.Time
+				a.CreatedAt = value.Int64
+			}
+		case alert.FieldDetectedAt:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field detected_at", values[i])
+			} else if value.Valid {
+				a.DetectedAt = new(int64)
+				*a.DetectedAt = value.Int64
 			}
 		case alert.FieldClosedAt:
-			if value, ok := values[i].(*sql.NullTime); !ok {
+			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field closed_at", values[i])
 			} else if value.Valid {
-				a.ClosedAt = new(time.Time)
-				*a.ClosedAt = value.Time
+				a.ClosedAt = new(int64)
+				*a.ClosedAt = value.Int64
 			}
 		}
 	}
@@ -127,6 +176,21 @@ func (a *Alert) assignValues(columns []string, values []interface{}) error {
 // QueryAttributes queries the "attributes" edge of the Alert entity.
 func (a *Alert) QueryAttributes() *AttributeQuery {
 	return (&AlertClient{config: a.config}).QueryAttributes(a)
+}
+
+// QueryReferences queries the "references" edge of the Alert entity.
+func (a *Alert) QueryReferences() *ReferenceQuery {
+	return (&AlertClient{config: a.config}).QueryReferences(a)
+}
+
+// QueryTaskLogs queries the "task_logs" edge of the Alert entity.
+func (a *Alert) QueryTaskLogs() *TaskLogQuery {
+	return (&AlertClient{config: a.config}).QueryTaskLogs(a)
+}
+
+// QueryActionLogs queries the "action_logs" edge of the Alert entity.
+func (a *Alert) QueryActionLogs() *ActionLogQuery {
+	return (&AlertClient{config: a.config}).QueryActionLogs(a)
 }
 
 // Update returns a builder for updating this Alert.
@@ -160,11 +224,17 @@ func (a *Alert) String() string {
 	builder.WriteString(a.Detector)
 	builder.WriteString(", status=")
 	builder.WriteString(fmt.Sprintf("%v", a.Status))
+	builder.WriteString(", severity=")
+	builder.WriteString(fmt.Sprintf("%v", a.Severity))
 	builder.WriteString(", created_at=")
-	builder.WriteString(a.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(fmt.Sprintf("%v", a.CreatedAt))
+	if v := a.DetectedAt; v != nil {
+		builder.WriteString(", detected_at=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
 	if v := a.ClosedAt; v != nil {
 		builder.WriteString(", closed_at=")
-		builder.WriteString(v.Format(time.ANSIC))
+		builder.WriteString(fmt.Sprintf("%v", *v))
 	}
 	builder.WriteByte(')')
 	return builder.String()
