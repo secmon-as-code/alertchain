@@ -4,7 +4,7 @@ AlertChain is simple & programmable SOAR (Security Orchestration, Automation and
 
 ## Concept
 
-![Concept](https://user-images.githubusercontent.com/605953/130339742-4aba4f88-1b1d-4b48-8323-0dce5f8a85fc.jpg)
+![Concept](https://user-images.githubusercontent.com/605953/132087986-318968c1-6e0a-419b-9013-be50c2b93930.jpg)
 
 AlertChain has `Chain` consisting of multiple steps, `Stage`. Also Each `Stage` has one ore more `Task` to annotate and evaluate a security alert and execute workflow.
 
