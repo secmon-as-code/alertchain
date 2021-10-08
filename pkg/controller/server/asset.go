@@ -1,13 +1,10 @@
 package server
 
 import (
-	"crypto/sha256"
-	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/m-mizutani/alertchain/assets"
 	"github.com/pkg/errors"
 )
 
@@ -20,26 +17,28 @@ type cacheMap map[string]*cache
 var assetCache = cacheMap{}
 
 func initAsset() {
-	assets := assets.Assets()
+	/*
+		assets := assets.Assets()
 
-	indexHTML, err := assets.ReadFile("dist/index.html")
-	if err != nil {
-		panic("Open dist/index.html: " + err.Error())
-	}
-	bundleJS, err := assets.ReadFile("dist/bundle.js")
-	if err != nil {
-		panic("Open dist/bundle.js: " + err.Error())
-	}
+		indexHTML, err := assets.ReadFile("dist/index.html")
+		if err != nil {
+			panic("Open dist/index.html: " + err.Error())
+		}
+		bundleJS, err := assets.ReadFile("dist/bundle.js")
+		if err != nil {
+			panic("Open dist/bundle.js: " + err.Error())
+		}
 
-	assetCache["index.html"] = &cache{
-		data: indexHTML,
-		eTag: fmt.Sprintf("%x", sha256.Sum256(indexHTML)),
-	}
+		assetCache["index.html"] = &cache{
+			data: indexHTML,
+			eTag: fmt.Sprintf("%x", sha256.Sum256(indexHTML)),
+		}
 
-	assetCache["bundle.js"] = &cache{
-		data: bundleJS,
-		eTag: fmt.Sprintf("%x", sha256.Sum256(bundleJS)),
-	}
+		assetCache["bundle.js"] = &cache{
+			data: bundleJS,
+			eTag: fmt.Sprintf("%x", sha256.Sum256(bundleJS)),
+		}
+	*/
 }
 
 func handleAsset(ctx *gin.Context, fname, contentType string) {
