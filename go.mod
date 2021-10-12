@@ -6,9 +6,9 @@ require (
 	entgo.io/ent v0.9.0
 	github.com/bradleyfalzon/ghinstallation v1.1.1
 	github.com/gin-gonic/gin v1.7.4
-	github.com/go-sql-driver/mysql v1.5.1-0.20200311113236-681ffa848bae
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/google/uuid v1.3.0
+	github.com/lib/pq v1.10.3
 	github.com/m-mizutani/goerr v0.1.2
 	github.com/mattn/go-sqlite3 v1.14.8
 	github.com/pkg/errors v0.9.1
