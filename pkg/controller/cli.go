@@ -159,6 +159,16 @@ func cmdServe(cfg *config) *cli.Command {
 			// Setup usecase
 			uc := usecase.New(infra.Clients{DB: dbClient}, chain.Jobs.Convert(), chain.Actions.Convert())
 
+			ch := chain.ActivateSources()
+			go func() {
+				for alert := range ch {
+					ctx := &types.Context{}
+					if _, err := uc.HandleAlert(ctx, &alert.Alert, alert.Edges.Attributes); err != nil {
+						utils.HandleError(err)
+					}
+				}
+			}()
+
 			// Starting server
 			if err := server.New(uc, cfg.ServerAddr, cfg.ServerPort).Run(); err != nil {
 				return err

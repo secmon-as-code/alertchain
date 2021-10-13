@@ -138,10 +138,19 @@ func (x *Chain) LookupTask(taskType interface{}) Task {
 	return nil
 }
 
+func runSource(src Source, ch chan *Alert) {
+	for {
+		if err := src.Run(ch); err != nil {
+			utils.HandleError(err)
+		}
+		time.Sleep(time.Second * 3)
+	}
+}
+
 func (x *Chain) ActivateSources() chan *Alert {
 	alertCh := make(chan *Alert, 256)
 	for _, src := range x.Sources {
-		go src.Run(alertCh)
+		go runSource(src, alertCh)
 	}
 	return alertCh
 }

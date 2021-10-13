@@ -191,6 +191,8 @@ github.com/m-mizutani/zlog v0.0.0-20211013013500-5628597e2ff9 h1:E+5udtSw+bXWFkd
 github.com/m-mizutani/zlog v0.0.0-20211013013500-5628597e2ff9/go.mod h1:VyMPwnXiN8/95pUnB4bY9f59kFb4FSyOy7/tRyGJKAM=
 github.com/m-mizutani/zlog v0.0.0-20211013013724-75a40a07ccd4 h1:iKZwJgdFKNTs26f4t6MPe/Vmg3Xz1uw+mHvNoVXGX9M=
 github.com/m-mizutani/zlog v0.0.0-20211013013724-75a40a07ccd4/go.mod h1:VyMPwnXiN8/95pUnB4bY9f59kFb4FSyOy7/tRyGJKAM=
+github.com/m-mizutani/zlog v0.0.0-20211013022110-49eb19db11a8 h1:nNypSARTyBG2meCXs3aZ1JjfGF8QfA6pm+aLZdmF5OE=
+github.com/m-mizutani/zlog v0.0.0-20211013022110-49eb19db11a8/go.mod h1:VyMPwnXiN8/95pUnB4bY9f59kFb4FSyOy7/tRyGJKAM=
 github.com/magiconair/properties v1.8.1/go.mod h1:PppfXfuXeibc/6YijjN8zIbojt8czPbwD3XqdrwzmxQ=
 github.com/mattn/go-colorable v0.0.9/go.mod h1:9vuHe8Xs5qXnSaW/c/ABM9alt+Vo+STaOChaDxuIBZU=
 github.com/mattn/go-colorable v0.1.11 h1:nQ+aFkoE2TMGc0b68U2OKSexC+eq46+XwZzWXHRmPYs=
