@@ -11,12 +11,14 @@ import (
 	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/alertchain/types"
 	"github.com/m-mizutani/goerr"
+	"github.com/m-mizutani/zlog/filter"
 	cli "github.com/urfave/cli/v2"
 )
 
 type config struct {
-	logLevel string
-	chain    *alertchain.Chain
+	logLevel  string
+	logFormat string
+	chain     *alertchain.Chain
 
 	// serve
 	DBType     string
@@ -44,11 +46,23 @@ func (x *Controller) CLIWithChain(args []string, chain *alertchain.Chain) error 
 				Aliases:     []string{"l"},
 				Usage:       "[debug|info|warn|error]",
 				Value:       "info",
+				EnvVars:     []string{"ALERT_CHAIN_LOG_LEVEL"},
 				Destination: &cfg.logLevel,
+			},
+			&cli.StringFlag{
+				Name:        "log-format",
+				Aliases:     []string{"f"},
+				Usage:       "[console|json]",
+				Value:       "json",
+				EnvVars:     []string{"ALERT_CHAIN_LOG_FORMAT"},
+				Destination: &cfg.logFormat,
 			},
 		},
 		Before: func(c *cli.Context) error {
 			if err := utils.SetLogLevel(cfg.logLevel); err != nil {
+				return err
+			}
+			if err := utils.SetLogFormatter(cfg.logFormat); err != nil {
 				return err
 			}
 			return nil
@@ -118,7 +132,8 @@ func cmdServe(cfg *config) *cli.Command {
 		Flags: flags,
 
 		Action: func(c *cli.Context) error {
-			logger.Info().Interface("config", cfg).Msg("Starting AlertChain")
+			logger.AddFilter(filter.Value(cfg.DBConfig))
+			logger.With("config", cfg).Info("Starting AlertChain")
 
 			// Setup database
 			dbClient, err := db.New(cfg.DBType, cfg.DBConfig)
@@ -127,7 +142,7 @@ func cmdServe(cfg *config) *cli.Command {
 			}
 			defer func() {
 				if err := dbClient.Close(); err != nil {
-					logger.Err(err).Msg("Failed to close database conn")
+					logger.With("err", err).Error("Failed to close database conn")
 				}
 			}()
 

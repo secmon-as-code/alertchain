@@ -1,33 +1,29 @@
 package utils
 
 import (
-	"fmt"
-	"os"
-	"strings"
-
-	"github.com/rs/zerolog"
+	"github.com/m-mizutani/goerr"
+	"github.com/m-mizutani/zlog"
 )
 
-var Logger zerolog.Logger
+var Logger *zlog.Logger
 
 func initLogger() {
-	Logger = zerolog.New(os.Stderr).With().Timestamp().Logger().Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	Logger = zlog.New()
 }
 
 func SetLogLevel(logLevel string) error {
-	level := zerolog.InfoLevel
-	switch strings.ToLower(logLevel) {
-	case "debug":
-		level = zerolog.DebugLevel
-	case "info":
-		level = zerolog.InfoLevel
-	case "warn":
-		level = zerolog.WarnLevel
-	case "error":
-		level = zerolog.ErrorLevel
+	return Logger.SetLogLevel(logLevel)
+}
+
+func SetLogFormatter(logfmt string) error {
+	switch logfmt {
+	case "console":
+		Logger.Formatter = zlog.NewConsoleFormatter()
+	case "json":
+		Logger.Formatter = zlog.NewJsonFormatter()
 	default:
-		return fmt.Errorf("invalid log level, choose one of debug, info, warn or error")
+		return goerr.New("Unsupported log format").With("format", logfmt)
 	}
-	Logger = Logger.Level(level)
+
 	return nil
 }

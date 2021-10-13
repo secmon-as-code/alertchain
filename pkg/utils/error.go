@@ -24,16 +24,16 @@ func CopyErrorToExecLog(err error, execLog *ent.ExecLog) {
 }
 
 func HandleError(err error) {
-	ev := Logger.Error()
+	log := Logger.Log()
 
 	var goErr *goerr.Error
 	if errors.As(err, &goErr) {
 		for k, v := range goErr.Values() {
-			ev.Interface(k, v)
+			log = log.With(k, v)
 		}
 		for _, st := range goErr.Stacks() {
-			Logger.Debug().Interface("stack", st).Send()
+			Logger.With("stack", st).Debug("stack trace")
 		}
 	}
-	ev.Msg(err.Error())
+	log.Error(err.Error())
 }
