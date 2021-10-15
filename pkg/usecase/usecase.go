@@ -3,10 +3,11 @@ package usecase
 import (
 	"github.com/m-mizutani/alertchain/pkg/infra"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent"
+	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/alertchain/types"
 )
 
-// var logger = utils.Logger
+var logger = utils.Logger
 
 type Interface interface {
 	GetAlerts(ctx *types.Context) ([]*ent.Alert, error)

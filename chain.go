@@ -101,6 +101,7 @@ func (x *Chain) TestInvokeTasks(t *testing.T, recv *Alert) (*Alert, error) {
 		DB: db.NewDBMock(t),
 	}
 
+	wg.Add(1)
 	alert, err := x.InvokeTasks(ctx, recv, clients)
 	if err != nil {
 		return nil, err

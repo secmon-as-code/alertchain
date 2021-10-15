@@ -30,11 +30,12 @@ func (x *usecase) HandleAlert(ctx *types.Context, alert *ent.Alert, attrs []*ent
 	}
 
 	go func() {
-		if wg := ctx.WaitGroup(); wg != nil {
-			defer wg.Done()
-		}
 		if err := executeJobs(ctx, &x.clients, x.jobs, created.ID); err != nil {
 			utils.HandleError(err)
+		}
+		if wg := ctx.WaitGroup(); wg != nil {
+			logger.Trace("Done waitgroup")
+			wg.Done()
 		}
 	}()
 
@@ -67,7 +68,11 @@ func saveAlert(ctx *types.Context, dbClient db.Interface, recv *ent.Alert, attrs
 }
 
 func executeJobs(ctx *types.Context, clients *infra.Clients, jobs []*Job, alertID types.AlertID) error {
+	logger.With("alertID", alertID).Trace("Starting executeJobs")
+
 	for idx, job := range jobs {
+		logger.With("job", job).Trace("Starting Job")
+
 		if len(job.Tasks) == 0 {
 			continue
 		}
@@ -97,6 +102,7 @@ func executeJobs(ctx *types.Context, clients *infra.Clients, jobs []*Job, alertI
 			})
 		}
 		wg.Wait()
+		logger.With("job", job).Trace("Completed Job")
 
 		close(errCh)
 		for err := range errCh {
@@ -106,6 +112,9 @@ func executeJobs(ctx *types.Context, clients *infra.Clients, jobs []*Job, alertI
 			}
 		}
 	}
+
+	logger.With("alertID", alertID).Trace("Exiting executeJobs")
+
 	return nil
 }
 

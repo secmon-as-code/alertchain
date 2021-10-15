@@ -31,9 +31,8 @@ func HandleError(err error) {
 		for k, v := range goErr.Values() {
 			log = log.With(k, v)
 		}
-		for _, st := range goErr.Stacks() {
-			Logger.With("stack", st).Debug("stack trace")
-		}
+
+		log = log.With("stacks", goErr.Stacks()).With("values", goErr.Values())
 	}
-	log.Error(err.Error())
+	log.Error(fmt.Sprintf("%+v", err))
 }
