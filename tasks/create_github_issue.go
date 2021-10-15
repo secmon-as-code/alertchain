@@ -79,21 +79,23 @@ func (x *issueBody) str() *string {
 func alert2issue(url string, alert *alertchain.Alert) *github.IssueRequest {
 	var b issueBody
 
-	b.add([]string{
-		fmt.Sprintf("[alertchain](%s/alert/%s)", url, alert.ID),
-		"",
-		alert.Description + "",
+	b.add(
+		// TODO: re-enable alertchain link
+		// fmt.Sprintf("[alertchain](%s/alert/%s)", url, alert.ID),
+		// "",
+		"## Description",
+		alert.Description+"",
 		"",
 		"- - - - - - - -",
 		"",
-		"- Created at: " + time.Unix(alert.CreatedAt, 0).Format("2006-01-02 15:04:05"),
-		"- Detected by: " + alert.Detector,
-		"- Severity: " + string(alert.Severity),
+		"- Created at: "+time.Unix(alert.CreatedAt, 0).Format("2006-01-02 15:04:05"),
+		"- Detected by: "+alert.Detector,
+		"- Severity: "+string(alert.Severity),
 		"",
 		"- - - - - - - -",
 		"",
 		"## Attributes",
-	}...)
+	)
 
 	if len(alert.Attributes) > 0 {
 		b.add([]string{
