@@ -21,10 +21,10 @@ const (
 	FieldStatus = "status"
 	// FieldSeverity holds the string denoting the severity field in the database.
 	FieldSeverity = "severity"
-	// FieldCreatedAt holds the string denoting the created_at field in the database.
-	FieldCreatedAt = "created_at"
 	// FieldDetectedAt holds the string denoting the detected_at field in the database.
 	FieldDetectedAt = "detected_at"
+	// FieldCreatedAt holds the string denoting the created_at field in the database.
+	FieldCreatedAt = "created_at"
 	// FieldClosedAt holds the string denoting the closed_at field in the database.
 	FieldClosedAt = "closed_at"
 	// EdgeAttributes holds the string denoting the attributes edge name in mutations.
@@ -75,8 +75,8 @@ var Columns = []string{
 	FieldDetector,
 	FieldStatus,
 	FieldSeverity,
-	FieldCreatedAt,
 	FieldDetectedAt,
+	FieldCreatedAt,
 	FieldClosedAt,
 }
 

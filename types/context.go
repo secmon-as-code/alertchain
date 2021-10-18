@@ -2,15 +2,11 @@ package types
 
 import (
 	"context"
-	"io"
-	"sync"
 	"time"
 )
 
 type Context struct {
-	base   context.Context
-	writer io.Writer
-	wg     *sync.WaitGroup
+	base context.Context
 }
 
 func WrapContext(ctx context.Context) *Context {
@@ -35,22 +31,8 @@ func (x *Context) Value(key interface{}) interface{} {
 	return x.base.Value(key)
 }
 
-func (x *Context) copy() *Context {
-	ctx := *x
-	return &ctx
-}
-
-// Original functions
-func (x *Context) Writer() io.Writer { return x.writer }
-func (x *Context) InjectWriter(w io.Writer) *Context {
-	ctx := x.copy()
-	ctx.writer = w
-	return ctx
-}
-
-func (x *Context) WaitGroup() *sync.WaitGroup { return x.wg }
-func (x *Context) InjectWaitGroup(wg *sync.WaitGroup) *Context {
-	ctx := x.copy()
-	ctx.wg = wg
-	return ctx
+func (x *Context) SetTimeout(timeout time.Duration) context.CancelFunc {
+	ctx, cancel := context.WithTimeout(x.base, timeout)
+	x.base = ctx
+	return cancel
 }

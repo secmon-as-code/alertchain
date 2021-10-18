@@ -1,21 +1,6 @@
 package alertchain_test
 
-import (
-	"errors"
-	"math/rand"
-	"sync"
-	"testing"
-	"time"
-
-	"github.com/m-mizutani/alertchain"
-	"github.com/m-mizutani/alertchain/pkg/infra"
-	"github.com/m-mizutani/alertchain/pkg/infra/db"
-	"github.com/m-mizutani/alertchain/pkg/infra/ent"
-	"github.com/m-mizutani/alertchain/pkg/usecase"
-	"github.com/m-mizutani/alertchain/types"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-)
+/*
 
 func setupAlertTest(t *testing.T, chain *alertchain.Chain) (usecase.Interface, infra.Clients, *types.Context) {
 	clients := infra.Clients{
@@ -228,3 +213,4 @@ func TestRecvAlertErrorHandling(t *testing.T) {
 		assert.True(t, done2ndJob)
 	})
 }
+*/

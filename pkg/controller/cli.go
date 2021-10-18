@@ -5,9 +5,7 @@ import (
 
 	"github.com/m-mizutani/alertchain"
 	"github.com/m-mizutani/alertchain/pkg/controller/server"
-	"github.com/m-mizutani/alertchain/pkg/infra"
 	"github.com/m-mizutani/alertchain/pkg/infra/db"
-	"github.com/m-mizutani/alertchain/pkg/usecase"
 	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/alertchain/types"
 	"github.com/m-mizutani/goerr"
@@ -156,21 +154,10 @@ func cmdServe(cfg *config) *cli.Command {
 				chain = c
 			}
 
-			// Setup usecase
-			uc := usecase.New(infra.Clients{DB: dbClient}, chain.Jobs.Convert(), chain.Actions.Convert())
-
-			ch := chain.ActivateSources()
-			go func() {
-				for alert := range ch {
-					ctx := types.NewContext()
-					if _, err := uc.HandleAlert(ctx, &alert.Alert, alert.Edges.Attributes); err != nil {
-						utils.HandleError(err)
-					}
-				}
-			}()
+			chain.InvokeSource()
 
 			// Starting server
-			if err := server.New(uc, cfg.ServerAddr, cfg.ServerPort).Run(); err != nil {
+			if err := server.New(chain, cfg.ServerAddr, cfg.ServerPort).Run(); err != nil {
 				return err
 			}
 

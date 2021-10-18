@@ -517,10 +517,10 @@ type AlertMutation struct {
 	detector           *string
 	status             *types.AlertStatus
 	severity           *types.Severity
-	created_at         *int64
-	addcreated_at      *int64
 	detected_at        *int64
 	adddetected_at     *int64
+	created_at         *int64
+	addcreated_at      *int64
 	closed_at          *int64
 	addclosed_at       *int64
 	clearedFields      map[string]struct{}
@@ -858,6 +858,76 @@ func (m *AlertMutation) ResetSeverity() {
 	delete(m.clearedFields, alert.FieldSeverity)
 }
 
+// SetDetectedAt sets the "detected_at" field.
+func (m *AlertMutation) SetDetectedAt(i int64) {
+	m.detected_at = &i
+	m.adddetected_at = nil
+}
+
+// DetectedAt returns the value of the "detected_at" field in the mutation.
+func (m *AlertMutation) DetectedAt() (r int64, exists bool) {
+	v := m.detected_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDetectedAt returns the old "detected_at" field's value of the Alert entity.
+// If the Alert object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *AlertMutation) OldDetectedAt(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, fmt.Errorf("OldDetectedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, fmt.Errorf("OldDetectedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDetectedAt: %w", err)
+	}
+	return oldValue.DetectedAt, nil
+}
+
+// AddDetectedAt adds i to the "detected_at" field.
+func (m *AlertMutation) AddDetectedAt(i int64) {
+	if m.adddetected_at != nil {
+		*m.adddetected_at += i
+	} else {
+		m.adddetected_at = &i
+	}
+}
+
+// AddedDetectedAt returns the value that was added to the "detected_at" field in this mutation.
+func (m *AlertMutation) AddedDetectedAt() (r int64, exists bool) {
+	v := m.adddetected_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ClearDetectedAt clears the value of the "detected_at" field.
+func (m *AlertMutation) ClearDetectedAt() {
+	m.detected_at = nil
+	m.adddetected_at = nil
+	m.clearedFields[alert.FieldDetectedAt] = struct{}{}
+}
+
+// DetectedAtCleared returns if the "detected_at" field was cleared in this mutation.
+func (m *AlertMutation) DetectedAtCleared() bool {
+	_, ok := m.clearedFields[alert.FieldDetectedAt]
+	return ok
+}
+
+// ResetDetectedAt resets all changes to the "detected_at" field.
+func (m *AlertMutation) ResetDetectedAt() {
+	m.detected_at = nil
+	m.adddetected_at = nil
+	delete(m.clearedFields, alert.FieldDetectedAt)
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (m *AlertMutation) SetCreatedAt(i int64) {
 	m.created_at = &i
@@ -914,76 +984,6 @@ func (m *AlertMutation) ResetCreatedAt() {
 	m.addcreated_at = nil
 }
 
-// SetDetectedAt sets the "detected_at" field.
-func (m *AlertMutation) SetDetectedAt(i int64) {
-	m.detected_at = &i
-	m.adddetected_at = nil
-}
-
-// DetectedAt returns the value of the "detected_at" field in the mutation.
-func (m *AlertMutation) DetectedAt() (r int64, exists bool) {
-	v := m.detected_at
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldDetectedAt returns the old "detected_at" field's value of the Alert entity.
-// If the Alert object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *AlertMutation) OldDetectedAt(ctx context.Context) (v *int64, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldDetectedAt is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, fmt.Errorf("OldDetectedAt requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldDetectedAt: %w", err)
-	}
-	return oldValue.DetectedAt, nil
-}
-
-// AddDetectedAt adds i to the "detected_at" field.
-func (m *AlertMutation) AddDetectedAt(i int64) {
-	if m.adddetected_at != nil {
-		*m.adddetected_at += i
-	} else {
-		m.adddetected_at = &i
-	}
-}
-
-// AddedDetectedAt returns the value that was added to the "detected_at" field in this mutation.
-func (m *AlertMutation) AddedDetectedAt() (r int64, exists bool) {
-	v := m.adddetected_at
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// ClearDetectedAt clears the value of the "detected_at" field.
-func (m *AlertMutation) ClearDetectedAt() {
-	m.detected_at = nil
-	m.adddetected_at = nil
-	m.clearedFields[alert.FieldDetectedAt] = struct{}{}
-}
-
-// DetectedAtCleared returns if the "detected_at" field was cleared in this mutation.
-func (m *AlertMutation) DetectedAtCleared() bool {
-	_, ok := m.clearedFields[alert.FieldDetectedAt]
-	return ok
-}
-
-// ResetDetectedAt resets all changes to the "detected_at" field.
-func (m *AlertMutation) ResetDetectedAt() {
-	m.detected_at = nil
-	m.adddetected_at = nil
-	delete(m.clearedFields, alert.FieldDetectedAt)
-}
-
 // SetClosedAt sets the "closed_at" field.
 func (m *AlertMutation) SetClosedAt(i int64) {
 	m.closed_at = &i
@@ -1002,7 +1002,7 @@ func (m *AlertMutation) ClosedAt() (r int64, exists bool) {
 // OldClosedAt returns the old "closed_at" field's value of the Alert entity.
 // If the Alert object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *AlertMutation) OldClosedAt(ctx context.Context) (v *int64, err error) {
+func (m *AlertMutation) OldClosedAt(ctx context.Context) (v int64, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, fmt.Errorf("OldClosedAt is only allowed on UpdateOne operations")
 	}
@@ -1305,11 +1305,11 @@ func (m *AlertMutation) Fields() []string {
 	if m.severity != nil {
 		fields = append(fields, alert.FieldSeverity)
 	}
-	if m.created_at != nil {
-		fields = append(fields, alert.FieldCreatedAt)
-	}
 	if m.detected_at != nil {
 		fields = append(fields, alert.FieldDetectedAt)
+	}
+	if m.created_at != nil {
+		fields = append(fields, alert.FieldCreatedAt)
 	}
 	if m.closed_at != nil {
 		fields = append(fields, alert.FieldClosedAt)
@@ -1332,10 +1332,10 @@ func (m *AlertMutation) Field(name string) (ent.Value, bool) {
 		return m.Status()
 	case alert.FieldSeverity:
 		return m.Severity()
-	case alert.FieldCreatedAt:
-		return m.CreatedAt()
 	case alert.FieldDetectedAt:
 		return m.DetectedAt()
+	case alert.FieldCreatedAt:
+		return m.CreatedAt()
 	case alert.FieldClosedAt:
 		return m.ClosedAt()
 	}
@@ -1357,10 +1357,10 @@ func (m *AlertMutation) OldField(ctx context.Context, name string) (ent.Value, e
 		return m.OldStatus(ctx)
 	case alert.FieldSeverity:
 		return m.OldSeverity(ctx)
-	case alert.FieldCreatedAt:
-		return m.OldCreatedAt(ctx)
 	case alert.FieldDetectedAt:
 		return m.OldDetectedAt(ctx)
+	case alert.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
 	case alert.FieldClosedAt:
 		return m.OldClosedAt(ctx)
 	}
@@ -1407,19 +1407,19 @@ func (m *AlertMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetSeverity(v)
 		return nil
-	case alert.FieldCreatedAt:
-		v, ok := value.(int64)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetCreatedAt(v)
-		return nil
 	case alert.FieldDetectedAt:
 		v, ok := value.(int64)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetDetectedAt(v)
+		return nil
+	case alert.FieldCreatedAt:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
 		return nil
 	case alert.FieldClosedAt:
 		v, ok := value.(int64)
@@ -1436,11 +1436,11 @@ func (m *AlertMutation) SetField(name string, value ent.Value) error {
 // this mutation.
 func (m *AlertMutation) AddedFields() []string {
 	var fields []string
-	if m.addcreated_at != nil {
-		fields = append(fields, alert.FieldCreatedAt)
-	}
 	if m.adddetected_at != nil {
 		fields = append(fields, alert.FieldDetectedAt)
+	}
+	if m.addcreated_at != nil {
+		fields = append(fields, alert.FieldCreatedAt)
 	}
 	if m.addclosed_at != nil {
 		fields = append(fields, alert.FieldClosedAt)
@@ -1453,10 +1453,10 @@ func (m *AlertMutation) AddedFields() []string {
 // was not set, or was not defined in the schema.
 func (m *AlertMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
-	case alert.FieldCreatedAt:
-		return m.AddedCreatedAt()
 	case alert.FieldDetectedAt:
 		return m.AddedDetectedAt()
+	case alert.FieldCreatedAt:
+		return m.AddedCreatedAt()
 	case alert.FieldClosedAt:
 		return m.AddedClosedAt()
 	}
@@ -1468,19 +1468,19 @@ func (m *AlertMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *AlertMutation) AddField(name string, value ent.Value) error {
 	switch name {
-	case alert.FieldCreatedAt:
-		v, ok := value.(int64)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.AddCreatedAt(v)
-		return nil
 	case alert.FieldDetectedAt:
 		v, ok := value.(int64)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddDetectedAt(v)
+		return nil
+	case alert.FieldCreatedAt:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddCreatedAt(v)
 		return nil
 	case alert.FieldClosedAt:
 		v, ok := value.(int64)
@@ -1570,11 +1570,11 @@ func (m *AlertMutation) ResetField(name string) error {
 	case alert.FieldSeverity:
 		m.ResetSeverity()
 		return nil
-	case alert.FieldCreatedAt:
-		m.ResetCreatedAt()
-		return nil
 	case alert.FieldDetectedAt:
 		m.ResetDetectedAt()
+		return nil
+	case alert.FieldCreatedAt:
+		m.ResetCreatedAt()
 		return nil
 	case alert.FieldClosedAt:
 		m.ResetClosedAt()

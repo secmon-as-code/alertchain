@@ -17,24 +17,14 @@ type Interface interface {
 	Close() error
 
 	GetAlert(ctx *types.Context, id types.AlertID) (*ent.Alert, error)
-	GetAlerts(ctx *types.Context) ([]*ent.Alert, error)
-	NewAlert(ctx *types.Context) (*ent.Alert, error)
-	UpdateAlert(ctx *types.Context, id types.AlertID, alert *ent.Alert) error
-	UpdateAlertStatus(ctx *types.Context, id types.AlertID, status types.AlertStatus, ts int64) error
-	UpdateAlertSeverity(ctx *types.Context, id types.AlertID, status types.Severity, ts int64) error
+	PutAlert(ctx *types.Context, alert *ent.Alert) (*ent.Alert, error)
+	UpdateAlertStatus(ctx *types.Context, id types.AlertID, status types.AlertStatus) error
+	UpdateAlertSeverity(ctx *types.Context, id types.AlertID, sev types.Severity) error
+	UpdateAlertClosedAt(ctx *types.Context, id types.AlertID, ts int64) error
 
 	AddAttributes(ctx *types.Context, id types.AlertID, newAttrs []*ent.Attribute) error
-	GetAttribute(ctx *types.Context, id int) (*ent.Attribute, error)
-
+	AddReferences(ctx *types.Context, id types.AlertID, refs []*ent.Reference) error
 	AddAnnotation(ctx *types.Context, attr *ent.Attribute, ann []*ent.Annotation) error
-	AddReference(ctx *types.Context, id types.AlertID, ref *ent.Reference) error
-
-	NewTaskLog(ctx *types.Context, id types.AlertID, taskName string, stage int64) (*ent.TaskLog, error)
-	AppendTaskLog(ctx *types.Context, taskID int, execLog *ent.ExecLog) error
-
-	NewActionLog(ctx *types.Context, name string, attrID int) (*ent.ActionLog, error)
-	AppendActionLog(ctx *types.Context, actionID int, execLog *ent.ExecLog) error
-	GetActionLog(ctx *types.Context, actionLogID int) (*ent.ActionLog, error)
 }
 
 type Client struct {

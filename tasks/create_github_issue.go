@@ -4,12 +4,10 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/bradleyfalzon/ghinstallation"
 	"github.com/google/go-github/github"
 	"github.com/m-mizutani/alertchain"
-	"github.com/m-mizutani/alertchain/pkg/infra/ent"
 	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/alertchain/types"
 	"github.com/m-mizutani/goerr"
@@ -54,7 +52,7 @@ func (x *CreateGitHubIssue) Execute(ctx *types.Context, alert *alertchain.Alert)
 		return goerr.Wrap(err).With("resp", resp)
 	}
 
-	alert.AddReference(&ent.Reference{
+	alert.AddReference(&alertchain.Reference{
 		Source: "CreateGitHubIssue",
 		Title:  "alert issue",
 		URL:    *issue.HTMLURL,
@@ -70,6 +68,9 @@ type issueBody struct {
 
 func (x *issueBody) add(s ...string) {
 	x.lines = append(x.lines, s...)
+}
+func (x *issueBody) fmt(format string, args ...interface{}) {
+	x.lines = append(x.lines, fmt.Sprintf(format, args...))
 }
 func (x *issueBody) str() *string {
 	d := strings.Join(x.lines, "\n")
@@ -88,7 +89,7 @@ func alert2issue(url string, alert *alertchain.Alert) *github.IssueRequest {
 		"",
 		"- - - - - - - -",
 		"",
-		"- Created at: "+time.Unix(alert.CreatedAt, 0).Format("2006-01-02 15:04:05"),
+		"- Created at: "+alert.CreatedAt().Format("2006-01-02 15:04:05"),
 		"- Detected by: "+alert.Detector,
 		"- Severity: "+string(alert.Severity),
 		"",
@@ -103,7 +104,16 @@ func alert2issue(url string, alert *alertchain.Alert) *github.IssueRequest {
 			"|:----|:----|:---|:----|",
 		}...)
 		for _, attr := range alert.Attributes {
-			b.add(fmt.Sprintf("| `%s` | %s | %s| %s|", attr.Key, attr.Value, attr.Type, strings.Join(attr.Context, ", ")))
+			b.fmt("| `%s` | %s | %s | %s |", attr.Key, attr.Value, attr.Type, attr.Contexts.String())
+		}
+	} else {
+		b.add("n/a")
+	}
+
+	b.add("", "## References")
+	if len(alert.References) > 0 {
+		for _, ref := range alert.References {
+			b.fmt("- %s: [%s](%s) (%s)", ref.Source, ref.Title, ref.URL, ref.Comment)
 		}
 	} else {
 		b.add("n/a")

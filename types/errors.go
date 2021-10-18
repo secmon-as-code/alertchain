@@ -8,4 +8,6 @@ var (
 	ErrItemNotFound         = goerr.New("item not found")
 	ErrInvalidChain         = goerr.New("invalid chain plugin")
 	ErrInvalidInput         = goerr.New("invalid input data")
+
+	ErrChainIsNotConfigured = goerr.New("chain is not configured")
 )

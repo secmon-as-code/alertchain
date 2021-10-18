@@ -1,18 +1,13 @@
 package alertchain
 
 import (
-	"reflect"
-	"sync"
-	"testing"
+	"context"
 	"time"
 
-	"github.com/google/uuid"
-	"github.com/m-mizutani/alertchain/pkg/infra"
 	"github.com/m-mizutani/alertchain/pkg/infra/db"
-	"github.com/m-mizutani/alertchain/pkg/infra/ent"
-	"github.com/m-mizutani/alertchain/pkg/usecase"
 	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/alertchain/types"
+	"github.com/m-mizutani/goerr"
 )
 
 var logger = utils.Logger
@@ -21,22 +16,19 @@ type Chain struct {
 	Jobs    Jobs
 	Sources []Source
 	Actions Actions
+
+	db db.Interface
 }
 
-type Job struct {
-	Timeout   time.Duration
-	ExitOnErr bool
-	Tasks     []Task
-}
-
-type Task interface {
-	Name() string
-	Execute(ctx *types.Context, alert *Alert) error
+func New(dbClient db.Interface) *Chain {
+	return &Chain{
+		db: dbClient,
+	}
 }
 
 type Source interface {
 	Name() string
-	Run(alertCh chan *Alert) error
+	Run(handler Handler) error
 }
 
 type Action interface {
@@ -45,123 +37,76 @@ type Action interface {
 	Execute(ctx *types.Context, attr *Attribute) error
 }
 
-type Jobs []*Job
 type Actions []Action
 
-func (x Jobs) Convert() []*usecase.Job {
-	resp := make([]*usecase.Job, len(x))
-	for i, j := range x {
-		job := &usecase.Job{
-			Timeout:   j.Timeout,
-			ExitOnErr: j.ExitOnErr,
-			Tasks:     make([]*usecase.Task, len(j.Tasks)),
-		}
-
-		for i, task := range j.Tasks {
-			job.Tasks[i] = &usecase.Task{
-				Name: task.Name(),
-				Execute: func(ctx *types.Context, alert *ent.Alert) (*usecase.ChangeRequest, error) {
-					newAlert := NewAlert(alert)
-					if err := task.Execute(ctx, newAlert); err != nil {
-						return nil, err
-					}
-					return &newAlert.ChangeRequest, nil
-				},
-			}
-		}
-
-		resp[i] = job
+func (x *Chain) diagnosis() error {
+	if x.db == nil {
+		return goerr.Wrap(types.ErrChainIsNotConfigured, "DB is not set")
 	}
-	return resp
-}
-
-func (x Actions) Convert() []*usecase.Action {
-	resp := make([]*usecase.Action, len(x))
-	for i, action := range x {
-		resp[i] = &usecase.Action{
-			ID:   uuid.New().String(),
-			Name: action.Name(),
-			Executable: func(attr *ent.Attribute) bool {
-				return action.Executable(newAttribute(attr))
-			},
-			Execute: func(ctx *types.Context, attr *ent.Attribute) error {
-				return action.Execute(ctx, newAttribute(attr))
-			},
-		}
-	}
-	return resp
-}
-
-// TestInvokeTasks runs
-func (x *Chain) TestInvokeTasks(t *testing.T, recv *Alert) (*Alert, error) {
-	var wg sync.WaitGroup
-	ctx := types.NewContext().InjectWaitGroup(&wg)
-
-	clients := &infra.Clients{
-		DB: db.NewDBMock(t),
-	}
-
-	wg.Add(1)
-	alert, err := x.InvokeTasks(ctx, recv, clients)
-	if err != nil {
-		return nil, err
-	}
-	wg.Wait()
-
-	created, err := clients.DB.GetAlert(types.NewContext(), alert.id)
-	if err != nil {
-		return nil, err
-	}
-
-	return NewAlert(created), nil
-}
-
-func (x *Chain) InvokeTasks(ctx *types.Context, recv *Alert, clients *infra.Clients) (*Alert, error) {
-	uc := usecase.New(*clients, x.Jobs.Convert(), x.Actions.Convert())
-	created, err := uc.HandleAlert(ctx, &recv.Alert, recv.Attributes.toEnt())
-	if err != nil {
-		return nil, err
-	}
-
-	return NewAlert(created), nil
-}
-
-func (x *Chain) LookupTask(taskType interface{}) Task {
-	actual := reflect.TypeOf(taskType)
-	for _, job := range x.Jobs {
-		for _, task := range job.Tasks {
-			if reflect.TypeOf(task) == actual {
-				return task
-			}
-		}
-	}
-
 	return nil
 }
 
-func runSource(src Source, ch chan *Alert) {
+func (x *Chain) Execute(ctx context.Context, alert *Alert) (*Alert, error) {
+	if err := x.diagnosis(); err != nil {
+		return nil, err
+	}
+	if err := alert.validate(); err != nil {
+		return nil, err
+	}
+
+	c, ok := ctx.(*types.Context)
+	if !ok {
+		c = types.WrapContext(ctx)
+	}
+
+	logger.With("alert", alert).Trace("Starting Chain.Execute")
+	alertID, err := insertAlert(c, alert, x.db)
+	if err != nil {
+		return nil, err
+	}
+
+	logger.With("alert", alert).Trace("Exiting Chain.Execute")
+
+	if err := x.Jobs.Execute(c, x.db, alertID); err != nil {
+		return nil, err
+	}
+
+	created, err := x.db.GetAlert(c, alertID)
+	if err != nil {
+		return nil, err
+	}
+
+	return newAlert(created), nil
+}
+
+func (x *Chain) InvokeSource() {
+	if err := x.diagnosis(); err != nil {
+		logger.With("err", err).Error(err.Error())
+		panic(err)
+	}
+
+	for _, src := range x.Sources {
+		handler := func(ctx context.Context, alert *Alert) error {
+			_, err := x.Execute(ctx, alert)
+			return err
+		}
+		go runSource(src, handler)
+	}
+}
+
+func runSource(src Source, handler Handler) {
 	for {
-		if err := src.Run(ch); err != nil {
+		if err := src.Run(handler); err != nil {
 			utils.HandleError(err)
 		}
 		time.Sleep(time.Second * 3)
 	}
 }
 
-func (x *Chain) ActivateSources() chan *Alert {
-	alertCh := make(chan *Alert, 256)
-	for _, src := range x.Sources {
-		go runSource(src, alertCh)
-	}
-	return alertCh
-}
-
-func (x *Chain) NewJob() *Job {
-	job := &Job{}
+func (x *Chain) AddJob(job *Job) {
 	x.Jobs = append(x.Jobs, job)
-	return job
 }
 
-func (x *Job) AddTask(task Task) {
-	x.Tasks = append(x.Tasks, task)
+func (x *Chain) AddJobs(jobs ...*Job) {
+	x.Jobs = append(x.Jobs, jobs...)
 }

@@ -94,12 +94,6 @@ func (ac *AlertCreate) SetNillableSeverity(t *types.Severity) *AlertCreate {
 	return ac
 }
 
-// SetCreatedAt sets the "created_at" field.
-func (ac *AlertCreate) SetCreatedAt(i int64) *AlertCreate {
-	ac.mutation.SetCreatedAt(i)
-	return ac
-}
-
 // SetDetectedAt sets the "detected_at" field.
 func (ac *AlertCreate) SetDetectedAt(i int64) *AlertCreate {
 	ac.mutation.SetDetectedAt(i)
@@ -111,6 +105,12 @@ func (ac *AlertCreate) SetNillableDetectedAt(i *int64) *AlertCreate {
 	if i != nil {
 		ac.SetDetectedAt(*i)
 	}
+	return ac
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (ac *AlertCreate) SetCreatedAt(i int64) *AlertCreate {
+	ac.mutation.SetCreatedAt(i)
 	return ac
 }
 
@@ -348,6 +348,14 @@ func (ac *AlertCreate) createSpec() (*Alert, *sqlgraph.CreateSpec) {
 		})
 		_node.Severity = value
 	}
+	if value, ok := ac.mutation.DetectedAt(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt64,
+			Value:  value,
+			Column: alert.FieldDetectedAt,
+		})
+		_node.DetectedAt = value
+	}
 	if value, ok := ac.mutation.CreatedAt(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt64,
@@ -356,21 +364,13 @@ func (ac *AlertCreate) createSpec() (*Alert, *sqlgraph.CreateSpec) {
 		})
 		_node.CreatedAt = value
 	}
-	if value, ok := ac.mutation.DetectedAt(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeInt64,
-			Value:  value,
-			Column: alert.FieldDetectedAt,
-		})
-		_node.DetectedAt = &value
-	}
 	if value, ok := ac.mutation.ClosedAt(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt64,
 			Value:  value,
 			Column: alert.FieldClosedAt,
 		})
-		_node.ClosedAt = &value
+		_node.ClosedAt = value
 	}
 	if nodes := ac.mutation.AttributesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

@@ -13,51 +13,52 @@ func TestAlert(t *testing.T) {
 	ctx := types.NewContext()
 	t.Run("Create a new alert", func(t *testing.T) {
 		client := setupDB(t)
-		alert, err := client.NewAlert(ctx)
+		alert, err := client.PutAlert(ctx, &ent.Alert{
+			Title:       "five",
+			Detector:    "blue",
+			Description: "insane",
+		})
 		require.NoError(t, err)
 		assert.NotEmpty(t, alert.ID)
-		assert.NotEmpty(t, alert.CreatedAt)
-		assert.Empty(t, alert.Title)
+		assert.Equal(t, "five", alert.Title)
+		assert.Equal(t, "blue", alert.Detector)
+		assert.Equal(t, "insane", alert.Description)
 
 		t.Run("Get alert by ID", func(t *testing.T) {
 			got, err := client.GetAlert(ctx, alert.ID)
 			require.NoError(t, err)
 			assert.Equal(t, got.ID, alert.ID)
-			assert.Empty(t, alert.Title)
 		})
 
 		t.Run("Update alert", func(t *testing.T) {
-			alert.Title = "five"
-			alert.Detector = "blue"
-			alert.Description = "insane"
+			assert.NotEqual(t, types.StatusClosed, alert.Status)
+			assert.NotEqual(t, types.SevAffected, alert.Severity)
 
-			// Should not be updated
+			// Should be updated
 			alert.Status = types.StatusClosed
 			alert.Severity = types.SevAffected
 
-			require.NoError(t, client.UpdateAlert(ctx, alert.ID, alert))
+			require.NoError(t, client.UpdateAlertSeverity(ctx, alert.ID, types.SevAffected))
+			require.NoError(t, client.UpdateAlertStatus(ctx, alert.ID, types.StatusClosed))
+			require.NoError(t, client.UpdateAlertClosedAt(ctx, alert.ID, 1234))
 
 			t.Run("Get updated alert", func(t *testing.T) {
 				got, err := client.GetAlert(ctx, alert.ID)
 				require.NoError(t, err)
 				assert.Equal(t, got.ID, alert.ID)
-				assert.Equal(t, "five", got.Title)
-				assert.Equal(t, "blue", got.Detector)
-				assert.Equal(t, "insane", got.Description)
-				assert.NotEqual(t, types.StatusClosed, got.Status)
-				assert.NotEqual(t, types.SevAffected, got.Severity)
-
-				t.Run("status can not be updated via SaveAlert", func(t *testing.T) {
-					assert.NotEqual(t, types.StatusClosed, got.Status)
-				})
+				assert.Equal(t, types.StatusClosed, alert.Status)
+				assert.Equal(t, types.SevAffected, alert.Severity)
+				assert.Equal(t, int64(1234), got.ClosedAt)
 			})
 		})
 	})
 
 	t.Run("Create a new alert with attributes", func(t *testing.T) {
 		client := setupDB(t)
-		alert, _ := client.NewAlert(ctx)
-		alert.Title = "five"
+		alert, _ := client.PutAlert(ctx, &ent.Alert{
+			Title: "five",
+		})
+
 		attrs := []*ent.Attribute{
 			{
 				Key:     "srcaddr",
@@ -72,7 +73,7 @@ func TestAlert(t *testing.T) {
 				Context: []string{string(types.CtxLocal)},
 			},
 		}
-		require.NoError(t, client.UpdateAlert(ctx, alert.ID, alert))
+
 		require.NoError(t, client.AddAttributes(ctx, alert.ID, attrs))
 
 		t.Run("Get alert with attributes", func(t *testing.T) {
@@ -88,7 +89,8 @@ func TestAlert(t *testing.T) {
 func TestReference(t *testing.T) {
 	t.Run("Add Reference", func(t *testing.T) {
 		client := setupDB(t)
-		alert, _ := client.NewAlert(types.NewContext())
+		ctx := types.NewContext()
+		alert, _ := client.PutAlert(ctx, &ent.Alert{})
 
 		ref1 := &ent.Reference{
 			Source:  "blue",
@@ -108,12 +110,11 @@ func TestReference(t *testing.T) {
 			Title:  "b6",
 		}
 
-		require.NoError(t, client.AddReference(types.NewContext(), alert.ID, ref1))
-		require.NoError(t, client.AddReference(types.NewContext(), alert.ID, ref2))
-		require.NoError(t, client.AddReference(types.NewContext(), alert.ID, ref6))
+		require.NoError(t, client.AddReferences(ctx, alert.ID, []*ent.Reference{ref1, ref2}))
+		require.NoError(t, client.AddReferences(ctx, alert.ID, []*ent.Reference{ref6}))
 
 		t.Run("get added references", func(t *testing.T) {
-			got, err := client.GetAlert(types.NewContext(), alert.ID)
+			got, err := client.GetAlert(ctx, alert.ID)
 			require.NoError(t, err)
 			require.NotNil(t, got)
 			require.Len(t, got.Edges.References, 3)

@@ -26,12 +26,12 @@ type Alert struct {
 	Status types.AlertStatus `json:"status,omitempty"`
 	// Severity holds the value of the "severity" field.
 	Severity types.Severity `json:"severity,omitempty"`
+	// DetectedAt holds the value of the "detected_at" field.
+	DetectedAt int64 `json:"detected_at,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt int64 `json:"created_at,omitempty"`
-	// DetectedAt holds the value of the "detected_at" field.
-	DetectedAt *int64 `json:"detected_at,omitempty"`
 	// ClosedAt holds the value of the "closed_at" field.
-	ClosedAt *int64 `json:"closed_at,omitempty"`
+	ClosedAt int64 `json:"closed_at,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the AlertQuery when eager-loading is set.
 	Edges AlertEdges `json:"edges"`
@@ -93,7 +93,7 @@ func (*Alert) scanValues(columns []string) ([]interface{}, error) {
 	values := make([]interface{}, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case alert.FieldCreatedAt, alert.FieldDetectedAt, alert.FieldClosedAt:
+		case alert.FieldDetectedAt, alert.FieldCreatedAt, alert.FieldClosedAt:
 			values[i] = new(sql.NullInt64)
 		case alert.FieldID, alert.FieldTitle, alert.FieldDescription, alert.FieldDetector, alert.FieldStatus, alert.FieldSeverity:
 			values[i] = new(sql.NullString)
@@ -148,25 +148,23 @@ func (a *Alert) assignValues(columns []string, values []interface{}) error {
 			} else if value.Valid {
 				a.Severity = types.Severity(value.String)
 			}
+		case alert.FieldDetectedAt:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field detected_at", values[i])
+			} else if value.Valid {
+				a.DetectedAt = value.Int64
+			}
 		case alert.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field created_at", values[i])
 			} else if value.Valid {
 				a.CreatedAt = value.Int64
 			}
-		case alert.FieldDetectedAt:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for field detected_at", values[i])
-			} else if value.Valid {
-				a.DetectedAt = new(int64)
-				*a.DetectedAt = value.Int64
-			}
 		case alert.FieldClosedAt:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field closed_at", values[i])
 			} else if value.Valid {
-				a.ClosedAt = new(int64)
-				*a.ClosedAt = value.Int64
+				a.ClosedAt = value.Int64
 			}
 		}
 	}
@@ -226,16 +224,12 @@ func (a *Alert) String() string {
 	builder.WriteString(fmt.Sprintf("%v", a.Status))
 	builder.WriteString(", severity=")
 	builder.WriteString(fmt.Sprintf("%v", a.Severity))
+	builder.WriteString(", detected_at=")
+	builder.WriteString(fmt.Sprintf("%v", a.DetectedAt))
 	builder.WriteString(", created_at=")
 	builder.WriteString(fmt.Sprintf("%v", a.CreatedAt))
-	if v := a.DetectedAt; v != nil {
-		builder.WriteString(", detected_at=")
-		builder.WriteString(fmt.Sprintf("%v", *v))
-	}
-	if v := a.ClosedAt; v != nil {
-		builder.WriteString(", closed_at=")
-		builder.WriteString(fmt.Sprintf("%v", *v))
-	}
+	builder.WriteString(", closed_at=")
+	builder.WriteString(fmt.Sprintf("%v", a.ClosedAt))
 	builder.WriteByte(')')
 	return builder.String()
 }

@@ -36,8 +36,8 @@ var (
 		{Name: "detector", Type: field.TypeString, Nullable: true},
 		{Name: "status", Type: field.TypeString, Default: "new"},
 		{Name: "severity", Type: field.TypeString, Nullable: true},
-		{Name: "created_at", Type: field.TypeInt64},
 		{Name: "detected_at", Type: field.TypeInt64, Nullable: true},
+		{Name: "created_at", Type: field.TypeInt64},
 		{Name: "closed_at", Type: field.TypeInt64, Nullable: true},
 	}
 	// AlertsTable holds the schema information for the "alerts" table.

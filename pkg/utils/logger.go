@@ -3,12 +3,16 @@ package utils
 import (
 	"github.com/m-mizutani/goerr"
 	"github.com/m-mizutani/zlog"
+	"github.com/m-mizutani/zlog/filter"
 )
 
 var Logger *zlog.Logger
 
 func initLogger() {
 	Logger = zlog.New()
+	Logger.Filters = zlog.Filters{
+		filter.Tag(),
+	}
 }
 
 func SetLogLevel(logLevel string) error {

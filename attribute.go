@@ -1,52 +1,91 @@
 package alertchain
 
 import (
+	"strings"
+	"time"
+
 	"github.com/m-mizutani/alertchain/pkg/infra/ent"
-	"github.com/m-mizutani/alertchain/pkg/usecase"
 	"github.com/m-mizutani/alertchain/types"
 )
 
 type Attribute struct {
-	ent.Attribute
-	Annotations []*Annotation     `json:"annotations"`
-	Actions     []*usecase.Action `json:"actions"`
+	Key      string
+	Value    string
+	Type     types.AttrType
+	Contexts Contexts
 
-	Alert *Alert `json:"-"`
+	Annotations []*Annotation
 
-	changeRequest *usecase.ChangeRequest
-
-	// To remove "edges" in JSON. DO NOT USE as data field
-	EdgesOverride interface{} `json:"edges,omitempty"`
+	id    int
+	alert *Alert
 }
 
-func (x *Alert) pushAttribute(attr *ent.Attribute) *Attribute {
-	created := newAttribute(attr)
-	x.Attributes = append(x.Attributes, created)
+func (x *Attribute) toEnt() *ent.Attribute {
+	ctx := make([]string, len(x.Contexts))
+	for p, c := range x.Contexts {
+		ctx[p] = string(c)
+	}
 
-	created.Alert = x
-	created.changeRequest = &x.ChangeRequest
-
-	return created
+	return &ent.Attribute{
+		ID:      x.id,
+		Key:     x.Key,
+		Value:   x.Value,
+		Type:    x.Type,
+		Context: ctx,
+	}
 }
 
-func newAttribute(attr *ent.Attribute) *Attribute {
-	annotations := make([]*Annotation, len(attr.Edges.Annotations))
-	for j, ann := range attr.Edges.Annotations {
-		annotations[j] = &Annotation{Annotation: *ann}
+func (x Attributes) toEnt() []*ent.Attribute {
+	resp := make([]*ent.Attribute, len(x))
+	for i, ref := range x {
+		resp[i] = ref.toEnt()
+	}
+	return resp
+}
+
+func newAttributes(alert *Alert, bases []*ent.Attribute) Attributes {
+	attrs := make(Attributes, len(bases))
+	for i, base := range bases {
+		attrs[i] = newAttribute(alert, base)
+	}
+	return attrs
+}
+
+func newAttribute(alert *Alert, base *ent.Attribute) *Attribute {
+	ctx := make([]types.AttrContext, len(base.Context))
+	for p, c := range base.Context {
+		ctx[p] = types.AttrContext(c)
+	}
+	ann := make([]*Annotation, len(base.Edges.Annotations))
+	for p, a := range base.Edges.Annotations {
+		ann[p] = newAnnotation(a)
 	}
 
-	created := &Attribute{
-		Attribute:     *attr,
-		Alert:         NewAlert(attr.Edges.Alert),
-		Annotations:   annotations,
-		changeRequest: &usecase.ChangeRequest{},
+	return &Attribute{
+		Key:         base.Key,
+		Value:       base.Value,
+		Type:        base.Type,
+		Contexts:    ctx,
+		Annotations: ann,
+
+		id:    base.ID,
+		alert: alert,
 	}
-	return created
+}
+
+type Contexts []types.AttrContext
+
+func (x Contexts) String() string {
+	s := make([]string, len(x))
+	for i, c := range x {
+		s[i] = string(c)
+	}
+	return strings.Join(s, ", ")
 }
 
 func (x *Attribute) HasContext(ctx types.AttrContext) bool {
-	for _, c := range x.Context {
-		if c == string(ctx) {
+	for _, c := range x.Contexts {
+		if c == ctx {
 			return true
 		}
 	}
@@ -54,14 +93,6 @@ func (x *Attribute) HasContext(ctx types.AttrContext) bool {
 }
 
 type Attributes []*Attribute
-
-func (x Attributes) toEnt() []*ent.Attribute {
-	resp := make([]*ent.Attribute, len(x))
-	for i := range x {
-		resp[i] = &x[i].Attribute
-	}
-	return resp
-}
 
 func (x Attributes) FindByKey(key string) Attributes {
 	var resp Attributes
@@ -105,9 +136,30 @@ func (x Attributes) FindByContext(ctx types.AttrContext) Attributes {
 }
 
 func (x *Attribute) Annotate(ann *Annotation) {
-	x.changeRequest.AddAnnotation(&x.Attribute, &ann.Annotation)
+	x.alert.AddAnnotation(x, ann)
 }
 
 type Annotation struct {
-	ent.Annotation
+	Timestamp time.Time
+	Source    string
+	Name      string
+	Value     string
+}
+
+func (x *Annotation) toEnt() *ent.Annotation {
+	return &ent.Annotation{
+		Timestamp: x.Timestamp.UTC().Unix(),
+		Source:    x.Source,
+		Name:      x.Name,
+		Value:     x.Value,
+	}
+}
+
+func newAnnotation(base *ent.Annotation) *Annotation {
+	return &Annotation{
+		Timestamp: time.Unix(base.Timestamp, 0).UTC(),
+		Source:    base.Source,
+		Name:      base.Name,
+		Value:     base.Value,
+	}
 }

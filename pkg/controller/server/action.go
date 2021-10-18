@@ -1,14 +1,6 @@
 package server
 
-import (
-	"net/http"
-	"strconv"
-
-	"github.com/gin-gonic/gin"
-	"github.com/m-mizutani/alertchain/types"
-	"github.com/m-mizutani/goerr"
-)
-
+/*
 func getAction(c *gin.Context) {
 	uc := ctxUsecase(c)
 	s := c.Param("id")
@@ -48,3 +40,4 @@ func postAction(c *gin.Context) {
 
 	resp(c, http.StatusOK, actionLog)
 }
+*/
