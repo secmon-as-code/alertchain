@@ -56,7 +56,7 @@ func (x *Chain) Execute(ctx context.Context, alert *Alert) (*Alert, error) {
 
 	c, ok := ctx.(*types.Context)
 	if !ok {
-		c = types.WrapContext(ctx)
+		c = types.NewContextWith(ctx)
 	}
 
 	logger.With("alert", alert).Trace("Starting Chain.Execute")

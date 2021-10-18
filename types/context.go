@@ -6,33 +6,42 @@ import (
 )
 
 type Context struct {
-	base context.Context
+	base    context.Context
+	timeout context.Context
 }
 
-func WrapContext(ctx context.Context) *Context {
-	return &Context{base: ctx}
+func NewContextWith(ctx context.Context) *Context {
+	return &Context{
+		base:    ctx,
+		timeout: ctx,
+	}
 }
 
 func NewContext() *Context {
-	return &Context{base: context.Background()}
+	return NewContextWith(context.Background())
 }
 
 // context.Context
 func (x *Context) Deadline() (deadline time.Time, ok bool) {
-	return x.base.Deadline()
+	return x.timeout.Deadline()
 }
 func (x *Context) Done() <-chan struct{} {
-	return x.base.Done()
+	return x.timeout.Done()
 }
 func (x *Context) Err() error {
-	return x.base.Err()
+	return x.timeout.Err()
 }
 func (x *Context) Value(key interface{}) interface{} {
 	return x.base.Value(key)
 }
 
 func (x *Context) SetTimeout(timeout time.Duration) context.CancelFunc {
-	ctx, cancel := context.WithTimeout(x.base, timeout)
-	x.base = ctx
+	if timeout == 0 {
+		x.timeout = x.base
+		return nil
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	x.timeout = ctx
 	return cancel
 }

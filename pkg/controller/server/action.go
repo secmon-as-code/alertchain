@@ -10,7 +10,7 @@ func getAction(c *gin.Context) {
 		return
 	}
 
-	actionLog, err := uc.GetActionLog(types.WrapContext(c), int(id))
+	actionLog, err := uc.GetActionLog(types.NewContextWith(c), int(id))
 	if err != nil {
 		c.Error(err)
 		return
@@ -32,7 +32,7 @@ func postAction(c *gin.Context) {
 		return
 	}
 
-	actionLog, err := uc.ExecuteAction(types.WrapContext(c), body.ActionID, body.AttrID)
+	actionLog, err := uc.ExecuteAction(types.NewContextWith(c), body.ActionID, body.AttrID)
 	if err != nil {
 		c.Error(err)
 		return

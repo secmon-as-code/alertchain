@@ -41,8 +41,9 @@ func (x *Job) Execute(ctx *types.Context, client db.Interface, alertID types.Ale
 	if len(x.Tasks) == 0 {
 		return nil
 	}
-	if x.Timeout > 0 {
-		cancel := ctx.SetTimeout(x.Timeout)
+
+	cancel := ctx.SetTimeout(x.Timeout)
+	if cancel != nil {
 		defer cancel()
 	}
 
