@@ -162,7 +162,7 @@ func cmdServe(cfg *config) *cli.Command {
 			ch := chain.ActivateSources()
 			go func() {
 				for alert := range ch {
-					ctx := &types.Context{}
+					ctx := types.NewContext()
 					if _, err := uc.HandleAlert(ctx, &alert.Alert, alert.Edges.Attributes); err != nil {
 						utils.HandleError(err)
 					}
