@@ -154,7 +154,7 @@ func cmdServe(cfg *config) *cli.Command {
 				chain = c
 			}
 
-			chain.InvokeSource()
+			chain.StartSourcesAsync()
 
 			// Starting server
 			if err := server.New(chain, cfg.ServerAddr, cfg.ServerPort).Run(); err != nil {

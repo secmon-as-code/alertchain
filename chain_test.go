@@ -263,7 +263,6 @@ func TestChainAlert(t *testing.T) {
 	assert.Equal(t, sent.Description, task.alert.Description)
 	assert.NotEqual(t, sent.DetectedAt, task.alert.DetectedAt)            // alert in task is generated only unixtime second
 	assert.Equal(t, sent.DetectedAt.Unix(), task.alert.DetectedAt.Unix()) // matched with only unixtime second
-	assert.True(t, sent.CreatedAt().IsZero())
 
 	assert.Len(t, sent.Attributes.FindByKey("alpha").FindByValue("A"), 1)
 	assert.Len(t, sent.Attributes.FindByKey("beta").FindByValue("B"), 1)

@@ -85,6 +85,9 @@ func (x *Alert) validate() error {
 }
 
 func insertAlert(ctx *types.Context, alert *Alert, client db.Interface) (types.AlertID, error) {
+	alert.Status = types.StatusNew
+	alert.createdAt = time.Now().UTC()
+
 	added, err := client.PutAlert(ctx, alert.toEnt())
 	if err != nil {
 		return "", err

@@ -5,6 +5,7 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/enttest"
 	"github.com/m-mizutani/alertchain/types"
@@ -17,6 +18,7 @@ type Interface interface {
 	Close() error
 
 	GetAlert(ctx *types.Context, id types.AlertID) (*ent.Alert, error)
+	GetAlerts(ctx *types.Context, offset, limit int) ([]*ent.Alert, error)
 	PutAlert(ctx *types.Context, alert *ent.Alert) (*ent.Alert, error)
 	UpdateAlertStatus(ctx *types.Context, id types.AlertID, status types.AlertStatus) error
 	UpdateAlertSeverity(ctx *types.Context, id types.AlertID, sev types.Severity) error
@@ -48,7 +50,7 @@ func New(dbType, dbConfig string) (Interface, error) {
 
 func NewDBMock(t *testing.T) Interface {
 	db := newClient()
-	db.client = enttest.Open(t, "sqlite3", "file:ent?mode=memory&cache=shared&_fk=1")
+	db.client = enttest.Open(t, "sqlite3", "file:"+uuid.NewString()+"?mode=memory&cache=shared&_fk=1")
 	db.lock = true
 	return db
 }

@@ -2,7 +2,6 @@ package alertchain
 
 import (
 	"context"
-	"time"
 
 	"github.com/m-mizutani/alertchain/pkg/infra/db"
 	"github.com/m-mizutani/alertchain/pkg/utils"
@@ -24,11 +23,6 @@ func New(dbClient db.Interface) *Chain {
 	return &Chain{
 		db: dbClient,
 	}
-}
-
-type Source interface {
-	Name() string
-	Run(handler Handler) error
 }
 
 type Action interface {
@@ -77,30 +71,6 @@ func (x *Chain) Execute(ctx context.Context, alert *Alert) (*Alert, error) {
 	}
 
 	return newAlert(created), nil
-}
-
-func (x *Chain) InvokeSource() {
-	if err := x.diagnosis(); err != nil {
-		logger.With("err", err).Error(err.Error())
-		panic(err)
-	}
-
-	for _, src := range x.Sources {
-		handler := func(ctx context.Context, alert *Alert) error {
-			_, err := x.Execute(ctx, alert)
-			return err
-		}
-		go runSource(src, handler)
-	}
-}
-
-func runSource(src Source, handler Handler) {
-	for {
-		if err := src.Run(handler); err != nil {
-			utils.HandleError(err)
-		}
-		time.Sleep(time.Second * 3)
-	}
 }
 
 func (x *Chain) AddJob(job *Job) {

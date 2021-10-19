@@ -8,14 +8,8 @@ import (
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/attribute"
 )
 
-func (x *Client) GetAlert(ctx *types.Context, id types.AlertID) (*ent.Alert, error) {
-	if x.lock {
-		x.mutex.Lock()
-		defer x.mutex.Unlock()
-	}
-
-	fetched, err := x.client.Alert.Query().
-		Where(entAlert.ID(id)).
+func getAlertQuery(client *ent.Client) *ent.AlertQuery {
+	return client.Alert.Query().
 		WithTaskLogs(func(q *ent.TaskLogQuery) {
 			q.WithExecLogs(func(q *ent.ExecLogQuery) {
 				q.Order(ent.Desc("timestamp"))
@@ -29,13 +23,38 @@ func (x *Client) GetAlert(ctx *types.Context, id types.AlertID) (*ent.Alert, err
 		WithReferences().
 		WithAttributes(func(q *ent.AttributeQuery) {
 			q.WithAnnotations()
-		}).Only(ctx)
+		})
+}
+
+func (x *Client) GetAlert(ctx *types.Context, id types.AlertID) (*ent.Alert, error) {
+	if x.lock {
+		x.mutex.Lock()
+		defer x.mutex.Unlock()
+	}
+
+	fetched, err := getAlertQuery(x.client).Where(entAlert.ID(id)).Only(ctx)
 	if err != nil {
 		return nil, types.ErrDatabaseUnexpected.Wrap(err)
 	}
 
 	return fetched, nil
 }
+
+func (x *Client) GetAlerts(ctx *types.Context, offset, limit int) ([]*ent.Alert, error) {
+	if x.lock {
+		x.mutex.Lock()
+		defer x.mutex.Unlock()
+	}
+
+	fetched, err := getAlertQuery(x.client).Order(ent.Desc(entAlert.FieldCreatedAt)).Offset(offset).Limit(limit).All(ctx)
+	if err != nil {
+		return nil, types.ErrDatabaseUnexpected.Wrap(err)
+	}
+
+	return fetched, nil
+
+}
+
 func (x *Client) PutAlert(ctx *types.Context, alert *ent.Alert) (*ent.Alert, error) {
 	q := x.client.Alert.Create().
 		SetID(types.NewAlertID()).
