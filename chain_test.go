@@ -84,6 +84,22 @@ func (x *TaskGray) Execute(ctx *types.Context, alert *alertchain.Alert) error {
 	return nil
 }
 
+type TaskWhite struct {
+	alert *alertchain.Alert
+}
+
+func (x *TaskWhite) Name() string { return "white" }
+func (x *TaskWhite) Execute(ctx *types.Context, alert *alertchain.Alert) error {
+	x.alert = alert
+	alert.AddAttributes([]*alertchain.Attribute{
+		{
+			Key:   "gamma",
+			Value: "C",
+		},
+	})
+	return nil
+}
+
 func TestChainBasic(t *testing.T) {
 	chain := alertchain.New(db.NewDBMock(t))
 	chain.AddJobs(&alertchain.Job{
@@ -203,4 +219,68 @@ func TestChainTimeout(t *testing.T) {
 	assert.Equal(t, 1, chain.Jobs[1].Tasks[0].(*TaskGray).called)
 	assert.True(t, chain.Jobs[1].Tasks[0].(*TaskGray).timeout)
 	assert.Equal(t, 1, chain.Jobs[2].Tasks[0].(*TaskBlue).called)
+}
+
+func TestChainAlert(t *testing.T) {
+	mock := db.NewDBMock(t)
+	chain := alertchain.New(mock)
+	task := &TaskWhite{}
+	chain.AddJobs(alertchain.Jobs{
+		{
+			Tasks: []alertchain.Task{task},
+		},
+	}...)
+
+	sent := &alertchain.Alert{
+		Title:       "words",
+		Detector:    "blue",
+		Description: "five",
+		DetectedAt:  time.Now().UTC(),
+		Attributes: alertchain.Attributes{
+			{
+				Key:   "alpha",
+				Value: "A",
+			},
+			{
+				Key:   "beta",
+				Value: "B",
+			},
+		},
+		References: alertchain.References{
+			{
+				Source:  "orange",
+				Title:   "scarred red",
+				URL:     "https://example.com/x",
+				Comment: "?",
+			},
+		},
+	}
+	created, err := chain.Execute(types.NewContext(), sent)
+	require.NoError(t, err)
+	require.NotNil(t, task.alert)
+	assert.Equal(t, sent.Title, task.alert.Title)
+	assert.Equal(t, sent.Detector, task.alert.Detector)
+	assert.Equal(t, sent.Description, task.alert.Description)
+	assert.NotEqual(t, sent.DetectedAt, task.alert.DetectedAt)            // alert in task is generated only unixtime second
+	assert.Equal(t, sent.DetectedAt.Unix(), task.alert.DetectedAt.Unix()) // matched with only unixtime second
+	assert.True(t, sent.CreatedAt().IsZero())
+
+	assert.Len(t, sent.Attributes.FindByKey("alpha").FindByValue("A"), 1)
+	assert.Len(t, sent.Attributes.FindByKey("beta").FindByValue("B"), 1)
+	assert.Len(t, sent.Attributes.FindByKey("gamma").FindByValue("C"), 0)
+	assert.Len(t, task.alert.Attributes.FindByKey("alpha").FindByValue("A"), 1)
+	assert.Len(t, task.alert.Attributes.FindByKey("beta").FindByValue("B"), 1)
+	assert.Len(t, task.alert.Attributes.FindByKey("gamma").FindByValue("C"), 0)
+
+	// created alert has added attribute in last job
+	assert.Len(t, created.Attributes.FindByKey("gamma").FindByValue("C"), 1)
+
+	got, err := mock.GetAlert(types.NewContext(), created.ID())
+	require.NoError(t, err)
+	require.NotNil(t, got)
+	// retrieved alert also has added attribute
+	assert.Len(t, alertchain.NewAlert(got).Attributes.FindByKey("gamma").FindByValue("C"), 1)
+
+	require.Len(t, task.alert.References, 1)
+	assert.Equal(t, sent.References[0], task.alert.References[0])
 }

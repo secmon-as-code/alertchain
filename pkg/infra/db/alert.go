@@ -213,7 +213,7 @@ func (x *Client) AddReferences(ctx *types.Context, id types.AlertID, refs []*ent
 		return types.ErrDatabaseUnexpected.Wrap(err)
 	}
 
-	if _, err := x.client.Alert.Update().AddReferences(added...).Save(ctx); err != nil {
+	if _, err := x.client.Alert.UpdateOneID(id).AddReferences(added...).Save(ctx); err != nil {
 		return types.ErrDatabaseUnexpected.Wrap(err)
 	}
 

@@ -28,6 +28,12 @@ type Alert struct {
 	changeRequest
 }
 
+func (x *Alert) ID() types.AlertID {
+	if x.base == nil {
+		return ""
+	}
+	return x.base.ID
+}
 func (x *Alert) CreatedAt() time.Time { return x.createdAt }
 func (x *Alert) ClosedAt() time.Time  { return x.closedAt }
 
