@@ -119,3 +119,7 @@ func (x *Chain) Start() error {
 	x.StartSources()
 	return nil
 }
+
+func (x *Chain) Logger() *zlog.Logger {
+	return x.logger
+}
