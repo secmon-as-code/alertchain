@@ -22,17 +22,3 @@ func CopyErrorToExecLog(err error, execLog *ent.ExecLog) {
 	}
 	execLog.Status = types.ExecFailure
 }
-
-func HandleError(err error) {
-	log := Logger.Log()
-
-	var goErr *goerr.Error
-	if errors.As(err, &goErr) {
-		for k, v := range goErr.Values() {
-			log = log.With(k, v)
-		}
-
-		log = log.With("stacks", goErr.Stacks()).With("values", goErr.Values())
-	}
-	log.Error(fmt.Sprintf("%+v", err))
-}

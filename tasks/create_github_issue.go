@@ -8,12 +8,9 @@ import (
 	"github.com/bradleyfalzon/ghinstallation"
 	"github.com/google/go-github/github"
 	"github.com/m-mizutani/alertchain"
-	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/alertchain/types"
 	"github.com/m-mizutani/goerr"
 )
-
-var logger = utils.Logger
 
 type CreateGitHubIssue struct {
 	AppID      int64
@@ -31,7 +28,7 @@ type CreateGitHubIssue struct {
 func (x *CreateGitHubIssue) Name() string { return "Create GitHub issue" }
 
 func (x *CreateGitHubIssue) Execute(ctx *types.Context, alert *alertchain.Alert) error {
-	logger.Trace("starting CreateGitHubIssue")
+	ctx.Logger().Trace("starting CreateGitHubIssue")
 	rt := http.DefaultTransport
 	if x.TestRoundTripper != nil {
 		rt = x.TestRoundTripper
@@ -58,7 +55,7 @@ func (x *CreateGitHubIssue) Execute(ctx *types.Context, alert *alertchain.Alert)
 		URL:    *issue.HTMLURL,
 	})
 
-	logger.Trace("exiting CreateGitHubIssue")
+	ctx.Logger().Trace("exiting CreateGitHubIssue")
 	return nil
 }
 
