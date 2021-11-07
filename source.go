@@ -4,8 +4,6 @@ import (
 	"context"
 	"sync"
 	"time"
-
-	"github.com/m-mizutani/alertchain/pkg/utils"
 )
 
 type Handler func(ctx context.Context, alert *Alert) error
@@ -26,8 +24,8 @@ func (x *Chain) StartSourcesAsync() {
 }
 
 func (x *Chain) startSources(wg *sync.WaitGroup) {
-	if err := x.diagnosis(); err != nil {
-		logger.With("err", err).Error(err.Error())
+	if err := x.init(); err != nil {
+		x.logger.With("err", err).Error(err.Error())
 		panic(err)
 	}
 
@@ -35,7 +33,7 @@ func (x *Chain) startSources(wg *sync.WaitGroup) {
 		_, err := x.Execute(ctx, alert)
 		return err
 	}
-	for i := range x.Sources {
+	for i := range x.sources {
 		if wg != nil {
 			wg.Add(1)
 		}
@@ -47,13 +45,13 @@ func (x *Chain) startSources(wg *sync.WaitGroup) {
 
 			for {
 				if err := src.Run(handler); err != nil {
-					utils.HandleError(err)
+					x.logger.Err(err).Error("failed run")
 				} else {
 					break
 				}
 
 				time.Sleep(time.Second * 3)
 			}
-		}(x.Sources[i])
+		}(x.sources[i])
 	}
 }

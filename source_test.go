@@ -7,7 +7,6 @@ import (
 
 	"github.com/m-mizutani/alertchain"
 	"github.com/m-mizutani/alertchain/pkg/infra/db"
-	"github.com/m-mizutani/alertchain/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -30,14 +29,14 @@ func (x *SourceBlue) Run(handler alertchain.Handler) error {
 
 func TestSource(t *testing.T) {
 	mock := db.NewDBMock(t)
-	chain := alertchain.New(mock)
-	s1 := &SourceBlue{title: "one", wait: time.Millisecond * 10}
-	s2 := &SourceBlue{title: "five", wait: time.Millisecond * 1500}
-	chain.Sources = []alertchain.Source{s1, s2}
+	chain := alertchain.New(alertchain.OptDB(mock), alertchain.OptSources(
+		&SourceBlue{title: "one", wait: time.Millisecond * 10},
+		&SourceBlue{title: "five", wait: time.Millisecond * 1500},
+	))
 
 	chain.StartSources()
 
-	alerts, err := mock.GetAlerts(types.NewContext(), 0, 10)
+	alerts, err := mock.GetAlerts(newContext(), 0, 10)
 	require.NoError(t, err)
 	require.Len(t, alerts, 2)
 	assert.Equal(t, "five", alerts[0].Title)

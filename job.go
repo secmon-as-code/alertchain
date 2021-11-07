@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/m-mizutani/alertchain/pkg/infra/db"
-	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/alertchain/types"
 	"github.com/m-mizutani/goerr"
 )
@@ -24,11 +23,11 @@ type Task interface {
 
 func (x Jobs) Execute(ctx *types.Context, client db.Interface, alertID types.AlertID) error {
 	for idx, job := range x {
-		logger.With("job", job).With("step", idx).Trace("Starting Job")
+		ctx.Logger().With("job", job).With("step", idx).Trace("Starting Job")
 		if err := job.Execute(ctx, client, alertID); err != nil {
 			return err
 		}
-		logger.With("job", job).Trace("Exiting Job")
+		ctx.Logger().With("job", job).Trace("Exiting Job")
 	}
 	return nil
 }
@@ -66,11 +65,11 @@ func (x *Job) Execute(ctx *types.Context, client db.Interface, alertID types.Ale
 		})
 	}
 	wg.Wait()
-	logger.With("job", x).Trace("Completed Job")
+	ctx.Logger().With("job", x).Trace("Completed Job")
 
 	close(errCh)
 	for err := range errCh {
-		utils.HandleError(err)
+		ctx.Logger().Err(err).With("job", x).Error("failed job")
 		if err != nil && x.ExitOnErr {
 			return err
 		}

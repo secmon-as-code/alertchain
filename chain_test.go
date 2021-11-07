@@ -1,23 +1,22 @@
 package alertchain_test
 
 import (
+	"context"
 	"errors"
-	"os"
 	"testing"
 	"time"
 
 	"github.com/m-mizutani/alertchain"
 	"github.com/m-mizutani/alertchain/pkg/infra/db"
-	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/alertchain/types"
+	"github.com/m-mizutani/zlog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func init() {
-	if logLevel, ok := os.LookupEnv("LOG_LEVEL"); ok {
-		utils.Logger.SetLogLevel(logLevel)
-	}
+func newContext() *types.Context {
+	var logger = zlog.New()
+	return types.NewContextWith(context.Background(), logger)
 }
 
 type TaskBlue struct {
@@ -101,20 +100,23 @@ func (x *TaskWhite) Execute(ctx *types.Context, alert *alertchain.Alert) error {
 }
 
 func TestChainBasic(t *testing.T) {
-	chain := alertchain.New(db.NewDBMock(t))
-	chain.AddJobs(&alertchain.Job{
-		Tasks: []alertchain.Task{
-			&TaskBlue{v: "less"},
-			&TaskOrange{},
+	mock := db.NewDBMock(t)
+	chain := alertchain.New(alertchain.OptDB(mock), alertchain.OptJobs(
+		&alertchain.Job{
+			Tasks: []alertchain.Task{
+				&TaskBlue{v: "less"},
+				&TaskOrange{},
+			},
 		},
-	}, &alertchain.Job{
-		Tasks: []alertchain.Task{
-			&TaskBlue{v: "full"},
-			&TaskOrange{},
+		&alertchain.Job{
+			Tasks: []alertchain.Task{
+				&TaskBlue{v: "full"},
+				&TaskOrange{},
+			},
 		},
-	})
+	))
 
-	alert, err := chain.Execute(types.NewContext(), &alertchain.Alert{
+	alert, err := chain.Execute(newContext(), &alertchain.Alert{
 		Title:       "test-alert",
 		Description: "x",
 		Detector:    "y",
@@ -122,10 +124,10 @@ func TestChainBasic(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("called tasks properly", func(t *testing.T) {
-		assert.Equal(t, 1, chain.Jobs[0].Tasks[0].(*TaskBlue).called)
-		assert.Equal(t, 1, chain.Jobs[0].Tasks[1].(*TaskOrange).called)
-		assert.Equal(t, 1, chain.Jobs[1].Tasks[0].(*TaskBlue).called)
-		assert.Equal(t, 1, chain.Jobs[1].Tasks[1].(*TaskOrange).called)
+		assert.Equal(t, 1, chain.Jobs()[0].Tasks[0].(*TaskBlue).called)
+		assert.Equal(t, 1, chain.Jobs()[0].Tasks[1].(*TaskOrange).called)
+		assert.Equal(t, 1, chain.Jobs()[1].Tasks[0].(*TaskBlue).called)
+		assert.Equal(t, 1, chain.Jobs()[1].Tasks[1].(*TaskOrange).called)
 	})
 
 	t.Run("added attrs", func(t *testing.T) {
@@ -145,91 +147,89 @@ func TestChainBasic(t *testing.T) {
 }
 
 func TestChainError(t *testing.T) {
-	chain := alertchain.New(db.NewDBMock(t))
-	chain.AddJobs(alertchain.Jobs{
-		{
+	mock := db.NewDBMock(t)
+	chain := alertchain.New(alertchain.OptDB(mock), alertchain.OptJobs(
+		&alertchain.Job{
 			ExitOnErr: false,
 			Tasks: []alertchain.Task{
 				&TaskBlue{},
 				&TaskRed{err: errors.New("not failed")},
 			},
 		},
-		{
+		&alertchain.Job{
 			ExitOnErr: true,
 			Tasks: []alertchain.Task{
 				&TaskBlue{},
 				&TaskRed{err: errors.New("failed")},
 			},
 		},
-		{
+		&alertchain.Job{
 			ExitOnErr: true,
 			Tasks: []alertchain.Task{
 				&TaskBlue{},
 			},
 		},
-	}...)
+	))
 
-	_, err := chain.Execute(types.NewContext(), &alertchain.Alert{
+	_, err := chain.Execute(newContext(), &alertchain.Alert{
 		Title:       "test-alert",
 		Description: "x",
 		Detector:    "y",
 	})
 
-	require.NotErrorIs(t, err, chain.Jobs[0].Tasks[1].(*TaskRed).err)
-	require.ErrorIs(t, err, chain.Jobs[1].Tasks[1].(*TaskRed).err)
+	require.NotErrorIs(t, err, chain.Jobs()[0].Tasks[1].(*TaskRed).err)
+	require.ErrorIs(t, err, chain.Jobs()[1].Tasks[1].(*TaskRed).err)
 
-	assert.Equal(t, 1, chain.Jobs[0].Tasks[0].(*TaskBlue).called)
-	assert.Equal(t, 1, chain.Jobs[0].Tasks[1].(*TaskRed).called)
-	assert.Equal(t, 1, chain.Jobs[1].Tasks[0].(*TaskBlue).called)
-	assert.Equal(t, 1, chain.Jobs[1].Tasks[1].(*TaskRed).called)
-	assert.Equal(t, 0, chain.Jobs[2].Tasks[0].(*TaskBlue).called) // Stopped by TaskRed's error
+	assert.Equal(t, 1, chain.Jobs()[0].Tasks[0].(*TaskBlue).called)
+	assert.Equal(t, 1, chain.Jobs()[0].Tasks[1].(*TaskRed).called)
+	assert.Equal(t, 1, chain.Jobs()[1].Tasks[0].(*TaskBlue).called)
+	assert.Equal(t, 1, chain.Jobs()[1].Tasks[1].(*TaskRed).called)
+	assert.Equal(t, 0, chain.Jobs()[2].Tasks[0].(*TaskBlue).called) // Stopped by TaskRed's error
 }
 
 func TestChainTimeout(t *testing.T) {
-	chain := alertchain.New(db.NewDBMock(t))
-	chain.AddJobs(alertchain.Jobs{
-		{
+	mock := db.NewDBMock(t)
+	chain := alertchain.New(alertchain.OptDB(mock), alertchain.OptJobs(
+		&alertchain.Job{
 			ExitOnErr: true,
 			Timeout:   time.Millisecond * 500,
 			Tasks: []alertchain.Task{
 				&TaskGray{},
 			},
 		},
-		{
+		&alertchain.Job{
 			ExitOnErr: true,
 			Timeout:   time.Millisecond * 100,
 			Tasks: []alertchain.Task{
 				&TaskGray{},
 			},
 		},
-		{
+		&alertchain.Job{
 			Tasks: []alertchain.Task{
 				&TaskBlue{},
 			},
 		},
-	}...)
+	))
 
-	_, err := chain.Execute(types.NewContext(), &alertchain.Alert{
+	_, err := chain.Execute(newContext(), &alertchain.Alert{
 		Title:    "test-alert",
 		Detector: "y",
 	})
 	require.NoError(t, err) // Not error by TaskGray even if timeout. But task should return error when timed out
-	assert.Equal(t, 1, chain.Jobs[0].Tasks[0].(*TaskGray).called)
-	assert.False(t, chain.Jobs[0].Tasks[0].(*TaskGray).timeout)
-	assert.Equal(t, 1, chain.Jobs[1].Tasks[0].(*TaskGray).called)
-	assert.True(t, chain.Jobs[1].Tasks[0].(*TaskGray).timeout)
-	assert.Equal(t, 1, chain.Jobs[2].Tasks[0].(*TaskBlue).called)
+	assert.Equal(t, 1, chain.Jobs()[0].Tasks[0].(*TaskGray).called)
+	assert.False(t, chain.Jobs()[0].Tasks[0].(*TaskGray).timeout)
+	assert.Equal(t, 1, chain.Jobs()[1].Tasks[0].(*TaskGray).called)
+	assert.True(t, chain.Jobs()[1].Tasks[0].(*TaskGray).timeout)
+	assert.Equal(t, 1, chain.Jobs()[2].Tasks[0].(*TaskBlue).called)
 }
 
 func TestChainAlert(t *testing.T) {
-	mock := db.NewDBMock(t)
-	chain := alertchain.New(mock)
 	task := &TaskWhite{}
-	chain.AddJobs(alertchain.Jobs{
-		{
+	mock := db.NewDBMock(t)
+	chain := alertchain.New(alertchain.OptDB(mock), alertchain.OptJobs(
+		&alertchain.Job{
 			Tasks: []alertchain.Task{task},
-		},
-	}...)
+		}))
 
 	sent := &alertchain.Alert{
 		Title:       "words",
@@ -255,7 +255,7 @@ func TestChainAlert(t *testing.T) {
 			},
 		},
 	}
-	created, err := chain.Execute(types.NewContext(), sent)
+	created, err := chain.Execute(newContext(), sent)
 	require.NoError(t, err)
 	require.NotNil(t, task.alert)
 	assert.Equal(t, sent.Title, task.alert.Title)
@@ -274,7 +274,7 @@ func TestChainAlert(t *testing.T) {
 	// created alert has added attribute in last job
 	assert.Len(t, created.Attributes.FindByKey("gamma").FindByValue("C"), 1)
 
-	got, err := mock.GetAlert(types.NewContext(), created.ID())
+	got, err := mock.GetAlert(newContext(), created.ID())
 	require.NoError(t, err)
 	require.NotNil(t, got)
 	// retrieved alert also has added attribute

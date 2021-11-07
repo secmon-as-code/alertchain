@@ -34,6 +34,9 @@ func (x *Client) GetAlert(ctx *types.Context, id types.AlertID) (*ent.Alert, err
 
 	fetched, err := getAlertQuery(x.client).Where(entAlert.ID(id)).Only(ctx)
 	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, nil
+		}
 		return nil, types.ErrDatabaseUnexpected.Wrap(err)
 	}
 
