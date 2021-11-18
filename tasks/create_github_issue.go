@@ -3,6 +3,7 @@ package tasks
 import (
 	"fmt"
 	"net/http"
+	"sort"
 	"strings"
 
 	"github.com/bradleyfalzon/ghinstallation"
@@ -100,6 +101,10 @@ func alert2issue(url string, alert *alertchain.Alert) *github.IssueRequest {
 			"| Key | Value | Type | Context |",
 			"|:----|:----|:---|:----|",
 		}...)
+
+		sort.Slice(alert.Attributes, func(i, j int) bool {
+			return alert.Attributes[i].Key < alert.Attributes[j].Key
+		})
 		for _, attr := range alert.Attributes {
 			b.fmt("| `%s` | %s | %s | %s |", attr.Key, attr.Value, attr.Type, attr.Contexts.String())
 		}
