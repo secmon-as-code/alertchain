@@ -29,7 +29,7 @@ func (x *SourceBlue) Run(handler alertchain.Handler) error {
 
 func TestSource(t *testing.T) {
 	mock := db.NewDBMock(t)
-	chain := alertchain.New(alertchain.OptDB(mock), alertchain.OptSources(
+	chain := alertchain.New(alertchain.WithDB(mock), alertchain.WithSources(
 		&SourceBlue{title: "one", wait: time.Millisecond * 10},
 		&SourceBlue{title: "five", wait: time.Millisecond * 1500},
 	))

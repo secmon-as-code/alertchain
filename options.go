@@ -10,7 +10,7 @@ import (
 
 type Option func(chain *Chain)
 
-func OptLogLevel(logLevel string) Option {
+func WithLogLevel(logLevel string) Option {
 	return func(chain *Chain) {
 		if err := chain.logger.SetLogLevel(logLevel); err != nil {
 			chain.logger.With("given", logLevel).Warn("ignore invalid log level")
@@ -18,7 +18,7 @@ func OptLogLevel(logLevel string) Option {
 	}
 }
 
-func OptLogFormat(format string) Option {
+func WithLogFormat(format string) Option {
 	return func(chain *Chain) {
 		switch format {
 		case "console":
@@ -32,7 +32,7 @@ func OptLogFormat(format string) Option {
 	}
 }
 
-func OptDBConfig(dbType, dbConfig string) Option {
+func WithDBConfig(dbType, dbConfig string) Option {
 	return func(chain *Chain) {
 		chain.config.DB = types.DBConfig{
 			Type:   dbType,
@@ -41,25 +41,25 @@ func OptDBConfig(dbType, dbConfig string) Option {
 	}
 }
 
-func OptDB(db db.Interface) Option {
+func WithDB(db db.Interface) Option {
 	return func(chain *Chain) {
 		chain.db = db
 	}
 }
 
-func OptJobs(jobs ...*Job) Option {
+func WithJobs(jobs ...*Job) Option {
 	return func(chain *Chain) {
 		chain.jobs = jobs
 	}
 }
 
-func OptSources(src ...Source) Option {
+func WithSources(src ...Source) Option {
 	return func(chain *Chain) {
 		chain.sources = src
 	}
 }
 
-func OptAction(actions ...Action) Option {
+func WithAction(actions ...Action) Option {
 	return func(chain *Chain) {
 		chain.actions = actions
 	}

@@ -101,7 +101,7 @@ func (x *TaskWhite) Execute(ctx *types.Context, alert *alertchain.Alert) error {
 
 func TestChainBasic(t *testing.T) {
 	mock := db.NewDBMock(t)
-	chain := alertchain.New(alertchain.OptDB(mock), alertchain.OptJobs(
+	chain := alertchain.New(alertchain.WithDB(mock), alertchain.WithJobs(
 		&alertchain.Job{
 			Tasks: []alertchain.Task{
 				&TaskBlue{v: "less"},
@@ -148,7 +148,7 @@ func TestChainBasic(t *testing.T) {
 
 func TestChainError(t *testing.T) {
 	mock := db.NewDBMock(t)
-	chain := alertchain.New(alertchain.OptDB(mock), alertchain.OptJobs(
+	chain := alertchain.New(alertchain.WithDB(mock), alertchain.WithJobs(
 		&alertchain.Job{
 			ExitOnErr: false,
 			Tasks: []alertchain.Task{
@@ -189,7 +189,7 @@ func TestChainError(t *testing.T) {
 
 func TestChainTimeout(t *testing.T) {
 	mock := db.NewDBMock(t)
-	chain := alertchain.New(alertchain.OptDB(mock), alertchain.OptJobs(
+	chain := alertchain.New(alertchain.WithDB(mock), alertchain.WithJobs(
 		&alertchain.Job{
 			ExitOnErr: true,
 			Timeout:   time.Millisecond * 500,
@@ -226,7 +226,7 @@ func TestChainTimeout(t *testing.T) {
 func TestChainAlert(t *testing.T) {
 	task := &TaskWhite{}
 	mock := db.NewDBMock(t)
-	chain := alertchain.New(alertchain.OptDB(mock), alertchain.OptJobs(
+	chain := alertchain.New(alertchain.WithDB(mock), alertchain.WithJobs(
 		&alertchain.Job{
 			Tasks: []alertchain.Task{task},
 		}))
