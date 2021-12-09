@@ -3,6 +3,7 @@ package alertchain
 import (
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/m-mizutani/alertchain/pkg/infra/db"
 	"github.com/m-mizutani/alertchain/types"
@@ -51,8 +52,9 @@ func WithDB(db db.Interface) Option {
 	}
 }
 
-func WithAPI(addr string, fallback http.Handler) Option {
+func WithAPI(addr, url string, fallback http.Handler) Option {
 	return func(chain *Chain) error {
+		chain.apiURL = strings.TrimRight(url, "/")
 		chain.api = newAPIServer(addr, chain.db, fallback, chain.logger)
 		return nil
 	}

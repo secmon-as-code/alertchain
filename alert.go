@@ -80,13 +80,19 @@ func (x *Alert) validate() error {
 	return nil
 }
 
-func insertAlert(ctx *types.Context, alert *Alert, client db.Interface) (types.AlertID, error) {
+func insertAlert(ctx *types.Context, alert *Alert, url string, client db.Interface) (types.AlertID, error) {
 	alert.Status = types.StatusNew
 	alert.createdAt = time.Now().UTC()
 
 	added, err := client.PutAlert(ctx, alert.toEnt())
 	if err != nil {
 		return "", err
+	}
+
+	if url != "" {
+		alert.References = append(alert.References, &Reference{
+			URL: url + "/api/v1/alert/" + string(added.ID),
+		})
 	}
 
 	if err := client.AddAttributes(ctx, added.ID, alert.Attributes.toEnt()); err != nil {

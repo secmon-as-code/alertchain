@@ -20,6 +20,8 @@ type Chain struct {
 
 	db     db.Interface
 	api    *apiServer
+	apiURL string
+
 	logger *zlog.Logger
 }
 
@@ -68,7 +70,7 @@ func (x *Chain) Execute(ctx context.Context, alert *Alert) (*Alert, error) {
 	}
 
 	x.logger.With("alert", alert).Trace("Starting Chain.Execute")
-	alertID, err := insertAlert(c, alert, x.db)
+	alertID, err := insertAlert(c, alert, x.apiURL, x.db)
 	if err != nil {
 		return nil, err
 	}
