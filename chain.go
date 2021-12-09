@@ -3,7 +3,7 @@ package alertchain
 import (
 	"context"
 	"sync"
-	"sync/atomic"
+	"time"
 
 	"github.com/m-mizutani/alertchain/pkg/infra/db"
 	"github.com/m-mizutani/alertchain/types"
@@ -16,26 +16,15 @@ type Chain struct {
 	sources []Source
 	actions Actions
 
-	config      types.Config
-	configMutex sync.Mutex
-	configured  int32
+	config types.Config
 
 	db     db.Interface
+	api    *apiServer
 	logger *zlog.Logger
 }
 
-func New(options ...Option) *Chain {
-	chain := newDefault()
-
-	for _, opt := range options {
-		opt(chain)
-	}
-
-	return chain
-}
-
-func newDefault() *Chain {
-	return &Chain{
+func New(options ...Option) (*Chain, error) {
+	chain := &Chain{
 		logger: zlog.New(),
 		config: types.Config{
 			DB: types.DBConfig{
@@ -44,6 +33,20 @@ func newDefault() *Chain {
 			},
 		},
 	}
+
+	for _, opt := range options {
+		opt(chain)
+	}
+
+	if chain.db == nil {
+		dbClient, err := db.New(chain.config.DB.Type, chain.config.DB.Config)
+		if err != nil {
+			return nil, goerr.Wrap(types.ErrChainIsNotConfigured, "DB is not set")
+		}
+		chain.db = dbClient
+	}
+
+	return chain, nil
 }
 
 type Action interface {
@@ -54,36 +57,7 @@ type Action interface {
 
 type Actions []Action
 
-func (x *Chain) init() error {
-	if atomic.LoadInt32(&(x.configured)) > 0 {
-		return nil
-	}
-
-	x.configMutex.Lock()
-	defer x.configMutex.Unlock()
-
-	if atomic.LoadInt32(&(x.configured)) > 0 {
-		return nil
-	}
-
-	if x.db == nil {
-		dbClient, err := db.New(x.config.DB.Type, x.config.DB.Config)
-		if err != nil {
-			return goerr.Wrap(types.ErrChainIsNotConfigured, "DB is not set")
-		}
-		x.db = dbClient
-	}
-
-	atomic.StoreInt32(&(x.configured), int32(1))
-
-	return nil
-}
-
 func (x *Chain) Execute(ctx context.Context, alert *Alert) (*Alert, error) {
-	if err := x.init(); err != nil {
-		return nil, err
-	}
-
 	if err := alert.validate(); err != nil {
 		return nil, err
 	}
@@ -113,10 +87,53 @@ func (x *Chain) Execute(ctx context.Context, alert *Alert) (*Alert, error) {
 	return newAlert(created), nil
 }
 
+func (x *Chain) handleError(err error) {
+	x.logger.Err(err).Error("failed run")
+}
+
 func (x *Chain) Start() error {
 	x.logger.With("config", x.config).Info("Starting AlertChain")
 
-	x.StartSources()
+	handler := func(ctx context.Context, alert *Alert) error {
+		_, err := x.Execute(ctx, alert)
+		return err
+	}
+
+	var wg sync.WaitGroup
+	for i := range x.sources {
+		wg.Add(1)
+
+		go func(src Source) {
+			defer wg.Done()
+
+			for {
+				if err := src.Run(handler); err != nil {
+					x.handleError(err)
+				} else {
+					break
+				}
+
+				time.Sleep(time.Second * 3)
+			}
+		}(x.sources[i])
+	}
+
+	if x.api != nil {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for {
+				if err := x.api.Run(); err != nil {
+					x.handleError(err)
+				} else {
+					break
+				}
+			}
+		}()
+	}
+
+	wg.Wait()
+
 	return nil
 }
 

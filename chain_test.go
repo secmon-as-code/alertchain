@@ -101,7 +101,7 @@ func (x *TaskWhite) Execute(ctx *types.Context, alert *alertchain.Alert) error {
 
 func TestChainBasic(t *testing.T) {
 	mock := db.NewDBMock(t)
-	chain := alertchain.New(alertchain.WithDB(mock), alertchain.WithJobs(
+	chain, err := alertchain.New(alertchain.WithDB(mock), alertchain.WithJobs(
 		&alertchain.Job{
 			Tasks: []alertchain.Task{
 				&TaskBlue{v: "less"},
@@ -115,6 +115,7 @@ func TestChainBasic(t *testing.T) {
 			},
 		},
 	))
+	require.NoError(t, err)
 
 	alert, err := chain.Execute(newContext(), &alertchain.Alert{
 		Title:       "test-alert",
@@ -148,7 +149,7 @@ func TestChainBasic(t *testing.T) {
 
 func TestChainError(t *testing.T) {
 	mock := db.NewDBMock(t)
-	chain := alertchain.New(alertchain.WithDB(mock), alertchain.WithJobs(
+	chain, err := alertchain.New(alertchain.WithDB(mock), alertchain.WithJobs(
 		&alertchain.Job{
 			ExitOnErr: false,
 			Tasks: []alertchain.Task{
@@ -170,8 +171,8 @@ func TestChainError(t *testing.T) {
 			},
 		},
 	))
-
-	_, err := chain.Execute(newContext(), &alertchain.Alert{
+	require.NoError(t, err)
+	_, err = chain.Execute(newContext(), &alertchain.Alert{
 		Title:       "test-alert",
 		Description: "x",
 		Detector:    "y",
@@ -189,7 +190,7 @@ func TestChainError(t *testing.T) {
 
 func TestChainTimeout(t *testing.T) {
 	mock := db.NewDBMock(t)
-	chain := alertchain.New(alertchain.WithDB(mock), alertchain.WithJobs(
+	chain, err := alertchain.New(alertchain.WithDB(mock), alertchain.WithJobs(
 		&alertchain.Job{
 			ExitOnErr: true,
 			Timeout:   time.Millisecond * 500,
@@ -210,8 +211,9 @@ func TestChainTimeout(t *testing.T) {
 			},
 		},
 	))
+	require.NoError(t, err)
 
-	_, err := chain.Execute(newContext(), &alertchain.Alert{
+	_, err = chain.Execute(newContext(), &alertchain.Alert{
 		Title:    "test-alert",
 		Detector: "y",
 	})
@@ -226,10 +228,11 @@ func TestChainTimeout(t *testing.T) {
 func TestChainAlert(t *testing.T) {
 	task := &TaskWhite{}
 	mock := db.NewDBMock(t)
-	chain := alertchain.New(alertchain.WithDB(mock), alertchain.WithJobs(
+	chain, err := alertchain.New(alertchain.WithDB(mock), alertchain.WithJobs(
 		&alertchain.Job{
 			Tasks: []alertchain.Task{task},
 		}))
+	require.NoError(t, err)
 
 	sent := &alertchain.Alert{
 		Title:       "words",
@@ -274,7 +277,7 @@ func TestChainAlert(t *testing.T) {
 	// created alert has added attribute in last job
 	assert.Len(t, created.Attributes.FindByKey("gamma").FindByValue("C"), 1)
 
-	got, err := mock.GetAlert(newContext(), created.ID())
+	got, err := mock.GetAlert(newContext(), created.ID)
 	require.NoError(t, err)
 	require.NotNil(t, got)
 	// retrieved alert also has added attribute

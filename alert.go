@@ -10,6 +10,7 @@ import (
 )
 
 type Alert struct {
+	ID          types.AlertID
 	Title       string
 	Description string
 	Detector    string
@@ -28,12 +29,6 @@ type Alert struct {
 	changeRequest
 }
 
-func (x *Alert) ID() types.AlertID {
-	if x.base == nil {
-		return ""
-	}
-	return x.base.ID
-}
 func (x *Alert) CreatedAt() time.Time { return x.createdAt }
 func (x *Alert) ClosedAt() time.Time  { return x.closedAt }
 
@@ -57,6 +52,7 @@ func (x *Alert) toEnt() *ent.Alert {
 func newAlert(base *ent.Alert) *Alert {
 	alert := &Alert{
 		base:        base,
+		ID:          base.ID,
 		Title:       base.Title,
 		Description: base.Description,
 		Detector:    base.Detector,

@@ -49,7 +49,11 @@ func (x *Client) GetAlerts(ctx *types.Context, offset, limit int) ([]*ent.Alert,
 		defer x.mutex.Unlock()
 	}
 
-	fetched, err := getAlertQuery(x.client).Order(ent.Desc(entAlert.FieldCreatedAt)).Offset(offset).Limit(limit).All(ctx)
+	fetched, err := getAlertQuery(x.client).
+		Order(ent.Desc(entAlert.FieldCreatedAt)).
+		Offset(offset).
+		Limit(limit).
+		All(ctx)
 	if err != nil {
 		return nil, types.ErrDatabaseUnexpected.Wrap(err)
 	}
