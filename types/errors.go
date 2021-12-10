@@ -10,4 +10,5 @@ var (
 	ErrInvalidInput         = goerr.New("invalid input data")
 
 	ErrChainIsNotConfigured = goerr.New("chain is not configured")
+	ErrInvalidConfigOrder   = goerr.New("invalid configuration order")
 )

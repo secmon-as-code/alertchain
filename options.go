@@ -7,6 +7,7 @@ import (
 
 	"github.com/m-mizutani/alertchain/pkg/infra/db"
 	"github.com/m-mizutani/alertchain/types"
+	"github.com/m-mizutani/goerr"
 	"github.com/m-mizutani/zlog"
 )
 
@@ -37,10 +38,11 @@ func WithLogFormat(format string) Option {
 
 func WithDBConfig(dbType, dbConfig string) Option {
 	return func(chain *Chain) error {
-		chain.config.DB = types.DBConfig{
-			Type:   dbType,
-			Config: dbConfig,
+		dbClient, err := db.New(dbType, dbConfig)
+		if err != nil {
+			return goerr.Wrap(err)
 		}
+		chain.db = dbClient
 		return nil
 	}
 }
@@ -54,6 +56,9 @@ func WithDB(db db.Interface) Option {
 
 func WithAPI(addr, url string, fallback http.Handler) Option {
 	return func(chain *Chain) error {
+		if chain.db == nil {
+			return goerr.Wrap(types.ErrInvalidConfigOrder, "db configuration is required before API")
+		}
 		chain.apiURL = strings.TrimRight(url, "/")
 		chain.api = newAPIServer(addr, chain.db, fallback, chain.logger)
 		return nil

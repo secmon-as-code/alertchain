@@ -40,10 +40,13 @@ func New(options ...Option) (*Chain, error) {
 		opt(chain)
 	}
 
+	// fallback to setup db
 	if chain.db == nil {
-		dbClient, err := db.New(chain.config.DB.Type, chain.config.DB.Config)
+		dbType := "sqlite3"
+		dbCfg := "file:alertchain?mode=memory&cache=shared&_fk=1"
+		dbClient, err := db.New(dbType, dbCfg)
 		if err != nil {
-			return nil, goerr.Wrap(types.ErrChainIsNotConfigured, "DB is not set")
+			return nil, goerr.Wrap(err)
 		}
 		chain.db = dbClient
 	}
