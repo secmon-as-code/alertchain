@@ -2,6 +2,7 @@ package alertchain
 
 import (
 	"context"
+	"net/http"
 	"sync"
 	"time"
 
@@ -90,6 +91,14 @@ func (x *Chain) Execute(ctx context.Context, alert *Alert) (*Alert, error) {
 	}
 
 	return newAlert(created), nil
+}
+
+func (x *Chain) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if x.api.engine == nil {
+		panic("AlertChain API is not configured")
+	}
+
+	x.api.engine.ServeHTTP(w, r)
 }
 
 func (x *Chain) handleError(err error) {
