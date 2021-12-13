@@ -20,7 +20,7 @@ type CreateGitHubIssue struct {
 	Owner      string
 	Repo       string
 
-	AlertChainURL string
+	Exclude []types.Severity
 
 	// For test
 	TestRoundTripper http.RoundTripper
@@ -30,6 +30,13 @@ func (x *CreateGitHubIssue) Name() string { return "Create GitHub issue" }
 
 func (x *CreateGitHubIssue) Execute(ctx *types.Context, alert *alertchain.Alert) error {
 	ctx.Logger().Trace("starting CreateGitHubIssue")
+
+	for _, sev := range x.Exclude {
+		if sev == alert.Severity {
+			return nil
+		}
+	}
+
 	rt := http.DefaultTransport
 	if x.TestRoundTripper != nil {
 		rt = x.TestRoundTripper
@@ -42,7 +49,7 @@ func (x *CreateGitHubIssue) Execute(ctx *types.Context, alert *alertchain.Alert)
 
 	client := github.NewClient(&http.Client{Transport: itr})
 
-	issue, resp, err := client.Issues.Create(ctx, x.Owner, x.Repo, alert2issue(x.AlertChainURL, alert))
+	issue, resp, err := client.Issues.Create(ctx, x.Owner, x.Repo, alert2issue(alert))
 	if err != nil {
 		return goerr.Wrap(err)
 	}
@@ -75,7 +82,7 @@ func (x *issueBody) str() *string {
 	return &d
 }
 
-func alert2issue(url string, alert *alertchain.Alert) *github.IssueRequest {
+func alert2issue(alert *alertchain.Alert) *github.IssueRequest {
 	var b issueBody
 
 	b.add(
