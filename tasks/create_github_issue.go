@@ -97,6 +97,7 @@ func alert2issue(alert *alertchain.Alert) *github.IssueRequest {
 		"- Created at: "+alert.CreatedAt().Format("2006-01-02 15:04:05"),
 		"- Detected by: "+alert.Detector,
 		"- Severity: "+string(alert.Severity),
+		"- ID: "+string(alert.ID),
 		"",
 		"- - - - - - - -",
 		"",
