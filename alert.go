@@ -90,8 +90,11 @@ func insertAlert(ctx *types.Context, alert *Alert, url string, client db.Interfa
 	}
 
 	if url != "" {
+		endpoint := url + "/api/v1/alert/" + string(added.ID)
 		alert.References = append(alert.References, &Reference{
-			URL: url + "/api/v1/alert/" + string(added.ID),
+			Title:   "alertchain API",
+			URL:     endpoint,
+			Comment: endpoint,
 		})
 	}
 
