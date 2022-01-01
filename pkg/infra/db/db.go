@@ -6,9 +6,10 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/m-mizutani/alertchain/pkg/domain/model"
+	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/enttest"
-	"github.com/m-mizutani/alertchain/types"
 
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
@@ -17,16 +18,16 @@ import (
 type Interface interface {
 	Close() error
 
-	GetAlert(ctx *types.Context, id types.AlertID) (*ent.Alert, error)
-	GetAlerts(ctx *types.Context, offset, limit int) ([]*ent.Alert, error)
-	PutAlert(ctx *types.Context, alert *ent.Alert) (*ent.Alert, error)
+	GetAlert(ctx *types.Context, id types.AlertID) (*model.Alert, error)
+	GetAlerts(ctx *types.Context, offset, limit int) ([]*model.Alert, error)
+	PutAlert(ctx *types.Context, alert *model.Alert) error
 	UpdateAlertStatus(ctx *types.Context, id types.AlertID, status types.AlertStatus) error
 	UpdateAlertSeverity(ctx *types.Context, id types.AlertID, sev types.Severity) error
 	UpdateAlertClosedAt(ctx *types.Context, id types.AlertID, ts int64) error
 
-	AddAttributes(ctx *types.Context, id types.AlertID, newAttrs []*ent.Attribute) error
-	AddReferences(ctx *types.Context, id types.AlertID, refs []*ent.Reference) error
-	AddAnnotation(ctx *types.Context, attr *ent.Attribute, ann []*ent.Annotation) error
+	AddAttributes(ctx *types.Context, id types.AlertID, newAttrs []*model.Attribute) error
+	AddReferences(ctx *types.Context, id types.AlertID, refs []*model.Reference) error
+	AddAnnotation(ctx *types.Context, attr *model.Attribute, ann []*model.Annotation) error
 }
 
 type Client struct {

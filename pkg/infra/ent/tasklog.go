@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"entgo.io/ent/dialect/sql"
+	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/tasklog"
-	"github.com/m-mizutani/alertchain/types"
 )
 
 // TaskLog is the model entity for the TaskLog schema.

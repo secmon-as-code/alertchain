@@ -8,8 +8,8 @@ import (
 	"strings"
 
 	"entgo.io/ent/dialect/sql"
+	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/execlog"
-	"github.com/m-mizutani/alertchain/types"
 )
 
 // ExecLog is the model entity for the ExecLog schema.

@@ -1,33 +1,15 @@
-package alertchain_test
+package model_test
 
-import (
-	"context"
-	"encoding/json"
-	"fmt"
-	"io"
-	"io/ioutil"
-	"net/http"
-	"net/http/httptest"
-	"testing"
-	"time"
-
-	"github.com/m-mizutani/alertchain"
-	"github.com/m-mizutani/alertchain/pkg/infra/db"
-	"github.com/m-mizutani/alertchain/types"
-	"github.com/m-mizutani/zlog"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-)
-
+/*
 type PushAlert struct {
 	err error
 }
 
 func (x *PushAlert) Name() string { return "blue" }
-func (x *PushAlert) Run(handler alertchain.Handler) error {
+func (x *PushAlert) Run(handler model.Handler) error {
 	ctx := context.Background()
 	for i := 0; i < 10; i++ {
-		err := handler(ctx, &alertchain.Alert{
+		err := handler(ctx, &model.Alert{
 			Title:    fmt.Sprintf("%d", i),
 			Detector: "blue",
 		})
@@ -196,3 +178,4 @@ func TestAlertAPI(t *testing.T) {
 		})
 	})
 }
+*/

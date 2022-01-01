@@ -9,12 +9,12 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/actionlog"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/alert"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/attribute"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/reference"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/tasklog"
-	"github.com/m-mizutani/alertchain/types"
 )
 
 // AlertCreate is the builder for creating a Alert entity.
@@ -289,6 +289,9 @@ func (ac *AlertCreate) sqlSave(ctx context.Context) (*Alert, error) {
 			err = &ConstraintError{err.Error(), err}
 		}
 		return nil, err
+	}
+	if _spec.ID.Value != nil {
+		_node.ID = _spec.ID.Value.(types.AlertID)
 	}
 	return _node, nil
 }

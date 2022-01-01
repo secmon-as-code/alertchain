@@ -3,8 +3,8 @@ package db_test
 import (
 	"testing"
 
+	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/infra/db"
-	"github.com/m-mizutani/alertchain/pkg/infra/ent"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -19,9 +19,9 @@ func setupDB(t *testing.T) db.Interface {
 	return client
 }
 
-func equalAttributes(t *testing.T, expected, actual *ent.Attribute) {
+func equalAttributes(t *testing.T, expected, actual *model.Attribute) {
 	assert.Equal(t, expected.Key, actual.Key)
 	assert.Equal(t, expected.Value, actual.Value)
 	assert.Equal(t, expected.Type, actual.Type)
-	assert.Equal(t, expected.Context, actual.Context)
+	assert.Equal(t, expected.Contexts, actual.Contexts)
 }

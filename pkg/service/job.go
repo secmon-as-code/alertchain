@@ -1,26 +1,6 @@
-package alertchain
+package service
 
-import (
-	"sync"
-	"time"
-
-	"github.com/m-mizutani/alertchain/pkg/infra/db"
-	"github.com/m-mizutani/alertchain/types"
-	"github.com/m-mizutani/goerr"
-)
-
-type Jobs []*Job
-type Job struct {
-	Timeout   time.Duration
-	ExitOnErr bool
-	Tasks     []Task
-}
-
-type Task interface {
-	Name() string
-	Execute(ctx *types.Context, alert *Alert) error
-}
-
+/*
 func (x Jobs) Execute(ctx *types.Context, client db.Interface, alertID types.AlertID) error {
 	for idx, job := range x {
 		ctx.Logger().With("job", job).With("step", idx).Trace("Starting Job")
@@ -103,3 +83,4 @@ func executeTask(ctx *types.Context, input *executeTaskInput) {
 		return
 	}
 }
+*/

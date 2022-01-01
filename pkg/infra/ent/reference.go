@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"entgo.io/ent/dialect/sql"
+	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/reference"
-	"github.com/m-mizutani/alertchain/types"
 )
 
 // Reference is the model entity for the Reference schema.

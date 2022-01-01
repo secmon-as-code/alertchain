@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"entgo.io/ent/dialect/sql"
+	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/actionlog"
-	"github.com/m-mizutani/alertchain/types"
 )
 
 // ActionLog is the model entity for the ActionLog schema.

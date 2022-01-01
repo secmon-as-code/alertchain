@@ -1,12 +1,32 @@
 package db
 
 import (
+	"time"
+
+	"github.com/m-mizutani/alertchain/pkg/domain/model"
+	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent"
-	"github.com/m-mizutani/alertchain/types"
 
 	entAlert "github.com/m-mizutani/alertchain/pkg/infra/ent/alert"
-	"github.com/m-mizutani/alertchain/pkg/infra/ent/attribute"
 )
+
+func entToAlert(alert *ent.Alert) *model.Alert {
+	return model.NewAlertWithID(alert.ID, &model.Alert{
+		Title:       alert.Title,
+		Description: alert.Description,
+		Detector:    alert.Detector,
+		Status:      alert.Status,
+		Severity:    alert.Severity,
+
+		DetectedAt: time.Unix(alert.DetectedAt, 0),
+
+		CreatedAt: time.Unix(alert.CreatedAt, 0),
+		ClosedAt:  time.Unix(alert.ClosedAt, 0),
+
+		Attributes: entToAttributes(alert.Edges.Attributes),
+		References: entToReferences(alert.Edges.References),
+	})
+}
 
 func getAlertQuery(client *ent.Client) *ent.AlertQuery {
 	return client.Alert.Query().
@@ -26,12 +46,7 @@ func getAlertQuery(client *ent.Client) *ent.AlertQuery {
 		})
 }
 
-func (x *Client) GetAlert(ctx *types.Context, id types.AlertID) (*ent.Alert, error) {
-	if x.lock {
-		x.mutex.Lock()
-		defer x.mutex.Unlock()
-	}
-
+func (x *Client) GetAlert(ctx *types.Context, id types.AlertID) (*model.Alert, error) {
 	fetched, err := getAlertQuery(x.client).Where(entAlert.ID(id)).Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
@@ -40,15 +55,10 @@ func (x *Client) GetAlert(ctx *types.Context, id types.AlertID) (*ent.Alert, err
 		return nil, types.ErrDatabaseUnexpected.Wrap(err)
 	}
 
-	return fetched, nil
+	return entToAlert(fetched), nil
 }
 
-func (x *Client) GetAlerts(ctx *types.Context, offset, limit int) ([]*ent.Alert, error) {
-	if x.lock {
-		x.mutex.Lock()
-		defer x.mutex.Unlock()
-	}
-
+func (x *Client) GetAlerts(ctx *types.Context, offset, limit int) ([]*model.Alert, error) {
 	fetched, err := getAlertQuery(x.client).
 		Order(ent.Desc(entAlert.FieldCreatedAt)).
 		Offset(offset).
@@ -58,45 +68,42 @@ func (x *Client) GetAlerts(ctx *types.Context, offset, limit int) ([]*ent.Alert,
 		return nil, types.ErrDatabaseUnexpected.Wrap(err)
 	}
 
-	return fetched, nil
-
+	alerts := make([]*model.Alert, len(fetched))
+	for i := range fetched {
+		alerts[i] = entToAlert(fetched[i])
+	}
+	return alerts, nil
 }
 
-func (x *Client) PutAlert(ctx *types.Context, alert *ent.Alert) (*ent.Alert, error) {
+func (x *Client) PutAlert(ctx *types.Context, alert *model.Alert) error {
+	if err := alert.Validate(); err != nil {
+		return err
+	}
+
 	q := x.client.Alert.Create().
-		SetID(types.NewAlertID()).
+		SetID(alert.ID()).
 		SetTitle(alert.Title).
 		SetDescription(alert.Description).
 		SetDetector(alert.Detector).
 		SetStatus(alert.Status).
 		SetSeverity(alert.Severity).
-		SetDetectedAt(alert.DetectedAt).
-		SetCreatedAt(alert.CreatedAt).
-		SetClosedAt(alert.ClosedAt)
+		SetDetectedAt(alert.DetectedAt.Unix()).
+		SetCreatedAt(alert.CreatedAt.Unix()).
+		SetClosedAt(alert.ClosedAt.Unix())
 
-	if x.lock {
-		x.mutex.Lock()
-		defer x.mutex.Unlock()
-	}
-	created, err := q.Save(ctx)
-
-	if err != nil {
-		return nil, types.ErrDatabaseUnexpected.Wrap(err)
+	if _, err := q.Save(ctx); err != nil {
+		return types.ErrDatabaseUnexpected.Wrap(err)
 	}
 
-	return created, nil
+	return nil
 }
 
-func (x *Client) UpdateAlert(ctx *types.Context, alert *ent.Alert) error {
-	q := x.client.Alert.UpdateOneID(alert.ID).
-		SetClosedAt(alert.ClosedAt).
+func (x *Client) UpdateAlert(ctx *types.Context, alert *model.Alert) error {
+	q := x.client.Alert.UpdateOneID(alert.ID()).
+		SetClosedAt(alert.ClosedAt.Unix()).
 		SetSeverity(alert.Severity).
 		SetStatus(alert.Status)
 
-	if x.lock {
-		x.mutex.Lock()
-		defer x.mutex.Unlock()
-	}
 	if _, err := q.Save(ctx); err != nil {
 		return types.ErrDatabaseUnexpected.Wrap(err)
 	}
@@ -142,106 +149,4 @@ func (x *Client) UpdateAlertClosedAt(ctx *types.Context, id types.AlertID, ts in
 
 	return nil
 
-}
-
-func (x *Client) AddAttributes(ctx *types.Context, id types.AlertID, newAttrs []*ent.Attribute) error {
-	if len(newAttrs) == 0 {
-		return nil // nothing to do
-	}
-
-	builders := make([]*ent.AttributeCreate, len(newAttrs))
-	for i, attr := range newAttrs {
-		builders[i] = x.client.Attribute.Create().
-			SetKey(attr.Key).
-			SetValue(attr.Value).
-			SetType(attr.Type).
-			SetContext(attr.Context).
-			SetAlertID(id)
-	}
-
-	if x.lock {
-		x.mutex.Lock()
-		defer x.mutex.Unlock()
-	}
-	added, err := x.client.Attribute.CreateBulk(builders...).Save(ctx)
-	if err != nil {
-		return types.ErrDatabaseUnexpected.Wrap(err)
-	}
-
-	if _, err := x.client.Alert.UpdateOneID(id).AddAttributes(added...).Save(ctx); err != nil {
-		return types.ErrDatabaseUnexpected.Wrap(err)
-	}
-
-	return nil
-}
-
-func (x *Client) GetAttribute(ctx *types.Context, id int) (*ent.Attribute, error) {
-	if x.lock {
-		x.mutex.Lock()
-		defer x.mutex.Unlock()
-	}
-
-	attr, err := x.client.Attribute.Query().Where(attribute.ID(id)).WithAlert().First(ctx)
-	if err != nil {
-		return nil, types.ErrDatabaseUnexpected.Wrap(err)
-	}
-
-	return attr, nil
-}
-
-func (x *Client) AddAnnotation(ctx *types.Context, attr *ent.Attribute, annotations []*ent.Annotation) error {
-	if len(annotations) == 0 {
-		return nil
-	}
-
-	builders := make([]*ent.AnnotationCreate, len(annotations))
-	for i, ann := range annotations {
-		builders[i] = x.client.Annotation.Create().
-			SetName(ann.Name).
-			SetSource(ann.Source).
-			SetValue(ann.Value).
-			SetTimestamp(ann.Timestamp)
-	}
-
-	if x.lock {
-		x.mutex.Lock()
-		defer x.mutex.Unlock()
-	}
-	added, err := x.client.Annotation.CreateBulk(builders...).Save(ctx)
-	if err != nil {
-		return types.ErrDatabaseUnexpected.Wrap(err)
-	}
-
-	if _, err := x.client.Attribute.UpdateOneID(attr.ID).AddAnnotations(added...).Save(ctx); err != nil {
-		return types.ErrDatabaseUnexpected.Wrap(err)
-	}
-
-	return nil
-}
-
-func (x *Client) AddReferences(ctx *types.Context, id types.AlertID, refs []*ent.Reference) error {
-	if x.lock {
-		x.mutex.Lock()
-		defer x.mutex.Unlock()
-	}
-
-	builders := make([]*ent.ReferenceCreate, len(refs))
-	for i, ref := range refs {
-		builders[i] = x.client.Reference.Create().
-			SetSource(ref.Source).
-			SetTitle(ref.Title).
-			SetURL(ref.URL).
-			SetComment(ref.Comment)
-	}
-
-	added, err := x.client.Reference.CreateBulk(builders...).Save(ctx)
-	if err != nil {
-		return types.ErrDatabaseUnexpected.Wrap(err)
-	}
-
-	if _, err := x.client.Alert.UpdateOneID(id).AddReferences(added...).Save(ctx); err != nil {
-		return types.ErrDatabaseUnexpected.Wrap(err)
-	}
-
-	return nil
 }

@@ -4,8 +4,8 @@ package execlog
 
 import (
 	"entgo.io/ent/dialect/sql"
+	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/predicate"
-	"github.com/m-mizutani/alertchain/types"
 )
 
 // ID filters vertices based on their ID field.

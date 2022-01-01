@@ -3,9 +3,9 @@
 package ent
 
 import (
+	"github.com/m-mizutani/alertchain/pkg/domain/schema"
+	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/alert"
-	"github.com/m-mizutani/alertchain/pkg/infra/schema"
-	"github.com/m-mizutani/alertchain/types"
 )
 
 // The init function reads all schema descriptors with runtime code

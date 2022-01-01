@@ -1,12 +1,12 @@
-package alertchain
+package model
 
 import (
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/infra/db"
-	"github.com/m-mizutani/alertchain/types"
 	"github.com/m-mizutani/goerr"
 	"github.com/m-mizutani/zlog"
 )
@@ -117,7 +117,7 @@ func getAlert(c *gin.Context) {
 	if resp == nil {
 		c.JSON(http.StatusNotFound, apiResponse{Message: "not found"})
 	} else {
-		c.JSON(http.StatusOK, newAlert(resp))
+		c.JSON(http.StatusOK, resp)
 	}
 }
 
@@ -148,11 +148,5 @@ func getAlerts(c *gin.Context) {
 		_ = c.Error(err)
 		return
 	}
-
-	alerts := make([]*Alert, len(resp))
-	for i, alert := range resp {
-		alerts[i] = newAlert(alert)
-	}
-
-	c.JSON(http.StatusOK, alerts)
+	c.JSON(http.StatusOK, resp)
 }

@@ -1,18 +1,6 @@
 package tasks
 
-import (
-	"fmt"
-	"net/http"
-	"sort"
-	"strings"
-
-	"github.com/bradleyfalzon/ghinstallation"
-	"github.com/google/go-github/github"
-	"github.com/m-mizutani/alertchain"
-	"github.com/m-mizutani/alertchain/types"
-	"github.com/m-mizutani/goerr"
-)
-
+/*
 type CreateGitHubIssue struct {
 	AppID      int64
 	InstallID  int64
@@ -134,3 +122,4 @@ func alert2issue(alert *alertchain.Alert) *github.IssueRequest {
 		Body:  b.str(),
 	}
 }
+*/

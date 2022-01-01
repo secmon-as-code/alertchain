@@ -3,7 +3,7 @@ package schema
 import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/field"
-	"github.com/m-mizutani/alertchain/types"
+	"github.com/m-mizutani/alertchain/pkg/domain/types"
 )
 
 // ExecLog holds the schema definition for the ExecLog entity.

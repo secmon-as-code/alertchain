@@ -3,7 +3,7 @@
 package alert
 
 import (
-	"github.com/m-mizutani/alertchain/types"
+	"github.com/m-mizutani/alertchain/pkg/domain/types"
 )
 
 const (

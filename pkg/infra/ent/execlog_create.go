@@ -9,8 +9,8 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/execlog"
-	"github.com/m-mizutani/alertchain/types"
 )
 
 // ExecLogCreate is the builder for creating a ExecLog entity.

@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/migrate"
-	"github.com/m-mizutani/alertchain/types"
 
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/actionlog"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/alert"

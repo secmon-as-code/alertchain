@@ -4,7 +4,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
-	"github.com/m-mizutani/alertchain/types"
+	"github.com/m-mizutani/alertchain/pkg/domain/types"
 )
 
 // Alert holds the schema definition for the Alert entity.
