@@ -9,38 +9,50 @@ const (
 	FieldID = "id"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
-	// EdgeArgument holds the string denoting the argument edge name in mutations.
-	EdgeArgument = "argument"
-	// EdgeExecLogs holds the string denoting the exec_logs edge name in mutations.
-	EdgeExecLogs = "exec_logs"
+	// FieldStartedAt holds the string denoting the started_at field in the database.
+	FieldStartedAt = "started_at"
+	// FieldStoppedAt holds the string denoting the stopped_at field in the database.
+	FieldStoppedAt = "stopped_at"
+	// FieldLog holds the string denoting the log field in the database.
+	FieldLog = "log"
+	// FieldErrmsg holds the string denoting the errmsg field in the database.
+	FieldErrmsg = "errmsg"
+	// FieldErrValues holds the string denoting the err_values field in the database.
+	FieldErrValues = "err_values"
+	// FieldStackTrace holds the string denoting the stack_trace field in the database.
+	FieldStackTrace = "stack_trace"
+	// FieldStatus holds the string denoting the status field in the database.
+	FieldStatus = "status"
+	// EdgeJob holds the string denoting the job edge name in mutations.
+	EdgeJob = "job"
 	// Table holds the table name of the actionlog in the database.
 	Table = "action_logs"
-	// ArgumentTable is the table that holds the argument relation/edge.
-	ArgumentTable = "attributes"
-	// ArgumentInverseTable is the table name for the Attribute entity.
-	// It exists in this package in order to avoid circular dependency with the "attribute" package.
-	ArgumentInverseTable = "attributes"
-	// ArgumentColumn is the table column denoting the argument relation/edge.
-	ArgumentColumn = "action_log_argument"
-	// ExecLogsTable is the table that holds the exec_logs relation/edge.
-	ExecLogsTable = "exec_logs"
-	// ExecLogsInverseTable is the table name for the ExecLog entity.
-	// It exists in this package in order to avoid circular dependency with the "execlog" package.
-	ExecLogsInverseTable = "exec_logs"
-	// ExecLogsColumn is the table column denoting the exec_logs relation/edge.
-	ExecLogsColumn = "action_log_exec_logs"
+	// JobTable is the table that holds the job relation/edge.
+	JobTable = "action_logs"
+	// JobInverseTable is the table name for the Job entity.
+	// It exists in this package in order to avoid circular dependency with the "job" package.
+	JobInverseTable = "jobs"
+	// JobColumn is the table column denoting the job relation/edge.
+	JobColumn = "job_action_logs"
 )
 
 // Columns holds all SQL columns for actionlog fields.
 var Columns = []string{
 	FieldID,
 	FieldName,
+	FieldStartedAt,
+	FieldStoppedAt,
+	FieldLog,
+	FieldErrmsg,
+	FieldErrValues,
+	FieldStackTrace,
+	FieldStatus,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "action_logs"
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
-	"alert_action_logs",
+	"job_action_logs",
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).

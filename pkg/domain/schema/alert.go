@@ -31,9 +31,8 @@ func (Alert) Fields() []ent.Field {
 // Edges of the Alert.
 func (Alert) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("attributes", Attribute.Type),
-		edge.To("references", Reference.Type),
-		edge.To("task_logs", TaskLog.Type),
-		edge.To("action_logs", ActionLog.Type),
+		edge.To(edgeAlertToAttrs, Attribute.Type),
+		edge.To(edgeAlertToRef, Reference.Type),
+		edge.To(edgeAlertToJob, Job.Type),
 	}
 }

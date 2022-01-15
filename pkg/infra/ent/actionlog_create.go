@@ -9,9 +9,9 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/actionlog"
-	"github.com/m-mizutani/alertchain/pkg/infra/ent/attribute"
-	"github.com/m-mizutani/alertchain/pkg/infra/ent/execlog"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/job"
 )
 
 // ActionLogCreate is the builder for creating a ActionLog entity.
@@ -27,34 +27,89 @@ func (alc *ActionLogCreate) SetName(s string) *ActionLogCreate {
 	return alc
 }
 
-// AddArgumentIDs adds the "argument" edge to the Attribute entity by IDs.
-func (alc *ActionLogCreate) AddArgumentIDs(ids ...int) *ActionLogCreate {
-	alc.mutation.AddArgumentIDs(ids...)
+// SetStartedAt sets the "started_at" field.
+func (alc *ActionLogCreate) SetStartedAt(i int64) *ActionLogCreate {
+	alc.mutation.SetStartedAt(i)
 	return alc
 }
 
-// AddArgument adds the "argument" edges to the Attribute entity.
-func (alc *ActionLogCreate) AddArgument(a ...*Attribute) *ActionLogCreate {
-	ids := make([]int, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
-	}
-	return alc.AddArgumentIDs(ids...)
-}
-
-// AddExecLogIDs adds the "exec_logs" edge to the ExecLog entity by IDs.
-func (alc *ActionLogCreate) AddExecLogIDs(ids ...int) *ActionLogCreate {
-	alc.mutation.AddExecLogIDs(ids...)
+// SetStoppedAt sets the "stopped_at" field.
+func (alc *ActionLogCreate) SetStoppedAt(i int64) *ActionLogCreate {
+	alc.mutation.SetStoppedAt(i)
 	return alc
 }
 
-// AddExecLogs adds the "exec_logs" edges to the ExecLog entity.
-func (alc *ActionLogCreate) AddExecLogs(e ...*ExecLog) *ActionLogCreate {
-	ids := make([]int, len(e))
-	for i := range e {
-		ids[i] = e[i].ID
+// SetNillableStoppedAt sets the "stopped_at" field if the given value is not nil.
+func (alc *ActionLogCreate) SetNillableStoppedAt(i *int64) *ActionLogCreate {
+	if i != nil {
+		alc.SetStoppedAt(*i)
 	}
-	return alc.AddExecLogIDs(ids...)
+	return alc
+}
+
+// SetLog sets the "log" field.
+func (alc *ActionLogCreate) SetLog(s string) *ActionLogCreate {
+	alc.mutation.SetLog(s)
+	return alc
+}
+
+// SetNillableLog sets the "log" field if the given value is not nil.
+func (alc *ActionLogCreate) SetNillableLog(s *string) *ActionLogCreate {
+	if s != nil {
+		alc.SetLog(*s)
+	}
+	return alc
+}
+
+// SetErrmsg sets the "errmsg" field.
+func (alc *ActionLogCreate) SetErrmsg(s string) *ActionLogCreate {
+	alc.mutation.SetErrmsg(s)
+	return alc
+}
+
+// SetNillableErrmsg sets the "errmsg" field if the given value is not nil.
+func (alc *ActionLogCreate) SetNillableErrmsg(s *string) *ActionLogCreate {
+	if s != nil {
+		alc.SetErrmsg(*s)
+	}
+	return alc
+}
+
+// SetErrValues sets the "err_values" field.
+func (alc *ActionLogCreate) SetErrValues(s []string) *ActionLogCreate {
+	alc.mutation.SetErrValues(s)
+	return alc
+}
+
+// SetStackTrace sets the "stack_trace" field.
+func (alc *ActionLogCreate) SetStackTrace(s []string) *ActionLogCreate {
+	alc.mutation.SetStackTrace(s)
+	return alc
+}
+
+// SetStatus sets the "status" field.
+func (alc *ActionLogCreate) SetStatus(ts types.ExecStatus) *ActionLogCreate {
+	alc.mutation.SetStatus(ts)
+	return alc
+}
+
+// SetJobID sets the "job" edge to the Job entity by ID.
+func (alc *ActionLogCreate) SetJobID(id int) *ActionLogCreate {
+	alc.mutation.SetJobID(id)
+	return alc
+}
+
+// SetNillableJobID sets the "job" edge to the Job entity by ID if the given value is not nil.
+func (alc *ActionLogCreate) SetNillableJobID(id *int) *ActionLogCreate {
+	if id != nil {
+		alc = alc.SetJobID(*id)
+	}
+	return alc
+}
+
+// SetJob sets the "job" edge to the Job entity.
+func (alc *ActionLogCreate) SetJob(j *Job) *ActionLogCreate {
+	return alc.SetJobID(j.ID)
 }
 
 // Mutation returns the ActionLogMutation object of the builder.
@@ -130,6 +185,12 @@ func (alc *ActionLogCreate) check() error {
 	if _, ok := alc.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "name"`)}
 	}
+	if _, ok := alc.mutation.StartedAt(); !ok {
+		return &ValidationError{Name: "started_at", err: errors.New(`ent: missing required field "started_at"`)}
+	}
+	if _, ok := alc.mutation.Status(); !ok {
+		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "status"`)}
+	}
 	return nil
 }
 
@@ -165,42 +226,80 @@ func (alc *ActionLogCreate) createSpec() (*ActionLog, *sqlgraph.CreateSpec) {
 		})
 		_node.Name = value
 	}
-	if nodes := alc.mutation.ArgumentIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   actionlog.ArgumentTable,
-			Columns: []string{actionlog.ArgumentColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: attribute.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
+	if value, ok := alc.mutation.StartedAt(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt64,
+			Value:  value,
+			Column: actionlog.FieldStartedAt,
+		})
+		_node.StartedAt = value
 	}
-	if nodes := alc.mutation.ExecLogsIDs(); len(nodes) > 0 {
+	if value, ok := alc.mutation.StoppedAt(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt64,
+			Value:  value,
+			Column: actionlog.FieldStoppedAt,
+		})
+		_node.StoppedAt = value
+	}
+	if value, ok := alc.mutation.Log(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: actionlog.FieldLog,
+		})
+		_node.Log = value
+	}
+	if value, ok := alc.mutation.Errmsg(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: actionlog.FieldErrmsg,
+		})
+		_node.Errmsg = value
+	}
+	if value, ok := alc.mutation.ErrValues(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeJSON,
+			Value:  value,
+			Column: actionlog.FieldErrValues,
+		})
+		_node.ErrValues = value
+	}
+	if value, ok := alc.mutation.StackTrace(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeJSON,
+			Value:  value,
+			Column: actionlog.FieldStackTrace,
+		})
+		_node.StackTrace = value
+	}
+	if value, ok := alc.mutation.Status(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: actionlog.FieldStatus,
+		})
+		_node.Status = value
+	}
+	if nodes := alc.mutation.JobIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   actionlog.ExecLogsTable,
-			Columns: []string{actionlog.ExecLogsColumn},
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   actionlog.JobTable,
+			Columns: []string{actionlog.JobColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: execlog.FieldID,
+					Column: job.FieldID,
 				},
 			},
 		}
 		for _, k := range nodes {
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
+		_node.job_action_logs = &nodes[0]
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

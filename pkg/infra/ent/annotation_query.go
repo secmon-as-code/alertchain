@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/annotation"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/attribute"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/predicate"
 )
 
@@ -24,7 +25,9 @@ type AnnotationQuery struct {
 	order      []OrderFunc
 	fields     []string
 	predicates []predicate.Annotation
-	withFKs    bool
+	// eager-loading edges.
+	withAttribute *AttributeQuery
+	withFKs       bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -59,6 +62,28 @@ func (aq *AnnotationQuery) Unique(unique bool) *AnnotationQuery {
 func (aq *AnnotationQuery) Order(o ...OrderFunc) *AnnotationQuery {
 	aq.order = append(aq.order, o...)
 	return aq
+}
+
+// QueryAttribute chains the current query on the "attribute" edge.
+func (aq *AnnotationQuery) QueryAttribute() *AttributeQuery {
+	query := &AttributeQuery{config: aq.config}
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := aq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := aq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(annotation.Table, annotation.FieldID, selector),
+			sqlgraph.To(attribute.Table, attribute.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, annotation.AttributeTable, annotation.AttributeColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(aq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // First returns the first Annotation entity from the query.
@@ -237,15 +262,27 @@ func (aq *AnnotationQuery) Clone() *AnnotationQuery {
 		return nil
 	}
 	return &AnnotationQuery{
-		config:     aq.config,
-		limit:      aq.limit,
-		offset:     aq.offset,
-		order:      append([]OrderFunc{}, aq.order...),
-		predicates: append([]predicate.Annotation{}, aq.predicates...),
+		config:        aq.config,
+		limit:         aq.limit,
+		offset:        aq.offset,
+		order:         append([]OrderFunc{}, aq.order...),
+		predicates:    append([]predicate.Annotation{}, aq.predicates...),
+		withAttribute: aq.withAttribute.Clone(),
 		// clone intermediate query.
 		sql:  aq.sql.Clone(),
 		path: aq.path,
 	}
+}
+
+// WithAttribute tells the query-builder to eager-load the nodes that are connected to
+// the "attribute" edge. The optional arguments are used to configure the query builder of the edge.
+func (aq *AnnotationQuery) WithAttribute(opts ...func(*AttributeQuery)) *AnnotationQuery {
+	query := &AttributeQuery{config: aq.config}
+	for _, opt := range opts {
+		opt(query)
+	}
+	aq.withAttribute = query
+	return aq
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -311,10 +348,16 @@ func (aq *AnnotationQuery) prepareQuery(ctx context.Context) error {
 
 func (aq *AnnotationQuery) sqlAll(ctx context.Context) ([]*Annotation, error) {
 	var (
-		nodes   = []*Annotation{}
-		withFKs = aq.withFKs
-		_spec   = aq.querySpec()
+		nodes       = []*Annotation{}
+		withFKs     = aq.withFKs
+		_spec       = aq.querySpec()
+		loadedTypes = [1]bool{
+			aq.withAttribute != nil,
+		}
 	)
+	if aq.withAttribute != nil {
+		withFKs = true
+	}
 	if withFKs {
 		_spec.Node.Columns = append(_spec.Node.Columns, annotation.ForeignKeys...)
 	}
@@ -328,6 +371,7 @@ func (aq *AnnotationQuery) sqlAll(ctx context.Context) ([]*Annotation, error) {
 			return fmt.Errorf("ent: Assign called without calling ScanValues")
 		}
 		node := nodes[len(nodes)-1]
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	if err := sqlgraph.QueryNodes(ctx, aq.driver, _spec); err != nil {
@@ -336,6 +380,36 @@ func (aq *AnnotationQuery) sqlAll(ctx context.Context) ([]*Annotation, error) {
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+
+	if query := aq.withAttribute; query != nil {
+		ids := make([]int, 0, len(nodes))
+		nodeids := make(map[int][]*Annotation)
+		for i := range nodes {
+			if nodes[i].attribute_annotations == nil {
+				continue
+			}
+			fk := *nodes[i].attribute_annotations
+			if _, ok := nodeids[fk]; !ok {
+				ids = append(ids, fk)
+			}
+			nodeids[fk] = append(nodeids[fk], nodes[i])
+		}
+		query.Where(attribute.IDIn(ids...))
+		neighbors, err := query.All(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for _, n := range neighbors {
+			nodes, ok := nodeids[n.ID]
+			if !ok {
+				return nil, fmt.Errorf(`unexpected foreign-key "attribute_annotations" returned %v`, n.ID)
+			}
+			for i := range nodes {
+				nodes[i].Edges.Attribute = n
+			}
+		}
+	}
+
 	return nodes, nil
 }
 

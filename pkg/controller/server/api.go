@@ -17,7 +17,7 @@ type apiServer struct {
 	engine *gin.Engine
 }
 
-func newAPIServer(addr string, db db.Interface, fallback http.Handler, logger *zlog.Logger) *apiServer {
+func newAPIServer(addr string, db *db.Client, fallback http.Handler, logger *zlog.Logger) *apiServer {
 	return &apiServer{
 		addr:   addr,
 		engine: newAPIEngine(db, fallback, logger),
@@ -41,19 +41,19 @@ const (
 	ctxKeyLogger = "logger"
 )
 
-func ctxSetDB(c *gin.Context, db db.Interface) {
+func ctxSetDB(c *gin.Context, db *db.Client) {
 	c.Set(ctxKeyDB, db)
 }
 
-func ctxGetDB(c *gin.Context) db.Interface {
+func ctxGetDB(c *gin.Context) *db.Client {
 	obj, ok := c.Get(ctxKeyDB)
 	if !ok {
 		panic("DB is not found in gin.Context")
 	}
 
-	db, ok := obj.(db.Interface)
+	db, ok := obj.(*db.Client)
 	if !ok {
-		panic("DB object in gin.Context is not db.Interface")
+		panic("DB object in gin.Context is not *db.Client")
 	}
 
 	return db
@@ -77,7 +77,7 @@ func ctxGetLogger(c *gin.Context) *zlog.Logger {
 	return logger
 }
 
-func newAPIEngine(db db.Interface, fallback http.Handler, logger *zlog.Logger) *gin.Engine {
+func newAPIEngine(db *db.Client, fallback http.Handler, logger *zlog.Logger) *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
 	engine := gin.New()
 	engine.Use(gin.Recovery())

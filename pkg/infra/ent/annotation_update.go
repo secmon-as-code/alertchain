@@ -10,6 +10,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/annotation"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/attribute"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/predicate"
 )
 
@@ -57,9 +58,34 @@ func (au *AnnotationUpdate) SetValue(s string) *AnnotationUpdate {
 	return au
 }
 
+// SetAttributeID sets the "attribute" edge to the Attribute entity by ID.
+func (au *AnnotationUpdate) SetAttributeID(id int) *AnnotationUpdate {
+	au.mutation.SetAttributeID(id)
+	return au
+}
+
+// SetNillableAttributeID sets the "attribute" edge to the Attribute entity by ID if the given value is not nil.
+func (au *AnnotationUpdate) SetNillableAttributeID(id *int) *AnnotationUpdate {
+	if id != nil {
+		au = au.SetAttributeID(*id)
+	}
+	return au
+}
+
+// SetAttribute sets the "attribute" edge to the Attribute entity.
+func (au *AnnotationUpdate) SetAttribute(a *Attribute) *AnnotationUpdate {
+	return au.SetAttributeID(a.ID)
+}
+
 // Mutation returns the AnnotationMutation object of the builder.
 func (au *AnnotationUpdate) Mutation() *AnnotationMutation {
 	return au.mutation
+}
+
+// ClearAttribute clears the "attribute" edge to the Attribute entity.
+func (au *AnnotationUpdate) ClearAttribute() *AnnotationUpdate {
+	au.mutation.ClearAttribute()
+	return au
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -169,6 +195,41 @@ func (au *AnnotationUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: annotation.FieldValue,
 		})
 	}
+	if au.mutation.AttributeCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   annotation.AttributeTable,
+			Columns: []string{annotation.AttributeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: attribute.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := au.mutation.AttributeIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   annotation.AttributeTable,
+			Columns: []string{annotation.AttributeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: attribute.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, au.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{annotation.Label}
@@ -219,9 +280,34 @@ func (auo *AnnotationUpdateOne) SetValue(s string) *AnnotationUpdateOne {
 	return auo
 }
 
+// SetAttributeID sets the "attribute" edge to the Attribute entity by ID.
+func (auo *AnnotationUpdateOne) SetAttributeID(id int) *AnnotationUpdateOne {
+	auo.mutation.SetAttributeID(id)
+	return auo
+}
+
+// SetNillableAttributeID sets the "attribute" edge to the Attribute entity by ID if the given value is not nil.
+func (auo *AnnotationUpdateOne) SetNillableAttributeID(id *int) *AnnotationUpdateOne {
+	if id != nil {
+		auo = auo.SetAttributeID(*id)
+	}
+	return auo
+}
+
+// SetAttribute sets the "attribute" edge to the Attribute entity.
+func (auo *AnnotationUpdateOne) SetAttribute(a *Attribute) *AnnotationUpdateOne {
+	return auo.SetAttributeID(a.ID)
+}
+
 // Mutation returns the AnnotationMutation object of the builder.
 func (auo *AnnotationUpdateOne) Mutation() *AnnotationMutation {
 	return auo.mutation
+}
+
+// ClearAttribute clears the "attribute" edge to the Attribute entity.
+func (auo *AnnotationUpdateOne) ClearAttribute() *AnnotationUpdateOne {
+	auo.mutation.ClearAttribute()
+	return auo
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
@@ -354,6 +440,41 @@ func (auo *AnnotationUpdateOne) sqlSave(ctx context.Context) (_node *Annotation,
 			Value:  value,
 			Column: annotation.FieldValue,
 		})
+	}
+	if auo.mutation.AttributeCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   annotation.AttributeTable,
+			Columns: []string{annotation.AttributeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: attribute.FieldID,
+				},
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := auo.mutation.AttributeIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   annotation.AttributeTable,
+			Columns: []string{annotation.AttributeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: attribute.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &Annotation{config: auo.config}
 	_spec.Assign = _node.assignValues

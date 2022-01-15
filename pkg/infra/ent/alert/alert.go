@@ -31,10 +31,8 @@ const (
 	EdgeAttributes = "attributes"
 	// EdgeReferences holds the string denoting the references edge name in mutations.
 	EdgeReferences = "references"
-	// EdgeTaskLogs holds the string denoting the task_logs edge name in mutations.
-	EdgeTaskLogs = "task_logs"
-	// EdgeActionLogs holds the string denoting the action_logs edge name in mutations.
-	EdgeActionLogs = "action_logs"
+	// EdgeJobs holds the string denoting the jobs edge name in mutations.
+	EdgeJobs = "jobs"
 	// Table holds the table name of the alert in the database.
 	Table = "alerts"
 	// AttributesTable is the table that holds the attributes relation/edge.
@@ -51,20 +49,13 @@ const (
 	ReferencesInverseTable = "references"
 	// ReferencesColumn is the table column denoting the references relation/edge.
 	ReferencesColumn = "alert_references"
-	// TaskLogsTable is the table that holds the task_logs relation/edge.
-	TaskLogsTable = "task_logs"
-	// TaskLogsInverseTable is the table name for the TaskLog entity.
-	// It exists in this package in order to avoid circular dependency with the "tasklog" package.
-	TaskLogsInverseTable = "task_logs"
-	// TaskLogsColumn is the table column denoting the task_logs relation/edge.
-	TaskLogsColumn = "alert_task_logs"
-	// ActionLogsTable is the table that holds the action_logs relation/edge.
-	ActionLogsTable = "action_logs"
-	// ActionLogsInverseTable is the table name for the ActionLog entity.
-	// It exists in this package in order to avoid circular dependency with the "actionlog" package.
-	ActionLogsInverseTable = "action_logs"
-	// ActionLogsColumn is the table column denoting the action_logs relation/edge.
-	ActionLogsColumn = "alert_action_logs"
+	// JobsTable is the table that holds the jobs relation/edge.
+	JobsTable = "jobs"
+	// JobsInverseTable is the table name for the Job entity.
+	// It exists in this package in order to avoid circular dependency with the "job" package.
+	JobsInverseTable = "jobs"
+	// JobsColumn is the table column denoting the jobs relation/edge.
+	JobsColumn = "alert_jobs"
 )
 
 // Columns holds all SQL columns for alert fields.

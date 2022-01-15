@@ -3,7 +3,7 @@ package types
 type ExecStatus string
 
 const (
-	ExecStart   ExecStatus = "start"
+	ExecRunning ExecStatus = "running"
 	ExecSucceed ExecStatus = "succeed"
 	ExecFailure ExecStatus = "failure"
 )

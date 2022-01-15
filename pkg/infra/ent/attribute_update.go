@@ -276,7 +276,7 @@ func (au *AttributeUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if au.mutation.AlertCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: false,
+			Inverse: true,
 			Table:   attribute.AlertTable,
 			Columns: []string{attribute.AlertColumn},
 			Bidi:    false,
@@ -292,7 +292,7 @@ func (au *AttributeUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if nodes := au.mutation.AlertIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: false,
+			Inverse: true,
 			Table:   attribute.AlertTable,
 			Columns: []string{attribute.AlertColumn},
 			Bidi:    false,
@@ -598,7 +598,7 @@ func (auo *AttributeUpdateOne) sqlSave(ctx context.Context) (_node *Attribute, e
 	if auo.mutation.AlertCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: false,
+			Inverse: true,
 			Table:   attribute.AlertTable,
 			Columns: []string{attribute.AlertColumn},
 			Bidi:    false,
@@ -614,7 +614,7 @@ func (auo *AttributeUpdateOne) sqlSave(ctx context.Context) (_node *Attribute, e
 	if nodes := auo.mutation.AlertIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.M2O,
-			Inverse: false,
+			Inverse: true,
 			Table:   attribute.AlertTable,
 			Columns: []string{attribute.AlertColumn},
 			Bidi:    false,

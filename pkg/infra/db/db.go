@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/enttest"
@@ -15,25 +14,9 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-type Interface interface {
-	Close() error
-
-	GetAlert(ctx *types.Context, id types.AlertID) (*model.Alert, error)
-	GetAlerts(ctx *types.Context, offset, limit int) ([]*model.Alert, error)
-	PutAlert(ctx *types.Context, alert *model.Alert) error
-	UpdateAlertStatus(ctx *types.Context, id types.AlertID, status types.AlertStatus) error
-	UpdateAlertSeverity(ctx *types.Context, id types.AlertID, sev types.Severity) error
-	UpdateAlertClosedAt(ctx *types.Context, id types.AlertID, ts int64) error
-
-	AddAttributes(ctx *types.Context, id types.AlertID, newAttrs []*model.Attribute) error
-	AddReferences(ctx *types.Context, id types.AlertID, refs []*model.Reference) error
-	AddAnnotation(ctx *types.Context, attr *model.Attribute, ann []*model.Annotation) error
-}
-
 type Client struct {
 	client *ent.Client
 
-	lock  bool
 	mutex sync.Mutex
 }
 
@@ -41,7 +24,7 @@ func newClient() *Client {
 	return &Client{}
 }
 
-func New(dbType, dbConfig string) (Interface, error) {
+func New(dbType, dbConfig string) (*Client, error) {
 	client := newClient()
 	if err := client.init(dbType, dbConfig); err != nil {
 		return nil, err
@@ -49,10 +32,9 @@ func New(dbType, dbConfig string) (Interface, error) {
 	return client, nil
 }
 
-func NewDBMock(t *testing.T) Interface {
+func NewDBMock(t *testing.T) *Client {
 	db := newClient()
-	db.client = enttest.Open(t, "sqlite3", "file:"+uuid.NewString()+"?mode=memory&cache=shared&_fk=1")
-	db.lock = true
+	db.client = enttest.Open(t, "sqlite3", "file:"+uuid.NewString()+"?mode=memory&cache=private&_fk=1")
 	return db
 }
 

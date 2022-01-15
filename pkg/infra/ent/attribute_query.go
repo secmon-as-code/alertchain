@@ -104,7 +104,7 @@ func (aq *AttributeQuery) QueryAlert() *AlertQuery {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(attribute.Table, attribute.FieldID, selector),
 			sqlgraph.To(alert.Table, alert.FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, false, attribute.AlertTable, attribute.AlertColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, attribute.AlertTable, attribute.AlertColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(aq.driver.Dialect(), step)
 		return fromU, nil
@@ -453,10 +453,10 @@ func (aq *AttributeQuery) sqlAll(ctx context.Context) ([]*Attribute, error) {
 		ids := make([]types.AlertID, 0, len(nodes))
 		nodeids := make(map[types.AlertID][]*Attribute)
 		for i := range nodes {
-			if nodes[i].attribute_alert == nil {
+			if nodes[i].alert_attributes == nil {
 				continue
 			}
-			fk := *nodes[i].attribute_alert
+			fk := *nodes[i].alert_attributes
 			if _, ok := nodeids[fk]; !ok {
 				ids = append(ids, fk)
 			}
@@ -470,7 +470,7 @@ func (aq *AttributeQuery) sqlAll(ctx context.Context) ([]*Attribute, error) {
 		for _, n := range neighbors {
 			nodes, ok := nodeids[n.ID]
 			if !ok {
-				return nil, fmt.Errorf(`unexpected foreign-key "attribute_alert" returned %v`, n.ID)
+				return nil, fmt.Errorf(`unexpected foreign-key "alert_attributes" returned %v`, n.ID)
 			}
 			for i := range nodes {
 				nodes[i].Edges.Alert = n

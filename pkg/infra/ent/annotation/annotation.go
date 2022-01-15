@@ -15,8 +15,17 @@ const (
 	FieldName = "name"
 	// FieldValue holds the string denoting the value field in the database.
 	FieldValue = "value"
+	// EdgeAttribute holds the string denoting the attribute edge name in mutations.
+	EdgeAttribute = "attribute"
 	// Table holds the table name of the annotation in the database.
 	Table = "annotations"
+	// AttributeTable is the table that holds the attribute relation/edge.
+	AttributeTable = "annotations"
+	// AttributeInverseTable is the table name for the Attribute entity.
+	// It exists in this package in order to avoid circular dependency with the "attribute" package.
+	AttributeInverseTable = "attributes"
+	// AttributeColumn is the table column denoting the attribute relation/edge.
+	AttributeColumn = "attribute_annotations"
 )
 
 // Columns holds all SQL columns for annotation fields.
@@ -32,7 +41,6 @@ var Columns = []string{
 // table and are not defined as standalone fields in the schema.
 var ForeignKeys = []string{
 	"attribute_annotations",
-	"task_log_annotated",
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).

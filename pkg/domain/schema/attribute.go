@@ -25,7 +25,7 @@ func (Attribute) Fields() []ent.Field {
 // Edges of the Attribute.
 func (Attribute) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("annotations", Annotation.Type),
-		edge.To("alert", Alert.Type).Unique(),
+		edge.To(edgeAttrsToAnn, Annotation.Type),
+		edge.From(edgeAttrToAlert, Alert.Type).Ref(edgeAlertToAttrs).Unique(),
 	}
 }

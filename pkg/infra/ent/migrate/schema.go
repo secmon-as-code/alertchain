@@ -12,7 +12,14 @@ var (
 	ActionLogsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "name", Type: field.TypeString},
-		{Name: "alert_action_logs", Type: field.TypeString, Nullable: true},
+		{Name: "started_at", Type: field.TypeInt64},
+		{Name: "stopped_at", Type: field.TypeInt64, Nullable: true},
+		{Name: "log", Type: field.TypeString, Nullable: true},
+		{Name: "errmsg", Type: field.TypeString, Nullable: true},
+		{Name: "err_values", Type: field.TypeJSON, Nullable: true},
+		{Name: "stack_trace", Type: field.TypeJSON, Nullable: true},
+		{Name: "status", Type: field.TypeString},
+		{Name: "job_action_logs", Type: field.TypeInt, Nullable: true},
 	}
 	// ActionLogsTable holds the schema information for the "action_logs" table.
 	ActionLogsTable = &schema.Table{
@@ -21,9 +28,9 @@ var (
 		PrimaryKey: []*schema.Column{ActionLogsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "action_logs_alerts_action_logs",
-				Columns:    []*schema.Column{ActionLogsColumns[2]},
-				RefColumns: []*schema.Column{AlertsColumns[0]},
+				Symbol:     "action_logs_jobs_action_logs",
+				Columns:    []*schema.Column{ActionLogsColumns[9]},
+				RefColumns: []*schema.Column{JobsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 		},
@@ -54,7 +61,6 @@ var (
 		{Name: "name", Type: field.TypeString},
 		{Name: "value", Type: field.TypeString},
 		{Name: "attribute_annotations", Type: field.TypeInt, Nullable: true},
-		{Name: "task_log_annotated", Type: field.TypeInt, Nullable: true},
 	}
 	// AnnotationsTable holds the schema information for the "annotations" table.
 	AnnotationsTable = &schema.Table{
@@ -68,12 +74,6 @@ var (
 				RefColumns: []*schema.Column{AttributesColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
-			{
-				Symbol:     "annotations_task_logs_annotated",
-				Columns:    []*schema.Column{AnnotationsColumns[6]},
-				RefColumns: []*schema.Column{TaskLogsColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
 		},
 	}
 	// AttributesColumns holds the columns for the "attributes" table.
@@ -83,9 +83,7 @@ var (
 		{Name: "value", Type: field.TypeString},
 		{Name: "type", Type: field.TypeString},
 		{Name: "context", Type: field.TypeJSON},
-		{Name: "action_log_argument", Type: field.TypeInt, Nullable: true},
 		{Name: "alert_attributes", Type: field.TypeString, Nullable: true},
-		{Name: "attribute_alert", Type: field.TypeString, Nullable: true},
 	}
 	// AttributesTable holds the schema information for the "attributes" table.
 	AttributesTable = &schema.Table{
@@ -94,53 +92,31 @@ var (
 		PrimaryKey: []*schema.Column{AttributesColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "attributes_action_logs_argument",
-				Columns:    []*schema.Column{AttributesColumns[5]},
-				RefColumns: []*schema.Column{ActionLogsColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-			{
 				Symbol:     "attributes_alerts_attributes",
-				Columns:    []*schema.Column{AttributesColumns[6]},
-				RefColumns: []*schema.Column{AlertsColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-			{
-				Symbol:     "attributes_alerts_alert",
-				Columns:    []*schema.Column{AttributesColumns[7]},
+				Columns:    []*schema.Column{AttributesColumns[5]},
 				RefColumns: []*schema.Column{AlertsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 		},
 	}
-	// ExecLogsColumns holds the columns for the "exec_logs" table.
-	ExecLogsColumns = []*schema.Column{
+	// JobsColumns holds the columns for the "jobs" table.
+	JobsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "timestamp", Type: field.TypeInt64},
-		{Name: "log", Type: field.TypeString, Nullable: true},
-		{Name: "errmsg", Type: field.TypeString, Nullable: true},
-		{Name: "err_values", Type: field.TypeJSON, Nullable: true},
-		{Name: "stack_trace", Type: field.TypeJSON, Nullable: true},
-		{Name: "status", Type: field.TypeString},
-		{Name: "action_log_exec_logs", Type: field.TypeInt, Nullable: true},
-		{Name: "task_log_exec_logs", Type: field.TypeInt, Nullable: true},
+		{Name: "name", Type: field.TypeString},
+		{Name: "step", Type: field.TypeInt64},
+		{Name: "input", Type: field.TypeJSON},
+		{Name: "alert_jobs", Type: field.TypeString, Nullable: true},
 	}
-	// ExecLogsTable holds the schema information for the "exec_logs" table.
-	ExecLogsTable = &schema.Table{
-		Name:       "exec_logs",
-		Columns:    ExecLogsColumns,
-		PrimaryKey: []*schema.Column{ExecLogsColumns[0]},
+	// JobsTable holds the schema information for the "jobs" table.
+	JobsTable = &schema.Table{
+		Name:       "jobs",
+		Columns:    JobsColumns,
+		PrimaryKey: []*schema.Column{JobsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "exec_logs_action_logs_exec_logs",
-				Columns:    []*schema.Column{ExecLogsColumns[7]},
-				RefColumns: []*schema.Column{ActionLogsColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-			{
-				Symbol:     "exec_logs_task_logs_exec_logs",
-				Columns:    []*schema.Column{ExecLogsColumns[8]},
-				RefColumns: []*schema.Column{TaskLogsColumns[0]},
+				Symbol:     "jobs_alerts_jobs",
+				Columns:    []*schema.Column{JobsColumns[4]},
+				RefColumns: []*schema.Column{AlertsColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
 		},
@@ -168,48 +144,21 @@ var (
 			},
 		},
 	}
-	// TaskLogsColumns holds the columns for the "task_logs" table.
-	TaskLogsColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeInt, Increment: true},
-		{Name: "name", Type: field.TypeString},
-		{Name: "stage", Type: field.TypeInt64},
-		{Name: "alert_task_logs", Type: field.TypeString, Nullable: true},
-	}
-	// TaskLogsTable holds the schema information for the "task_logs" table.
-	TaskLogsTable = &schema.Table{
-		Name:       "task_logs",
-		Columns:    TaskLogsColumns,
-		PrimaryKey: []*schema.Column{TaskLogsColumns[0]},
-		ForeignKeys: []*schema.ForeignKey{
-			{
-				Symbol:     "task_logs_alerts_task_logs",
-				Columns:    []*schema.Column{TaskLogsColumns[3]},
-				RefColumns: []*schema.Column{AlertsColumns[0]},
-				OnDelete:   schema.SetNull,
-			},
-		},
-	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		ActionLogsTable,
 		AlertsTable,
 		AnnotationsTable,
 		AttributesTable,
-		ExecLogsTable,
+		JobsTable,
 		ReferencesTable,
-		TaskLogsTable,
 	}
 )
 
 func init() {
-	ActionLogsTable.ForeignKeys[0].RefTable = AlertsTable
+	ActionLogsTable.ForeignKeys[0].RefTable = JobsTable
 	AnnotationsTable.ForeignKeys[0].RefTable = AttributesTable
-	AnnotationsTable.ForeignKeys[1].RefTable = TaskLogsTable
-	AttributesTable.ForeignKeys[0].RefTable = ActionLogsTable
-	AttributesTable.ForeignKeys[1].RefTable = AlertsTable
-	AttributesTable.ForeignKeys[2].RefTable = AlertsTable
-	ExecLogsTable.ForeignKeys[0].RefTable = ActionLogsTable
-	ExecLogsTable.ForeignKeys[1].RefTable = TaskLogsTable
+	AttributesTable.ForeignKeys[0].RefTable = AlertsTable
+	JobsTable.ForeignKeys[0].RefTable = AlertsTable
 	ReferencesTable.ForeignKeys[0].RefTable = AlertsTable
-	TaskLogsTable.ForeignKeys[0].RefTable = AlertsTable
 }

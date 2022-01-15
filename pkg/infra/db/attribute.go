@@ -45,12 +45,8 @@ func (x *Client) AddAttributes(ctx *types.Context, id types.AlertID, newAttrs []
 			SetAlertID(id)
 	}
 
-	added, err := x.client.Attribute.CreateBulk(builders...).Save(ctx)
+	_, err := x.client.Attribute.CreateBulk(builders...).Save(ctx)
 	if err != nil {
-		return types.ErrDatabaseUnexpected.Wrap(err)
-	}
-
-	if _, err := x.client.Alert.UpdateOneID(id).AddAttributes(added...).Save(ctx); err != nil {
 		return types.ErrDatabaseUnexpected.Wrap(err)
 	}
 

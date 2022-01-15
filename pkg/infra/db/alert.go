@@ -30,15 +30,8 @@ func entToAlert(alert *ent.Alert) *model.Alert {
 
 func getAlertQuery(client *ent.Client) *ent.AlertQuery {
 	return client.Alert.Query().
-		WithTaskLogs(func(q *ent.TaskLogQuery) {
-			q.WithExecLogs(func(q *ent.ExecLogQuery) {
-				q.Order(ent.Desc("timestamp"))
-			})
-		}).
-		WithActionLogs(func(q *ent.ActionLogQuery) {
-			q.WithExecLogs(func(q *ent.ExecLogQuery) {
-				q.Order(ent.Desc("timestamp"))
-			})
+		WithJobs(func(jq *ent.JobQuery) {
+			jq.WithActionLogs()
 		}).
 		WithReferences().
 		WithAttributes(func(q *ent.AttributeQuery) {
@@ -112,10 +105,6 @@ func (x *Client) UpdateAlert(ctx *types.Context, alert *model.Alert) error {
 }
 
 func (x *Client) UpdateAlertSeverity(ctx *types.Context, id types.AlertID, sev types.Severity) error {
-	if x.lock {
-		x.mutex.Lock()
-		defer x.mutex.Unlock()
-	}
 	if _, err := x.client.Alert.UpdateOneID(id).
 		SetSeverity(sev).Save(ctx); err != nil {
 		return types.ErrDatabaseUnexpected.Wrap(err)
@@ -125,10 +114,6 @@ func (x *Client) UpdateAlertSeverity(ctx *types.Context, id types.AlertID, sev t
 }
 
 func (x *Client) UpdateAlertStatus(ctx *types.Context, id types.AlertID, status types.AlertStatus) error {
-	if x.lock {
-		x.mutex.Lock()
-		defer x.mutex.Unlock()
-	}
 	if _, err := x.client.Alert.UpdateOneID(id).
 		SetStatus(status).Save(ctx); err != nil {
 		return types.ErrDatabaseUnexpected.Wrap(err)
@@ -138,10 +123,6 @@ func (x *Client) UpdateAlertStatus(ctx *types.Context, id types.AlertID, status 
 }
 
 func (x *Client) UpdateAlertClosedAt(ctx *types.Context, id types.AlertID, ts int64) error {
-	if x.lock {
-		x.mutex.Lock()
-		defer x.mutex.Unlock()
-	}
 	if _, err := x.client.Alert.UpdateOneID(id).
 		SetClosedAt(ts).Save(ctx); err != nil {
 		return types.ErrDatabaseUnexpected.Wrap(err)

@@ -7,7 +7,7 @@ import (
 )
 
 type Clients struct {
-	DB db.Interface
+	DB *db.Client
 }
 
 func NewMock(t *testing.T) *Clients {

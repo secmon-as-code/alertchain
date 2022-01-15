@@ -43,13 +43,11 @@ type AlertEdges struct {
 	Attributes []*Attribute `json:"attributes,omitempty"`
 	// References holds the value of the references edge.
 	References []*Reference `json:"references,omitempty"`
-	// TaskLogs holds the value of the task_logs edge.
-	TaskLogs []*TaskLog `json:"task_logs,omitempty"`
-	// ActionLogs holds the value of the action_logs edge.
-	ActionLogs []*ActionLog `json:"action_logs,omitempty"`
+	// Jobs holds the value of the jobs edge.
+	Jobs []*Job `json:"jobs,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [4]bool
+	loadedTypes [3]bool
 }
 
 // AttributesOrErr returns the Attributes value or an error if the edge
@@ -70,22 +68,13 @@ func (e AlertEdges) ReferencesOrErr() ([]*Reference, error) {
 	return nil, &NotLoadedError{edge: "references"}
 }
 
-// TaskLogsOrErr returns the TaskLogs value or an error if the edge
+// JobsOrErr returns the Jobs value or an error if the edge
 // was not loaded in eager-loading.
-func (e AlertEdges) TaskLogsOrErr() ([]*TaskLog, error) {
+func (e AlertEdges) JobsOrErr() ([]*Job, error) {
 	if e.loadedTypes[2] {
-		return e.TaskLogs, nil
+		return e.Jobs, nil
 	}
-	return nil, &NotLoadedError{edge: "task_logs"}
-}
-
-// ActionLogsOrErr returns the ActionLogs value or an error if the edge
-// was not loaded in eager-loading.
-func (e AlertEdges) ActionLogsOrErr() ([]*ActionLog, error) {
-	if e.loadedTypes[3] {
-		return e.ActionLogs, nil
-	}
-	return nil, &NotLoadedError{edge: "action_logs"}
+	return nil, &NotLoadedError{edge: "jobs"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -181,14 +170,9 @@ func (a *Alert) QueryReferences() *ReferenceQuery {
 	return (&AlertClient{config: a.config}).QueryReferences(a)
 }
 
-// QueryTaskLogs queries the "task_logs" edge of the Alert entity.
-func (a *Alert) QueryTaskLogs() *TaskLogQuery {
-	return (&AlertClient{config: a.config}).QueryTaskLogs(a)
-}
-
-// QueryActionLogs queries the "action_logs" edge of the Alert entity.
-func (a *Alert) QueryActionLogs() *ActionLogQuery {
-	return (&AlertClient{config: a.config}).QueryActionLogs(a)
+// QueryJobs queries the "jobs" edge of the Alert entity.
+func (a *Alert) QueryJobs() *JobQuery {
+	return (&AlertClient{config: a.config}).QueryJobs(a)
 }
 
 // Update returns a builder for updating this Alert.

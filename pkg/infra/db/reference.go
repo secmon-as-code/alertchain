@@ -7,11 +7,6 @@ import (
 )
 
 func (x *Client) AddReferences(ctx *types.Context, id types.AlertID, refs []*model.Reference) error {
-	if x.lock {
-		x.mutex.Lock()
-		defer x.mutex.Unlock()
-	}
-
 	builders := make([]*ent.ReferenceCreate, len(refs))
 	for i, ref := range refs {
 		builders[i] = x.client.Reference.Create().

@@ -8,6 +8,7 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/annotation"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/attribute"
 )
 
 // Annotation is the model entity for the Annotation schema.
@@ -22,9 +23,34 @@ type Annotation struct {
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
 	// Value holds the value of the "value" field.
-	Value                 string `json:"value,omitempty"`
+	Value string `json:"value,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the AnnotationQuery when eager-loading is set.
+	Edges                 AnnotationEdges `json:"edges"`
 	attribute_annotations *int
-	task_log_annotated    *int
+}
+
+// AnnotationEdges holds the relations/edges for other nodes in the graph.
+type AnnotationEdges struct {
+	// Attribute holds the value of the attribute edge.
+	Attribute *Attribute `json:"attribute,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [1]bool
+}
+
+// AttributeOrErr returns the Attribute value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e AnnotationEdges) AttributeOrErr() (*Attribute, error) {
+	if e.loadedTypes[0] {
+		if e.Attribute == nil {
+			// The edge attribute was loaded in eager-loading,
+			// but was not found.
+			return nil, &NotFoundError{label: attribute.Label}
+		}
+		return e.Attribute, nil
+	}
+	return nil, &NotLoadedError{edge: "attribute"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -37,8 +63,6 @@ func (*Annotation) scanValues(columns []string) ([]interface{}, error) {
 		case annotation.FieldSource, annotation.FieldName, annotation.FieldValue:
 			values[i] = new(sql.NullString)
 		case annotation.ForeignKeys[0]: // attribute_annotations
-			values[i] = new(sql.NullInt64)
-		case annotation.ForeignKeys[1]: // task_log_annotated
 			values[i] = new(sql.NullInt64)
 		default:
 			return nil, fmt.Errorf("unexpected column %q for type Annotation", columns[i])
@@ -92,16 +116,14 @@ func (a *Annotation) assignValues(columns []string, values []interface{}) error 
 				a.attribute_annotations = new(int)
 				*a.attribute_annotations = int(value.Int64)
 			}
-		case annotation.ForeignKeys[1]:
-			if value, ok := values[i].(*sql.NullInt64); !ok {
-				return fmt.Errorf("unexpected type %T for edge-field task_log_annotated", value)
-			} else if value.Valid {
-				a.task_log_annotated = new(int)
-				*a.task_log_annotated = int(value.Int64)
-			}
 		}
 	}
 	return nil
+}
+
+// QueryAttribute queries the "attribute" edge of the Annotation entity.
+func (a *Annotation) QueryAttribute() *AttributeQuery {
+	return (&AnnotationClient{config: a.config}).QueryAttribute(a)
 }
 
 // Update returns a builder for updating this Annotation.

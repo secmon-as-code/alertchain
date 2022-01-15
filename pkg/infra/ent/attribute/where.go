@@ -492,7 +492,7 @@ func HasAlert() predicate.Attribute {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.To(AlertTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, false, AlertTable, AlertColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, AlertTable, AlertColumn),
 		)
 		sqlgraph.HasNeighbors(s, step)
 	})
@@ -504,7 +504,7 @@ func HasAlertWith(preds ...predicate.Alert) predicate.Attribute {
 		step := sqlgraph.NewStep(
 			sqlgraph.From(Table, FieldID),
 			sqlgraph.To(AlertInverseTable, FieldID),
-			sqlgraph.Edge(sqlgraph.M2O, false, AlertTable, AlertColumn),
+			sqlgraph.Edge(sqlgraph.M2O, true, AlertTable, AlertColumn),
 		)
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {

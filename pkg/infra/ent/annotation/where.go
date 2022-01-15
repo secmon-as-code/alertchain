@@ -4,6 +4,7 @@ package annotation
 
 import (
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/predicate"
 )
 
@@ -524,6 +525,34 @@ func ValueEqualFold(v string) predicate.Annotation {
 func ValueContainsFold(v string) predicate.Annotation {
 	return predicate.Annotation(func(s *sql.Selector) {
 		s.Where(sql.ContainsFold(s.C(FieldValue), v))
+	})
+}
+
+// HasAttribute applies the HasEdge predicate on the "attribute" edge.
+func HasAttribute() predicate.Annotation {
+	return predicate.Annotation(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(AttributeTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, AttributeTable, AttributeColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasAttributeWith applies the HasEdge predicate on the "attribute" edge with a given conditions (other predicates).
+func HasAttributeWith(preds ...predicate.Attribute) predicate.Annotation {
+	return predicate.Annotation(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.To(AttributeInverseTable, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, AttributeTable, AttributeColumn),
+		)
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
 	})
 }
 

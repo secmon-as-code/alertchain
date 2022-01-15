@@ -10,6 +10,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/annotation"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/attribute"
 )
 
 // AnnotationCreate is the builder for creating a Annotation entity.
@@ -41,6 +42,25 @@ func (ac *AnnotationCreate) SetName(s string) *AnnotationCreate {
 func (ac *AnnotationCreate) SetValue(s string) *AnnotationCreate {
 	ac.mutation.SetValue(s)
 	return ac
+}
+
+// SetAttributeID sets the "attribute" edge to the Attribute entity by ID.
+func (ac *AnnotationCreate) SetAttributeID(id int) *AnnotationCreate {
+	ac.mutation.SetAttributeID(id)
+	return ac
+}
+
+// SetNillableAttributeID sets the "attribute" edge to the Attribute entity by ID if the given value is not nil.
+func (ac *AnnotationCreate) SetNillableAttributeID(id *int) *AnnotationCreate {
+	if id != nil {
+		ac = ac.SetAttributeID(*id)
+	}
+	return ac
+}
+
+// SetAttribute sets the "attribute" edge to the Attribute entity.
+func (ac *AnnotationCreate) SetAttribute(a *Attribute) *AnnotationCreate {
+	return ac.SetAttributeID(a.ID)
 }
 
 // Mutation returns the AnnotationMutation object of the builder.
@@ -183,6 +203,26 @@ func (ac *AnnotationCreate) createSpec() (*Annotation, *sqlgraph.CreateSpec) {
 			Column: annotation.FieldValue,
 		})
 		_node.Value = value
+	}
+	if nodes := ac.mutation.AttributeIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   annotation.AttributeTable,
+			Columns: []string{annotation.AttributeColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: &sqlgraph.FieldSpec{
+					Type:   field.TypeInt,
+					Column: attribute.FieldID,
+				},
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.attribute_annotations = &nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

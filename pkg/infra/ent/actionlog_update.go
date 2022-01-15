@@ -9,9 +9,9 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/actionlog"
-	"github.com/m-mizutani/alertchain/pkg/infra/ent/attribute"
-	"github.com/m-mizutani/alertchain/pkg/infra/ent/execlog"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/job"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/predicate"
 )
 
@@ -28,34 +28,120 @@ func (alu *ActionLogUpdate) Where(ps ...predicate.ActionLog) *ActionLogUpdate {
 	return alu
 }
 
-// AddArgumentIDs adds the "argument" edge to the Attribute entity by IDs.
-func (alu *ActionLogUpdate) AddArgumentIDs(ids ...int) *ActionLogUpdate {
-	alu.mutation.AddArgumentIDs(ids...)
+// SetStoppedAt sets the "stopped_at" field.
+func (alu *ActionLogUpdate) SetStoppedAt(i int64) *ActionLogUpdate {
+	alu.mutation.ResetStoppedAt()
+	alu.mutation.SetStoppedAt(i)
 	return alu
 }
 
-// AddArgument adds the "argument" edges to the Attribute entity.
-func (alu *ActionLogUpdate) AddArgument(a ...*Attribute) *ActionLogUpdate {
-	ids := make([]int, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
+// SetNillableStoppedAt sets the "stopped_at" field if the given value is not nil.
+func (alu *ActionLogUpdate) SetNillableStoppedAt(i *int64) *ActionLogUpdate {
+	if i != nil {
+		alu.SetStoppedAt(*i)
 	}
-	return alu.AddArgumentIDs(ids...)
-}
-
-// AddExecLogIDs adds the "exec_logs" edge to the ExecLog entity by IDs.
-func (alu *ActionLogUpdate) AddExecLogIDs(ids ...int) *ActionLogUpdate {
-	alu.mutation.AddExecLogIDs(ids...)
 	return alu
 }
 
-// AddExecLogs adds the "exec_logs" edges to the ExecLog entity.
-func (alu *ActionLogUpdate) AddExecLogs(e ...*ExecLog) *ActionLogUpdate {
-	ids := make([]int, len(e))
-	for i := range e {
-		ids[i] = e[i].ID
+// AddStoppedAt adds i to the "stopped_at" field.
+func (alu *ActionLogUpdate) AddStoppedAt(i int64) *ActionLogUpdate {
+	alu.mutation.AddStoppedAt(i)
+	return alu
+}
+
+// ClearStoppedAt clears the value of the "stopped_at" field.
+func (alu *ActionLogUpdate) ClearStoppedAt() *ActionLogUpdate {
+	alu.mutation.ClearStoppedAt()
+	return alu
+}
+
+// SetLog sets the "log" field.
+func (alu *ActionLogUpdate) SetLog(s string) *ActionLogUpdate {
+	alu.mutation.SetLog(s)
+	return alu
+}
+
+// SetNillableLog sets the "log" field if the given value is not nil.
+func (alu *ActionLogUpdate) SetNillableLog(s *string) *ActionLogUpdate {
+	if s != nil {
+		alu.SetLog(*s)
 	}
-	return alu.AddExecLogIDs(ids...)
+	return alu
+}
+
+// ClearLog clears the value of the "log" field.
+func (alu *ActionLogUpdate) ClearLog() *ActionLogUpdate {
+	alu.mutation.ClearLog()
+	return alu
+}
+
+// SetErrmsg sets the "errmsg" field.
+func (alu *ActionLogUpdate) SetErrmsg(s string) *ActionLogUpdate {
+	alu.mutation.SetErrmsg(s)
+	return alu
+}
+
+// SetNillableErrmsg sets the "errmsg" field if the given value is not nil.
+func (alu *ActionLogUpdate) SetNillableErrmsg(s *string) *ActionLogUpdate {
+	if s != nil {
+		alu.SetErrmsg(*s)
+	}
+	return alu
+}
+
+// ClearErrmsg clears the value of the "errmsg" field.
+func (alu *ActionLogUpdate) ClearErrmsg() *ActionLogUpdate {
+	alu.mutation.ClearErrmsg()
+	return alu
+}
+
+// SetErrValues sets the "err_values" field.
+func (alu *ActionLogUpdate) SetErrValues(s []string) *ActionLogUpdate {
+	alu.mutation.SetErrValues(s)
+	return alu
+}
+
+// ClearErrValues clears the value of the "err_values" field.
+func (alu *ActionLogUpdate) ClearErrValues() *ActionLogUpdate {
+	alu.mutation.ClearErrValues()
+	return alu
+}
+
+// SetStackTrace sets the "stack_trace" field.
+func (alu *ActionLogUpdate) SetStackTrace(s []string) *ActionLogUpdate {
+	alu.mutation.SetStackTrace(s)
+	return alu
+}
+
+// ClearStackTrace clears the value of the "stack_trace" field.
+func (alu *ActionLogUpdate) ClearStackTrace() *ActionLogUpdate {
+	alu.mutation.ClearStackTrace()
+	return alu
+}
+
+// SetStatus sets the "status" field.
+func (alu *ActionLogUpdate) SetStatus(ts types.ExecStatus) *ActionLogUpdate {
+	alu.mutation.SetStatus(ts)
+	return alu
+}
+
+// SetJobID sets the "job" edge to the Job entity by ID.
+func (alu *ActionLogUpdate) SetJobID(id int) *ActionLogUpdate {
+	alu.mutation.SetJobID(id)
+	return alu
+}
+
+// SetNillableJobID sets the "job" edge to the Job entity by ID if the given value is not nil.
+func (alu *ActionLogUpdate) SetNillableJobID(id *int) *ActionLogUpdate {
+	if id != nil {
+		alu = alu.SetJobID(*id)
+	}
+	return alu
+}
+
+// SetJob sets the "job" edge to the Job entity.
+func (alu *ActionLogUpdate) SetJob(j *Job) *ActionLogUpdate {
+	return alu.SetJobID(j.ID)
 }
 
 // Mutation returns the ActionLogMutation object of the builder.
@@ -63,46 +149,10 @@ func (alu *ActionLogUpdate) Mutation() *ActionLogMutation {
 	return alu.mutation
 }
 
-// ClearArgument clears all "argument" edges to the Attribute entity.
-func (alu *ActionLogUpdate) ClearArgument() *ActionLogUpdate {
-	alu.mutation.ClearArgument()
+// ClearJob clears the "job" edge to the Job entity.
+func (alu *ActionLogUpdate) ClearJob() *ActionLogUpdate {
+	alu.mutation.ClearJob()
 	return alu
-}
-
-// RemoveArgumentIDs removes the "argument" edge to Attribute entities by IDs.
-func (alu *ActionLogUpdate) RemoveArgumentIDs(ids ...int) *ActionLogUpdate {
-	alu.mutation.RemoveArgumentIDs(ids...)
-	return alu
-}
-
-// RemoveArgument removes "argument" edges to Attribute entities.
-func (alu *ActionLogUpdate) RemoveArgument(a ...*Attribute) *ActionLogUpdate {
-	ids := make([]int, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
-	}
-	return alu.RemoveArgumentIDs(ids...)
-}
-
-// ClearExecLogs clears all "exec_logs" edges to the ExecLog entity.
-func (alu *ActionLogUpdate) ClearExecLogs() *ActionLogUpdate {
-	alu.mutation.ClearExecLogs()
-	return alu
-}
-
-// RemoveExecLogIDs removes the "exec_logs" edge to ExecLog entities by IDs.
-func (alu *ActionLogUpdate) RemoveExecLogIDs(ids ...int) *ActionLogUpdate {
-	alu.mutation.RemoveExecLogIDs(ids...)
-	return alu
-}
-
-// RemoveExecLogs removes "exec_logs" edges to ExecLog entities.
-func (alu *ActionLogUpdate) RemoveExecLogs(e ...*ExecLog) *ActionLogUpdate {
-	ids := make([]int, len(e))
-	for i := range e {
-		ids[i] = e[i].ID
-	}
-	return alu.RemoveExecLogIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -177,106 +227,112 @@ func (alu *ActionLogUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
-	if alu.mutation.ArgumentCleared() {
+	if value, ok := alu.mutation.StoppedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt64,
+			Value:  value,
+			Column: actionlog.FieldStoppedAt,
+		})
+	}
+	if value, ok := alu.mutation.AddedStoppedAt(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt64,
+			Value:  value,
+			Column: actionlog.FieldStoppedAt,
+		})
+	}
+	if alu.mutation.StoppedAtCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt64,
+			Column: actionlog.FieldStoppedAt,
+		})
+	}
+	if value, ok := alu.mutation.Log(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: actionlog.FieldLog,
+		})
+	}
+	if alu.mutation.LogCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Column: actionlog.FieldLog,
+		})
+	}
+	if value, ok := alu.mutation.Errmsg(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: actionlog.FieldErrmsg,
+		})
+	}
+	if alu.mutation.ErrmsgCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Column: actionlog.FieldErrmsg,
+		})
+	}
+	if value, ok := alu.mutation.ErrValues(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeJSON,
+			Value:  value,
+			Column: actionlog.FieldErrValues,
+		})
+	}
+	if alu.mutation.ErrValuesCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeJSON,
+			Column: actionlog.FieldErrValues,
+		})
+	}
+	if value, ok := alu.mutation.StackTrace(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeJSON,
+			Value:  value,
+			Column: actionlog.FieldStackTrace,
+		})
+	}
+	if alu.mutation.StackTraceCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeJSON,
+			Column: actionlog.FieldStackTrace,
+		})
+	}
+	if value, ok := alu.mutation.Status(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: actionlog.FieldStatus,
+		})
+	}
+	if alu.mutation.JobCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   actionlog.ArgumentTable,
-			Columns: []string{actionlog.ArgumentColumn},
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   actionlog.JobTable,
+			Columns: []string{actionlog.JobColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: attribute.FieldID,
+					Column: job.FieldID,
 				},
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := alu.mutation.RemovedArgumentIDs(); len(nodes) > 0 && !alu.mutation.ArgumentCleared() {
+	if nodes := alu.mutation.JobIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   actionlog.ArgumentTable,
-			Columns: []string{actionlog.ArgumentColumn},
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   actionlog.JobTable,
+			Columns: []string{actionlog.JobColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: attribute.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := alu.mutation.ArgumentIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   actionlog.ArgumentTable,
-			Columns: []string{actionlog.ArgumentColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: attribute.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if alu.mutation.ExecLogsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   actionlog.ExecLogsTable,
-			Columns: []string{actionlog.ExecLogsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: execlog.FieldID,
-				},
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := alu.mutation.RemovedExecLogsIDs(); len(nodes) > 0 && !alu.mutation.ExecLogsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   actionlog.ExecLogsTable,
-			Columns: []string{actionlog.ExecLogsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: execlog.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := alu.mutation.ExecLogsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   actionlog.ExecLogsTable,
-			Columns: []string{actionlog.ExecLogsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: execlog.FieldID,
+					Column: job.FieldID,
 				},
 			},
 		}
@@ -304,34 +360,120 @@ type ActionLogUpdateOne struct {
 	mutation *ActionLogMutation
 }
 
-// AddArgumentIDs adds the "argument" edge to the Attribute entity by IDs.
-func (aluo *ActionLogUpdateOne) AddArgumentIDs(ids ...int) *ActionLogUpdateOne {
-	aluo.mutation.AddArgumentIDs(ids...)
+// SetStoppedAt sets the "stopped_at" field.
+func (aluo *ActionLogUpdateOne) SetStoppedAt(i int64) *ActionLogUpdateOne {
+	aluo.mutation.ResetStoppedAt()
+	aluo.mutation.SetStoppedAt(i)
 	return aluo
 }
 
-// AddArgument adds the "argument" edges to the Attribute entity.
-func (aluo *ActionLogUpdateOne) AddArgument(a ...*Attribute) *ActionLogUpdateOne {
-	ids := make([]int, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
+// SetNillableStoppedAt sets the "stopped_at" field if the given value is not nil.
+func (aluo *ActionLogUpdateOne) SetNillableStoppedAt(i *int64) *ActionLogUpdateOne {
+	if i != nil {
+		aluo.SetStoppedAt(*i)
 	}
-	return aluo.AddArgumentIDs(ids...)
-}
-
-// AddExecLogIDs adds the "exec_logs" edge to the ExecLog entity by IDs.
-func (aluo *ActionLogUpdateOne) AddExecLogIDs(ids ...int) *ActionLogUpdateOne {
-	aluo.mutation.AddExecLogIDs(ids...)
 	return aluo
 }
 
-// AddExecLogs adds the "exec_logs" edges to the ExecLog entity.
-func (aluo *ActionLogUpdateOne) AddExecLogs(e ...*ExecLog) *ActionLogUpdateOne {
-	ids := make([]int, len(e))
-	for i := range e {
-		ids[i] = e[i].ID
+// AddStoppedAt adds i to the "stopped_at" field.
+func (aluo *ActionLogUpdateOne) AddStoppedAt(i int64) *ActionLogUpdateOne {
+	aluo.mutation.AddStoppedAt(i)
+	return aluo
+}
+
+// ClearStoppedAt clears the value of the "stopped_at" field.
+func (aluo *ActionLogUpdateOne) ClearStoppedAt() *ActionLogUpdateOne {
+	aluo.mutation.ClearStoppedAt()
+	return aluo
+}
+
+// SetLog sets the "log" field.
+func (aluo *ActionLogUpdateOne) SetLog(s string) *ActionLogUpdateOne {
+	aluo.mutation.SetLog(s)
+	return aluo
+}
+
+// SetNillableLog sets the "log" field if the given value is not nil.
+func (aluo *ActionLogUpdateOne) SetNillableLog(s *string) *ActionLogUpdateOne {
+	if s != nil {
+		aluo.SetLog(*s)
 	}
-	return aluo.AddExecLogIDs(ids...)
+	return aluo
+}
+
+// ClearLog clears the value of the "log" field.
+func (aluo *ActionLogUpdateOne) ClearLog() *ActionLogUpdateOne {
+	aluo.mutation.ClearLog()
+	return aluo
+}
+
+// SetErrmsg sets the "errmsg" field.
+func (aluo *ActionLogUpdateOne) SetErrmsg(s string) *ActionLogUpdateOne {
+	aluo.mutation.SetErrmsg(s)
+	return aluo
+}
+
+// SetNillableErrmsg sets the "errmsg" field if the given value is not nil.
+func (aluo *ActionLogUpdateOne) SetNillableErrmsg(s *string) *ActionLogUpdateOne {
+	if s != nil {
+		aluo.SetErrmsg(*s)
+	}
+	return aluo
+}
+
+// ClearErrmsg clears the value of the "errmsg" field.
+func (aluo *ActionLogUpdateOne) ClearErrmsg() *ActionLogUpdateOne {
+	aluo.mutation.ClearErrmsg()
+	return aluo
+}
+
+// SetErrValues sets the "err_values" field.
+func (aluo *ActionLogUpdateOne) SetErrValues(s []string) *ActionLogUpdateOne {
+	aluo.mutation.SetErrValues(s)
+	return aluo
+}
+
+// ClearErrValues clears the value of the "err_values" field.
+func (aluo *ActionLogUpdateOne) ClearErrValues() *ActionLogUpdateOne {
+	aluo.mutation.ClearErrValues()
+	return aluo
+}
+
+// SetStackTrace sets the "stack_trace" field.
+func (aluo *ActionLogUpdateOne) SetStackTrace(s []string) *ActionLogUpdateOne {
+	aluo.mutation.SetStackTrace(s)
+	return aluo
+}
+
+// ClearStackTrace clears the value of the "stack_trace" field.
+func (aluo *ActionLogUpdateOne) ClearStackTrace() *ActionLogUpdateOne {
+	aluo.mutation.ClearStackTrace()
+	return aluo
+}
+
+// SetStatus sets the "status" field.
+func (aluo *ActionLogUpdateOne) SetStatus(ts types.ExecStatus) *ActionLogUpdateOne {
+	aluo.mutation.SetStatus(ts)
+	return aluo
+}
+
+// SetJobID sets the "job" edge to the Job entity by ID.
+func (aluo *ActionLogUpdateOne) SetJobID(id int) *ActionLogUpdateOne {
+	aluo.mutation.SetJobID(id)
+	return aluo
+}
+
+// SetNillableJobID sets the "job" edge to the Job entity by ID if the given value is not nil.
+func (aluo *ActionLogUpdateOne) SetNillableJobID(id *int) *ActionLogUpdateOne {
+	if id != nil {
+		aluo = aluo.SetJobID(*id)
+	}
+	return aluo
+}
+
+// SetJob sets the "job" edge to the Job entity.
+func (aluo *ActionLogUpdateOne) SetJob(j *Job) *ActionLogUpdateOne {
+	return aluo.SetJobID(j.ID)
 }
 
 // Mutation returns the ActionLogMutation object of the builder.
@@ -339,46 +481,10 @@ func (aluo *ActionLogUpdateOne) Mutation() *ActionLogMutation {
 	return aluo.mutation
 }
 
-// ClearArgument clears all "argument" edges to the Attribute entity.
-func (aluo *ActionLogUpdateOne) ClearArgument() *ActionLogUpdateOne {
-	aluo.mutation.ClearArgument()
+// ClearJob clears the "job" edge to the Job entity.
+func (aluo *ActionLogUpdateOne) ClearJob() *ActionLogUpdateOne {
+	aluo.mutation.ClearJob()
 	return aluo
-}
-
-// RemoveArgumentIDs removes the "argument" edge to Attribute entities by IDs.
-func (aluo *ActionLogUpdateOne) RemoveArgumentIDs(ids ...int) *ActionLogUpdateOne {
-	aluo.mutation.RemoveArgumentIDs(ids...)
-	return aluo
-}
-
-// RemoveArgument removes "argument" edges to Attribute entities.
-func (aluo *ActionLogUpdateOne) RemoveArgument(a ...*Attribute) *ActionLogUpdateOne {
-	ids := make([]int, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
-	}
-	return aluo.RemoveArgumentIDs(ids...)
-}
-
-// ClearExecLogs clears all "exec_logs" edges to the ExecLog entity.
-func (aluo *ActionLogUpdateOne) ClearExecLogs() *ActionLogUpdateOne {
-	aluo.mutation.ClearExecLogs()
-	return aluo
-}
-
-// RemoveExecLogIDs removes the "exec_logs" edge to ExecLog entities by IDs.
-func (aluo *ActionLogUpdateOne) RemoveExecLogIDs(ids ...int) *ActionLogUpdateOne {
-	aluo.mutation.RemoveExecLogIDs(ids...)
-	return aluo
-}
-
-// RemoveExecLogs removes "exec_logs" edges to ExecLog entities.
-func (aluo *ActionLogUpdateOne) RemoveExecLogs(e ...*ExecLog) *ActionLogUpdateOne {
-	ids := make([]int, len(e))
-	for i := range e {
-		ids[i] = e[i].ID
-	}
-	return aluo.RemoveExecLogIDs(ids...)
 }
 
 // Select allows selecting one or more fields (columns) of the returned entity.
@@ -477,106 +583,112 @@ func (aluo *ActionLogUpdateOne) sqlSave(ctx context.Context) (_node *ActionLog, 
 			}
 		}
 	}
-	if aluo.mutation.ArgumentCleared() {
+	if value, ok := aluo.mutation.StoppedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt64,
+			Value:  value,
+			Column: actionlog.FieldStoppedAt,
+		})
+	}
+	if value, ok := aluo.mutation.AddedStoppedAt(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt64,
+			Value:  value,
+			Column: actionlog.FieldStoppedAt,
+		})
+	}
+	if aluo.mutation.StoppedAtCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt64,
+			Column: actionlog.FieldStoppedAt,
+		})
+	}
+	if value, ok := aluo.mutation.Log(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: actionlog.FieldLog,
+		})
+	}
+	if aluo.mutation.LogCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Column: actionlog.FieldLog,
+		})
+	}
+	if value, ok := aluo.mutation.Errmsg(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: actionlog.FieldErrmsg,
+		})
+	}
+	if aluo.mutation.ErrmsgCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Column: actionlog.FieldErrmsg,
+		})
+	}
+	if value, ok := aluo.mutation.ErrValues(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeJSON,
+			Value:  value,
+			Column: actionlog.FieldErrValues,
+		})
+	}
+	if aluo.mutation.ErrValuesCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeJSON,
+			Column: actionlog.FieldErrValues,
+		})
+	}
+	if value, ok := aluo.mutation.StackTrace(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeJSON,
+			Value:  value,
+			Column: actionlog.FieldStackTrace,
+		})
+	}
+	if aluo.mutation.StackTraceCleared() {
+		_spec.Fields.Clear = append(_spec.Fields.Clear, &sqlgraph.FieldSpec{
+			Type:   field.TypeJSON,
+			Column: actionlog.FieldStackTrace,
+		})
+	}
+	if value, ok := aluo.mutation.Status(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: actionlog.FieldStatus,
+		})
+	}
+	if aluo.mutation.JobCleared() {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   actionlog.ArgumentTable,
-			Columns: []string{actionlog.ArgumentColumn},
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   actionlog.JobTable,
+			Columns: []string{actionlog.JobColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: attribute.FieldID,
+					Column: job.FieldID,
 				},
 			},
 		}
 		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
 	}
-	if nodes := aluo.mutation.RemovedArgumentIDs(); len(nodes) > 0 && !aluo.mutation.ArgumentCleared() {
+	if nodes := aluo.mutation.JobIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   actionlog.ArgumentTable,
-			Columns: []string{actionlog.ArgumentColumn},
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   actionlog.JobTable,
+			Columns: []string{actionlog.JobColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: attribute.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := aluo.mutation.ArgumentIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   actionlog.ArgumentTable,
-			Columns: []string{actionlog.ArgumentColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: attribute.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Add = append(_spec.Edges.Add, edge)
-	}
-	if aluo.mutation.ExecLogsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   actionlog.ExecLogsTable,
-			Columns: []string{actionlog.ExecLogsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: execlog.FieldID,
-				},
-			},
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := aluo.mutation.RemovedExecLogsIDs(); len(nodes) > 0 && !aluo.mutation.ExecLogsCleared() {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   actionlog.ExecLogsTable,
-			Columns: []string{actionlog.ExecLogsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: execlog.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
-	}
-	if nodes := aluo.mutation.ExecLogsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   actionlog.ExecLogsTable,
-			Columns: []string{actionlog.ExecLogsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: execlog.FieldID,
+					Column: job.FieldID,
 				},
 			},
 		}

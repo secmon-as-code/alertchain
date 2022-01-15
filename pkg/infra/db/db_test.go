@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func setupDB(t *testing.T) db.Interface {
+func setupDB(t *testing.T) *db.Client {
 	client := db.NewDBMock(t)
 	t.Cleanup(func() {
 		if err := client.Close(); err != nil {

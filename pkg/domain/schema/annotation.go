@@ -2,6 +2,7 @@ package schema
 
 import (
 	"entgo.io/ent"
+	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 )
 
@@ -22,5 +23,7 @@ func (Annotation) Fields() []ent.Field {
 
 // Edges of the Annotation.
 func (Annotation) Edges() []ent.Edge {
-	return nil
+	return []ent.Edge{
+		edge.From(edgeAnnToAttr, Attribute.Type).Ref(edgeAttrsToAnn).Unique(),
+	}
 }

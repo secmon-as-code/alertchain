@@ -10,11 +10,10 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
-	"github.com/m-mizutani/alertchain/pkg/infra/ent/actionlog"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/alert"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/attribute"
+	"github.com/m-mizutani/alertchain/pkg/infra/ent/job"
 	"github.com/m-mizutani/alertchain/pkg/infra/ent/reference"
-	"github.com/m-mizutani/alertchain/pkg/infra/ent/tasklog"
 )
 
 // AlertCreate is the builder for creating a Alert entity.
@@ -164,34 +163,19 @@ func (ac *AlertCreate) AddReferences(r ...*Reference) *AlertCreate {
 	return ac.AddReferenceIDs(ids...)
 }
 
-// AddTaskLogIDs adds the "task_logs" edge to the TaskLog entity by IDs.
-func (ac *AlertCreate) AddTaskLogIDs(ids ...int) *AlertCreate {
-	ac.mutation.AddTaskLogIDs(ids...)
+// AddJobIDs adds the "jobs" edge to the Job entity by IDs.
+func (ac *AlertCreate) AddJobIDs(ids ...int) *AlertCreate {
+	ac.mutation.AddJobIDs(ids...)
 	return ac
 }
 
-// AddTaskLogs adds the "task_logs" edges to the TaskLog entity.
-func (ac *AlertCreate) AddTaskLogs(t ...*TaskLog) *AlertCreate {
-	ids := make([]int, len(t))
-	for i := range t {
-		ids[i] = t[i].ID
+// AddJobs adds the "jobs" edges to the Job entity.
+func (ac *AlertCreate) AddJobs(j ...*Job) *AlertCreate {
+	ids := make([]int, len(j))
+	for i := range j {
+		ids[i] = j[i].ID
 	}
-	return ac.AddTaskLogIDs(ids...)
-}
-
-// AddActionLogIDs adds the "action_logs" edge to the ActionLog entity by IDs.
-func (ac *AlertCreate) AddActionLogIDs(ids ...int) *AlertCreate {
-	ac.mutation.AddActionLogIDs(ids...)
-	return ac
-}
-
-// AddActionLogs adds the "action_logs" edges to the ActionLog entity.
-func (ac *AlertCreate) AddActionLogs(a ...*ActionLog) *AlertCreate {
-	ids := make([]int, len(a))
-	for i := range a {
-		ids[i] = a[i].ID
-	}
-	return ac.AddActionLogIDs(ids...)
+	return ac.AddJobIDs(ids...)
 }
 
 // Mutation returns the AlertMutation object of the builder.
@@ -413,36 +397,17 @@ func (ac *AlertCreate) createSpec() (*Alert, *sqlgraph.CreateSpec) {
 		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
-	if nodes := ac.mutation.TaskLogsIDs(); len(nodes) > 0 {
+	if nodes := ac.mutation.JobsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
 			Inverse: false,
-			Table:   alert.TaskLogsTable,
-			Columns: []string{alert.TaskLogsColumn},
+			Table:   alert.JobsTable,
+			Columns: []string{alert.JobsColumn},
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: &sqlgraph.FieldSpec{
 					Type:   field.TypeInt,
-					Column: tasklog.FieldID,
-				},
-			},
-		}
-		for _, k := range nodes {
-			edge.Target.Nodes = append(edge.Target.Nodes, k)
-		}
-		_spec.Edges = append(_spec.Edges, edge)
-	}
-	if nodes := ac.mutation.ActionLogsIDs(); len(nodes) > 0 {
-		edge := &sqlgraph.EdgeSpec{
-			Rel:     sqlgraph.O2M,
-			Inverse: false,
-			Table:   alert.ActionLogsTable,
-			Columns: []string{alert.ActionLogsColumn},
-			Bidi:    false,
-			Target: &sqlgraph.EdgeTarget{
-				IDSpec: &sqlgraph.FieldSpec{
-					Type:   field.TypeInt,
-					Column: actionlog.FieldID,
+					Column: job.FieldID,
 				},
 			},
 		}
