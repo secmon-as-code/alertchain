@@ -6,9 +6,9 @@ ASSET_JS=$(DIST_DIR)/bundle.js
 ASSET_SRC=$(ASSET_DIR)/src/*.tsx
 ASSETS=$(ASSET_JS) $(DIST_DIR)/index.html
 
-SRC=*.go pkg/**/*.go \
+SRC=*.go pkg/**/*.go
 
-ENT_DIR=./pkg/infra/ent
+ENT_DIR=./gen/ent
 ENT_SRC=$(ENT_DIR)/ent.go
 ENT_SCHEMA_DIR=./pkg/domain/schema
 
@@ -21,6 +21,9 @@ $(ENT_SRC): $(ENT_SCHEMA_DIR)/*.go
 
 $(CHAIN): $(EXAMPLE_SRC_DIR)/*.go $(SRC) $(ENT_SRC)
 	go build -buildmode=plugin -o chain.so $(EXAMPLE_SRC_DIR)
+
+test:
+	go test
 
 alertchain: $(ASSETS) $(SRC) $(ENT_SRC)
 	go build -o alertchain .

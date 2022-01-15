@@ -1,9 +1,9 @@
 package db
 
 import (
+	"github.com/m-mizutani/alertchain/gen/ent"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
-	"github.com/m-mizutani/alertchain/pkg/infra/ent"
 )
 
 func entToAttributes(base []*ent.Attribute) []*model.Attribute {

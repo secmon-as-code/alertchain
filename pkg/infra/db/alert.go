@@ -3,11 +3,11 @@ package db
 import (
 	"time"
 
+	"github.com/m-mizutani/alertchain/gen/ent"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
-	"github.com/m-mizutani/alertchain/pkg/infra/ent"
 
-	entAlert "github.com/m-mizutani/alertchain/pkg/infra/ent/alert"
+	entAlert "github.com/m-mizutani/alertchain/gen/ent/alert"
 )
 
 func entToAlert(alert *ent.Alert) *model.Alert {

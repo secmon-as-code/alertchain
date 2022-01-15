@@ -2,13 +2,12 @@ package db
 
 import (
 	"context"
-	"sync"
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/m-mizutani/alertchain/gen/ent"
+	"github.com/m-mizutani/alertchain/gen/ent/enttest"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
-	"github.com/m-mizutani/alertchain/pkg/infra/ent"
-	"github.com/m-mizutani/alertchain/pkg/infra/ent/enttest"
 
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
@@ -16,8 +15,6 @@ import (
 
 type Client struct {
 	client *ent.Client
-
-	mutex sync.Mutex
 }
 
 func newClient() *Client {
