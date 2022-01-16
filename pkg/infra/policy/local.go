@@ -33,7 +33,7 @@ func NewLocal(path string) (*Local, error) {
 			return nil
 		}
 
-		raw, err := os.ReadFile(path)
+		raw, err := os.ReadFile(filepath.Clean(path))
 		if err != nil {
 			return goerr.Wrap(err, "fail to read .rego file as local policy").With("path", path)
 		}
