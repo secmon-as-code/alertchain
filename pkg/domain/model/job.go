@@ -2,18 +2,18 @@ package model
 
 import (
 	"time"
-
-	"github.com/m-mizutani/alertchain/pkg/domain/types"
 )
 
-type Jobs []*Job
 type Job struct {
-	Timeout   time.Duration
-	ExitOnErr bool
-	Tasks     []Task
+	Name string `json:"name"`
+
+	Timeout   time.Duration `json:"-"`
+	ExitOnErr bool          `json:"-"`
+	Actions   []Action      `json:"-"`
 }
 
-type Task interface {
-	Name() string
-	Execute(ctx *types.Context, alert *Alert) error
+type JobDefinition struct {
+	Job
+
+	Actions []string `json:"actions"`
 }

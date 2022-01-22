@@ -1,7 +1,13 @@
 package service
 
-type Service struct{}
+import "github.com/m-mizutani/alertchain/pkg/infra"
 
-func New() *Service {
-	return &Service{}
+type Service struct {
+	clients *infra.Clients
+}
+
+func New(clients *infra.Clients) *Service {
+	return &Service{
+		clients: clients,
+	}
 }

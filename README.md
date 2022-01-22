@@ -45,7 +45,8 @@ Create a configuration file.
 ```jsonnet:config.jsonnet
 {
     "policy": {
-        "files": ["alert.rego", "action.rego"],
+        "type": "local",
+        "path": "alert.rego",
     },
     "database: {
         "type": "postgres",
@@ -56,18 +57,26 @@ Create a configuration file.
 
         }
     },
-    "actions": {
-        "inspect-virus-total": {
-            "api_key": "xxxxxx",
+    "actions": [
+        {
+            "id": "vt",
+            "use": "inspect-virustotal"
+            "config": {
+                "api_key": "xxxxxx",
+            },
         },
-        "notify-slack": {
-            "webhook_url": "https://slack.com/xxxxxxxx",
+        {
+            "id": "notify-slack",
+            "use": "notify-slack"
+            "config": {
+                "webhook_url": "https://slack.com/xxxxxxxx",
+            },
         },
-    },
+    ],
     "jobs": [
         {
             "name": "enrich",
-            "actions": ["inspect-virus-total"],
+            "actions": ["vt"],
         },
         {
             "name": "response",
@@ -127,7 +136,7 @@ status = result {
     - `input.action`:
         - `input.action.name`: Action name
 - output:
-    - `execute` (boolean): If true, action will be executed
+    - `cancel` (boolean): If true, action will be cancelled
     - `args` (array of `alert.attributes[_]`): Target attribute(s) of action
 
 #### Example

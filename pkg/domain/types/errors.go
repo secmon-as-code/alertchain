@@ -10,6 +10,8 @@ var (
 	ErrInvalidChain         = goerr.New("invalid chain plugin")
 	ErrInvalidInput         = goerr.New("invalid input data")
 
+	ErrInvalidActionConfig = goerr.New("invalid action config")
+
 	ErrChainIsNotConfigured = goerr.New("chain is not configured")
 	ErrInvalidConfigOrder   = goerr.New("invalid configuration order")
 )

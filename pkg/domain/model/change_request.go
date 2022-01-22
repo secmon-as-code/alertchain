@@ -4,37 +4,37 @@ import (
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
 )
 
-type newAnnotationRequest struct {
+type AnnotationRequest struct {
 	attr *Attribute
 	ann  *Annotation
 }
 
-type changeRequest struct {
+type ChangeRequest struct {
 	NewAttrs       []*Attribute
 	NewReferences  []*Reference
 	NewStatus      *types.AlertStatus
 	NewSeverity    *types.Severity
-	NewAnnotations []*newAnnotationRequest
+	NewAnnotations []*AnnotationRequest
 }
 
-func (x *changeRequest) UpdateStatus(status types.AlertStatus) {
+func (x *ChangeRequest) UpdateStatus(status types.AlertStatus) {
 	x.NewStatus = &status
 }
 
-func (x *changeRequest) UpdateSeverity(sev types.Severity) {
+func (x *ChangeRequest) UpdateSeverity(sev types.Severity) {
 	x.NewSeverity = &sev
 }
 
-func (x *changeRequest) AddAttributes(attrs []*Attribute) {
+func (x *ChangeRequest) AddAttributes(attrs []*Attribute) {
 	x.NewAttrs = append(x.NewAttrs, attrs...)
 }
 
-func (x *changeRequest) AddReference(ref *Reference) {
+func (x *ChangeRequest) AddReference(ref *Reference) {
 	x.NewReferences = append(x.NewReferences, ref)
 }
 
-func (x *changeRequest) AddAnnotation(attr *Attribute, ann *Annotation) {
-	x.NewAnnotations = append(x.NewAnnotations, &newAnnotationRequest{
+func (x *ChangeRequest) AddAnnotation(attr *Attribute, ann *Annotation) {
+	x.NewAnnotations = append(x.NewAnnotations, &AnnotationRequest{
 		attr: attr,
 		ann:  ann,
 	})

@@ -23,8 +23,6 @@ type Alert struct {
 
 	CreatedAt time.Time
 	ClosedAt  time.Time
-
-	changeRequest
 }
 
 func (x *Alert) ID() types.AlertID { return x.id }
