@@ -13,10 +13,10 @@ type Clients struct {
 func (x *Clients) DB() *db.Client        { return x.db }
 func (x *Clients) Policy() policy.Client { return x.policy }
 
-func New(options ...Option) *Clients {
-	clients := &Clients{}
-	for _, opt := range options {
-		opt(clients)
+func New(dbClient *db.Client, policyClient policy.Client) *Clients {
+	clients := &Clients{
+		db:     dbClient,
+		policy: policyClient,
 	}
 
 	return clients
