@@ -23,7 +23,7 @@ $(CHAIN): $(EXAMPLE_SRC_DIR)/*.go $(SRC) $(ENT_SRC)
 	go build -buildmode=plugin -o chain.so $(EXAMPLE_SRC_DIR)
 
 test:
-	go test
+	go test ./pkg/...
 
 alertchain: $(ASSETS) $(SRC) $(ENT_SRC)
 	go build -o alertchain .

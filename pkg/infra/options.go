@@ -1,27 +1,20 @@
 package infra
 
 import (
-	"testing"
-
 	"github.com/m-mizutani/alertchain/pkg/infra/db"
+	"github.com/m-mizutani/alertchain/pkg/infra/policy"
 )
 
-type Option func(*Clients) error
+type Option func(*Clients)
 
-func WithDB(dbType, dbConfig string) Option {
-	return func(c *Clients) error {
-		client, err := db.New(dbType, dbConfig)
-		if err != nil {
-			return err
-		}
-		c.DB = client
-		return nil
+func WithDB(client *db.Client) Option {
+	return func(c *Clients) {
+		c.db = client
 	}
 }
 
-func WithDBMock(t *testing.T) Option {
-	return func(c *Clients) error {
-		c.DB = db.NewDBMock(t)
-		return nil
+func WithPolicy(client policy.Client) Option {
+	return func(c *Clients) {
+		c.policy = client
 	}
 }

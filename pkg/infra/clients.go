@@ -2,19 +2,22 @@ package infra
 
 import (
 	"github.com/m-mizutani/alertchain/pkg/infra/db"
+	"github.com/m-mizutani/alertchain/pkg/infra/policy"
 )
 
 type Clients struct {
-	DB *db.Client
+	db     *db.Client
+	policy policy.Client
 }
 
-func New(options ...Option) (*Clients, error) {
+func (x *Clients) DB() *db.Client        { return x.db }
+func (x *Clients) Policy() policy.Client { return x.policy }
+
+func New(options ...Option) *Clients {
 	clients := &Clients{}
 	for _, opt := range options {
-		if err := opt(clients); err != nil {
-			return nil, err
-		}
+		opt(clients)
 	}
 
-	return clients, nil
+	return clients
 }
