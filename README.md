@@ -10,7 +10,7 @@ SOAR is a platform to automate security alert handling (investigating alert, eva
 
 ![AlertChain architecture overview](https://user-images.githubusercontent.com/605953/147866269-48a0df6f-181d-4fc1-ac90-3b1650fd0dff.jpg)
 
-AlertChain is a simple SOAR framework that is fully integrated with OPA. AlertChain has 2 type of
+AlertChain is a simple SOAR framework that is fully integrated with OPA. AlertChain has 2 type of components.
 
 - `source`: A security alert receiver. AlertChain does not generate/detect security alert by own. AlertChain can import various security alerts from `source` instead.
 - `action`: A security alert handling workflow. There are 2 major categories of actions.
