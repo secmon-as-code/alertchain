@@ -59,17 +59,21 @@ func ctxGetDB(c *gin.Context) *db.Client {
 	return db
 }
 
-func ctxSetLogger(c *gin.Context, logger *zlog.Logger) {
-	c.Set(ctxKeyLogger, logger)
+func newContext(c *gin.Context) *types.Context {
+	return types.NewContext(types.WithCtx(c), types.WithLogger(ctxGetLogger(c)))
 }
 
-func ctxGetLogger(c *gin.Context) *zlog.Logger {
+func ctxSetLogger(c *gin.Context, log *zlog.LogEntity) {
+	c.Set(ctxKeyLogger, log)
+}
+
+func ctxGetLogger(c *gin.Context) *zlog.LogEntity {
 	obj, ok := c.Get(ctxKeyLogger)
 	if !ok {
 		panic("Logger is not found in gin.Context")
 	}
 
-	logger, ok := obj.(*zlog.Logger)
+	logger, ok := obj.(*zlog.LogEntity)
 	if !ok {
 		panic("Logger object in gin.Context is not zlog.Logger")
 	}
@@ -89,7 +93,7 @@ func newAPIEngine(db *db.Client, fallback http.Handler, logger *zlog.Logger) *gi
 		}
 	})
 	engine.Use(func(c *gin.Context) {
-		ctxSetLogger(c, logger)
+		ctxSetLogger(c, logger.Log())
 		ctxSetDB(c, db)
 		c.Next()
 	})
@@ -106,7 +110,7 @@ func newAPIEngine(db *db.Client, fallback http.Handler, logger *zlog.Logger) *gi
 
 func getAlert(c *gin.Context) {
 	id := types.AlertID(c.Param("id"))
-	ctx := types.NewContextWith(c, ctxGetLogger(c))
+	ctx := types.NewContext(types.WithCtx(c), types.WithLogger(ctxGetLogger(c)))
 
 	resp, err := ctxGetDB(c).GetAlert(ctx, id)
 	if err != nil {
@@ -135,7 +139,7 @@ func queryToInt(c *gin.Context, name string, defaultValue int) int {
 }
 
 func getAlerts(c *gin.Context) {
-	ctx := types.NewContextWith(c, ctxGetLogger(c))
+	ctx := types.NewContext(types.WithCtx(c), types.WithLogger(ctxGetLogger(c)))
 
 	offset := queryToInt(c, "offset", 0)
 	limit := queryToInt(c, "limit", 10)

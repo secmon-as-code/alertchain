@@ -65,7 +65,7 @@ func NewCreateIssue(config model.ActionConfig) (model.Action, error) {
 }
 
 func (x *CreateIssue) Run(ctx *types.Context, alert *model.Alert, args ...*model.Attribute) (*model.ChangeRequest, error) {
-	ctx.Logger().Trace("starting CreateGitHubIssue")
+	ctx.Log().Trace("starting CreateGitHubIssue")
 
 	rt := http.DefaultTransport
 	if x.rt != nil {
@@ -94,7 +94,7 @@ func (x *CreateIssue) Run(ctx *types.Context, alert *model.Alert, args ...*model
 		URL:    *issue.HTMLURL,
 	})
 
-	ctx.Logger().Trace("exiting CreateGitHubIssue")
+	ctx.Log().Trace("exiting CreateGitHubIssue")
 	return &req, nil
 }
 

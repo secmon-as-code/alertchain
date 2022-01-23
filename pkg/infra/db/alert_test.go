@@ -1,24 +1,17 @@
 package db_test
 
 import (
-	"context"
 	"testing"
 	"time"
 
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
-	"github.com/m-mizutani/zlog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func newContext() *types.Context {
-	var logger = zlog.New()
-	return types.NewContextWith(context.Background(), logger)
-}
-
 func TestAlert(t *testing.T) {
-	ctx := newContext()
+	ctx := types.NewContext()
 	t.Run("Create a new alert", func(t *testing.T) {
 		client := setupDB(t)
 		alert := model.NewAlert(&model.Alert{
@@ -103,7 +96,7 @@ func TestAlert(t *testing.T) {
 func TestReference(t *testing.T) {
 	t.Run("Add Reference", func(t *testing.T) {
 		client := setupDB(t)
-		ctx := newContext()
+		ctx := types.NewContext()
 		alert := model.NewAlert(&model.Alert{
 			Title:     "five",
 			Detector:  "blue",
