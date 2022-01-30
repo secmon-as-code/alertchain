@@ -10,16 +10,16 @@ import (
 
 type Context struct {
 	logger *zlog.LogEntity
-	base   context.Context
+	parent context.Context
 }
 
 type ContextOption func(ctx *Context)
 
 func NewContext(options ...ContextOption) *Context {
-	base := context.Background()
+	parent := context.Background()
 	ctx := &Context{
 		logger: utils.Logger.Log(),
-		base:   base,
+		parent: parent,
 	}
 	for _, opt := range options {
 		opt(ctx)
@@ -35,29 +35,29 @@ func WithLogger(logger *zlog.LogEntity) ContextOption {
 
 func WithCtx(ctx context.Context) ContextOption {
 	return func(ctx *Context) {
-		ctx.base = ctx
+		ctx.parent = ctx
 	}
 }
 
 // context.Context
 func (x *Context) Deadline() (deadline time.Time, ok bool) {
-	return x.base.Deadline()
+	return x.parent.Deadline()
 }
 func (x *Context) Done() <-chan struct{} {
-	return x.base.Done()
+	return x.parent.Done()
 }
 func (x *Context) Err() error {
-	return x.base.Err()
+	return x.parent.Err()
 }
 func (x *Context) Value(key interface{}) interface{} {
-	return x.base.Value(key)
+	return x.parent.Value(key)
 }
 
 func (x *Context) WithTimeout(timeout time.Duration) (*Context, context.CancelFunc) {
-	ctxTimeout, cancel := context.WithTimeout(x.base, timeout)
+	ctxTimeout, cancel := context.WithTimeout(x.parent, timeout)
 
 	return &Context{
-		base:   ctxTimeout,
+		parent: ctxTimeout,
 		logger: x.logger,
 	}, cancel
 }
