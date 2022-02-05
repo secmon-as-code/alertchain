@@ -33,9 +33,9 @@ func WithLogger(logger *zlog.LogEntity) ContextOption {
 	}
 }
 
-func WithCtx(ctx context.Context) ContextOption {
+func WithCtx(parent context.Context) ContextOption {
 	return func(ctx *Context) {
-		ctx.parent = ctx
+		ctx.parent = parent
 	}
 }
 
