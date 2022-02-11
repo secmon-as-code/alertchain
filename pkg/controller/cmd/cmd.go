@@ -1,11 +1,12 @@
 package cmd
 
-type Cmd struct{}
+import "github.com/urfave/cli/v2"
 
-func New() *Cmd {
-	return &Cmd{}
-}
+func Run(argv []string) error {
+	cli := cli.App{}
 
-func (x *Cmd) Run(argv []string) error {
+	if err := cli.Run(argv); err != nil {
+		return err
+	}
 	return nil
 }
