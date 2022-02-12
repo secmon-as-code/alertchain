@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/m-mizutani/alertchain/pkg/actions/github"
+	"github.com/m-mizutani/alertchain/pkg/actions/otx"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/goerr"
@@ -21,6 +22,7 @@ func Register(id string, factory model.ActionFactory) {
 
 func init() {
 	Register(github.CreateIssueID, github.NewCreateIssue)
+	Register(otx.InquiryID, otx.NewInquiry)
 }
 
 func New(id string, cfg model.ActionConfig) (model.Action, error) {

@@ -10,31 +10,35 @@ type AnnotationRequest struct {
 }
 
 type ChangeRequest struct {
-	NewAttrs       []*Attribute
-	NewReferences  []*Reference
-	NewStatus      *types.AlertStatus
-	NewSeverity    *types.Severity
-	NewAnnotations []*AnnotationRequest
+	addingAttrs       []*Attribute
+	addingReferences  []*Reference
+	addingAnnotations []*AnnotationRequest
+	updatingStatus    *types.AlertStatus
+	updatingSeverity  *types.Severity
 }
 
+func (x *ChangeRequest) AddingAttrs() []*Attribute               { return x.addingAttrs }
+func (x *ChangeRequest) AddingReferences() []*Reference          { return x.addingReferences }
+func (x *ChangeRequest) AddingAnnotations() []*AnnotationRequest { return x.addingAnnotations }
+
 func (x *ChangeRequest) UpdateStatus(status types.AlertStatus) {
-	x.NewStatus = &status
+	x.updatingStatus = &status
 }
 
 func (x *ChangeRequest) UpdateSeverity(sev types.Severity) {
-	x.NewSeverity = &sev
+	x.updatingSeverity = &sev
 }
 
 func (x *ChangeRequest) AddAttributes(attrs []*Attribute) {
-	x.NewAttrs = append(x.NewAttrs, attrs...)
+	x.addingAttrs = append(x.addingAttrs, attrs...)
 }
 
 func (x *ChangeRequest) AddReference(ref *Reference) {
-	x.NewReferences = append(x.NewReferences, ref)
+	x.addingReferences = append(x.addingReferences, ref)
 }
 
 func (x *ChangeRequest) AddAnnotation(attr *Attribute, ann *Annotation) {
-	x.NewAnnotations = append(x.NewAnnotations, &AnnotationRequest{
+	x.addingAnnotations = append(x.addingAnnotations, &AnnotationRequest{
 		attr: attr,
 		ann:  ann,
 	})

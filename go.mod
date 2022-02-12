@@ -11,7 +11,8 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/kr/pretty v0.3.0 // indirect
 	github.com/lib/pq v1.10.4
-	github.com/m-mizutani/goerr v0.1.2
+	github.com/m-mizutani/goerr v0.1.3
+	github.com/m-mizutani/gotx v0.0.0-20220212032548-561253db5a29
 	github.com/m-mizutani/zlog v0.2.0
 	github.com/mattn/go-sqlite3 v1.14.9
 	github.com/open-policy-agent/opa v0.36.1

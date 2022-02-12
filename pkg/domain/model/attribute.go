@@ -89,8 +89,9 @@ func (x Attributes) FindByContext(ctx types.AttrContext) Attributes {
 }
 
 type Annotation struct {
-	Timestamp time.Time
+	Timestamp *time.Time
 	Source    string
 	Name      string
 	Value     string
+	URI       string
 }
