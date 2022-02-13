@@ -3,7 +3,7 @@ module github.com/m-mizutani/alertchain
 go 1.16
 
 require (
-	entgo.io/ent v0.9.1
+	cloud.google.com/go/spanner v1.29.0
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
 	github.com/bradleyfalzon/ghinstallation v1.1.1
 	github.com/go-ozzo/ozzo-validation v3.6.0+incompatible
@@ -21,4 +21,5 @@ require (
 	github.com/urfave/cli/v2 v2.3.0
 	golang.org/x/crypto v0.0.0-20211202192323-5770296d904e // indirect
 	golang.org/x/sys v0.0.0-20220114195835-da31bd327af9 // indirect
+	google.golang.org/api v0.63.0
 )

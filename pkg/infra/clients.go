@@ -6,14 +6,14 @@ import (
 )
 
 type Clients struct {
-	db     *db.Client
+	db     db.Client
 	policy policy.Client
 }
 
-func (x *Clients) DB() *db.Client        { return x.db }
+func (x *Clients) DB() db.Client         { return x.db }
 func (x *Clients) Policy() policy.Client { return x.policy }
 
-func New(dbClient *db.Client, policyClient policy.Client) *Clients {
+func New(dbClient db.Client, policyClient policy.Client) *Clients {
 	clients := &Clients{
 		db:     dbClient,
 		policy: policyClient,

@@ -13,17 +13,12 @@ type ChangeRequest struct {
 	addingAttrs       []*Attribute
 	addingReferences  []*Reference
 	addingAnnotations []*AnnotationRequest
-	updatingStatus    *types.AlertStatus
 	updatingSeverity  *types.Severity
 }
 
 func (x *ChangeRequest) AddingAttrs() []*Attribute               { return x.addingAttrs }
 func (x *ChangeRequest) AddingReferences() []*Reference          { return x.addingReferences }
 func (x *ChangeRequest) AddingAnnotations() []*AnnotationRequest { return x.addingAnnotations }
-
-func (x *ChangeRequest) UpdateStatus(status types.AlertStatus) {
-	x.updatingStatus = &status
-}
 
 func (x *ChangeRequest) UpdateSeverity(sev types.Severity) {
 	x.updatingSeverity = &sev

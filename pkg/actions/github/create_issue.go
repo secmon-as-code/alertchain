@@ -91,7 +91,7 @@ func (x *CreateIssue) Run(ctx *types.Context, alert *model.Alert, args ...*model
 	req.AddReference(&model.Reference{
 		Source: "CreateGitHubIssue",
 		Title:  "alert issue",
-		URL:    *issue.HTMLURL,
+		URI:    *issue.HTMLURL,
 	})
 
 	ctx.Log().Trace("exiting CreateGitHubIssue")
@@ -128,7 +128,7 @@ func alert2issue(alert *model.Alert) *github.IssueRequest {
 		"- Created at: "+alert.CreatedAt.Format("2006-01-02 15:04:05"),
 		"- Detected by: "+alert.Detector,
 		"- Severity: "+string(alert.Severity),
-		"- ID: "+string(alert.ID()),
+		"- ID: "+string(alert.ID),
 		"",
 		"- - - - - - - -",
 		"",
@@ -154,7 +154,7 @@ func alert2issue(alert *model.Alert) *github.IssueRequest {
 	b.add("", "## References")
 	if len(alert.References) > 0 {
 		for _, ref := range alert.References {
-			b.fmt("- %s: [%s](%s) (%s)", ref.Source, ref.Title, ref.URL, ref.Comment)
+			b.fmt("- %s: [%s](%s) (%s)", ref.Source, ref.Title, ref.URI, ref.Comment)
 		}
 	} else {
 		b.add("n/a")

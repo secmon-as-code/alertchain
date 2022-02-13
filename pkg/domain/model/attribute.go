@@ -4,26 +4,32 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
 )
 
 type Attribute struct {
+	ID      types.AttributeID
+	AlertID types.AlertID
+
 	Key      string
 	Value    string
 	Type     types.AttrType
 	Contexts Contexts
 
-	Annotations []*Annotation
-
-	id int
+	Annotations []*Annotation `spanner:"-"`
 }
 
-func (x *Attribute) ID() int { return x.id }
+func (x *Alert) NewAttribute(key, value string, t types.AttrType, ctxs ...types.AttrContext) *Attribute {
+	return &Attribute{
+		ID:      types.AttributeID(uuid.NewString()),
+		AlertID: x.ID,
 
-func MakeAttribute(id int, attr *Attribute) *Attribute {
-	newAttr := *attr
-	newAttr.id = id
-	return &newAttr
+		Key:      key,
+		Value:    value,
+		Type:     t,
+		Contexts: ctxs,
+	}
 }
 
 type Contexts []types.AttrContext
@@ -89,9 +95,26 @@ func (x Attributes) FindByContext(ctx types.AttrContext) Attributes {
 }
 
 type Annotation struct {
+	ID          types.AnnotationID
+	AlertID     types.AlertID
+	AttributeID types.AttributeID
+
 	Timestamp *time.Time
 	Source    string
 	Name      string
 	Value     string
+	Tags      []string
 	URI       string
+}
+
+func (x *Attribute) NewAnnotation(src, name, value string, t types.AttrType) *Annotation {
+	return &Annotation{
+		ID:          types.AnnotationID(uuid.NewString()),
+		AlertID:     x.AlertID,
+		AttributeID: x.ID,
+
+		Source: src,
+		Name:   name,
+		Value:  value,
+	}
 }

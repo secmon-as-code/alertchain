@@ -147,9 +147,6 @@ func (x *Chain) Invoke(ctx *types.Context, target *model.Alert) error {
 		if result.Severity != "" {
 			req.UpdateSeverity(types.Severity(result.Severity))
 		}
-		if result.Status != "" {
-			req.UpdateStatus(types.AlertStatus(result.Status))
-		}
 		if err := alertSvc.HandleChangeRequest(ctx, &req); err != nil {
 			return goerr.Wrap(err).With("changeRequest", req)
 		}

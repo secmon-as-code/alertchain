@@ -5,14 +5,14 @@ import (
 
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/infra"
-	"github.com/m-mizutani/alertchain/pkg/infra/db"
+	"github.com/m-mizutani/alertchain/pkg/infra/db/spanner"
 	"github.com/m-mizutani/alertchain/pkg/infra/policy"
 	"github.com/m-mizutani/alertchain/pkg/service/chain"
 	"github.com/stretchr/testify/require"
 )
 
 func newClients(t *testing.T, eval func(in interface{}) (interface{}, error)) *infra.Clients {
-	return infra.New(db.NewDBMock(t), policy.NewMock(t, eval))
+	return infra.New(spanner.NewTestDB(t), policy.NewMock(t, eval))
 }
 
 func TestChain(t *testing.T) {

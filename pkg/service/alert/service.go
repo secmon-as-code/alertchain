@@ -25,7 +25,7 @@ func (x *Service) HandleChangeRequest(ctx *types.Context, req *model.ChangeReque
 }
 
 func (x *Service) Refresh(ctx *types.Context) error {
-	got, err := x.clients.DB().GetAlert(ctx, x.alert.ID())
+	got, err := x.clients.DB().GetAlert(ctx, x.alert.ID)
 	if err != nil {
 		return err
 	}

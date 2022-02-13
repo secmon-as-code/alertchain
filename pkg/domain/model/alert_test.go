@@ -36,12 +36,6 @@ func TestAlertValidate(t *testing.T) {
 		assert.ErrorIs(t, alert.Validate(), types.ErrInvalidInput)
 	})
 
-	t.Run("fail if Status is not set", func(t *testing.T) {
-		alert := makeTestAlert()
-		alert.Status = ""
-		assert.ErrorIs(t, alert.Validate(), types.ErrInvalidInput)
-	})
-
 	t.Run("fail if Severity is not set", func(t *testing.T) {
 		alert := makeTestAlert()
 		alert.Severity = ""
@@ -52,7 +46,6 @@ func TestAlertValidate(t *testing.T) {
 		alert := &model.Alert{
 			Title:     "t",
 			Detector:  "d",
-			Status:    types.StatusNew,
 			Severity:  types.SevUnclassified,
 			CreatedAt: time.Now(),
 		}
