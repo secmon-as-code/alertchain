@@ -75,14 +75,13 @@ func New(options ...Option) (*Chain, error) {
 func (x *Chain) HandleAlert(ctx *types.Context, label string, data any) error {
 	// Step 1: Detect alert
 	var alertResult model.AlertPolicyResult
-	var alertResultAny any
 
 	if x.alertPolicy != nil {
 		alertQuery := model.AlertPolicyQuery{
 			Label:   label,
 			Message: data,
 		}
-		if err := x.alertPolicy.Query(ctx, alertQuery, &alertResultAny); err != nil {
+		if err := x.alertPolicy.Query(ctx, alertQuery, &alertResult); err != nil {
 			return goerr.Wrap(err)
 		}
 	} else {
