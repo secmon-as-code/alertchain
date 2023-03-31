@@ -2,13 +2,6 @@ name: Unit test
 
 on: [push]
 
-env:
-  SPANNER_EMULATOR_HOST: localhost:9010
-  SPANNER_PROJECT_ID: alertchain-test
-  SPANNER_INSTANCE_ID: test-instance
-  SPANNER_DATABASE_ID: test-db
-  WRENCH_VERSION: v1.0.4
-
 jobs:
   testing:
     runs-on: ubuntu-latest
