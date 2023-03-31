@@ -1,0 +1,108 @@
+{
+  "notificationConfigName": "organizations/000000123456/notificationConfigs/pubsub_notification",
+  "finding": {
+    "name": "organizations/000000123456/sources/12345678912345678/findings/62eed6ad005045e897e6b52d66212345",
+    "parent": "organizations/000000123456/sources/12345678912345678",
+    "resourceName": "//cloudsql.googleapis.com/projects/my-project/instances/my-db",
+    "state": "ACTIVE",
+    "category": "Exfiltration: CloudSQL Over-Privileged Grant",
+    "sourceProperties": {
+      "sourceId": {
+        "projectNumber": "123412341234",
+        "customerOrganizationNumber": "000000123456"
+      },
+      "detectionCategory": {
+        "ruleName": "cloudsql_exfil",
+        "subRuleName": "user_granted_all_permissions"
+      },
+      "detectionPriority": "LOW",
+      "affectedResources": [
+        {
+          "gcpResourceName": "//cloudresourcemanager.googleapis.com/projects/123412341234"
+        },
+        {
+          "gcpResourceName": "//cloudsql.googleapis.com/projects/my-project/instances/my-db"
+        }
+      ],
+      "evidence": [
+        {
+          "sourceLogId": {
+            "projectId": "my-project",
+            "resourceContainer": "projects/my-project",
+            "timestamp": {
+              "seconds": "1677835445",
+              "nanos": 9.71e8
+            },
+            "insertId": "2#428169219889#my-db#audit#1677835445971000000#00000000005fd5a8-0-0@a1"
+          }
+        }
+      ],
+      "properties": {},
+      "findingId": "62eed6ad005045e897e6b52d66212345",
+      "contextUris": {
+        "mitreUri": {
+          "displayName": "MITRE Link",
+          "url": "https://attack.mitre.org/techniques/T1567/"
+        },
+        "cloudLoggingQueryUri": [
+          {
+            "displayName": "Cloud Logging Query Link",
+            "url": "https://console.cloud.google.com/logs/query;query\u003dtimestamp%3D%222023-03-03T09:24:05.971Z%22%0AinsertId%3D%222#428169219889#my-db#audit#1677835445971000000#00000000005fd5a8-0-0@a1%22%0Aresource.labels.project_id%3D%22my-project%22?project\u003dmy-project"
+          }
+        ],
+        "relatedFindingUri": {
+          "displayName": "Related CloudSQL Exfiltration Findings",
+          "url": "https://console.cloud.google.com/security/command-center/findings..."
+        }
+      }
+    },
+    "securityMarks": {
+      "name": "organizations/000000123456/sources/12345678912345678/findings/62eed6ad005045e897e6b52d66212345/securityMarks"
+    },
+    "eventTime": "2023-03-03T09:24:09.270839Z",
+    "createTime": "2023-03-03T09:24:09.740Z",
+    "severity": "LOW",
+    "canonicalName": "projects/123412341234/sources/12345678912345678/findings/62eed6ad005045e897e6b52d66212345",
+    "mute": "UNDEFINED",
+    "findingClass": "THREAT",
+    "mitreAttack": {
+      "primaryTactic": "EXFILTRATION",
+      "primaryTechniques": ["EXFILTRATION_OVER_WEB_SERVICE"]
+    },
+    "access": {
+      "callerIpGeo": {},
+      "serviceName": "cloudsql.googleapis.com",
+      "methodName": "cloudsql.instances.query"
+    },
+    "parentDisplayName": "Event Threat Detection",
+    "database": {
+      "displayName": "my_db",
+      "userName": "my_db",
+      "query": "GRANT ALL ON ALL TABLES IN SCHEMA public TO \"my_admin\"",
+      "grantees": ["my_admin"]
+    }
+  },
+  "resource": {
+    "name": "//cloudsql.googleapis.com/projects/my-project/instances/my-db",
+    "project": "//cloudresourcemanager.googleapis.com/projects/123412341234",
+    "projectDisplayName": "my-project",
+    "parent": "//cloudresourcemanager.googleapis.com/projects/123412341234",
+    "parentDisplayName": "my-project",
+    "type": "google.cloud.sql.Instance",
+    "folders": [
+      {
+        "resourceFolder": "//cloudresourcemanager.googleapis.com/folders/1111111111",
+        "resourceFolderDisplayName": "my-folder1"
+      },
+      {
+        "resourceFolder": "//cloudresourcemanager.googleapis.com/folders/2222222222",
+        "resourceFolderDisplayName": "my-folder2"
+      },
+      {
+        "resourceFolder": "//cloudresourcemanager.googleapis.com/folders/33333333",
+        "resourceFolderDisplayName": "my-folder3"
+      }
+    ],
+    "displayName": "my-db"
+  }
+}

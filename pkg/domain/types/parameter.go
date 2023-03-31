@@ -1,0 +1,15 @@
+package types
+
+type Parameter struct {
+	Value string        `json:"value"`
+	Type  ParameterType `json:"type"`
+}
+
+type ParameterType string
+
+const (
+	IPAddr     ParameterType = "ipaddr"
+	DomainName ParameterType = "domain"
+	FileSha256 ParameterType = "file_sha256"
+	FileSha512 ParameterType = "file_sha512"
+)
