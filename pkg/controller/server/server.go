@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"cloud.google.com/go/pubsub"
 	"github.com/go-chi/chi/v5"
@@ -80,7 +81,13 @@ func New(route interfaces.Router) *Server {
 }
 
 func (x *Server) Run(addr string) error {
-	if err := http.ListenAndServe(addr, x.mux); err != nil {
+	server := &http.Server{
+		Addr:              addr,
+		ReadHeaderTimeout: 3 * time.Second,
+		Handler:           x.mux,
+	}
+
+	if err := server.ListenAndServe(); err != nil {
 		return goerr.Wrap(err, "failed to listen")
 	}
 

@@ -12,12 +12,6 @@ env:
 jobs:
   testing:
     runs-on: ubuntu-latest
-    services:
-      emulator:
-        image: gcr.io/cloud-spanner-emulator/emulator:latest
-        ports:
-          - 9010:9010
-          - 9020:9020
 
     steps:
       - name: Checkout upstream repo
@@ -28,20 +22,4 @@ jobs:
         with:
           go-version: "1.17"
       - uses: google-github-actions/setup-gcloud@v0.5.0
-      - name: Create the spanner instance
-        shell: bash
-        run: |
-          gcloud config configurations create emulator
-          gcloud config set auth/disable_credentials true
-          gcloud config set project ${{ env.SPANNER_PROJECT_ID }}
-          gcloud config set api_endpoint_overrides/spanner http://localhost:9020/
-          gcloud spanner instances create ${{ env.SPANNER_INSTANCE_ID }} --config=emulator-config --description="Test Instance" --nodes=1
-      - name: Install wrench
-        shell: bash
-        run: |
-          curl -o /usr/local/bin/wrench -sSfL https://github.com/cloudspannerecosystem/wrench/releases/download/${{ env.WRENCH_VERSION }}/wrench_linux_amd64
-          chmod +x /usr/local/bin/wrench
-      - name: Create the databases
-        shell: bash
-        run: wrench create --directory ./db/spanner
       - run: go test ./pkg/...

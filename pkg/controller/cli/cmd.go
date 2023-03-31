@@ -2,6 +2,7 @@ package cli
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
@@ -74,7 +75,7 @@ func New() *CLI {
 
 			data := configData
 			if configFile != "" {
-				raw, err := os.ReadFile(configFile)
+				raw, err := os.ReadFile(filepath.Clean(configFile))
 				if err != nil {
 					return goerr.Wrap(err, "reading config file")
 				}

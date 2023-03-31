@@ -3,6 +3,7 @@ package utils
 import (
 	"io"
 	"os"
+	"path/filepath"
 	"sync"
 
 	"github.com/m-mizutani/goerr"
@@ -35,7 +36,7 @@ func ReconfigureLogger(format, level, output string) error {
 	case "stderr":
 		w = os.Stderr
 	default:
-		fd, err := os.Create(output)
+		fd, err := os.Create(filepath.Clean(output))
 		if err != nil {
 			return goerr.Wrap(err, "opening log file")
 		}
