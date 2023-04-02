@@ -64,6 +64,6 @@ func TestBasic(t *testing.T) {
 	)).NoError(t)
 
 	ctx := types.NewContext()
-	gt.NoError(t, c.HandleAlert(ctx, "test", alertData))
+	gt.NoError(t, c.HandleAlert(ctx, "scc", alertData))
 	gt.N(t, called).Equal(1)
 }

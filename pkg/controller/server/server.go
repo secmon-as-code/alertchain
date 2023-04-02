@@ -2,7 +2,9 @@ package server
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"cloud.google.com/go/pubsub"
@@ -25,27 +27,56 @@ func respondError(w http.ResponseWriter, err error) {
 		Error: err.Error(),
 	}
 
+	var errValues []slog.Attr
+	if goErr := goerr.Unwrap(err); goErr != nil {
+		for key, value := range goErr.Values() {
+			errValues = append(errValues, slog.Any(key, value))
+		}
+	}
+
+	utils.Logger().Error("routing data", err, errValues)
+
 	w.WriteHeader(http.StatusBadRequest)
 	if err := json.NewEncoder(w).Encode(body); err != nil {
 		utils.Logger().Error("failed to convert error message", err)
 	}
+
+	reader := strings.NewReader("Error: " + err.Error())
+	io.Copy(w, reader)
+}
+
+func getSchema(r *http.Request) (types.Schema, error) {
+	schema := chi.URLParam(r, "schema")
+	if schema == "" {
+		return "", goerr.Wrap(types.ErrInvalidHTTPRequest, "schema is empty")
+	}
+
+	return types.Schema(schema), nil
 }
 
 func New(route interfaces.Router) *Server {
 	s := &Server{}
 
 	handler := func(w http.ResponseWriter, r *http.Request, data any) {
-		ctx := types.NewContext(types.WithBase(r.Context()))
-		if err := route(ctx, chi.URLParam(r, "label"), data); err != nil {
-			utils.Logger().Error("routing data", err, slog.Any("data", data))
+		schema, err := getSchema(r)
+		if err != nil {
 			respondError(w, err)
 			return
 		}
+
+		ctx := types.NewContext(types.WithBase(r.Context()))
+		if err := route(ctx, schema, data); err != nil {
+			respondError(w, err)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("OK"))
 	}
 
 	r := chi.NewRouter()
 	r.Route("/alert", func(r chi.Router) {
-		r.Post("/raw/{label}", func(w http.ResponseWriter, r *http.Request) {
+		r.Post("/raw/{schema}", func(w http.ResponseWriter, r *http.Request) {
 			var data any
 			if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
 				respondError(w, err)
@@ -56,7 +87,7 @@ func New(route interfaces.Router) *Server {
 			handler(w, r, data)
 		})
 
-		r.Post("/pubsub/{label}", func(w http.ResponseWriter, r *http.Request) {
+		r.Post("/pubsub/{schema}", func(w http.ResponseWriter, r *http.Request) {
 			var msg pubsub.Message
 			if err := json.NewDecoder(r.Body).Decode(&msg); err != nil {
 				respondError(w, goerr.Wrap(err, "parsing pub/sub message"))

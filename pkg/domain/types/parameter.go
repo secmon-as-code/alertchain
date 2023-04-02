@@ -1,6 +1,7 @@
 package types
 
 type Parameter struct {
+	Key   string        `json:"key"`
 	Value string        `json:"value"`
 	Type  ParameterType `json:"type"`
 }

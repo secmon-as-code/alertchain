@@ -21,4 +21,6 @@ var (
 	ErrNoSuchActionName = newError("no such action name")
 
 	ErrNoSuchActionID = newError("no such action ID")
+
+	ErrInvalidHTTPRequest = newError("invalid HTTP request")
 )

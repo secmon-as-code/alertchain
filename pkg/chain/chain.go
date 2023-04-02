@@ -72,23 +72,21 @@ func New(options ...Option) (*Chain, error) {
 	return c, nil
 }
 
-func (x *Chain) HandleAlert(ctx *types.Context, label string, data any) error {
+func (x *Chain) HandleAlert(ctx *types.Context, schema types.Schema, data any) error {
 	// Step 1: Detect alert
-	var alertResult model.AlertPolicyResult
+	queryOpt := []opac.QueryOption{
+		opac.WithPackageSuffix("." + string(schema)),
+	}
 
+	var alertResult model.AlertPolicyResult
 	if x.alertPolicy != nil {
-		alertQuery := model.AlertPolicyQuery{
-			Label:   label,
-			Message: data,
-		}
-		if err := x.alertPolicy.Query(ctx, alertQuery, &alertResult); err != nil {
+		if err := x.alertPolicy.Query(ctx, data, &alertResult, queryOpt...); err != nil {
 			return goerr.Wrap(err)
 		}
 	} else {
 		alertResult.Alerts = []model.AlertMetaData{
 			{
-				Title:  "no name",
-				Source: "?",
+				Title:  "N/A",
 				Params: []types.Parameter{},
 			},
 		}
@@ -96,6 +94,7 @@ func (x *Chain) HandleAlert(ctx *types.Context, label string, data any) error {
 
 	for _, meta := range alertResult.Alerts {
 		// Step 2: Enrich indicators in the alert
+		meta.Schema = schema
 		alert := model.Alert{
 			AlertMetaData: meta,
 			Data:          data,

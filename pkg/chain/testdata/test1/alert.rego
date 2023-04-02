@@ -1,9 +1,7 @@
-package alert
+package alert.scc
 
 alert[msg] {
-    print(input)
     msg := {
-        "title": input.message.finding.category,
-        "source": "scc",
+        "title": input.finding.category,
     }
 }

@@ -20,9 +20,9 @@ var sccData []byte
 
 func TestSCC(t *testing.T) {
 	var called int
-	srv := server.New(func(ctx *types.Context, label string, data any) error {
+	srv := server.New(func(ctx *types.Context, schema types.Schema, data any) error {
 		called++
-		gt.V(t, label).Equal("scc")
+		gt.V(t, schema).Equal("scc")
 		alert := gt.Cast[map[string]any](t, data)
 		name := gt.Cast[string](t, alert["notificationConfigName"])
 		gt.V(t, name).Equal("organizations/000000123456/notificationConfigs/pubsub_notification")
@@ -38,9 +38,9 @@ func TestSCC(t *testing.T) {
 
 func TestPubSub(t *testing.T) {
 	var called int
-	srv := server.New(func(ctx *types.Context, label string, data any) error {
+	srv := server.New(func(ctx *types.Context, schema types.Schema, data any) error {
 		called++
-		gt.V(t, label).Equal("scc")
+		gt.V(t, schema).Equal("scc")
 		alert := gt.Cast[map[string]any](t, data)
 		name := gt.Cast[string](t, alert["color"])
 		gt.V(t, name).Equal("blue")
