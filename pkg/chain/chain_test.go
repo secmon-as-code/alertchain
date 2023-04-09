@@ -20,7 +20,7 @@ var alertRego string
 //go:embed testdata/test1/action.rego
 var actionRego string
 
-//go:embed testdata/test1/scc.json
+//go:embed testdata/test1/input/scc.json
 var sccData string
 
 type mockAction struct {

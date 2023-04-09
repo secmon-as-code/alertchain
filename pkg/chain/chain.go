@@ -1,6 +1,8 @@
 package chain
 
 import (
+	"bytes"
+	"encoding/json"
 	"time"
 
 	"github.com/m-mizutani/alertchain/pkg/domain/interfaces"
@@ -93,12 +95,20 @@ func (x *Chain) HandleAlert(ctx *types.Context, schema types.Schema, data any) e
 	}
 
 	for _, meta := range alertResult.Alerts {
+		var buf bytes.Buffer
+		encoder := json.NewEncoder(&buf)
+		encoder.SetIndent("", "  ")
+		if err := encoder.Encode(data); err != nil {
+			return goerr.Wrap(err, "failed to encode alert data").With("data", data)
+		}
+
 		// Step 2: Enrich indicators in the alert
-		meta.Schema = schema
 		alert := model.Alert{
 			AlertMetaData: meta,
+			Schema:        schema,
 			Data:          data,
 			CreatedAt:     time.Now(),
+			Raw:           buf.String(),
 		}
 
 		if x.enrichPolicy != nil {

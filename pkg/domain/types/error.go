@@ -18,6 +18,8 @@ var (
 	ErrConfigNoPolicyPath     = newError("no policy path")
 	ErrConfigNoActionName     = newError("no action name")
 
+	ErrActionInvalidConfig = newError("invalid action config")
+
 	ErrNoSuchActionName = newError("no such action name")
 
 	ErrNoSuchActionID = newError("no such action ID")

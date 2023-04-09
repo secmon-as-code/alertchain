@@ -2,9 +2,7 @@ package server
 
 import (
 	"encoding/json"
-	"io"
 	"net/http"
-	"strings"
 	"time"
 
 	"cloud.google.com/go/pubsub"
@@ -20,13 +18,7 @@ type Server struct {
 	mux *chi.Mux
 }
 
-func respondError(w http.ResponseWriter, err error) {
-	body := struct {
-		Error string `json:"error"`
-	}{
-		Error: err.Error(),
-	}
-
+func loggingError(msg string, err error) {
 	var errValues []slog.Attr
 	if goErr := goerr.Unwrap(err); goErr != nil {
 		for key, value := range goErr.Values() {
@@ -34,15 +26,23 @@ func respondError(w http.ResponseWriter, err error) {
 		}
 	}
 
-	utils.Logger().Error("routing data", err, errValues)
+	utils.Logger().Error(msg, err, errValues)
+}
+
+func respondError(w http.ResponseWriter, err error) {
+	body := struct {
+		Error string `json:"error"`
+	}{
+		Error: err.Error(),
+	}
+
+	loggingError("respond error", err)
 
 	w.WriteHeader(http.StatusBadRequest)
 	if err := json.NewEncoder(w).Encode(body); err != nil {
 		utils.Logger().Error("failed to convert error message", err)
+		return
 	}
-
-	reader := strings.NewReader("Error: " + err.Error())
-	io.Copy(w, reader)
 }
 
 func getSchema(r *http.Request) (types.Schema, error) {
@@ -71,7 +71,10 @@ func New(route interfaces.Router) *Server {
 		}
 
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("OK"))
+		if _, err := w.Write([]byte("OK")); err != nil {
+			loggingError("write OK", err)
+			return
+		}
 	}
 
 	r := chi.NewRouter()

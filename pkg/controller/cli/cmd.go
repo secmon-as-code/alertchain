@@ -56,6 +56,7 @@ func New() *CLI {
 				Name:        "config-file",
 				Aliases:     []string{"c"},
 				Category:    "config",
+				EnvVars:     []string{"ALERTCHAIN_CONFIG_FILE"},
 				Usage:       "Set config jsonnet file path",
 				Destination: &configFile,
 			},
@@ -63,6 +64,7 @@ func New() *CLI {
 				Name:        "config-data",
 				Aliases:     []string{"d"},
 				Category:    "config",
+				EnvVars:     []string{"ALERTCHAIN_CONFIG_DATA"},
 				Usage:       "Set config jsonnet data content",
 				Destination: &configData,
 			},
@@ -103,6 +105,7 @@ func New() *CLI {
 		Commands: []*cli.Command{
 			cmdConfig(&cfg),
 			cmdServe(&cfg),
+			cmdRun(&cfg),
 		},
 	}
 	return &CLI{app: app}

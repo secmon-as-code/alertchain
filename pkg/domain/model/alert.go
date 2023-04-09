@@ -12,16 +12,19 @@ type Parameter struct {
 }
 
 type AlertMetaData struct {
-	Title  string            `json:"title"`
-	Schema types.Schema      `json:"schema"`
-	Params []types.Parameter `json:"params"`
+	Title       string            `json:"title"`
+	Description string            `json:"description"`
+	Params      []types.Parameter `json:"params"`
 }
 
 type Alert struct {
 	AlertMetaData
-	Data       any         `json:"data"`
-	CreatedAt  time.Time   `json:"created_at"`
-	References []Reference `json:"reference"`
+	Schema     types.Schema `json:"schema"`
+	Data       any          `json:"data"`
+	CreatedAt  time.Time    `json:"created_at"`
+	References []Reference  `json:"reference"`
+
+	Raw string `json:"-"`
 }
 
 type Reference struct {

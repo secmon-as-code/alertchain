@@ -12,7 +12,7 @@ var factoryMap = map[types.ActionName]interfaces.ActionFactory{}
 
 func init() {
 	factories := []interfaces.ActionFactory{
-		&github.Factory{},
+		&github.IssuerFactory{},
 	}
 
 	for _, fac := range factories {
@@ -25,9 +25,9 @@ func New(cfg model.ActionConfig) (interfaces.Action, error) {
 		return nil, err
 	}
 
-	factory, ok := factoryMap[cfg.Name]
+	factory, ok := factoryMap[cfg.Use]
 	if !ok {
-		return nil, goerr.Wrap(types.ErrNoSuchActionName).With("name", cfg.Name)
+		return nil, goerr.Wrap(types.ErrNoSuchActionName).With("use", cfg.Use)
 	}
 
 	return factory.New(cfg.ID, cfg.Config)
