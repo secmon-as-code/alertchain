@@ -116,8 +116,8 @@ jM1rsSGIP5FFS056O92OpA3f3r7MPd2LFTBrQoxNIIqn9Lq+F+dX
 func TestIssuerFactoryPass(t *testing.T) {
 	factory := &github.IssuerFactory{}
 	action, err := factory.New("test-id", model.ActionConfigValues{
-		"app_id":      123,
-		"install_id":  123,
+		"app_id":      float64(123),
+		"install_id":  float64(123),
 		"private_key": dummyPrivateKey,
 		"owner":       "owner",
 		"repo":        "repo",
@@ -135,7 +135,7 @@ func TestIssuerFactoryFail(t *testing.T) {
 	}{
 		"missing app_id": {
 			cfg: model.ActionConfigValues{
-				"install_id":  123,
+				"install_id":  float64(123),
 				"private_key": dummyPrivateKey,
 				"owner":       "owner",
 				"repo":        "repo",
@@ -143,7 +143,7 @@ func TestIssuerFactoryFail(t *testing.T) {
 		},
 		"missing install_id": {
 			cfg: model.ActionConfigValues{
-				"app_id":      123,
+				"app_id":      float64(123),
 				"private_key": dummyPrivateKey,
 				"owner":       "owner",
 				"repo":        "repo",
@@ -151,24 +151,24 @@ func TestIssuerFactoryFail(t *testing.T) {
 		},
 		"missing private_key": {
 			cfg: model.ActionConfigValues{
-				"app_id":     123,
-				"install_id": 123,
+				"app_id":     float64(123),
+				"install_id": float64(123),
 				"owner":      "owner",
 				"repo":       "repo",
 			},
 		},
 		"missing owner": {
 			cfg: model.ActionConfigValues{
-				"app_id":      123,
-				"install_id":  123,
+				"app_id":      float64(123),
+				"install_id":  float64(123),
 				"private_key": dummyPrivateKey,
 				"repo":        "repo",
 			},
 		},
 		"missing repo": {
 			cfg: model.ActionConfigValues{
-				"app_id":      123,
-				"install_id":  123,
+				"app_id":      float64(123),
+				"install_id":  float64(123),
 				"private_key": dummyPrivateKey,
 				"owner":       "owner",
 			},
@@ -176,7 +176,7 @@ func TestIssuerFactoryFail(t *testing.T) {
 		"app_id is not a int": {
 			cfg: model.ActionConfigValues{
 				"app_id":      "123",
-				"install_id":  123,
+				"install_id":  float64(123),
 				"private_key": dummyPrivateKey,
 				"owner":       "owner",
 				"repo":        "repo",
@@ -184,7 +184,7 @@ func TestIssuerFactoryFail(t *testing.T) {
 		},
 		"install_id is not a int": {
 			cfg: model.ActionConfigValues{
-				"app_id":      123,
+				"app_id":      float64(123),
 				"install_id":  "123",
 				"private_key": dummyPrivateKey,
 				"owner":       "owner",
@@ -193,8 +193,8 @@ func TestIssuerFactoryFail(t *testing.T) {
 		},
 		"private_key is not RSA format": {
 			cfg: model.ActionConfigValues{
-				"app_id":      123,
-				"install_id":  123,
+				"app_id":      float64(123),
+				"install_id":  float64(123),
 				"private_key": "xxx",
 				"owner":       "owner",
 				"repo":        "repo",

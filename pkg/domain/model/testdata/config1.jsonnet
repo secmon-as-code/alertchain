@@ -3,7 +3,7 @@
   actions: [
     {
       id: 'test-scc',
-      use: 'scc',
+      uses: 'scc',
       config: {
         data: std.extVar('COLOR'),
         num: 123,
