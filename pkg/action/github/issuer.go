@@ -14,6 +14,7 @@ import (
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/goerr"
+	"github.com/m-mizutani/gots/ptr"
 	"golang.org/x/exp/slog"
 )
 
@@ -41,12 +42,12 @@ func (x *IssuerFactory) Name() types.ActionName {
 }
 
 func (x *IssuerFactory) New(id types.ActionID, cfg model.ActionConfigValues) (interfaces.Action, error) {
-	appID, ok := cfg["app_id"].(int)
+	appID, ok := cfg["app_id"].(float64)
 	if !ok {
 		return nil, goerr.Wrap(types.ErrActionInvalidConfig, "app_id is required")
 	}
 
-	installID, ok := cfg["install_id"].(int)
+	installID, ok := cfg["install_id"].(float64)
 	if !ok {
 		return nil, goerr.Wrap(types.ErrActionInvalidConfig, "install_id is required")
 	}
@@ -103,7 +104,10 @@ func (x *Issuer) Run(ctx *types.Context, alert model.Alert, params model.ActionP
 		return goerr.Wrap(err).With("resp", resp)
 	}
 
-	utils.Logger().Info("Created issue", slog.Any("issue", issue))
+	utils.Logger().Info("Created GitHub issue",
+		slog.Any("issue_number", ptr.From(issue.Number)),
+		slog.Any("title", ptr.From(issue.Title)),
+	)
 
 	return nil
 }

@@ -1,11 +1,16 @@
-# Description
+- ID: {{ .ID }}
+- Created At: {{ .CreatedAt }}
+- Schema: {{ .Schema }}
+
+## Description
 {{.Description}}
 
 ## Parameters
 
-| Key | Value |
-|-----|-------|
-{{range .Params}}| {{ .Key }} | `{{ .Value }}` |{{end}}
+| Key | Value | Type |
+|-----|-------|------|
+{{range .Params}}| {{ .Key }} | `{{ .Value }}` | {{ .Type }} |
+{{end}}
 
 ## Alert
 

@@ -25,6 +25,10 @@ func TestIssueTemplate(t *testing.T) {
 					Key:   "magic",
 					Value: "five",
 				},
+				{
+					Key:   "star",
+					Value: "light",
+				},
 			},
 		},
 		Schema: "fire",
@@ -34,6 +38,7 @@ func TestIssueTemplate(t *testing.T) {
 	s := buf.String()
 	gt.B(t, strings.Contains(s, "orange")).True()
 	gt.B(t, strings.Contains(s, "| magic | `five` |")).True()
+	gt.B(t, strings.Contains(s, "| star | `light` |")).True()
 	gt.B(t, strings.Contains(s, `{"foo": "bar"}`)).True()
 
 	println(s)
