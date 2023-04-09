@@ -12,7 +12,7 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
+    # if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
     steps:
       - name: checkout
         uses: actions/checkout@v3
@@ -30,6 +30,11 @@ jobs:
         run: docker tag ${{ env.TAG_NAME }} ${{ env.GITHUB_IMAGE_NAME }}
       - name: Push image
         run: docker push ${{ env.GITHUB_IMAGE_NAME }}
+      - name: Slack Notification
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_MESSAGE: "Pushed to ${{ env.GITHUB_IMAGE_NAME }}"
 
   release-ghcr:
     runs-on: ubuntu-latest
@@ -61,3 +66,6 @@ jobs:
         run: docker push "${{ env.GITHUB_IMAGE_REPO }}:latest"
       - name: Slack Notification
         uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_MESSAGE: "Pushed to ${{ env.GITHUB_IMAGE_NAME }}"
