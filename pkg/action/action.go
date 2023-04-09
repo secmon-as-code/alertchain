@@ -25,9 +25,9 @@ func New(cfg model.ActionConfig) (interfaces.Action, error) {
 		return nil, err
 	}
 
-	factory, ok := factoryMap[cfg.Use]
+	factory, ok := factoryMap[cfg.Uses]
 	if !ok {
-		return nil, goerr.Wrap(types.ErrNoSuchActionName).With("use", cfg.Use)
+		return nil, goerr.Wrap(types.ErrNoSuchActionName).With("use", cfg.Uses)
 	}
 
 	return factory.New(cfg.ID, cfg.Config)

@@ -26,7 +26,7 @@ type PolicyPackageConfig struct {
 
 type ActionConfig struct {
 	ID     types.ActionID     `json:"id"`
-	Use    types.ActionName   `json:"use"`
+	Uses   types.ActionName   `json:"uses"`
 	Config ActionConfigValues `json:"config"`
 }
 
@@ -34,7 +34,7 @@ func (x ActionConfig) Validate() error {
 	if x.ID == "" {
 		return goerr.Wrap(types.ErrConfigNoActionID)
 	}
-	if x.Use == "" {
+	if x.Uses == "" {
 		return goerr.Wrap(types.ErrConfigNoActionName).With("id", x.ID)
 	}
 	return nil
