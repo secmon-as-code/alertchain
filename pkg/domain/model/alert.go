@@ -17,6 +17,7 @@ type Parameter struct {
 type AlertMetaData struct {
 	Title       string            `json:"title"`
 	Description string            `json:"description"`
+	Source      string            `json:"source"`
 	Params      []types.Parameter `json:"params"`
 }
 

@@ -6,7 +6,3 @@ RUN go build -o alertchain -ldflags "-X github.com/m-mizutani/alertchain/pkg/dom
 
 FROM gcr.io/distroless/base
 COPY --from=build-go /app/alertchain /alertchain
-
-WORKDIR /
-EXPOSE 2080
-ENTRYPOINT ["/alertchain"]
