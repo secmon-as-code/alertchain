@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 	"time"
 
@@ -19,7 +20,9 @@ type Server struct {
 }
 
 func loggingError(msg string, err error) {
-	var errValues []slog.Attr
+	errValues := []any{
+		slog.String("error", err.Error()),
+	}
 	if goErr := goerr.Unwrap(err); goErr != nil {
 		for key, value := range goErr.Values() {
 			errValues = append(errValues, slog.Any(key, value))
@@ -91,8 +94,16 @@ func New(route interfaces.Router) *Server {
 		})
 
 		r.Post("/pubsub/{schema}", func(w http.ResponseWriter, r *http.Request) {
+			body, err := io.ReadAll(r.Body)
+			if err != nil {
+				respondError(w, goerr.Wrap(err, "reading pub/sub message"))
+				utils.Logger().Error("reading pub/sub message", err)
+				return
+			}
+			utils.Logger().Debug("recv pubsub message")
+
 			var msg pubsub.Message
-			if err := json.NewDecoder(r.Body).Decode(&msg); err != nil {
+			if err := json.Unmarshal(body, &msg); err != nil {
 				respondError(w, goerr.Wrap(err, "parsing pub/sub message"))
 				utils.Logger().Error("parsing alert", err)
 				return
