@@ -100,7 +100,7 @@ func New(route interfaces.Router) *Server {
 
 			var data any
 			if err := json.Unmarshal(msg.Data, &data); err != nil {
-				respondError(w, goerr.Wrap(err, "parsing pub/sub data field"))
+				respondError(w, goerr.Wrap(err, "parsing pub/sub data field").With("data", string(msg.Data)))
 				utils.Logger().Error("parsing alert", err)
 				return
 			}

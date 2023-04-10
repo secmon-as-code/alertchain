@@ -77,6 +77,7 @@ func (x *Chain) HandleAlert(ctx *types.Context, schema types.Schema, data any) e
 	queryOpt := []opac.QueryOption{
 		opac.WithPackageSuffix("." + string(schema)),
 	}
+	utils.Logger().Info("handling alert", slog.Any("data", data))
 
 	var alertResult model.AlertPolicyResult
 	if x.alertPolicy != nil {
@@ -96,7 +97,7 @@ func (x *Chain) HandleAlert(ctx *types.Context, schema types.Schema, data any) e
 		// Step 2: Enrich indicators in the alert
 		alert := model.NewAlert(meta, schema, data)
 
-		utils.Logger().Debug("alert detected", slog.Any("alert", alert))
+		utils.Logger().Info("alert detected", slog.Any("alert", alert))
 
 		if x.enrichPolicy != nil {
 			var enrich model.EnrichPolicyResult
