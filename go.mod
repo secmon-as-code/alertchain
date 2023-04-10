@@ -8,6 +8,7 @@ require (
 	github.com/go-chi/chi/v5 v5.0.8
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/google/go-jsonnet v0.19.1
+	github.com/google/uuid v1.3.0
 	github.com/m-mizutani/goerr v0.1.8
 	github.com/m-mizutani/gots v0.0.0-20221001005148-0f712425c01d
 	github.com/m-mizutani/gt v0.0.5-0.20230408063302-73d16a3c5d9d
@@ -34,7 +35,6 @@ require (
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/go-github/v29 v29.0.2 // indirect
 	github.com/google/go-querystring v1.0.0 // indirect
-	github.com/google/uuid v1.3.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.2.0 // indirect
 	github.com/googleapis/gax-go/v2 v2.7.0 // indirect
 	github.com/k0kubun/colorstring v0.0.0-20150214042306-9440f1994b88 // indirect
