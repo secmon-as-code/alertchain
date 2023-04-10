@@ -113,14 +113,17 @@ func New() *CLI {
 
 func (x *CLI) Run(argv []string) error {
 	if err := x.app.Run(argv); err != nil {
-		var attrs []any
+		attrs := []any{
+			slog.String("error", err.Error()),
+		}
+
 		if goErr := goerr.Unwrap(err); goErr != nil {
 			for k, v := range goErr.Values() {
 				attrs = append(attrs, slog.Any(k, v))
 			}
 		}
 
-		utils.Logger().Error("cli failed", err, attrs...)
+		utils.Logger().Error("cli failed", attrs...)
 		return err
 	}
 
