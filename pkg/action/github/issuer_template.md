@@ -1,6 +1,7 @@
 - ID: {{ .ID }}
 - Created At: {{ .CreatedAt }}
 - Schema: {{ .Schema }}
+- Detected by: {{ .Source }}
 
 ## Description
 {{.Description}}
