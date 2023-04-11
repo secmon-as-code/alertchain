@@ -2,7 +2,7 @@ package types
 
 type Parameter struct {
 	Key   string        `json:"key"`
-	Value string        `json:"value"`
+	Value any           `json:"value"`
 	Type  ParameterType `json:"type"`
 }
 

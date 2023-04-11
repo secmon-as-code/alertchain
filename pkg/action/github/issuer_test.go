@@ -29,6 +29,14 @@ func TestIssueTemplate(t *testing.T) {
 					Key:   "star",
 					Value: "light",
 				},
+				{
+					Key:   "int",
+					Value: 123,
+				},
+				{
+					Key:   "struct",
+					Value: struct{ Foo string }{Foo: "bar"},
+				},
 			},
 		},
 		Schema: "fire",
@@ -39,6 +47,8 @@ func TestIssueTemplate(t *testing.T) {
 	gt.B(t, strings.Contains(s, "orange")).True()
 	gt.B(t, strings.Contains(s, "| magic | `five` |")).True()
 	gt.B(t, strings.Contains(s, "| star | `light` |")).True()
+	gt.B(t, strings.Contains(s, "| int | `123` |")).True()
+	gt.B(t, strings.Contains(s, "| struct | `{bar}` |")).True()
 	gt.B(t, strings.Contains(s, `{"foo": "bar"}`)).True()
 
 	println(s)
