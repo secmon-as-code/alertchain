@@ -67,3 +67,37 @@ func TestBasic(t *testing.T) {
 	gt.NoError(t, c.HandleAlert(ctx, "scc", alertData))
 	gt.N(t, called).Equal(1)
 }
+
+func TestDisableAction(t *testing.T) {
+	var alertData any
+	gt.NoError(t, json.Unmarshal([]byte(sccData), &alertData))
+
+	alertPolicy := gt.R1(opac.NewLocal(
+		opac.WithPackage("alert"),
+		opac.WithPolicyData("alert.rego", alertRego),
+	)).NoError(t)
+
+	actionPolicy := gt.R1(opac.NewLocal(
+		opac.WithPackage("action"),
+		opac.WithPolicyData("action.rego", actionRego),
+	)).NoError(t)
+
+	var called int
+	mock := &mockAction{
+		callback: func(ctx *types.Context, alert model.Alert, params model.ActionParams) error {
+			called++
+			return nil
+		},
+	}
+
+	c := gt.R1(chain.New(
+		chain.WithPolicyAlert(alertPolicy),
+		chain.WithPolicyAction(actionPolicy),
+		chain.WithAction(mock),
+		chain.WithDisableAction(),
+	)).NoError(t)
+
+	ctx := types.NewContext()
+	gt.NoError(t, c.HandleAlert(ctx, "scc", alertData))
+	gt.N(t, called).Equal(0) // Action should not be called
+}

@@ -68,7 +68,7 @@ func setupPolicy(cfg model.PolicyConfig) ([]chain.Option, error) {
 	return options, nil
 }
 
-func buildChain(cfg model.Config) (*chain.Chain, error) {
+func buildChain(cfg model.Config, options ...chain.Option) (*chain.Chain, error) {
 	actions, err := setupActions(cfg.Actions)
 	if err != nil {
 		return nil, err
@@ -79,9 +79,7 @@ func buildChain(cfg model.Config) (*chain.Chain, error) {
 		return nil, err
 	}
 
-	options := []chain.Option{
-		chain.WithAction(actions...),
-	}
+	options = append(options, chain.WithAction(actions...))
 	options = append(options, policyOptions...)
 
 	return chain.New(options...)

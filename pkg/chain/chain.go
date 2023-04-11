@@ -18,39 +18,11 @@ type Chain struct {
 	alertPolicy  opac.Client
 	enrichPolicy opac.Client
 	actionPolicy opac.Client
+
+	disableAction bool
 }
 
 type Option func(c *Chain)
-
-func WithAction(actions ...interfaces.Action) Option {
-	return func(c *Chain) {
-		c.actions = append(c.actions, actions...)
-	}
-}
-
-func WithEnricher(enrichers ...interfaces.Enricher) Option {
-	return func(c *Chain) {
-		c.enrichers = append(c.enrichers, enrichers...)
-	}
-}
-
-func WithPolicyAlert(policy opac.Client) Option {
-	return func(c *Chain) {
-		c.alertPolicy = policy
-	}
-}
-
-func WithPolicyEnrich(policy opac.Client) Option {
-	return func(c *Chain) {
-		c.enrichPolicy = policy
-	}
-}
-
-func WithPolicyAction(policy opac.Client) Option {
-	return func(c *Chain) {
-		c.actionPolicy = policy
-	}
-}
 
 func New(options ...Option) (*Chain, error) {
 	c := &Chain{
@@ -127,6 +99,12 @@ func (x *Chain) HandleAlert(ctx *types.Context, schema types.Schema, data any) e
 				action, ok := x.actionMap[tgt.ID]
 				if !ok {
 					return goerr.Wrap(types.ErrNoSuchActionID).With("ID", tgt.ID)
+				}
+
+				utils.Logger().Info("action triggered", slog.Any("id", action.ID()))
+				if x.disableAction {
+					utils.Logger().Info("disable-action option is true, skip action")
+					continue
 				}
 
 				if err := action.Run(ctx, alert, tgt.Params); err != nil {

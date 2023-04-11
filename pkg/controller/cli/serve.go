@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"github.com/m-mizutani/alertchain/pkg/chain"
 	"github.com/m-mizutani/alertchain/pkg/controller/server"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/utils"
@@ -10,7 +11,8 @@ import (
 
 func cmdServe(cfg *model.Config) *cli.Command {
 	var (
-		addr string
+		addr          string
+		disableAction bool
 	)
 	return &cli.Command{
 		Name:    "serve",
@@ -23,10 +25,22 @@ func cmdServe(cfg *model.Config) *cli.Command {
 				Value:       "127.0.0.1:8080",
 				Destination: &addr,
 			},
+			&cli.BoolFlag{
+				Name:        "disable-action",
+				Usage:       "Disable action execution (for debug or dry-run)",
+				EnvVars:     []string{"ALERTCHAIN_DISABLE_ACTION"},
+				Value:       false,
+				Destination: &disableAction,
+			},
 		},
 
 		Action: func(ctx *cli.Context) error {
-			chain, err := buildChain(*cfg)
+			var options []chain.Option
+			if disableAction {
+				options = append(options, chain.WithDisableAction())
+			}
+
+			chain, err := buildChain(*cfg, options...)
 			if err != nil {
 				return err
 			}
