@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"time"
 
-	"cloud.google.com/go/pubsub"
 	"github.com/go-chi/chi/v5"
 	"github.com/m-mizutani/alertchain/pkg/domain/interfaces"
+	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/goerr"
@@ -100,15 +100,15 @@ func New(route interfaces.Router) *Server {
 			}
 			utils.Logger().Debug("recv pubsub message", slog.String("body", string(body)))
 
-			var msg pubsub.Message
-			if err := json.Unmarshal(body, &msg); err != nil {
+			var req model.PubSubRequest
+			if err := json.Unmarshal(body, &req); err != nil {
 				respondError(w, goerr.Wrap(err, "parsing pub/sub message").With("body", string(body)))
 				return
 			}
 
 			var data any
-			if err := json.Unmarshal(msg.Data, &data); err != nil {
-				respondError(w, goerr.Wrap(err, "parsing pub/sub data field").With("data", string(msg.Data)))
+			if err := json.Unmarshal(req.Message.Data, &data); err != nil {
+				respondError(w, goerr.Wrap(err, "parsing pub/sub data field").With("data", string(req.Message.Data)))
 				return
 			}
 

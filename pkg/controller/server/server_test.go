@@ -9,8 +9,8 @@ import (
 
 	"testing"
 
-	"cloud.google.com/go/pubsub"
 	"github.com/m-mizutani/alertchain/pkg/controller/server"
+	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/gt"
 )
@@ -47,15 +47,17 @@ func TestPubSub(t *testing.T) {
 		return nil
 	})
 
-	msg := pubsub.Message{
-		ID:   "xxx",
-		Data: []byte(`{"color":"blue"}`),
+	req := model.PubSubRequest{
+		Message: model.PubSubMessage{
+			Data: []byte(`{"color":"blue"}`),
+		},
 	}
-	body := gt.R1(json.Marshal(msg)).NoError(t)
 
-	req := httptest.NewRequest("POST", "/alert/pubsub/scc", bytes.NewReader(body))
+	body := gt.R1(json.Marshal(req)).NoError(t)
+
+	httpReq := httptest.NewRequest("POST", "/alert/pubsub/scc", bytes.NewReader(body))
 	w := httptest.NewRecorder()
-	srv.ServeHTTP(w, req)
+	srv.ServeHTTP(w, httpReq)
 	gt.N(t, w.Result().StatusCode).Equal(http.StatusOK)
 	gt.N(t, called).Equal(1)
 }
