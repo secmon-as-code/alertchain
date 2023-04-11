@@ -29,7 +29,7 @@ func loggingError(msg string, err error) {
 		}
 	}
 
-	utils.Logger().Error(msg, err, errValues)
+	utils.Logger().Error(msg, errValues...)
 }
 
 func respondError(w http.ResponseWriter, err error) {
@@ -86,7 +86,6 @@ func New(route interfaces.Router) *Server {
 			var data any
 			if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
 				respondError(w, err)
-				utils.Logger().Error("parsing alert", err)
 				return
 			}
 
@@ -96,23 +95,20 @@ func New(route interfaces.Router) *Server {
 		r.Post("/pubsub/{schema}", func(w http.ResponseWriter, r *http.Request) {
 			body, err := io.ReadAll(r.Body)
 			if err != nil {
-				respondError(w, goerr.Wrap(err, "reading pub/sub message"))
-				utils.Logger().Error("reading pub/sub message", err)
+				respondError(w, goerr.Wrap(err, "reading pub/sub message").With("body", string(body)))
 				return
 			}
-			utils.Logger().Debug("recv pubsub message")
+			utils.Logger().Debug("recv pubsub message", slog.String("body", string(body)))
 
 			var msg pubsub.Message
 			if err := json.Unmarshal(body, &msg); err != nil {
-				respondError(w, goerr.Wrap(err, "parsing pub/sub message"))
-				utils.Logger().Error("parsing alert", err)
+				respondError(w, goerr.Wrap(err, "parsing pub/sub message").With("body", string(body)))
 				return
 			}
 
 			var data any
 			if err := json.Unmarshal(msg.Data, &data); err != nil {
 				respondError(w, goerr.Wrap(err, "parsing pub/sub data field").With("data", string(msg.Data)))
-				utils.Logger().Error("parsing alert", err)
 				return
 			}
 

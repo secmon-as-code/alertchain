@@ -3,7 +3,9 @@ package cli
 import (
 	"github.com/m-mizutani/alertchain/pkg/controller/server"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
+	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/urfave/cli/v2"
+	"golang.org/x/exp/slog"
 )
 
 func cmdServe(cfg *model.Config) *cli.Command {
@@ -18,7 +20,7 @@ func cmdServe(cfg *model.Config) *cli.Command {
 				Name:        "addr",
 				Usage:       "Bind address",
 				EnvVars:     []string{"ALERTCHAIN_ADDR"},
-				Value:       "127.0.0.1:3000",
+				Value:       "127.0.0.1:8080",
 				Destination: &addr,
 			},
 		},
@@ -29,6 +31,7 @@ func cmdServe(cfg *model.Config) *cli.Command {
 				return err
 			}
 
+			utils.Logger().Info("Start alertchain server", slog.String("addr", addr))
 			if err := server.New(chain.HandleAlert).Run(addr); err != nil {
 				return err
 			}
