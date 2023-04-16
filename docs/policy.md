@@ -1,125 +1,106 @@
-# AlertChain
+# Policy
 
-AlertChain is a simple SOAR (Security Orchestration, Automation, and Response) framework that leverages [OPA](https://github.com/open-policy-agent/opa) (Open Policy Agent) to enhance security management.
+AlertChain has two types of policies: "Alert Policy" and "Action Policy". They are written in the Rego language. This document describes the input and output schemas for these policies.
 
-![AlertChain Diagram](https://user-images.githubusercontent.com/605953/232273906-a3df56fb-3201-4336-b897-e327e8d49981.jpg)
+## Alert Policy
 
-## Motivation
+### Package
 
-Security Orchestration, Automation, and Response (SOAR) is a platform designed for automating the detection, analysis, and response of security events. In order to enable automated event analysis and rapid response in SOAR systems, it is essential to execute automated security procedures and policies.
+The package name for Alert Policy must follow the naming convention below:
 
-By utilizing OPA and Rego, a SOAR system can flexibly apply a set of user-defined policies to maintain the security of applications and systems. This approach simplifies the process of updating or changing security policies and ensures a more accurate policy application. Moreover, the Rego language is flexible and expressive, making it easy to add or modify policies.
-
-## Installation
-
-To install AlertChain, run the following command:
-
-```bash
-$ go install github.com/m-mizutani/alertchain@latest
+```rego
+package alert.{schema}
 ```
 
-Refer to the [documentation](./docs) for details on configuration and alert/action policies.
+Here, `{schema}` must match the `{schema}` specified when receiving event data. For example, if the endpoint path for receiving data via Pub/Sub is `/alert/pubsub/my_alert`, the policy `package alert.my_alert` will be called.
 
-## Example
+### Input
 
-To configure AlertChain, users need to create at least three files:
+The input for Alert Policy will be the structured data (mainly JSON) received from the previous phase. For example, if the following message is input via Google Cloud Pub/Sub:
 
-1. Configuration file (config.jsonnet)
-2. Alert policy (alert.rego)
-3. Action policy (action.rego)
-
-**config.jsonnet**
-```jsonnet
+```
 {
-  policy: {
-    path: './policy',
-  },
-  actions: [
-    {
-      id: 'my_create_github_issue',
-      uses: 'github-issuer',
-      config: {
-        app_id: 12345,
-        install_id: 67890,
-        private_key: std.extVar('GITHUB_PRIVATE_KEY'),
-        owner: 'm-mizutani',
-        repo: 'security-alert',
-      },
+    "message": {
+        "data": "eyJuYW1lIjoiaG9nZSJ9Cg==",
     },
-  ],
 }
 ```
 
-`github-issuer` is an action that creates a GitHub issue as an alert ticket using GitHub Apps.
+From the Pub/Sub schema, `message.data` is extracted, and `eyJuYW1lIjoiaG9nZSJ9Cg==` is Base64 decoded to `{"name":"hoge"}`. This data is stored in Rego's `input`. The policy will determine whether this data will be treated as an alert or not based on this data.
 
-**alert.rego**
+### Output
+
+Once the alert determination is made, store the data with the schema below in the `alert` set. The stored data will be treated as an alert.
+
+- `title` (string, required): Title of the alert
+- `description` (string, optional): Human-readable explanation about the alert
+- `source` (string, optional): Data source
+- `params` (array, optional): Array of parameters
+  - `key` (string, required): Key of the parameter
+  - `value` (any, required): Value of the parameter.
+  - `type` (string, optional): Type of the parameter.
+
+The `params` field (parameter) serves not only to extract event data fields but also to accommodate user-defined values. For instance, users can add their own `severity` key parameter to determine the appropriate action. Parameters bind the alert and can be added or replaced by the action policy. (Refer to the Action Policy section for more details)
+
+### Example
+
 ```rego
-package alert.aws_guardduty
+package alert.my_alert
 
 alert[res] {
-    startswith(input.Findings[x].Type, "Trojan:")
-    input.Findings[_].Severity > 7
+    input.name == "hoge"
     res := {
-        "title": input.Findings[x].Type,
-        "source": "aws",
+        "title": "detected hoge",
+        "params": [
+            {
+                "key": "color",
+                "value": "blue",
+            },
+        ],
     }
 }
 ```
 
-This example alert policy is designed for [AWS GuardDuty](https://docs.aws.amazon.com/cli/latest/reference/guardduty/get-findings.html#examples). The alert evaluates GuardDuty event data based on the following criteria:
+In this example, the policy checks if the input contains the name "hoge". If it does, an alert will be created with the title "detected hoge" and a parameter of "color" set to "blue".
 
-- The finding type has a "Trojan:" prefix,
-- The severity is greater than 7, and
-- If these conditions are met, a new alert is created
+## Action Policy
 
-**policy/action.rego**
+An Action Policy is responsible for defining the following:
+
+- Next action to execute
+- Arguments for the next action
+- New or replacement parameters for the next action
+
+### Package
+
+The package name for an Action Policy must follow the format shown below:
+
 ```rego
-package action.main
-
-action[res] {
-    input.alert.source == "aws"
-    res := {
-        "id": "my_create_github_issue",
-    }
-}
+package action.{action_id}
 ```
 
-The action policy triggers the `my_create_github_issue` action defined in the configuration file if the alert source is from `aws`.
+`{action_id}` should match the `id` field in the `actions` setting in the Jsonnet configuration. For example, `package action.create_issue`.
 
-After preparing these files, you can start AlertChain using the following command:
+`package action.main` is a reserved and special action policy that is always evaluated first. This policy must be evaluated with all alerts. Subsequent action policies with the format `package action.{action_id}` (e.g. `package action.blue`) will be evaluated after performing their corresponding action, such as the "blue" action. Then, the action policy should determine the next action to execute.
 
-```bash
-$ alertchain -c config.json serve
-```
+![Flow of action policy](https://user-images.githubusercontent.com/605953/232349211-4bcc7abe-72ef-436a-916c-2b24953d99ed.jpg)
 
-Now, let's create an alert using AWS GuardDuty event data (guardduty.json):
+### Input
 
-**guardduty.json**
-```json
-{
-    "Findings": [
-        {
-            "Type": "Trojan:EC2/DriveBySourceTraffic!DNS",
-            "Region": "us-east-1",
-            "Severity": 8,
-            (snip)
-        }
-    ]
-}
-```
+An Action Policy accepts the following input:
 
-To send the event data to the AlertChain API endpoint, use this command:
+- `input.alert`: Alert data
+  - `title`: Title of the alert generated by the alert policy
+  - `data`: Original event data
+  - `params`: Array of parameters
+- `input.result`: The result of the executed action (optional)
 
-```bash
-$ curl -XPOST http://127.0.0.1:8080/alert/aws_guardduty -d @guardduty.json
-```
+Using this input, the action policy can process the alert data and determine the most appropriate action to perform next, along with the necessary arguments and parameters.
 
-Upon receiving the data, AlertChain performs the following actions:
+### Output
 
-1. Evaluates the event data using the alert policy and creates a new alert
-2. Evaluates the `action.main` policy with the new alert, selecting the `my_create_github_issue` action
-3. Executes the `my_create_github_issue` action that uses `github-issuer` to create a new GitHub issue
+After evaluating the action policy, if the next action is required, set the `action` field according to the schema described below:
 
-## License
-
-Apache License 2.0
+- `id`: This is the ID of the next action to be executed. Ensure that it is defined within the `actions` setting in the Jsonnet configuration file.
+- `args`: This is a key-value style map containing the arguments for the next action. The specific arguments are defined on a per-action basis.
+- `params`: This is an array of parameters. If a parameter with the same key already exists within the array, it will be replaced with the new value.
