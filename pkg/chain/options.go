@@ -11,12 +11,6 @@ func WithAction(actions ...interfaces.Action) Option {
 	}
 }
 
-func WithEnricher(enrichers ...interfaces.Enricher) Option {
-	return func(c *Chain) {
-		c.enrichers = append(c.enrichers, enrichers...)
-	}
-}
-
 func WithPolicyAlert(policy opac.Client) Option {
 	return func(c *Chain) {
 		c.alertPolicy = policy
@@ -25,7 +19,7 @@ func WithPolicyAlert(policy opac.Client) Option {
 
 func WithPolicyEnrich(policy opac.Client) Option {
 	return func(c *Chain) {
-		c.enrichPolicy = policy
+		c.inspectPolicy = policy
 	}
 }
 

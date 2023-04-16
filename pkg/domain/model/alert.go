@@ -9,25 +9,19 @@ import (
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
 )
 
-type Parameter struct {
-	Key   string
-	Value string
-}
-
 type AlertMetaData struct {
-	Title       string            `json:"title"`
-	Description string            `json:"description"`
-	Source      string            `json:"source"`
-	Params      []types.Parameter `json:"params"`
+	Title       string     `json:"title"`
+	Description string     `json:"description"`
+	Source      string     `json:"source"`
+	Params      Parameters `json:"params"`
 }
 
 type Alert struct {
 	AlertMetaData
-	ID         types.AlertID `json:"id"`
-	Schema     types.Schema  `json:"schema"`
-	Data       any           `json:"-"`
-	CreatedAt  time.Time     `json:"created_at"`
-	References []Reference   `json:"reference"`
+	ID        types.AlertID `json:"id"`
+	Schema    types.Schema  `json:"schema"`
+	Data      any           `json:"-"`
+	CreatedAt time.Time     `json:"created_at"`
 
 	Raw string `json:"-"`
 }
@@ -54,8 +48,17 @@ func NewAlert(meta AlertMetaData, schema types.Schema, data any) Alert {
 	}
 }
 
-type Reference struct {
-	types.Parameter
-	Source types.EnricherID `json:"source"`
-	Data   any              `json:"data"`
+func (x Alert) Clone(newParams ...Parameter) Alert {
+	newAlert := Alert{
+		AlertMetaData: x.AlertMetaData,
+		ID:            x.ID,
+		Schema:        x.Schema,
+		Data:          x.Data,
+		CreatedAt:     x.CreatedAt,
+		Raw:           x.Raw,
+	}
+
+	newAlert.Params = newAlert.Params.Overwrite(newParams)
+
+	return newAlert
 }

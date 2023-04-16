@@ -1,12 +1,10 @@
 package types
 
-type Parameter struct {
-	Key   string        `json:"key"`
-	Value any           `json:"value"`
-	Type  ParameterType `json:"type"`
-}
-
-type ParameterType string
+type (
+	ParamKey      string
+	ParamValue    any
+	ParameterType string
+)
 
 const (
 	IPAddr     ParameterType = "ipaddr"

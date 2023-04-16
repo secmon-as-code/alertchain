@@ -10,7 +10,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/m-mizutani/goerr v0.1.8
 	github.com/m-mizutani/gots v0.0.0-20221001005148-0f712425c01d
-	github.com/m-mizutani/gt v0.0.5-0.20230408063302-73d16a3c5d9d
+	github.com/m-mizutani/gt v0.0.5-0.20230415231649-0b6a04145a71
 	github.com/m-mizutani/opac v0.1.3-0.20230402001602-4479638f48f8
 	github.com/urfave/cli/v2 v2.25.1
 	golang.org/x/exp v0.0.0-20230321023759-10a507213a29
