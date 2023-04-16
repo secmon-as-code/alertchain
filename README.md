@@ -1,30 +1,32 @@
 # AlertChain
 
-AlertChain is a simple SOAR (Security Orchestration, Automation and Response) framework with [OPA](https://github.com/open-policy-agent/opa) (Open Policy Agent).
+AlertChain is a simple SOAR (Security Orchestration, Automation, and Response) framework that leverages [OPA](https://github.com/open-policy-agent/opa) (Open Policy Agent) to enhance security management.
 
-![](https://user-images.githubusercontent.com/605953/232273906-a3df56fb-3201-4336-b897-e327e8d49981.jpg)
+![AlertChain Diagram](https://user-images.githubusercontent.com/605953/232273906-a3df56fb-3201-4336-b897-e327e8d49981.jpg)
 
 ## Motivation
 
-Security Orchestration, Automation, and Response (SOAR) is a platform for automating the detection, analysis, and response to security events. To enable the automated analysis of events and rapid response in SOAR systems, automated security procedures and policies must be executed.
+Security Orchestration, Automation, and Response (SOAR) is a platform designed for automating the detection, analysis, and response of security events. In order to enable automated event analysis and rapid response in SOAR systems, it is essential to execute automated security procedures and policies.
 
-Using OPA and Rego, a SOAR system can flexibly apply a set of user-defined policies to maintain the security of applications and systems. This makes it easier to update or change security policies and enables more accurate policy application. Additionally, the Rego language is flexible and expressive, making it easy to add or modify policies.
+By utilizing OPA and Rego, a SOAR system can flexibly apply a set of user-defined policies to maintain the security of applications and systems. This approach simplifies the process of updating or changing security policies and ensures a more accurate policy application. Moreover, the Rego language is flexible and expressive, making it easy to add or modify policies.
 
-## Install
+## Installation
+
+To install AlertChain, run the following command:
 
 ```bash
 $ go install github.com/m-mizutani/alertchain@latest
 ```
 
-See [document](./docs) for configuration and alert/action policy details.
+Refer to the [documentation](./docs) for details on configuration and alert/action policies.
 
-## An Example
+## Example
 
-A user need to configure 3 files at least.
+To configure AlertChain, users need to create at least three files:
 
-- configuration file (config.jsonnet)
-- alert policy (alert.rego)
-- action policy (action.rego)
+1. Configuration file (config.jsonnet)
+2. Alert policy (alert.rego)
+3. Action policy (action.rego)
 
 **config.jsonnet**
 ```jsonnet
@@ -48,7 +50,7 @@ A user need to configure 3 files at least.
 }
 ```
 
-`github-issuer` is a name of action. This action is a creator of GitHub issue as alert ticket by GitHub Apps.
+`github-issuer` is an action that creates a GitHub issue as an alert ticket using GitHub Apps.
 
 **alert.rego**
 ```rego
@@ -64,11 +66,11 @@ alert[res] {
 }
 ```
 
-The example alert policy is for [AWS GuardDuty](https://docs.aws.amazon.com/cli/latest/reference/guardduty/get-findings.html#examples). The alert evaluates GuardDuty event data as following:
+This example alert policy is designed for [AWS GuardDuty](https://docs.aws.amazon.com/cli/latest/reference/guardduty/get-findings.html#examples). The alert evaluates GuardDuty event data based on the following criteria:
 
-- finding type has "Trojan:" prefix,
-- and severity is greater than 7,
-- then, creating a new alert
+- The finding type has a "Trojan:" prefix,
+- The severity is greater than 7, and
+- If these conditions are met, a new alert is created
 
 **policy/action.rego**
 ```rego
@@ -82,15 +84,15 @@ action[res] {
 }
 ```
 
-The action policy invokes `my_create_github_issue` action defined in the configuration file if alert source is `aws`.
+The action policy triggers the `my_create_github_issue` action defined in the configuration file if the alert source is from `aws`.
 
-After preparing the files, AlertChain can start with following command.
+After preparing these files, you can start AlertChain using the following command:
 
 ```bash
 $ alertchain -c config.json serve
 ```
 
-And, let's create alert by AWS GuardDuty event data (guardduty.json).
+Now, let's create an alert using AWS GuardDuty event data (guardduty.json):
 
 **guardduty.json**
 ```json
@@ -106,17 +108,17 @@ And, let's create alert by AWS GuardDuty event data (guardduty.json).
 }
 ```
 
-Sending the event data to AlertChain API endpoint.
+To send the event data to the AlertChain API endpoint, use this command:
 
 ```bash
 $ curl -XPOST http://127.0.0.1:8080/alert/aws_guardduty -d @guardduty.json
 ```
 
-Then, AlertChain works as following:
+Upon receiving the data, AlertChain performs the following actions:
 
-1. Evaluates the event data with alert policy, and creates a new alert
-2. Evaluates the `action.main` policy with the new alert, and chooses `my_create_github_issue` action.
-3. Invokes `my_create_github_issue` that uses `github-issuer` and an GitHub issue will be created.
+1. Evaluates the event data using the alert policy and creates a new alert
+2. Evaluates the `action.main` policy with the new alert, selecting the `my_create_github_issue` action
+3. Executes the `my_create_github_issue` action that uses `github-issuer` to create a new GitHub issue
 
 ## License
 
