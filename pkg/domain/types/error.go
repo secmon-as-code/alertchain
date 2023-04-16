@@ -30,4 +30,7 @@ var (
 	ErrNoSuchProbeID    = newError("no such probe ID")
 
 	ErrInvalidHTTPRequest = newError("invalid HTTP request")
+
+	// runtime errors
+	ErrMaxStackDepth = newError("max stack depth")
 )

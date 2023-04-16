@@ -21,13 +21,15 @@ type Chain struct {
 	actionPolicy  opac.Client
 
 	disableAction bool
+	maxStackDepth int
 }
 
 type Option func(c *Chain)
 
 func New(options ...Option) (*Chain, error) {
 	c := &Chain{
-		actionMap: make(map[types.ActionID]interfaces.Action),
+		actionMap:     make(map[types.ActionID]interfaces.Action),
+		maxStackDepth: types.DefaultMaxStackDepth,
 	}
 
 	for _, opt := range options {
@@ -56,7 +58,7 @@ func (x *Chain) HandleAlert(ctx *types.Context, schema types.Schema, data any) e
 	}
 
 	for _, alert := range alerts {
-		var actions model.ActionPolicyResult
+		var actions model.ActionPolicyResponse
 		initOpt := []opac.QueryOption{
 			opac.WithPackageSuffix(".main"),
 		}
@@ -99,6 +101,10 @@ func (x *Chain) detectAlert(ctx *types.Context, schema types.Schema, data any) (
 }
 
 func (x *Chain) runAction(ctx *types.Context, base model.Alert, tgt model.Action) error {
+	if ctx.Stack() > x.maxStackDepth {
+		return goerr.Wrap(types.ErrMaxStackDepth).With("stack", ctx.Stack())
+	}
+
 	alert := base.Clone(tgt.Params...)
 
 	action, ok := x.actionMap[tgt.ID]
@@ -112,21 +118,28 @@ func (x *Chain) runAction(ctx *types.Context, base model.Alert, tgt model.Action
 		return nil
 	}
 
-	resp, err := action.Run(ctx, alert, tgt.Args)
+	result, err := action.Run(ctx, alert, tgt.Args)
 	if err != nil {
 		return err
 	}
 
-	var result model.ActionPolicyResult
+	// query action policy with action result
 	opt := []opac.QueryOption{
 		opac.WithPackageSuffix("." + string(action.ID())),
 	}
-	if err := x.actionPolicy.Query(ctx, resp, &result, opt...); err != nil && !errors.Is(err, opac.ErrNoEvalResult) {
-		return goerr.Wrap(err, "failed to evaluate action response").With("response", resp)
+
+	request := model.ActionPolicyRequest{
+		Alert:  alert,
+		Result: result,
+	}
+	var response model.ActionPolicyResponse
+	if err := x.actionPolicy.Query(ctx, request, &response, opt...); err != nil && !errors.Is(err, opac.ErrNoEvalResult) {
+		return goerr.Wrap(err, "failed to evaluate action response").With("request", request)
 	}
 
-	for _, newTgt := range result.Actions {
-		if err := x.runAction(ctx, alert, newTgt); err != nil {
+	newCtx := ctx.New(types.WithStackIncrement())
+	for _, newTgt := range response.Actions {
+		if err := x.runAction(newCtx, alert, newTgt); err != nil {
 			return err
 		}
 	}

@@ -3,9 +3,9 @@ package model
 import "github.com/m-mizutani/alertchain/pkg/domain/types"
 
 type Parameter struct {
-	Key   types.ParamKey
-	Value types.ParamValue
-	Type  types.ParameterType
+	Key   types.ParamKey      `json:"key"`
+	Value types.ParamValue    `json:"value"`
+	Type  types.ParameterType `json:"type"`
 }
 
 type Parameters []Parameter
