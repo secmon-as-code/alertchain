@@ -39,11 +39,6 @@ func setupPolicy(cfg model.PolicyConfig) ([]chain.Option, error) {
 			f:           chain.WithPolicyAlert,
 		},
 		{
-			pkgName:     cfg.Package.Enrich,
-			defaultName: "enrich",
-			f:           chain.WithPolicyEnrich,
-		},
-		{
 			pkgName:     cfg.Package.Action,
 			defaultName: "action",
 			f:           chain.WithPolicyAction,

@@ -67,7 +67,7 @@ func New(route interfaces.Router) *Server {
 			return
 		}
 
-		ctx := types.NewContext(types.WithBase(r.Context()))
+		ctx := model.NewContext(model.WithBase(r.Context()))
 		if err := route(ctx, schema, data); err != nil {
 			respondError(w, err)
 			return

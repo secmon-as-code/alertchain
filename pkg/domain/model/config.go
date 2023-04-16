@@ -11,7 +11,6 @@ import (
 type Config struct {
 	Policy  PolicyConfig   `json:"policy"`
 	Actions []ActionConfig `json:"actions"`
-	Probes  []ProbeConfig  `json:"probes"`
 }
 
 type PolicyConfig struct {
@@ -21,7 +20,6 @@ type PolicyConfig struct {
 
 type PolicyPackageConfig struct {
 	Alert  string `json:"alert"`
-	Enrich string `json:"enrich"`
 	Action string `json:"action"`
 }
 

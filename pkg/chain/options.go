@@ -34,3 +34,9 @@ func WithDisableAction() Option {
 		c.disableAction = true
 	}
 }
+
+func WithEnablePrint() Option {
+	return func(c *Chain) {
+		c.enablePrint = true
+	}
+}

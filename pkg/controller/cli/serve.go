@@ -13,6 +13,7 @@ func cmdServe(cfg *model.Config) *cli.Command {
 	var (
 		addr          string
 		disableAction bool
+		enablePrint   bool
 	)
 	return &cli.Command{
 		Name:    "serve",
@@ -32,12 +33,22 @@ func cmdServe(cfg *model.Config) *cli.Command {
 				Value:       false,
 				Destination: &disableAction,
 			},
+			&cli.BoolFlag{
+				Name:        "enable-print",
+				Aliases:     []string{"p"},
+				Usage:       "enable print feature in Rego",
+				EnvVars:     []string{"ALERTCHAIN_PRINT"},
+				Destination: &enablePrint,
+			},
 		},
 
 		Action: func(ctx *cli.Context) error {
 			var options []chain.Option
 			if disableAction {
 				options = append(options, chain.WithDisableAction())
+			}
+			if enablePrint {
+				options = append(options, chain.WithEnablePrint())
 			}
 
 			chain, err := buildChain(*cfg, options...)

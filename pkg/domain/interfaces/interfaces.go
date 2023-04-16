@@ -7,7 +7,7 @@ import (
 
 type Action interface {
 	ID() types.ActionID
-	Run(ctx *types.Context, alert model.Alert, params model.ActionArgs) (any, error)
+	Run(ctx *model.Context, alert model.Alert, params model.ActionArgs) (any, error)
 }
 
 type ActionFactory interface {

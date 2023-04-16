@@ -25,14 +25,14 @@ var sccData string
 
 type mockAction struct {
 	id       types.ActionID
-	callback func(ctx *types.Context, alert model.Alert, params model.ActionArgs) (any, error)
+	callback func(ctx *model.Context, alert model.Alert, params model.ActionArgs) (any, error)
 }
 
 func (x *mockAction) ID() types.ActionID {
 	return x.id
 }
 
-func (x *mockAction) Run(ctx *types.Context, alert model.Alert, params model.ActionArgs) (any, error) {
+func (x *mockAction) Run(ctx *model.Context, alert model.Alert, params model.ActionArgs) (any, error) {
 	return x.callback(ctx, alert, params)
 }
 
@@ -54,7 +54,7 @@ func TestBasic(t *testing.T) {
 	var called int
 	mock := &mockAction{
 		id: "mock",
-		callback: func(ctx *types.Context, alert model.Alert, params model.ActionArgs) (any, error) {
+		callback: func(ctx *model.Context, alert model.Alert, params model.ActionArgs) (any, error) {
 			called++
 			return nil, nil
 		},
@@ -65,7 +65,7 @@ func TestBasic(t *testing.T) {
 		chain.WithAction(mock),
 	)).NoError(t)
 
-	ctx := types.NewContext()
+	ctx := model.NewContext()
 	gt.NoError(t, c.HandleAlert(ctx, "scc", alertData))
 	gt.N(t, called).Equal(1)
 }
@@ -87,7 +87,7 @@ func TestDisableAction(t *testing.T) {
 	var called int
 	mock := &mockAction{
 		id: "mock",
-		callback: func(ctx *types.Context, alert model.Alert, params model.ActionArgs) (any, error) {
+		callback: func(ctx *model.Context, alert model.Alert, params model.ActionArgs) (any, error) {
 			called++
 			return nil, nil
 		},
@@ -100,7 +100,7 @@ func TestDisableAction(t *testing.T) {
 		chain.WithDisableAction(),
 	)).NoError(t)
 
-	ctx := types.NewContext()
+	ctx := model.NewContext()
 	gt.NoError(t, c.HandleAlert(ctx, "scc", alertData))
 	gt.N(t, called).Equal(0) // Action should not be called
 }
@@ -131,7 +131,7 @@ func TestChainControl(t *testing.T) {
 	var calledMock, calledMockAfter int
 	mock := &mockAction{
 		id: "mock",
-		callback: func(ctx *types.Context, alert model.Alert, args model.ActionArgs) (any, error) {
+		callback: func(ctx *model.Context, alert model.Alert, args model.ActionArgs) (any, error) {
 			gt.A(t, alert.Params).Length(2).
 				Have(model.Parameter{
 					Key:   "k1",
@@ -148,7 +148,7 @@ func TestChainControl(t *testing.T) {
 
 	mockAfter := &mockAction{
 		id: "mock.after",
-		callback: func(ctx *types.Context, alert model.Alert, args model.ActionArgs) (any, error) {
+		callback: func(ctx *model.Context, alert model.Alert, args model.ActionArgs) (any, error) {
 			gt.A(t, alert.Params).Length(3).
 				Have(model.Parameter{
 					Key:   "k1",
@@ -175,7 +175,7 @@ func TestChainControl(t *testing.T) {
 		chain.WithAction(mockAfter),
 	)).NoError(t)
 
-	ctx := types.NewContext()
+	ctx := model.NewContext()
 	gt.NoError(t, c.HandleAlert(ctx, "my_test", alertData))
 	gt.N(t, calledMock).Equal(1)
 	gt.N(t, calledMockAfter).Equal(1)
@@ -207,7 +207,7 @@ func TestChainLoop(t *testing.T) {
 	var calledMock int
 	mock := &mockAction{
 		id: "mock",
-		callback: func(ctx *types.Context, alert model.Alert, args model.ActionArgs) (any, error) {
+		callback: func(ctx *model.Context, alert model.Alert, args model.ActionArgs) (any, error) {
 			gt.A(t, alert.Params).Length(1)
 			calledMock++
 			return nil, nil
@@ -220,7 +220,7 @@ func TestChainLoop(t *testing.T) {
 		chain.WithAction(mock),
 	)).NoError(t)
 
-	ctx := types.NewContext()
+	ctx := model.NewContext()
 	gt.NoError(t, c.HandleAlert(ctx, "my_test", alertData))
 	gt.N(t, calledMock).Equal(10)
 }

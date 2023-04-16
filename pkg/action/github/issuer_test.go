@@ -10,7 +10,6 @@ import (
 
 	"github.com/m-mizutani/alertchain/pkg/action/github"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
-	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/gt"
 
 	gh "github.com/google/go-github/github"
@@ -75,7 +74,7 @@ func TestIssuer(t *testing.T) {
 	factory := &github.IssuerFactory{}
 	issuer := gt.R1(factory.New("test", cfg)).NoError(t)
 
-	ctx := types.NewContext()
+	ctx := model.NewContext()
 	alert := model.Alert{
 		AlertMetaData: model.AlertMetaData{
 			Title:       "blue",
