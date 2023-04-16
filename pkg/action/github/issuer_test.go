@@ -12,6 +12,8 @@ import (
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/gt"
+
+	gh "github.com/google/go-github/github"
 )
 
 func TestIssueTemplate(t *testing.T) {
@@ -20,7 +22,7 @@ func TestIssueTemplate(t *testing.T) {
 		AlertMetaData: model.AlertMetaData{
 			Title:       "blue",
 			Description: "orange",
-			Params: []types.Parameter{
+			Params: []model.Parameter{
 				{
 					Key:   "magic",
 					Value: "five",
@@ -50,8 +52,6 @@ func TestIssueTemplate(t *testing.T) {
 	gt.B(t, strings.Contains(s, "| int | `123` |")).True()
 	gt.B(t, strings.Contains(s, "| struct | `{bar}` |")).True()
 	gt.B(t, strings.Contains(s, `{"foo": "bar"}`)).True()
-
-	println(s)
 }
 
 func TestIssuer(t *testing.T) {
@@ -80,7 +80,7 @@ func TestIssuer(t *testing.T) {
 		AlertMetaData: model.AlertMetaData{
 			Title:       "blue",
 			Description: "orange",
-			Params: []types.Parameter{
+			Params: []model.Parameter{
 				{
 					Key:   "magic",
 					Value: "five",
@@ -91,8 +91,10 @@ func TestIssuer(t *testing.T) {
 		Raw:       `{"foo": "bar"}`,
 	}
 
-	params := model.ActionParams{}
-	gt.NoError(t, issuer.Run(ctx, alert, params))
+	params := model.ActionArgs{}
+	resp := gt.R1(issuer.Run(ctx, alert, params)).NoError(t)
+	issue := gt.Cast[*gh.Issue](t, resp)
+	gt.V(t, issue.Title).Must().NotNil().Equal(&alert.Title)
 }
 
 const dummyPrivateKey = `-----BEGIN RSA PRIVATE KEY-----

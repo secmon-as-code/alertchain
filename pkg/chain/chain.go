@@ -1,6 +1,8 @@
 package chain
 
 import (
+	"errors"
+
 	"github.com/m-mizutani/alertchain/pkg/domain/interfaces"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
@@ -11,13 +13,12 @@ import (
 )
 
 type Chain struct {
-	enrichers []interfaces.Enricher
 	actions   []interfaces.Action
 	actionMap map[types.ActionID]interfaces.Action
 
-	alertPolicy  opac.Client
-	enrichPolicy opac.Client
-	actionPolicy opac.Client
+	alertPolicy   opac.Client
+	inspectPolicy opac.Client
+	actionPolicy  opac.Client
 
 	disableAction bool
 }
@@ -45,72 +46,88 @@ func New(options ...Option) (*Chain, error) {
 }
 
 func (x *Chain) HandleAlert(ctx *types.Context, schema types.Schema, data any) error {
-	// Step 1: Detect alert
-	queryOpt := []opac.QueryOption{
-		opac.WithPackageSuffix("." + string(schema)),
+	alerts, err := x.detectAlert(ctx, schema, data)
+	if err != nil {
+		return goerr.Wrap(err)
 	}
-	utils.Logger().Info("handling alert", slog.Any("data", data))
+
+	if x.actionPolicy == nil {
+		return nil
+	}
+
+	for _, alert := range alerts {
+		var actions model.ActionPolicyResult
+		initOpt := []opac.QueryOption{
+			opac.WithPackageSuffix(".main"),
+		}
+		if err := x.actionPolicy.Query(ctx, alert, &actions, initOpt...); err != nil {
+			return goerr.Wrap(err, "failed to evaluate alert for action").With("alert", alert)
+		}
+
+		for _, tgt := range actions.Actions {
+			if err := x.runAction(ctx, alert, tgt); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func (x *Chain) detectAlert(ctx *types.Context, schema types.Schema, data any) ([]model.Alert, error) {
+	if x.alertPolicy == nil {
+		return nil, nil
+	}
 
 	var alertResult model.AlertPolicyResult
-	if x.alertPolicy != nil {
-		if err := x.alertPolicy.Query(ctx, data, &alertResult, queryOpt...); err != nil {
-			return goerr.Wrap(err)
-		}
-	} else {
-		alertResult.Alerts = []model.AlertMetaData{
-			{
-				Title:  "N/A",
-				Params: []types.Parameter{},
-			},
-		}
+	opt := []opac.QueryOption{
+		opac.WithPackageSuffix("." + string(schema)),
+	}
+	if err := x.alertPolicy.Query(ctx, data, &alertResult, opt...); err != nil {
+		return nil, goerr.Wrap(err)
 	}
 
-	for _, meta := range alertResult.Alerts {
-		// Step 2: Enrich indicators in the alert
-		alert := model.NewAlert(meta, schema, data)
+	if len(alertResult.Alerts) == 0 {
+		return nil, nil
+	}
 
-		utils.Logger().Info("alert detected", slog.Any("alert", alert))
+	alerts := make([]model.Alert, len(alertResult.Alerts))
+	for i, meta := range alertResult.Alerts {
+		alerts[i] = model.NewAlert(meta, schema, data)
+	}
+	return alerts, nil
+}
 
-		if x.enrichPolicy != nil {
-			var enrich model.EnrichPolicyResult
-			if err := x.enrichPolicy.Query(ctx, alert, &enrich); err != nil {
-				return goerr.Wrap(err, "failed to evaluate alert for enrich").With("alert", alert)
-			}
+func (x *Chain) runAction(ctx *types.Context, base model.Alert, tgt model.Action) error {
+	alert := base.Clone(tgt.Params...)
 
-			for _, tgt := range enrich.Targets {
-				for _, enricher := range x.enrichers {
-					ref, err := enricher.Enrich(ctx, tgt)
-					if err != nil {
-						return err
-					}
-					alert.References = append(alert.References, ref...)
-				}
-			}
-		}
+	action, ok := x.actionMap[tgt.ID]
+	if !ok {
+		return goerr.Wrap(types.ErrNoSuchActionID).With("ID", tgt.ID)
+	}
 
-		// Step 3: Do action(s) if required
-		var actions model.ActionPolicyResult
-		if x.actionPolicy != nil {
-			if err := x.actionPolicy.Query(ctx, alert, &actions); err != nil {
-				return goerr.Wrap(err, "failed to evaluate alert for action").With("alert", alert)
-			}
+	utils.Logger().Info("action triggered", slog.Any("id", action.ID()))
+	if x.disableAction {
+		utils.Logger().Info("disable-action option is true, skip action")
+		return nil
+	}
 
-			for _, tgt := range actions.Actions {
-				action, ok := x.actionMap[tgt.ID]
-				if !ok {
-					return goerr.Wrap(types.ErrNoSuchActionID).With("ID", tgt.ID)
-				}
+	resp, err := action.Run(ctx, alert, tgt.Args)
+	if err != nil {
+		return err
+	}
 
-				utils.Logger().Info("action triggered", slog.Any("id", action.ID()))
-				if x.disableAction {
-					utils.Logger().Info("disable-action option is true, skip action")
-					continue
-				}
+	var result model.ActionPolicyResult
+	opt := []opac.QueryOption{
+		opac.WithPackageSuffix("." + string(action.ID())),
+	}
+	if err := x.actionPolicy.Query(ctx, resp, &result, opt...); err != nil && !errors.Is(err, opac.ErrNoEvalResult) {
+		return goerr.Wrap(err, "failed to evaluate action response").With("response", resp)
+	}
 
-				if err := action.Run(ctx, alert, tgt.Params); err != nil {
-					return err
-				}
-			}
+	for _, newTgt := range result.Actions {
+		if err := x.runAction(ctx, alert, newTgt); err != nil {
+			return err
 		}
 	}
 

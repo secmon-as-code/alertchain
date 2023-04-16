@@ -24,14 +24,14 @@ var actionRego string
 var sccData string
 
 type mockAction struct {
-	callback func(ctx *types.Context, alert model.Alert, params model.ActionParams) error
+	callback func(ctx *types.Context, alert model.Alert, params model.ActionArgs) (any, error)
 }
 
 func (x *mockAction) ID() types.ActionID {
 	return "mock"
 }
 
-func (x *mockAction) Run(ctx *types.Context, alert model.Alert, params model.ActionParams) error {
+func (x *mockAction) Run(ctx *types.Context, alert model.Alert, params model.ActionArgs) (any, error) {
 	return x.callback(ctx, alert, params)
 }
 
@@ -52,9 +52,9 @@ func TestBasic(t *testing.T) {
 
 	var called int
 	mock := &mockAction{
-		callback: func(ctx *types.Context, alert model.Alert, params model.ActionParams) error {
+		callback: func(ctx *types.Context, alert model.Alert, params model.ActionArgs) (any, error) {
 			called++
-			return nil
+			return nil, nil
 		},
 	}
 	c := gt.R1(chain.New(
@@ -84,9 +84,9 @@ func TestDisableAction(t *testing.T) {
 
 	var called int
 	mock := &mockAction{
-		callback: func(ctx *types.Context, alert model.Alert, params model.ActionParams) error {
+		callback: func(ctx *types.Context, alert model.Alert, params model.ActionArgs) (any, error) {
 			called++
-			return nil
+			return nil, nil
 		},
 	}
 

@@ -86,10 +86,10 @@ func (x *IssuerFactory) New(id types.ActionID, cfg model.ActionConfigValues) (in
 
 func (x *Issuer) ID() types.ActionID { return x.id }
 
-func (x *Issuer) Run(ctx *types.Context, alert model.Alert, params model.ActionParams) error {
+func (x *Issuer) Run(ctx *types.Context, alert model.Alert, params model.ActionArgs) (any, error) {
 	var buf bytes.Buffer
 	if err := issueTemplate.Execute(&buf, alert); err != nil {
-		return goerr.Wrap(err, "Failed to render issue template")
+		return nil, goerr.Wrap(err, "Failed to render issue template")
 	}
 	req := &github.IssueRequest{
 		Title: &alert.Title,
@@ -98,10 +98,10 @@ func (x *Issuer) Run(ctx *types.Context, alert model.Alert, params model.ActionP
 
 	issue, resp, err := x.client.Issues.Create(ctx, x.owner, x.repo, req)
 	if err != nil {
-		return goerr.Wrap(err)
+		return nil, goerr.Wrap(err)
 	}
 	if resp.StatusCode != http.StatusCreated {
-		return goerr.Wrap(err).With("resp", resp)
+		return nil, goerr.Wrap(err).With("resp", resp)
 	}
 
 	utils.Logger().Info("Created GitHub issue",
@@ -109,5 +109,5 @@ func (x *Issuer) Run(ctx *types.Context, alert model.Alert, params model.ActionP
 		slog.Any("title", ptr.From(issue.Title)),
 	)
 
-	return nil
+	return issue, nil
 }

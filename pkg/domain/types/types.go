@@ -4,6 +4,8 @@ import "github.com/google/uuid"
 
 type (
 	AlertID    string
+	ProbeID    string
+	ProbeName  string
 	ActionID   string
 	ActionName string
 	EnricherID string
