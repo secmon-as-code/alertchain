@@ -86,7 +86,7 @@ func (x *IssuerFactory) New(id types.ActionID, cfg model.ActionConfigValues) (in
 
 func (x *Issuer) ID() types.ActionID { return x.id }
 
-func (x *Issuer) Run(ctx *types.Context, alert model.Alert, params model.ActionArgs) (any, error) {
+func (x *Issuer) Run(ctx *model.Context, alert model.Alert, params model.ActionArgs) (any, error) {
 	var buf bytes.Buffer
 	if err := issueTemplate.Execute(&buf, alert); err != nil {
 		return nil, goerr.Wrap(err, "Failed to render issue template")

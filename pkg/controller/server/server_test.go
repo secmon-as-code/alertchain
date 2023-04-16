@@ -20,7 +20,7 @@ var sccData []byte
 
 func TestSCC(t *testing.T) {
 	var called int
-	srv := server.New(func(ctx *types.Context, schema types.Schema, data any) error {
+	srv := server.New(func(ctx *model.Context, schema types.Schema, data any) error {
 		called++
 		gt.V(t, schema).Equal("scc")
 		alert := gt.Cast[map[string]any](t, data)
@@ -38,7 +38,7 @@ func TestSCC(t *testing.T) {
 
 func TestPubSub(t *testing.T) {
 	var called int
-	srv := server.New(func(ctx *types.Context, schema types.Schema, data any) error {
+	srv := server.New(func(ctx *model.Context, schema types.Schema, data any) error {
 		called++
 		gt.V(t, schema).Equal("scc")
 		alert := gt.Cast[map[string]any](t, data)

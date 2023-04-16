@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/m-mizutani/alertchain/pkg/chain"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/goerr"
@@ -14,8 +15,9 @@ import (
 
 func cmdRun(cfg *model.Config) *cli.Command {
 	var (
-		input  string
-		schema types.Schema
+		input       string
+		schema      types.Schema
+		enablePrint bool
 	)
 
 	return &cli.Command{
@@ -38,10 +40,22 @@ func cmdRun(cfg *model.Config) *cli.Command {
 				Required:    true,
 				Destination: (*string)(&schema),
 			},
+			&cli.BoolFlag{
+				Name:        "enable-print",
+				Aliases:     []string{"p"},
+				Usage:       "enable print feature in Rego",
+				EnvVars:     []string{"ALERTCHAIN_ENABLE_PRINT"},
+				Destination: &enablePrint,
+			},
 		},
 
 		Action: func(c *cli.Context) error {
-			chain, err := buildChain(*cfg)
+			var chainOptions []chain.Option
+			if enablePrint {
+				chainOptions = append(chainOptions, chain.WithEnablePrint())
+			}
+
+			chain, err := buildChain(*cfg, chainOptions...)
 			if err != nil {
 				return err
 			}
@@ -62,7 +76,7 @@ func cmdRun(cfg *model.Config) *cli.Command {
 				return goerr.Wrap(err, "failed to decode input data")
 			}
 
-			ctx := types.NewContext(types.WithBase(c.Context))
+			ctx := model.NewContext(model.WithBase(c.Context))
 			if err := chain.HandleAlert(ctx, schema, data); err != nil {
 				return goerr.Wrap(err, "failed to handle alert")
 			}

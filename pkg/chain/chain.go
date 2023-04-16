@@ -22,6 +22,7 @@ type Chain struct {
 
 	disableAction bool
 	maxStackDepth int
+	enablePrint   bool
 }
 
 type Option func(c *Chain)
@@ -47,7 +48,7 @@ func New(options ...Option) (*Chain, error) {
 	return c, nil
 }
 
-func (x *Chain) HandleAlert(ctx *types.Context, schema types.Schema, data any) error {
+func (x *Chain) HandleAlert(ctx *model.Context, schema types.Schema, data any) error {
 	alerts, err := x.detectAlert(ctx, schema, data)
 	if err != nil {
 		return goerr.Wrap(err)
@@ -58,10 +59,16 @@ func (x *Chain) HandleAlert(ctx *types.Context, schema types.Schema, data any) e
 	}
 
 	for _, alert := range alerts {
+		ctx = ctx.New(model.WithAlert(alert))
+
 		var actions model.ActionPolicyResponse
 		initOpt := []opac.QueryOption{
 			opac.WithPackageSuffix(".main"),
 		}
+		if x.enablePrint {
+			initOpt = append(initOpt, opac.WithPrintWriter(newPrintHook(ctx)))
+		}
+
 		if err := x.actionPolicy.Query(ctx, alert, &actions, initOpt...); err != nil {
 			return goerr.Wrap(err, "failed to evaluate alert for action").With("alert", alert)
 		}
@@ -76,7 +83,7 @@ func (x *Chain) HandleAlert(ctx *types.Context, schema types.Schema, data any) e
 	return nil
 }
 
-func (x *Chain) detectAlert(ctx *types.Context, schema types.Schema, data any) ([]model.Alert, error) {
+func (x *Chain) detectAlert(ctx *model.Context, schema types.Schema, data any) ([]model.Alert, error) {
 	if x.alertPolicy == nil {
 		return nil, nil
 	}
@@ -85,6 +92,11 @@ func (x *Chain) detectAlert(ctx *types.Context, schema types.Schema, data any) (
 	opt := []opac.QueryOption{
 		opac.WithPackageSuffix("." + string(schema)),
 	}
+
+	if x.enablePrint {
+		opt = append(opt, opac.WithPrintWriter(newPrintHook(ctx)))
+	}
+
 	if err := x.alertPolicy.Query(ctx, data, &alertResult, opt...); err != nil {
 		return nil, goerr.Wrap(err)
 	}
@@ -100,7 +112,7 @@ func (x *Chain) detectAlert(ctx *types.Context, schema types.Schema, data any) (
 	return alerts, nil
 }
 
-func (x *Chain) runAction(ctx *types.Context, base model.Alert, tgt model.Action) error {
+func (x *Chain) runAction(ctx *model.Context, base model.Alert, tgt model.Action) error {
 	if ctx.Stack() > x.maxStackDepth {
 		return goerr.Wrap(types.ErrMaxStackDepth).With("stack", ctx.Stack())
 	}
@@ -127,6 +139,9 @@ func (x *Chain) runAction(ctx *types.Context, base model.Alert, tgt model.Action
 	opt := []opac.QueryOption{
 		opac.WithPackageSuffix("." + string(action.ID())),
 	}
+	if x.enablePrint {
+		opt = append(opt, opac.WithPrintWriter(newPrintHook(ctx)))
+	}
 
 	request := model.ActionPolicyRequest{
 		Alert:  alert,
@@ -137,7 +152,7 @@ func (x *Chain) runAction(ctx *types.Context, base model.Alert, tgt model.Action
 		return goerr.Wrap(err, "failed to evaluate action response").With("request", request)
 	}
 
-	newCtx := ctx.New(types.WithStackIncrement())
+	newCtx := ctx.New(model.WithStackIncrement())
 	for _, newTgt := range response.Actions {
 		if err := x.runAction(newCtx, alert, newTgt); err != nil {
 			return err
