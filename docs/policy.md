@@ -1,6 +1,6 @@
 # Policy
 
-AlertChain has 2 types of policies: "Alert Policy" and "Action Policy". They are written in Rego. This document describes the input and output schemas of these policies.
+AlertChain has two types of policies: "Alert Policy" and "Action Policy". They are written in the Rego language. This document describes the input and output schemas for these policies.
 
 ## Alert Policy
 
@@ -12,7 +12,7 @@ The package name for Alert Policy must follow the naming convention below:
 package alert.{schema}
 ```
 
-Here, `{schema}` must match the `{schema}` specified when receiving event data. For example, if the endpoint path for receiving via Pub/Sub is `/alert/pubsub/my_alert`, the policy `package alert.my_alert` will be called.
+Here, `{schema}` must match the `{schema}` specified when receiving event data. For example, if the endpoint path for receiving data via Pub/Sub is `/alert/pubsub/my_alert`, the policy `package alert.my_alert` will be called.
 
 ### Input
 
