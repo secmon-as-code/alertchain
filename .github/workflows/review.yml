@@ -1,0 +1,47 @@
+name: "review"
+
+on:
+  pull_request:
+    paths-ignore:
+      - "*.md"
+      - "LICENSE"
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v3
+      - name: "Get diff of the pull request"
+        id: get_diff
+        shell: bash
+        env:
+          PULL_REQUEST_HEAD_REF: "${{ github.event.pull_request.head.ref }}"
+        run: |-
+          git fetch origin "${{ env.PULL_REQUEST_HEAD_REF }}:${{ env.PULL_REQUEST_HEAD_REF }}"
+          git checkout "${{ env.PULL_REQUEST_HEAD_REF }}"
+          git diff "origin/${{ env.PULL_REQUEST_HEAD_REF }}" > "diff.txt"
+          # shellcheck disable=SC2086
+          echo "diff=$(cat "diff.txt")" >> $GITHUB_ENV
+      - uses: yu-iskw/gpt-code-review-action@v0.1.0
+        name: "Code Review by GPT"
+        id: review
+        with:
+          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_repository: ${{ github.repository }}
+          github_pull_request_number: ${{ github.event.pull_request.number }}
+          git_commit_hash: ${{ github.event.pull_request.head.sha }}
+          model: "text-davinci-003"
+          temperature: "0.7"
+          max_tokens: "256"
+          top_p: "1"
+          frequency_penalty: "0.0"
+          presence_penalty: "0.0"
+          pull_request_diff: |-
+            ${{ steps.get_diff.outputs.diff }}
+          extra_prompt: |-
+            You are very familiar with go language too.
+          log_level: "DEBUG"
