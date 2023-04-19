@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/getsentry/sentry-go"
 	"github.com/go-chi/chi/v5"
 	"github.com/m-mizutani/alertchain/pkg/domain/interfaces"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
@@ -39,6 +40,8 @@ func respondError(w http.ResponseWriter, err error) {
 		Error: err.Error(),
 	}
 
+	sentry.CaptureException(err)
+
 	loggingError("respond error", err)
 
 	w.WriteHeader(http.StatusBadRequest)
@@ -60,65 +63,99 @@ func getSchema(r *http.Request) (types.Schema, error) {
 func New(route interfaces.Router) *Server {
 	s := &Server{}
 
-	handler := func(w http.ResponseWriter, r *http.Request, data any) {
-		schema, err := getSchema(r)
-		if err != nil {
-			respondError(w, err)
-			return
-		}
+	wrap := func(handler apiHandler) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			defer func() {
+				if err := recover(); err != nil {
+					respondError(w, goerr.Wrap(err.(error), "panic in handler"))
+				}
+			}()
 
-		ctx := model.NewContext(model.WithBase(r.Context()))
-		if err := route(ctx, schema, data); err != nil {
-			respondError(w, err)
-			return
-		}
+			resp, err := handler(r, route)
+			if err != nil {
+				respondError(w, err)
+				return
+			}
 
-		w.WriteHeader(http.StatusOK)
-		if _, err := w.Write([]byte("OK")); err != nil {
-			loggingError("write OK", err)
-			return
+			w.WriteHeader(resp.Code)
+			if err := json.NewEncoder(w).Encode(resp.Data); err != nil {
+				loggingError("failed to convert error message", err)
+				return
+			}
 		}
 	}
 
 	r := chi.NewRouter()
 	r.Route("/alert", func(r chi.Router) {
-		r.Post("/raw/{schema}", func(w http.ResponseWriter, r *http.Request) {
-			var data any
-			if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-				respondError(w, err)
-				return
-			}
-
-			handler(w, r, data)
-		})
-
-		r.Post("/pubsub/{schema}", func(w http.ResponseWriter, r *http.Request) {
-			body, err := io.ReadAll(r.Body)
-			if err != nil {
-				respondError(w, goerr.Wrap(err, "reading pub/sub message").With("body", string(body)))
-				return
-			}
-			utils.Logger().Debug("recv pubsub message", slog.String("body", string(body)))
-
-			var req model.PubSubRequest
-			if err := json.Unmarshal(body, &req); err != nil {
-				respondError(w, goerr.Wrap(err, "parsing pub/sub message").With("body", string(body)))
-				return
-			}
-
-			var data any
-			if err := json.Unmarshal(req.Message.Data, &data); err != nil {
-				respondError(w, goerr.Wrap(err, "parsing pub/sub data field").With("data", string(req.Message.Data)))
-				return
-			}
-
-			handler(w, r, data)
-		})
+		r.Post("/raw/{schema}", wrap(handleRawAlert))
+		r.Post("/pubsub/{schema}", wrap(handlePubSubAlert))
 	})
 
 	s.mux = r
 
 	return s
+}
+
+type apiResponse struct {
+	Code int
+	Data any
+}
+
+type apiHandler func(r *http.Request, route interfaces.Router) (*apiResponse, error)
+
+func handleRawAlert(r *http.Request, route interfaces.Router) (*apiResponse, error) {
+	var data any
+	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+		return nil, goerr.Wrap(err, "failed to decode request body")
+	}
+
+	schema, err := getSchema(r)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := model.NewContext(model.WithBase(r.Context()))
+	if err := route(ctx, schema, data); err != nil {
+		return nil, err
+	}
+
+	return &apiResponse{
+		Code: http.StatusOK,
+		Data: "OK",
+	}, nil
+}
+
+func handlePubSubAlert(r *http.Request, route interfaces.Router) (*apiResponse, error) {
+	schema, err := getSchema(r)
+	if err != nil {
+		return nil, err
+	}
+
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		return nil, goerr.Wrap(err, "reading pub/sub message").With("body", string(body))
+	}
+	utils.Logger().Debug("recv pubsub message", slog.String("body", string(body)))
+
+	var req model.PubSubRequest
+	if err := json.Unmarshal(body, &req); err != nil {
+		return nil, goerr.Wrap(err, "parsing pub/sub message").With("body", string(body))
+	}
+
+	var data any
+	if err := json.Unmarshal(req.Message.Data, &data); err != nil {
+		return nil, goerr.Wrap(err, "parsing pub/sub data field").With("data", string(req.Message.Data))
+	}
+
+	ctx := model.NewContext(model.WithBase(r.Context()))
+	if err := route(ctx, schema, data); err != nil {
+		return nil, err
+	}
+
+	return &apiResponse{
+		Code: http.StatusOK,
+		Data: "OK",
+	}, nil
 }
 
 func (x *Server) Run(addr string) error {
@@ -127,6 +164,8 @@ func (x *Server) Run(addr string) error {
 		ReadHeaderTimeout: 3 * time.Second,
 		Handler:           x.mux,
 	}
+
+	defer sentry.Flush(2 * time.Second)
 
 	if err := server.ListenAndServe(); err != nil {
 		return goerr.Wrap(err, "failed to listen")
