@@ -1,10 +1,12 @@
 package cli
 
 import (
+	"github.com/getsentry/sentry-go"
 	"github.com/m-mizutani/alertchain/pkg/chain"
 	"github.com/m-mizutani/alertchain/pkg/controller/server"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/utils"
+	"github.com/m-mizutani/goerr"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/exp/slog"
 )
@@ -14,6 +16,7 @@ func cmdServe(cfg *model.Config) *cli.Command {
 		addr          string
 		disableAction bool
 		enablePrint   bool
+		enableSentry  bool
 	)
 	return &cli.Command{
 		Name:    "serve",
@@ -40,6 +43,12 @@ func cmdServe(cfg *model.Config) *cli.Command {
 				EnvVars:     []string{"ALERTCHAIN_PRINT"},
 				Destination: &enablePrint,
 			},
+			&cli.BoolFlag{
+				Name:        "enable-sentry",
+				Usage:       "Enable sentry logging, you need to set SENTRY_DSN environment variable",
+				EnvVars:     []string{"ALERTCHAIN_ENABLE_SENTRY"},
+				Destination: &enableSentry,
+			},
 		},
 
 		Action: func(ctx *cli.Context) error {
@@ -49,6 +58,11 @@ func cmdServe(cfg *model.Config) *cli.Command {
 			}
 			if enablePrint {
 				options = append(options, chain.WithEnablePrint())
+			}
+			if enableSentry {
+				if err := sentry.Init(sentry.ClientOptions{}); err != nil {
+					return goerr.Wrap(err, "Failed to initialize sentry")
+				}
 			}
 
 			chain, err := buildChain(*cfg, options...)
