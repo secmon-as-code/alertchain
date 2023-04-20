@@ -41,24 +41,6 @@ func (x ActionConfig) Validate() error {
 
 type ActionConfigValues map[string]any
 
-type ProbeConfig struct {
-	ID     types.ProbeID     `json:"id"`
-	Uses   types.ProbeName   `json:"uses"`
-	Config ProbeConfigValues `json:"config"`
-}
-
-func (x ProbeConfig) Validate() error {
-	if x.ID == "" {
-		return goerr.Wrap(types.ErrConfigNoProbeID)
-	}
-	if x.Uses == "" {
-		return goerr.Wrap(types.ErrConfigNoProbeName).With("id", x.ID)
-	}
-	return nil
-}
-
-type ProbeConfigValues map[string]any
-
 type EnvVar struct {
 	Key   string
 	Value string
