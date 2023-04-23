@@ -63,7 +63,7 @@ func TestIssueTemplate(t *testing.T) {
 	gt.B(t, strings.Contains(s, "### md-title")).True()
 	gt.B(t, strings.Contains(s, "*md-test*")).True()
 
-	os.WriteFile("test.md", []byte(s), 0644)
+	// os.WriteFile("test.md", []byte(s), 0644)
 }
 
 func TestIssueTemplateNoMarkdown(t *testing.T) {
