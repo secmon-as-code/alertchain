@@ -17,13 +17,9 @@ jobs:
       - name: "Get diff of the pull request"
         id: get_diff
         shell: bash
-        env:
-          PULL_REQUEST_HEAD_REF: "${{ github.event.pull_request.head.ref }}"
         run: |-
-          git fetch origin "${{ env.PULL_REQUEST_HEAD_REF }}:${{ env.PULL_REQUEST_HEAD_REF }}"
-          git fetch origin main
-          git checkout "${{ env.PULL_REQUEST_HEAD_REF }}"
-          git diff "main" > "diff.txt"
+          git fetch origin ${{ github.event.pull_request.base.ref }}:$GITHUB_REF
+          git diff --name-status $GITHUB_REF..${{ github.event.pull_request.head.sha }} > "diff.txt"
           cat diff.txt
           # shellcheck disable=SC2086
           echo "diff=$(cat "diff.txt")" >> $GITHUB_ENV
