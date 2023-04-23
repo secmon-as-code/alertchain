@@ -23,7 +23,8 @@ jobs:
           git fetch origin "${{ env.PULL_REQUEST_HEAD_REF }}:${{ env.PULL_REQUEST_HEAD_REF }}"
           git fetch origin main
           git checkout "${{ env.PULL_REQUEST_HEAD_REF }}"
-          git diff "origin/main" > "diff.txt"
+          git diff "main" > "diff.txt"
+          cat diff.txt
           # shellcheck disable=SC2086
           echo "diff=$(cat "diff.txt")" >> $GITHUB_ENV
       - uses: yu-iskw/gpt-code-review-action@v0.2.1
