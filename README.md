@@ -10,6 +10,24 @@ Security Orchestration, Automation, and Response (SOAR) is a platform designed f
 
 By utilizing OPA and Rego, a SOAR system can flexibly apply a set of user-defined policies to maintain the security of applications and systems. This approach simplifies the process of updating or changing security policies and ensures a more accurate policy application. Moreover, the Rego language is flexible and expressive, making it easy to add or modify policies.
 
+## Concept
+
+AlertChain is a versatile software that accepts structured event data through HTTP or other means, and then determines its actions based on policies written in Rego.
+
+### Action
+
+Actions, the basic units of operation, are primarily implemented within AlertChain using Go code. For example, there is an action called [github-issuer](docs/action/github-issuer.md) which creates an issue on GitHub. Users can define any number of actions in a configuration written in Jsonnet, each of which needs a unique ID. Basic settings, such as the username and API key required to execute the action, are defined within [the Jsonnet configuration](docs/config.md). Additionally, runtime adjustments, such as specifying labels when creating a GitHub issue, can be made within the policy itself.
+
+### Policy
+
+There are two main types of policies in AlertChain:
+
+1. Alert Policy: This policy evaluates the input structured data and determines whether the event should trigger an alert. Users can add any parameters as metadata during the evaluation process. The policy is invoked only once.
+
+2. Action Policy: This policy decides how to respond if an event is determined to be an alert. The `action.main` policy is always invoked first to determine the initial action to be taken. Actions are specified by their unique ID defined in the Jsonnet configuration, and if the action accepts arguments, they can be specified by the policy. After an action is executed, the `action.<action ID>` policy is invoked, allowing users to specify further actions or end the process. Parameters can be added or overwritten for calling new actions, allowing for alert state maintenance and enabling conditional branching and repetition if necessary.
+
+Overall, AlertChain provides a flexible and powerful framework for handling structured event data and determining appropriate actions based on user-defined policies.
+
 ## Installation
 
 To install AlertChain, run the following command:
