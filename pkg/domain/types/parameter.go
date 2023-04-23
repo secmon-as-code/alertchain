@@ -11,4 +11,5 @@ const (
 	DomainName ParameterType = "domain"
 	FileSha256 ParameterType = "file.sha256"
 	FileSha512 ParameterType = "file.sha512"
+	MarkDown   ParameterType = "markdown"
 )

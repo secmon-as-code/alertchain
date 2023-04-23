@@ -10,12 +10,63 @@ import (
 
 	"github.com/m-mizutani/alertchain/pkg/action/github"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
+	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/gt"
 
 	gh "github.com/google/go-github/github"
 )
 
 func TestIssueTemplate(t *testing.T) {
+	var buf bytes.Buffer
+	gt.NoError(t, github.ExecuteTemplate(&buf, model.Alert{
+		AlertMetaData: model.AlertMetaData{
+			Title:       "blue",
+			Description: "orange",
+			Params: []model.Parameter{
+				{
+					Key:   "magic",
+					Value: "five",
+				},
+				{
+					Key:   "star",
+					Value: "light",
+				},
+				{
+					Key:   "int",
+					Value: 123,
+				},
+				{
+					Key:   "struct",
+					Value: struct{ Foo string }{Foo: "bar"},
+				},
+				{
+					Key:   "md-title",
+					Value: "*md-test*",
+					Type:  types.MarkDown,
+				},
+			},
+		},
+		Schema: "fire",
+		Raw:    `{"foo": "bar"}`,
+	}))
+
+	s := buf.String()
+	gt.B(t, strings.Contains(s, "orange")).True()
+	gt.B(t, strings.Contains(s, "| magic | `five` |")).True()
+	gt.B(t, strings.Contains(s, "| star | `light` |")).True()
+	gt.B(t, strings.Contains(s, "| int | `123` |")).True()
+	gt.B(t, strings.Contains(s, "| struct | `{bar}` |")).True()
+	gt.B(t, strings.Contains(s, `{"foo": "bar"}`)).True()
+
+	gt.B(t, strings.Contains(s, "| md-title | `*md-test*` |")).False()
+	gt.B(t, strings.Contains(s, "## Comments")).True()
+	gt.B(t, strings.Contains(s, "### md-title")).True()
+	gt.B(t, strings.Contains(s, "*md-test*")).True()
+
+	// os.WriteFile("test.md", []byte(s), 0644)
+}
+
+func TestIssueTemplateNoMarkdown(t *testing.T) {
 	var buf bytes.Buffer
 	gt.NoError(t, github.ExecuteTemplate(&buf, model.Alert{
 		AlertMetaData: model.AlertMetaData{
@@ -45,12 +96,7 @@ func TestIssueTemplate(t *testing.T) {
 	}))
 
 	s := buf.String()
-	gt.B(t, strings.Contains(s, "orange")).True()
-	gt.B(t, strings.Contains(s, "| magic | `five` |")).True()
-	gt.B(t, strings.Contains(s, "| star | `light` |")).True()
-	gt.B(t, strings.Contains(s, "| int | `123` |")).True()
-	gt.B(t, strings.Contains(s, "| struct | `{bar}` |")).True()
-	gt.B(t, strings.Contains(s, `{"foo": "bar"}`)).True()
+	gt.B(t, strings.Contains(s, "## Comments")).False()
 }
 
 func TestIssuer(t *testing.T) {

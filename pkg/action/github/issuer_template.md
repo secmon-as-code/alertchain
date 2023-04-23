@@ -1,3 +1,4 @@
+{{$countMarkdown := 0}}
 - ID: {{ .ID }}
 - Created At: {{ .CreatedAt }}
 - Schema: {{ .Schema }}
@@ -10,7 +11,18 @@
 
 | Key | Value | Type |
 |-----|-------|------|
-{{range .Params}}| {{ .Key }} | `{{ .Value }}` | {{ .Type }} |
+{{range .Params}}{{ if ne .Type "markdown" }} | {{ .Key }} | `{{ .Value }}` | {{ .Type }} |
+{{else}}{{ $countMarkdown = add $countMarkdown 1 }}{{end}}{{end}}
+
+{{ if gt $countMarkdown 0 }}
+## Comments
+
+{{range .Params}}{{ if eq .Type "markdown" }}
+### {{ .Key }}
+
+{{ .Value }}
+
+{{end}}{{end}}
 {{end}}
 
 ## Alert

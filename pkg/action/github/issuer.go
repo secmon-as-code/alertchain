@@ -32,7 +32,11 @@ var issueTemplateData string
 var issueTemplate *template.Template
 
 func init() {
-	issueTemplate = template.Must(template.New("issue").Parse(issueTemplateData))
+	funcMap := template.FuncMap{
+		"add": func(a, b int) int { return a + b },
+	}
+
+	issueTemplate = template.Must(template.New("issue").Funcs(funcMap).Parse(issueTemplateData))
 }
 
 type IssuerFactory struct{}
