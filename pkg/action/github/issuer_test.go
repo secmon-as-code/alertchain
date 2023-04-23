@@ -59,8 +59,8 @@ func TestIssuer(t *testing.T) {
 	}
 
 	cfg := model.ActionConfigValues{
-		"app_id":      gt.R1(strconv.Atoi(os.Getenv("TEST_GITHUB_APP_ID"))).NoError(t),
-		"install_id":  gt.R1(strconv.Atoi(os.Getenv("TEST_GITHUB_INSTALL_ID"))).NoError(t),
+		"app_id":      float64(gt.R1(strconv.Atoi(os.Getenv("TEST_GITHUB_APP_ID"))).NoError(t)),
+		"install_id":  float64(gt.R1(strconv.Atoi(os.Getenv("TEST_GITHUB_INSTALL_ID"))).NoError(t)),
 		"private_key": os.Getenv("TEST_GITHUB_PRIVATE_KEY"),
 		"owner":       os.Getenv("TEST_GITHUB_OWNER"),
 		"repo":        os.Getenv("TEST_GITHUB_REPO"),
@@ -90,8 +90,11 @@ func TestIssuer(t *testing.T) {
 		Raw:       `{"foo": "bar"}`,
 	}
 
-	params := model.ActionArgs{}
-	resp := gt.R1(issuer.Run(ctx, alert, params)).NoError(t)
+	args := model.ActionArgs{
+		"assignee": "m-mizutani",
+		"labels":   []string{"bug", "help wanted", "dummy"},
+	}
+	resp := gt.R1(issuer.Run(ctx, alert, args)).NoError(t)
 	issue := gt.Cast[*gh.Issue](t, resp)
 	gt.V(t, issue.Title).Must().NotNil().Equal(&alert.Title)
 }

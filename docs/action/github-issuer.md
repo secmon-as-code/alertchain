@@ -44,3 +44,10 @@ The owner field specifies the owner name of the GitHub account to run the action
 ### `repo` (required)
 
 The repo field specifies the repository name of the GitHub account to run the action.
+
+## Arguments
+
+- `assignee` (string, optional): Specify the GitHub user to be assigned.
+- `labels` (array of strings, optional): Specify the labels.
+
+Note: If you wish to use `assignee` or `labels`, the GitHub App must also have `Read and Write` permissions for `Content`.

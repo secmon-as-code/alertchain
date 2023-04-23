@@ -96,6 +96,13 @@ func (x *Issuer) Run(ctx *model.Context, alert model.Alert, params model.ActionA
 		Body:  github.String(buf.String()),
 	}
 
+	if v, ok := params["assignee"].(string); ok && v != "" {
+		req.Assignee = github.String(v)
+	}
+	if v, ok := params["labels"].([]string); ok && len(v) > 0 {
+		req.Labels = &v
+	}
+
 	issue, resp, err := x.client.Issues.Create(ctx, x.owner, x.repo, req)
 	if err != nil {
 		return nil, goerr.Wrap(err)
