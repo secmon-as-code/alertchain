@@ -1,6 +1,7 @@
 package action
 
 import (
+	"github.com/m-mizutani/alertchain/pkg/action/chatgpt"
 	"github.com/m-mizutani/alertchain/pkg/action/github"
 	"github.com/m-mizutani/alertchain/pkg/domain/interfaces"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
@@ -13,6 +14,7 @@ var factoryMap = map[types.ActionName]interfaces.ActionFactory{}
 func init() {
 	factories := []interfaces.ActionFactory{
 		&github.IssuerFactory{},
+		&chatgpt.AnalystFactory{},
 	}
 
 	for _, fac := range factories {
