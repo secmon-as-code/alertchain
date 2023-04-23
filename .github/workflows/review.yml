@@ -25,7 +25,7 @@ jobs:
           git diff "origin/${{ env.PULL_REQUEST_HEAD_REF }}" > "diff.txt"
           # shellcheck disable=SC2086
           echo "diff=$(cat "diff.txt")" >> $GITHUB_ENV
-      - uses: yu-iskw/gpt-code-review-action@v0.2.1
+      - uses: yu-iskw/gpt-code-review-action@v0.3.0
         name: "Code Review by GPT"
         id: review
         with:
