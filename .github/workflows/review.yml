@@ -1,4 +1,4 @@
-name: "review"
+name: "Test Code Review"
 
 on:
   pull_request:
@@ -17,13 +17,15 @@ jobs:
       - name: "Get diff of the pull request"
         id: get_diff
         shell: bash
+        env:
+          PULL_REQUEST_HEAD_REF: "${{ github.event.pull_request.head.ref }}"
         run: |-
-          git fetch origin main:main
-          git diff main..${{ github.event.pull_request.head.sha }} > "diff.txt"
-          cat diff.txt
+          git fetch origin "${{ env.PULL_REQUEST_HEAD_REF }}:${{ env.PULL_REQUEST_HEAD_REF }}"
+          git checkout "${{ env.PULL_REQUEST_HEAD_REF }}"
+          git diff "origin/${{ env.PULL_REQUEST_HEAD_REF }}" > "diff.txt"
           # shellcheck disable=SC2086
           echo "diff=$(cat "diff.txt")" >> $GITHUB_ENV
-      - uses: yu-iskw/gpt-code-review-action@v0.2.1
+      - uses: yu-iskw/gpt-code-review-action@v0.3.0
         name: "Code Review by GPT"
         id: review
         with:
@@ -32,14 +34,15 @@ jobs:
           github_repository: ${{ github.repository }}
           github_pull_request_number: ${{ github.event.pull_request.number }}
           git_commit_hash: ${{ github.event.pull_request.head.sha }}
-          model: "text-davinci-003"
-          temperature: "0.7"
-          max_tokens: "256"
+          model: "gpt-3.5-turbo"
+          temperature: "0.1"
+          max_tokens: "512"
           top_p: "1"
           frequency_penalty: "0.0"
           presence_penalty: "0.0"
           pull_request_diff: |-
-            ${{ steps.get_diff.outputs.diff }}
+            ${{ steps.get_diff.outputs.pull_request_diff }}
+          pull_request_chunk_size: "3500"
           extra_prompt: |-
-            You are very familiar with go language too.
+            You are very familiar with python too.
           log_level: "DEBUG"
