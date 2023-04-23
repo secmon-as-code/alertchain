@@ -18,8 +18,8 @@ jobs:
         id: get_diff
         shell: bash
         run: |-
-          git fetch origin ${{ github.event.pull_request.base.ref }}:$GITHUB_REF
-          git diff --name-status $GITHUB_REF..${{ github.event.pull_request.head.sha }} > "diff.txt"
+          git fetch origin main:main
+          git diff main..${{ github.event.pull_request.head.sha }} > "diff.txt"
           cat diff.txt
           # shellcheck disable=SC2086
           echo "diff=$(cat "diff.txt")" >> $GITHUB_ENV
