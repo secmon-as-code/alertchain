@@ -2,7 +2,6 @@ package model_test
 
 import (
 	"embed"
-	_ "embed"
 	"testing"
 
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
