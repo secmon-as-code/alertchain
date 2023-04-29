@@ -23,6 +23,7 @@ func cmdRun(cfg *model.Config) *cli.Command {
 	return &cli.Command{
 		Name:    "run",
 		Aliases: []string{"r"},
+		Usage:   "Run alertchain policy at once and exit in",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:        "input",
@@ -31,6 +32,7 @@ func cmdRun(cfg *model.Config) *cli.Command {
 				EnvVars:     []string{"ALERTCHAIN_INPUT"},
 				Required:    true,
 				Destination: &input,
+				Category:    "run",
 			},
 			&cli.StringFlag{
 				Name:        "schema",

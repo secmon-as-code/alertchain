@@ -106,6 +106,8 @@ github.com/m-mizutani/gots v0.0.0-20221001005148-0f712425c01d h1:/9u6H8Rus9+0Lta
 github.com/m-mizutani/gots v0.0.0-20221001005148-0f712425c01d/go.mod h1:rKNIo/wNOWmUNwMTvWOvGgr52CoL9scU+4Gg2f5uaNw=
 github.com/m-mizutani/gt v0.0.5-0.20230415231649-0b6a04145a71 h1:WkSg6UEexe74TZOzN7XjV9KEice+CtEPhafzB70Dh50=
 github.com/m-mizutani/gt v0.0.5-0.20230415231649-0b6a04145a71/go.mod h1:0MPYSfGBLmYjTduzADVmIqD58ELQ5IfBFiK/f0FmB3k=
+github.com/m-mizutani/gt v0.0.5-0.20230429043555-1babe5ce62ab h1:UFZc9uo/GR7S6eXu08BkmPailOS1XbgaO+SeZn7vMH0=
+github.com/m-mizutani/gt v0.0.5-0.20230429043555-1babe5ce62ab/go.mod h1:0MPYSfGBLmYjTduzADVmIqD58ELQ5IfBFiK/f0FmB3k=
 github.com/m-mizutani/opac v0.1.3-0.20230416040037-ed3843f07e0e h1:lw2kF3SC/S9W2XXQvZn9d3WIJNxBrai/Hy1zKpQu1mg=
 github.com/m-mizutani/opac v0.1.3-0.20230416040037-ed3843f07e0e/go.mod h1:BPjgJqujf9XQu6lj6qipV0xEAoXpuD2xHcEjHNKsoiM=
 github.com/m-mizutani/zlog v0.3.4 h1:uI3SGLILZmeGfKstWlCY0CHLYsaLe7/h9+eJH+aF7qs=
