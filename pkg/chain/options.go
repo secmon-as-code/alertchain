@@ -40,3 +40,9 @@ func WithEnablePrint() Option {
 		c.enablePrint = true
 	}
 }
+
+func WithScenarioLogger(logger interfaces.ScenarioLogger) Option {
+	return func(c *Chain) {
+		c.scenarioLogger = logger
+	}
+}

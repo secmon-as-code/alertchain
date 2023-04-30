@@ -11,6 +11,9 @@ type (
 	EnricherID string
 
 	Schema string
+
+	ScenarioID    string
+	ScenarioTitle string
 )
 
 func NewAlertID() AlertID {

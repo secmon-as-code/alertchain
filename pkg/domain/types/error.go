@@ -6,6 +6,13 @@ type Error struct {
 
 func (x *Error) Error() string { return x.msg }
 
+func (x *Error) Is(err error) bool {
+	if e, ok := err.(*Error); ok {
+		return x.msg == e.msg
+	}
+	return false
+}
+
 func newError(msg string) *Error {
 	return &Error{
 		msg: msg,
@@ -26,8 +33,8 @@ var (
 
 	ErrNoSuchActionName = newError("no such action name")
 	ErrNoSuchActionID   = newError("no such action ID")
-	ErrNoSuchProbeName  = newError("no such probe name")
-	ErrNoSuchProbeID    = newError("no such probe ID")
+
+	ErrInvalidScenario = newError("invalid play scenario")
 
 	ErrInvalidHTTPRequest = newError("invalid HTTP request")
 
