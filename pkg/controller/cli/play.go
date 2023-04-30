@@ -94,8 +94,8 @@ func cmdPlay(cfg *model.Config) *cli.Command {
 }
 
 func openLogFile(dir, name string) (io.WriteCloser, error) {
-	path := filepath.Clean(dir)
-	fd, err := os.Create(filepath.Join(path, filepath.Clean(name)+".json"))
+	path := filepath.Join(dir, name+".json")
+	fd, err := os.Create(filepath.Clean(path))
 	if err != nil {
 		return nil, goerr.Wrap(err, "Failed to create scenario logging file")
 	}
