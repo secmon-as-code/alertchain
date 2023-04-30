@@ -44,5 +44,5 @@ jobs:
             ${{ steps.get_diff.outputs.pull_request_diff }}
           pull_request_chunk_size: "3500"
           extra_prompt: |-
-            You are very familiar with python too.
+            You are very familiar with Go too. If there are points that could be improved, provide specific source code locations and suggestions for improvement.
           log_level: "DEBUG"
