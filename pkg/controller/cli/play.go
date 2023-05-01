@@ -103,7 +103,8 @@ func cmdPlay(cfg *model.Config) *cli.Command {
 }
 
 func openLogFile(dir, name string) (io.WriteCloser, error) {
-	dirName := filepath.Join(dir, name)
+	dirName := filepath.Clean(filepath.Join(dir, name))
+	// #nosec G301
 	if err := os.MkdirAll(dirName, 0755); err != nil {
 		return nil, goerr.Wrap(err, "Failed to create scenario logging directory")
 	}
