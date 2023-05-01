@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
+	"github.com/m-mizutani/goerr"
 )
 
 type AlertMetaData struct {
@@ -24,6 +25,20 @@ type Alert struct {
 	CreatedAt time.Time     `json:"created_at"`
 
 	Raw string `json:"-"`
+}
+
+func (x Alert) Copy() (Alert, error) {
+	raw, err := json.Marshal(x)
+	if err != nil {
+		return Alert{}, goerr.Wrap(err, "Failed to marshal alert")
+	}
+
+	var newAlert Alert
+	if err := json.Unmarshal(raw, &newAlert); err != nil {
+		return Alert{}, goerr.Wrap(err, "Failed to unmarshal alert")
+	}
+
+	return newAlert, nil
 }
 
 func encodeAlertData(a any) string {

@@ -63,7 +63,15 @@ func cmdPlay(cfg *model.Config) *cli.Command {
 			}
 
 			ctx := model.NewContext(model.WithBase(c.Context))
+			ctx.Logger().Info("starting alertchain with play mode", slog.Any("playbook", playbookPath))
+
 			for _, s := range playbook.Scenarios {
+				ctx.Logger().Debug("Start scenario",
+					slog.String("id", string(s.ID)),
+					slog.String("title", string(s.Title)),
+					slog.Any("alert", s.Alert),
+				)
+
 				w, err := openLogFile(outDir, string(s.ID))
 				if err != nil {
 					return err
@@ -75,7 +83,8 @@ func cmdPlay(cfg *model.Config) *cli.Command {
 				}()
 
 				options := append(baseOptions,
-					chain.WithScenarioLogger(logger.NewJSONLogger(w)),
+					chain.WithScenarioLogger(logger.NewJSONLogger(w, s)),
+					chain.WithActionMock(s),
 				)
 
 				chain, err := buildChain(*cfg, options...)
@@ -94,7 +103,12 @@ func cmdPlay(cfg *model.Config) *cli.Command {
 }
 
 func openLogFile(dir, name string) (io.WriteCloser, error) {
-	path := filepath.Join(dir, name+".json")
+	dirName := filepath.Join(dir, name)
+	if err := os.MkdirAll(dirName, 0755); err != nil {
+		return nil, goerr.Wrap(err, "Failed to create scenario logging directory")
+	}
+
+	path := filepath.Join(dirName, "data.json")
 	fd, err := os.Create(filepath.Clean(path))
 	if err != nil {
 		return nil, goerr.Wrap(err, "Failed to create scenario logging file")

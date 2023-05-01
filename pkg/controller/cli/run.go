@@ -11,6 +11,7 @@ import (
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/goerr"
 	"github.com/urfave/cli/v2"
+	"golang.org/x/exp/slog"
 )
 
 func cmdRun(cfg *model.Config) *cli.Command {
@@ -79,6 +80,8 @@ func cmdRun(cfg *model.Config) *cli.Command {
 			}
 
 			ctx := model.NewContext(model.WithBase(c.Context))
+			ctx.Logger().Info("starting alertchain with run mode", slog.Any("data", data))
+
 			if err := chain.HandleAlert(ctx, schema, data); err != nil {
 				return goerr.Wrap(err, "failed to handle alert")
 			}

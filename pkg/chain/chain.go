@@ -22,6 +22,7 @@ type Chain struct {
 	actionPolicy  opac.Client
 
 	scenarioLogger interfaces.ScenarioLogger
+	actionMock     interfaces.ActionMock
 
 	disableAction bool
 	enablePrint   bool
@@ -63,33 +64,42 @@ func (x *Chain) HandleAlert(ctx *model.Context, schema types.Schema, data any) e
 		}
 	}()
 
+	ctx.Logger().Debug("[input] detect alert", slog.Any("data", data))
 	alerts, err := x.detectAlert(ctx, schema, data)
 	if err != nil {
 		return goerr.Wrap(err)
 	}
+	ctx.Logger().Debug("[output] detect alert", slog.Any("alerts", alerts))
 
 	if x.actionPolicy == nil {
 		return nil
 	}
 
 	for _, alert := range alerts {
+		copied, err := alert.Copy()
+		if err != nil {
+			return err
+		}
 		alertLogger := x.scenarioLogger.NewAlertLogger(&model.AlertLog{
-			Alert:     alert,
+			Alert:     copied,
 			CreatedAt: x.now().Nanosecond(),
 		})
+
 		ctx = ctx.New(model.WithAlert(alert))
 
 		var actions model.ActionPolicyResponse
-		initOpt := []opac.QueryOption{
+		mainOpt := []opac.QueryOption{
 			opac.WithPackageSuffix(".main"),
 		}
 		if x.enablePrint {
-			initOpt = append(initOpt, opac.WithPrintWriter(newPrintHook(ctx)))
+			mainOpt = append(mainOpt, opac.WithPrintWriter(newPrintHook(ctx)))
 		}
 
-		if err := x.actionPolicy.Query(ctx, alert, &actions, initOpt...); err != nil {
+		ctx.Logger().Debug("[input] query action policy", slog.String("policy", "main"), slog.Any("alert", alert))
+		if err := x.actionPolicy.Query(ctx, alert, &actions, mainOpt...); err != nil {
 			return goerr.Wrap(err, "failed to evaluate alert for action").With("alert", alert)
 		}
+		ctx.Logger().Debug("[output] query action policy", slog.Any("actions", actions))
 
 		for _, tgt := range actions.Actions {
 			if err := x.runAction(ctx, alert, tgt, alertLogger.Log); err != nil {
@@ -131,6 +141,8 @@ func (x *Chain) detectAlert(ctx *model.Context, schema types.Schema, data any) (
 }
 
 func (x *Chain) runAction(ctx *model.Context, base model.Alert, tgt model.Action, log func(log *model.ActionLog)) error {
+	ctx.Logger().Debug("[input] run action", slog.Any("action", tgt))
+
 	if ctx.Stack() > x.maxStackDepth {
 		return goerr.Wrap(types.ErrMaxStackDepth).With("stack", ctx.Stack())
 	}
@@ -138,21 +150,28 @@ func (x *Chain) runAction(ctx *model.Context, base model.Alert, tgt model.Action
 	startAt := x.now()
 
 	alert := base.Clone(tgt.Params...)
-
 	action, ok := x.actionMap[tgt.ID]
 	if !ok {
 		return goerr.Wrap(types.ErrNoSuchActionID).With("ID", tgt.ID)
 	}
-
 	utils.Logger().Info("action triggered", slog.Any("id", action.ID()))
-	if x.disableAction {
-		utils.Logger().Info("disable-action option is true, skip action")
-		return nil
-	}
 
-	result, err := action.Run(ctx, alert, tgt.Args)
-	if err != nil {
-		return err
+	// Run action. If actionMock is set, use it instead of action.Run()
+	var result any
+	if x.actionMock != nil {
+		result = x.actionMock.GetResult(action.ID())
+	} else {
+		if x.disableAction {
+			utils.Logger().Info("disable-action option is true, skip action")
+			return nil
+		}
+
+		resp, err := action.Run(ctx, alert, tgt.Args)
+		if err != nil {
+			return err
+		}
+
+		result = resp
 	}
 
 	// query action policy with action result
@@ -171,6 +190,8 @@ func (x *Chain) runAction(ctx *model.Context, base model.Alert, tgt model.Action
 	if err := x.actionPolicy.Query(ctx, request, &response, opt...); err != nil && !errors.Is(err, opac.ErrNoEvalResult) {
 		return goerr.Wrap(err, "failed to evaluate action response").With("request", request)
 	}
+
+	ctx.Logger().Debug("[output] run action", slog.Any("actions", response.Actions))
 
 	log(&model.ActionLog{
 		Action: model.Action{

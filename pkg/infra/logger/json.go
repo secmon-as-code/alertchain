@@ -14,13 +14,15 @@ type JSONLogger struct {
 	log model.ScenarioLog
 }
 
-func NewJSONLogger(w io.WriteCloser) *JSONLogger {
+func NewJSONLogger(w io.WriteCloser, s *model.Scenario) *JSONLogger {
 	return &JSONLogger{
-		w: w,
+		w:   w,
+		log: s.ToLog(),
 	}
 }
 
 func (x *JSONLogger) NewAlertLogger(log *model.AlertLog) interfaces.AlertLogger {
+	x.log.AlertLog = append(x.log.AlertLog, log)
 	return &JSONAlertLogger{
 		alertLog: log,
 	}

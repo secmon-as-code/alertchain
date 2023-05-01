@@ -15,6 +15,11 @@ type ActionFactory interface {
 	New(id types.ActionID, cfg model.ActionConfigValues) (Action, error)
 }
 
+// ActionMock is an interface for "play" mode. The mock should be registered as an option within the chain.Chain. This mock only returns the prepared result for each action ID.
+type ActionMock interface {
+	GetResult(id types.ActionID) any
+}
+
 // ScenarioLogger records the "play" result of the alert chain, which is used for debugging and testing purposes. A logger should be created by the LoggerFactory for each scenario. The LoggerFactory is registered as an option within the chain.Chain.
 type ScenarioLogger interface {
 	NewAlertLogger(log *model.AlertLog) AlertLogger

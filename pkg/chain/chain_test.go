@@ -1,6 +1,7 @@
 package chain_test
 
 import (
+	"embed"
 	_ "embed"
 	"encoding/json"
 	"os"
@@ -10,6 +11,7 @@ import (
 	"github.com/m-mizutani/alertchain/pkg/chain"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
+	"github.com/m-mizutani/alertchain/pkg/infra/logger"
 	"github.com/m-mizutani/gt"
 	"github.com/m-mizutani/opac"
 )
@@ -223,4 +225,73 @@ func TestChainLoop(t *testing.T) {
 	ctx := model.NewContext()
 	gt.NoError(t, c.HandleAlert(ctx, "my_test", alertData))
 	gt.N(t, calledMock).Equal(10)
+}
+
+//go:embed testdata/play/alert.rego
+var testPlayAlertRego string
+
+//go:embed testdata/play/action.main.rego
+var testPlayActionMainRego string
+
+//go:embed testdata/play/action.mock.rego
+var testPlayActionMockRego string
+
+//go:embed testdata/play/*.jsonnet
+var testPlaybookFS embed.FS
+
+func TestPlaybook(t *testing.T) {
+	alertPolicy := gt.R1(opac.NewLocal(
+		opac.WithPackage("alert"),
+		opac.WithPolicyData("alert.rego", testPlayAlertRego),
+	)).NoError(t)
+
+	actionPolicy := gt.R1(opac.NewLocal(
+		opac.WithPackage("action"),
+		opac.WithPolicyData("action.main.rego", testPlayActionMainRego),
+		opac.WithPolicyData("action.mock.rego", testPlayActionMockRego),
+	)).NoError(t)
+
+	var playbook model.Playbook
+	gt.NoError(t, model.ParsePlaybook("testdata/play/playbook.jsonnet", testPlaybookFS.ReadFile, &playbook))
+	gt.A(t, playbook.Scenarios).Length(1).At(0, func(t testing.TB, v *model.Scenario) {
+		gt.V(t, v.ID).Equal("s1")
+		alert := gt.Cast[map[string]any](t, v.Alert)
+		gt.V(t, alert).Equal(map[string]any{
+			"class": "threat",
+		})
+	})
+
+	var calledMock int
+	mock := &mockAction{
+		id: "my_action",
+		callback: func(ctx *model.Context, alert model.Alert, args model.ActionArgs) (any, error) {
+			gt.A(t, alert.Params).Length(1)
+			calledMock++
+			return nil, nil
+		},
+	}
+
+	recorder := logger.NewMemory(playbook.Scenarios[0])
+	c := gt.R1(chain.New(
+		chain.WithPolicyAlert(alertPolicy),
+		chain.WithPolicyAction(actionPolicy),
+		chain.WithAction(mock),
+		chain.WithActionMock(playbook.Scenarios[0]),
+		chain.WithScenarioLogger(recorder),
+	)).NoError(t)
+
+	var alertData any
+	ctx := model.NewContext()
+	gt.NoError(t, c.HandleAlert(ctx, "my_test", alertData))
+	gt.N(t, calledMock).Equal(0)
+
+	gt.V(t, recorder.Log.ID).Equal("s1")
+	gt.V(t, recorder.Log.Title).Equal("Scenario 1")
+	gt.A(t, recorder.Log.AlertLog).Length(1).At(0, func(t testing.TB, v *model.AlertLog) {
+		gt.V(t, v.Alert.Title).Equal("test alert")
+		gt.A(t, v.Alert.Params).Length(1).At(0, func(t testing.TB, v model.Parameter) {
+			gt.V(t, v.Key).Equal("c")
+			gt.V(t, v.Value).Equal(float64(1))
+		})
+	})
 }
