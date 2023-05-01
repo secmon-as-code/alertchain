@@ -26,7 +26,15 @@ The input for Alert Policy will be the structured data (mainly JSON) received fr
 }
 ```
 
-From the Pub/Sub schema, `message.data` is extracted, and `eyJuYW1lIjoiaG9nZSJ9Cg==` is Base64 decoded to `{"name":"hoge"}`. This data is stored in Rego's `input`. The policy will determine whether this data will be treated as an alert or not based on this data.
+From the Pub/Sub schema, `message.data` is extracted, and `eyJuYW1lIjoiaG9nZSJ9Cg==` is Base64 decoded to:
+
+```json
+{
+    "name": "hoge"
+}
+```
+
+This data is stored in Rego's `input`. The policy will determine whether this data will be treated as an alert or not based on this data.
 
 ### Output
 

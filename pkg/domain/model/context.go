@@ -10,7 +10,7 @@ import (
 type Context struct {
 	context.Context
 	stack int
-	alert Alert
+	alert *Alert
 }
 
 type CtxOption func(ctx *Context)
@@ -31,7 +31,7 @@ func WithBase(base context.Context) CtxOption {
 
 func WithAlert(alert Alert) CtxOption {
 	return func(ctx *Context) {
-		ctx.alert = alert
+		ctx.alert = &alert
 	}
 }
 
@@ -52,10 +52,12 @@ func (x *Context) New(options ...CtxOption) *Context {
 }
 
 func (x *Context) Stack() int   { return x.stack }
-func (x *Context) Alert() Alert { return x.alert }
+func (x *Context) Alert() Alert { return *x.alert }
 
 func (x *Context) Logger() *slog.Logger {
-	return utils.Logger().With(
-		slog.Any("alert_id", x.alert.ID),
-	)
+	logger := utils.Logger()
+	if x.alert != nil {
+		logger = logger.With(slog.Any("alert_id", x.alert.ID))
+	}
+	return logger
 }

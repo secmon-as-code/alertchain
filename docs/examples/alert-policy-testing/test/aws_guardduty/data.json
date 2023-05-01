@@ -1,0 +1,188 @@
+{
+  "Findings": [
+    {
+      "Severity": 8,
+      "Title": "Unprotected port on EC2 instance i-99999999 is being probed.",
+      "Type": "Trojan:EC2/DriveBySourceTraffic!DNS",
+      "AccountId": "783957204773",
+      "Arn": "arn:aws:guardduty:ap-northeast-1:783957204773:detector/c6b248a96abef3c6dd24b07e13380b04/finding/5d7da1b8ae2b4d5f8ce0b18633485266",
+      "CreatedAt": "2023-04-16T06:11:53.455Z",
+      "Description": "EC2 instance has an unprotected port which is being probed by a known malicious host.",
+      "Id": "5d7da1b8ae2b4d5f8ce0b18633485266",
+      "Partition": "aws",
+      "Region": "ap-northeast-1",
+      "Resource": {
+        "InstanceDetails": {
+          "AvailabilityZone": "GeneratedFindingInstanceAvailabilityZone",
+          "IamInstanceProfile": {
+            "Arn": "arn:aws:iam::783957204773:example/instance/profile",
+            "Id": "GeneratedFindingInstanceProfileId"
+          },
+          "ImageDescription": "GeneratedFindingInstanceImageDescription",
+          "ImageId": "ami-99999999",
+          "InstanceId": "i-99999999",
+          "InstanceState": "running",
+          "InstanceType": "m3.xlarge",
+          "OutpostArn": "arn:aws:outposts:us-west-2:123456789000:outpost/op-0fbc006e9abbc73c3",
+          "LaunchTime": "2016-08-02T02:05:06.000Z",
+          "NetworkInterfaces": [
+            {
+              "Ipv6Addresses": [],
+              "NetworkInterfaceId": "eni-bfcffe88",
+              "PrivateDnsName": "GeneratedFindingPrivateDnsName",
+              "PrivateIpAddress": "10.0.0.1",
+              "PrivateIpAddresses": [
+                {
+                  "PrivateDnsName": "GeneratedFindingPrivateName",
+                  "PrivateIpAddress": "10.0.0.1"
+                }
+              ],
+              "PublicDnsName": "GeneratedFindingPublicDNSName",
+              "PublicIp": "198.51.100.0",
+              "SecurityGroups": [
+                {
+                  "GroupId": "GeneratedFindingSecurityId",
+                  "GroupName": "GeneratedFindingSecurityGroupName"
+                }
+              ],
+              "SubnetId": "GeneratedFindingSubnetId",
+              "VpcId": "GeneratedFindingVPCId"
+            }
+          ],
+          "ProductCodes": [
+            {
+              "Code": "GeneratedFindingProductCodeId",
+              "ProductType": "GeneratedFindingProductCodeType"
+            }
+          ],
+          "Tags": [
+            {
+              "Key": "GeneratedFindingInstanceTag1",
+              "Value": "GeneratedFindingInstanceValue1"
+            },
+            {
+              "Key": "GeneratedFindingInstanceTag2",
+              "Value": "GeneratedFindingInstanceTagValue2"
+            },
+            {
+              "Key": "GeneratedFindingInstanceTag3",
+              "Value": "GeneratedFindingInstanceTagValue3"
+            },
+            {
+              "Key": "GeneratedFindingInstanceTag4",
+              "Value": "GeneratedFindingInstanceTagValue4"
+            },
+            {
+              "Key": "GeneratedFindingInstanceTag5",
+              "Value": "GeneratedFindingInstanceTagValue5"
+            },
+            {
+              "Key": "GeneratedFindingInstanceTag6",
+              "Value": "GeneratedFindingInstanceTagValue6"
+            },
+            {
+              "Key": "GeneratedFindingInstanceTag7",
+              "Value": "GeneratedFindingInstanceTagValue7"
+            },
+            {
+              "Key": "GeneratedFindingInstanceTag8",
+              "Value": "GeneratedFindingInstanceTagValue8"
+            },
+            {
+              "Key": "GeneratedFindingInstanceTag9",
+              "Value": "GeneratedFindingInstanceTagValue9"
+            }
+          ]
+        },
+        "ResourceType": "Instance"
+      },
+      "SchemaVersion": "2.0",
+      "Service": {
+        "Action": {
+          "ActionType": "PORT_PROBE",
+          "PortProbeAction": {
+            "Blocked": false,
+            "PortProbeDetails": [
+              {
+                "LocalPortDetails": {
+                  "Port": 80,
+                  "PortName": "HTTP"
+                },
+                "LocalIpDetails": {
+                  "IpAddressV4": "10.0.0.23"
+                },
+                "RemoteIpDetails": {
+                  "City": {
+                    "CityName": "GeneratedFindingCityName1"
+                  },
+                  "Country": {
+                    "CountryName": "GeneratedFindingCountryName1"
+                  },
+                  "GeoLocation": {
+                    "Lat": 0,
+                    "Lon": 0
+                  },
+                  "IpAddressV4": "198.51.100.0",
+                  "Organization": {
+                    "Asn": "9808",
+                    "AsnOrg": "GeneratedFindingASNOrg1",
+                    "Isp": "GeneratedFindingISP1",
+                    "Org": "GeneratedFindingORG1"
+                  }
+                }
+              },
+              {
+                "LocalPortDetails": {
+                  "Port": 443,
+                  "PortName": "HTTPS"
+                },
+                "LocalIpDetails": {
+                  "IpAddressV4": "10.0.0.23"
+                },
+                "RemoteIpDetails": {
+                  "City": {
+                    "CityName": "GeneratedFindingCityName2"
+                  },
+                  "Country": {
+                    "CountryName": "GeneratedFindingCountryName2"
+                  },
+                  "GeoLocation": {
+                    "Lat": 0,
+                    "Lon": 0
+                  },
+                  "IpAddressV4": "198.51.100.1",
+                  "Organization": {
+                    "Asn": "29073",
+                    "AsnOrg": "GeneratedFindingASNOrg2",
+                    "Isp": "GeneratedFindingISP2",
+                    "Org": "GeneratedFindingORG2"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "Evidence": {
+          "ThreatIntelligenceDetails": [
+            {
+              "ThreatListName": "GeneratedFindingThreatListName",
+              "ThreatNames": ["GeneratedFindingThreatName"]
+            }
+          ]
+        },
+        "Archived": false,
+        "Count": 1,
+        "DetectorId": "c6b248a96abef3c6dd24b07e13380b04",
+        "EventFirstSeen": "2023-04-16T06:11:53.000Z",
+        "EventLastSeen": "2023-04-16T06:11:53.000Z",
+        "ResourceRole": "TARGET",
+        "ServiceName": "guardduty",
+        "AdditionalInfo": {
+          "Value": "{\"threatName\":\"GeneratedFindingThreatName\",\"threatListName\":\"GeneratedFindingThreatListName\",\"sample\":true}",
+          "Type": "default"
+        }
+      },
+      "UpdatedAt": "2023-04-16T06:11:53.455Z"
+    }
+  ]
+}

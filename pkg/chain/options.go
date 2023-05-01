@@ -40,3 +40,15 @@ func WithEnablePrint() Option {
 		c.enablePrint = true
 	}
 }
+
+func WithActionMock(mock interfaces.ActionMock) Option {
+	return func(c *Chain) {
+		c.actionMock = mock
+	}
+}
+
+func WithScenarioLogger(logger interfaces.ScenarioLogger) Option {
+	return func(c *Chain) {
+		c.scenarioLogger = logger
+	}
+}

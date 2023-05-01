@@ -106,6 +106,7 @@ func New() *CLI {
 			cmdConfig(&cfg),
 			cmdServe(&cfg),
 			cmdRun(&cfg),
+			cmdPlay(&cfg),
 		},
 	}
 	return &CLI{app: app}

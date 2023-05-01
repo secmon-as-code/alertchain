@@ -8,14 +8,13 @@ The document describes a specification of configuration. A configuration file is
     path: 'tmp/policy',
     package: {
       alert: 'alert',
-      enrich: 'enrich',
       action: 'action',
     },
   },
   actions: [
     {
-      id: 'create-github-issue',
-      use: 'github-issuer',
+      id: 'create_github_issue',
+      uses: 'github-issuer',
       config: {
         app_id: 134650,
         install_id: 19102538,
