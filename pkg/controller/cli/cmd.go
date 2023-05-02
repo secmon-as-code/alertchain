@@ -18,9 +18,10 @@ type CLI struct {
 
 func New() *CLI {
 	var (
-		logLevel  string
-		logFormat string
-		logOutput string
+		logLevel    string
+		logFormat   string
+		logOutput   string
+		enablePrint bool
 
 		configFile string
 		configData string
@@ -32,6 +33,7 @@ func New() *CLI {
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:        "log-level",
+				Aliases:     []string{"l"},
 				Category:    "logging",
 				Usage:       "Set log level [debug|info|warn|error]",
 				Value:       "info",
@@ -39,6 +41,7 @@ func New() *CLI {
 			},
 			&cli.StringFlag{
 				Name:        "log-format",
+				Aliases:     []string{"f"},
 				Category:    "logging",
 				Usage:       "Set log format [text|json]",
 				Value:       "text",
@@ -46,12 +49,21 @@ func New() *CLI {
 			},
 			&cli.StringFlag{
 				Name:        "log-output",
+				Aliases:     []string{"o"},
 				Category:    "logging",
 				Usage:       "Set log output (create file other than '-', 'stdout', 'stderr')",
 				Value:       "-",
 				Destination: &logOutput,
 			},
-
+			&cli.BoolFlag{
+				Name:        "enable-print",
+				Aliases:     []string{"p"},
+				Category:    "logging",
+				EnvVars:     []string{"ALERTCHAIN_ENABLE_PRINT"},
+				Usage:       "Enable print feature in Rego. The cli option is priority than config file.",
+				Value:       false,
+				Destination: &enablePrint,
+			},
 			&cli.StringFlag{
 				Name:        "config-file",
 				Aliases:     []string{"c"},
@@ -95,6 +107,10 @@ func New() *CLI {
 
 			if err := model.ParseConfig(configFile, data, envVars, &cfg); err != nil {
 				return err
+			}
+
+			if enablePrint {
+				cfg.Policy.Print = true
 			}
 
 			utils.Logger().Debug("config loaded", slog.Any("config", cfg))
