@@ -13,16 +13,16 @@ require (
 	github.com/m-mizutani/gots v0.0.0-20221001005148-0f712425c01d
 	github.com/m-mizutani/gt v0.0.5-0.20230429043555-1babe5ce62ab
 	github.com/open-policy-agent/opa v0.52.0
-	github.com/sashabaranov/go-openai v1.9.0
-	github.com/urfave/cli/v2 v2.25.1
+	github.com/sashabaranov/go-openai v1.9.1
+	github.com/urfave/cli/v2 v2.25.3
 	golang.org/x/exp v0.0.0-20230425010034-47ecfdc1ba53
 )
 
 require (
 	github.com/OneOfOne/xxhash v1.2.8 // indirect
-	github.com/ProtonMail/go-crypto v0.0.0-20230217124315-7d5c6f04bbb8 // indirect
+	github.com/ProtonMail/go-crypto v0.0.0-20230426101702-58e86b294756 // indirect
 	github.com/agnivade/levenshtein v1.1.1 // indirect
-	github.com/cloudflare/circl v1.1.0 // indirect
+	github.com/cloudflare/circl v1.3.3 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
