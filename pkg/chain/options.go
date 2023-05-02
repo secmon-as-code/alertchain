@@ -2,7 +2,7 @@ package chain
 
 import (
 	"github.com/m-mizutani/alertchain/pkg/domain/interfaces"
-	"github.com/m-mizutani/opac"
+	"github.com/m-mizutani/alertchain/pkg/infra/policy"
 )
 
 func WithAction(actions ...interfaces.Action) Option {
@@ -11,21 +11,15 @@ func WithAction(actions ...interfaces.Action) Option {
 	}
 }
 
-func WithPolicyAlert(policy opac.Client) Option {
+func WithPolicyAlert(p *policy.Client) Option {
 	return func(c *Chain) {
-		c.alertPolicy = policy
+		c.alertPolicy = p
 	}
 }
 
-func WithPolicyEnrich(policy opac.Client) Option {
+func WithPolicyAction(p *policy.Client) Option {
 	return func(c *Chain) {
-		c.inspectPolicy = policy
-	}
-}
-
-func WithPolicyAction(policy opac.Client) Option {
-	return func(c *Chain) {
-		c.actionPolicy = policy
+		c.actionPolicy = p
 	}
 }
 

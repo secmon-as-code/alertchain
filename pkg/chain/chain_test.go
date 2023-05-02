@@ -2,9 +2,7 @@ package chain_test
 
 import (
 	"embed"
-	_ "embed"
 	"encoding/json"
-	"os"
 
 	"testing"
 
@@ -12,8 +10,8 @@ import (
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/infra/logger"
+	"github.com/m-mizutani/alertchain/pkg/infra/policy"
 	"github.com/m-mizutani/gt"
-	"github.com/m-mizutani/opac"
 )
 
 //go:embed testdata/test1/alert.rego
@@ -42,15 +40,14 @@ func TestBasic(t *testing.T) {
 	var alertData any
 	gt.NoError(t, json.Unmarshal([]byte(sccData), &alertData))
 
-	alertPolicy := gt.R1(opac.NewLocal(
-		opac.WithPackage("alert"),
-		opac.WithRegoPrint(os.Stdout),
-		opac.WithPolicyData("alert.rego", test1AlertRego),
+	alertPolicy := gt.R1(policy.New(
+		policy.WithPackage("alert"),
+		policy.WithPolicyData("alert.rego", test1AlertRego),
 	)).NoError(t)
 
-	actionPolicy := gt.R1(opac.NewLocal(
-		opac.WithPackage("action"),
-		opac.WithPolicyData("action.rego", test1ActionRego),
+	actionPolicy := gt.R1(policy.New(
+		policy.WithPackage("action"),
+		policy.WithPolicyData("action.rego", test1ActionRego),
 	)).NoError(t)
 
 	var called int
@@ -76,14 +73,14 @@ func TestDisableAction(t *testing.T) {
 	var alertData any
 	gt.NoError(t, json.Unmarshal([]byte(sccData), &alertData))
 
-	alertPolicy := gt.R1(opac.NewLocal(
-		opac.WithPackage("alert"),
-		opac.WithPolicyData("alert.rego", test1AlertRego),
+	alertPolicy := gt.R1(policy.New(
+		policy.WithPackage("alert"),
+		policy.WithPolicyData("alert.rego", test1AlertRego),
 	)).NoError(t)
 
-	actionPolicy := gt.R1(opac.NewLocal(
-		opac.WithPackage("action"),
-		opac.WithPolicyData("action.rego", test1ActionRego),
+	actionPolicy := gt.R1(policy.New(
+		policy.WithPackage("action"),
+		policy.WithPolicyData("action.rego", test1ActionRego),
 	)).NoError(t)
 
 	var called int
@@ -119,15 +116,15 @@ var test2ActionMockRego string
 func TestChainControl(t *testing.T) {
 	var alertData any
 
-	alertPolicy := gt.R1(opac.NewLocal(
-		opac.WithPackage("alert"),
-		opac.WithPolicyData("alert.rego", test2AlertRego),
+	alertPolicy := gt.R1(policy.New(
+		policy.WithPackage("alert"),
+		policy.WithPolicyData("alert.rego", test2AlertRego),
 	)).NoError(t)
 
-	actionPolicy := gt.R1(opac.NewLocal(
-		opac.WithPackage("action"),
-		opac.WithPolicyData("action.rego", test2ActionRego),
-		opac.WithPolicyData("action.mock.rego", test2ActionMockRego),
+	actionPolicy := gt.R1(policy.New(
+		policy.WithPackage("action"),
+		policy.WithPolicyData("action.rego", test2ActionRego),
+		policy.WithPolicyData("action.mock.rego", test2ActionMockRego),
 	)).NoError(t)
 
 	var calledMock, calledMockAfter int
@@ -195,15 +192,15 @@ var test3ActionMockRego string
 func TestChainLoop(t *testing.T) {
 	var alertData any
 
-	alertPolicy := gt.R1(opac.NewLocal(
-		opac.WithPackage("alert"),
-		opac.WithPolicyData("alert.rego", test3AlertRego),
+	alertPolicy := gt.R1(policy.New(
+		policy.WithPackage("alert"),
+		policy.WithPolicyData("alert.rego", test3AlertRego),
 	)).NoError(t)
 
-	actionPolicy := gt.R1(opac.NewLocal(
-		opac.WithPackage("action"),
-		opac.WithPolicyData("action.main.rego", test3ActionMainRego),
-		opac.WithPolicyData("action.mock.rego", test3ActionMockRego),
+	actionPolicy := gt.R1(policy.New(
+		policy.WithPackage("action"),
+		policy.WithPolicyData("action.main.rego", test3ActionMainRego),
+		policy.WithPolicyData("action.mock.rego", test3ActionMockRego),
 	)).NoError(t)
 
 	var calledMock int
@@ -240,15 +237,15 @@ var testPlayActionMockRego string
 var testPlaybookFS embed.FS
 
 func TestPlaybook(t *testing.T) {
-	alertPolicy := gt.R1(opac.NewLocal(
-		opac.WithPackage("alert"),
-		opac.WithPolicyData("alert.rego", testPlayAlertRego),
+	alertPolicy := gt.R1(policy.New(
+		policy.WithPackage("alert"),
+		policy.WithPolicyData("alert.rego", testPlayAlertRego),
 	)).NoError(t)
 
-	actionPolicy := gt.R1(opac.NewLocal(
-		opac.WithPackage("action"),
-		opac.WithPolicyData("action.main.rego", testPlayActionMainRego),
-		opac.WithPolicyData("action.mock.rego", testPlayActionMockRego),
+	actionPolicy := gt.R1(policy.New(
+		policy.WithPackage("action"),
+		policy.WithPolicyData("action.main.rego", testPlayActionMainRego),
+		policy.WithPolicyData("action.mock.rego", testPlayActionMockRego),
 	)).NoError(t)
 
 	var playbook model.Playbook

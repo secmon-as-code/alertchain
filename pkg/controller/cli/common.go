@@ -6,8 +6,8 @@ import (
 	"github.com/m-mizutani/alertchain/pkg/domain/interfaces"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
+	"github.com/m-mizutani/alertchain/pkg/infra/policy"
 	"github.com/m-mizutani/goerr"
-	"github.com/m-mizutani/opac"
 )
 
 func setupActions(configs []model.ActionConfig) (actions []interfaces.Action, err error) {
@@ -31,7 +31,7 @@ func setupPolicy(cfg model.PolicyConfig) ([]chain.Option, error) {
 	configs := []struct {
 		pkgName     string
 		defaultName string
-		f           func(opac.Client) chain.Option
+		f           func(*policy.Client) chain.Option
 	}{
 		{
 			pkgName:     cfg.Package.Alert,
@@ -46,15 +46,16 @@ func setupPolicy(cfg model.PolicyConfig) ([]chain.Option, error) {
 	}
 
 	var options []chain.Option
+
 	for _, c := range configs {
 		pkgName := c.defaultName
 		if c.pkgName != "" {
 			pkgName = c.pkgName
 		}
 
-		client, err := opac.NewLocal(opac.WithDir(cfg.Path), opac.WithPackage(pkgName))
+		client, err := policy.New(policy.WithDir(cfg.Path), policy.WithPackage(pkgName))
 		if err != nil {
-			return nil, goerr.Wrap(err, "creating new opac.Client")
+			return nil, goerr.Wrap(err, "creating new policy.Client")
 		}
 
 		options = append(options, c.f(client))

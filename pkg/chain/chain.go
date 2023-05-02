@@ -7,9 +7,9 @@ import (
 	"github.com/m-mizutani/alertchain/pkg/domain/interfaces"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
+	"github.com/m-mizutani/alertchain/pkg/infra/policy"
 	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/goerr"
-	"github.com/m-mizutani/opac"
 	"golang.org/x/exp/slog"
 )
 
@@ -17,9 +17,8 @@ type Chain struct {
 	actions   []interfaces.Action
 	actionMap map[types.ActionID]interfaces.Action
 
-	alertPolicy   opac.Client
-	inspectPolicy opac.Client
-	actionPolicy  opac.Client
+	alertPolicy  *policy.Client
+	actionPolicy *policy.Client
 
 	scenarioLogger interfaces.ScenarioLogger
 	actionMock     interfaces.ActionMock
@@ -88,11 +87,18 @@ func (x *Chain) HandleAlert(ctx *model.Context, schema types.Schema, data any) e
 		ctx = ctx.New(model.WithAlert(alert))
 
 		var actions model.ActionPolicyResponse
-		mainOpt := []opac.QueryOption{
-			opac.WithPackageSuffix(".main"),
+		mainOpt := []policy.QueryOption{
+			policy.WithPackageSuffix("main"),
 		}
 		if x.enablePrint {
-			mainOpt = append(mainOpt, opac.WithPrintWriter(newPrintHook(ctx)))
+			mainOpt = append(mainOpt, policy.WithRegoPrint(func(file string, row int, msg string) error {
+				ctx.Logger().Info("rego print",
+					slog.String("file", file),
+					slog.Int("row", row),
+					slog.String("msg", msg),
+				)
+				return nil
+			}))
 		}
 
 		ctx.Logger().Debug("[input] query action policy", slog.String("policy", "main"), slog.Any("alert", alert))
@@ -117,12 +123,8 @@ func (x *Chain) detectAlert(ctx *model.Context, schema types.Schema, data any) (
 	}
 
 	var alertResult model.AlertPolicyResult
-	opt := []opac.QueryOption{
-		opac.WithPackageSuffix("." + string(schema)),
-	}
-
-	if x.enablePrint {
-		opt = append(opt, opac.WithPrintWriter(newPrintHook(ctx)))
+	opt := []policy.QueryOption{
+		policy.WithPackageSuffix(string(schema)),
 	}
 
 	if err := x.alertPolicy.Query(ctx, data, &alertResult, opt...); err != nil {
@@ -175,11 +177,8 @@ func (x *Chain) runAction(ctx *model.Context, base model.Alert, tgt model.Action
 	}
 
 	// query action policy with action result
-	opt := []opac.QueryOption{
-		opac.WithPackageSuffix("." + string(action.ID())),
-	}
-	if x.enablePrint {
-		opt = append(opt, opac.WithPrintWriter(newPrintHook(ctx)))
+	opt := []policy.QueryOption{
+		policy.WithPackageSuffix(string(action.ID())),
 	}
 
 	request := model.ActionPolicyRequest{
@@ -187,7 +186,7 @@ func (x *Chain) runAction(ctx *model.Context, base model.Alert, tgt model.Action
 		Result: result,
 	}
 	var response model.ActionPolicyResponse
-	if err := x.actionPolicy.Query(ctx, request, &response, opt...); err != nil && !errors.Is(err, opac.ErrNoEvalResult) {
+	if err := x.actionPolicy.Query(ctx, request, &response, opt...); err != nil && !errors.Is(err, types.ErrNoPolicyResult) {
 		return goerr.Wrap(err, "failed to evaluate action response").With("request", request)
 	}
 

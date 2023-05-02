@@ -56,9 +56,7 @@ func cmdServe(cfg *model.Config) *cli.Command {
 			if disableAction {
 				options = append(options, chain.WithDisableAction())
 			}
-			if enablePrint {
-				options = append(options, chain.WithEnablePrint())
-			}
+
 			if enableSentry {
 				if err := sentry.Init(sentry.ClientOptions{}); err != nil {
 					return goerr.Wrap(err, "Failed to initialize sentry")

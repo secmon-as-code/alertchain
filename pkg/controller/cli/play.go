@@ -52,9 +52,6 @@ func cmdPlay(cfg *model.Config) *cli.Command {
 
 		Action: func(c *cli.Context) error {
 			var baseOptions []chain.Option
-			if enablePrint {
-				baseOptions = append(baseOptions, chain.WithEnablePrint())
-			}
 
 			// Load playbook
 			var playbook model.Playbook

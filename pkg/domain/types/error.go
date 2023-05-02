@@ -38,6 +38,10 @@ var (
 
 	ErrInvalidHTTPRequest = newError("invalid HTTP request")
 
+	ErrPolicyClientFailed = newError("policy client failed")
+	ErrNoPolicyData       = newError("no policy data")
+	ErrNoPolicyResult     = newError("no policy result")
+
 	// runtime errors
 	ErrMaxStackDepth = newError("max stack depth")
 )

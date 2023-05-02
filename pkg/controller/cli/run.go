@@ -54,9 +54,6 @@ func cmdRun(cfg *model.Config) *cli.Command {
 
 		Action: func(c *cli.Context) error {
 			var chainOptions []chain.Option
-			if enablePrint {
-				chainOptions = append(chainOptions, chain.WithEnablePrint())
-			}
 
 			chain, err := buildChain(*cfg, chainOptions...)
 			if err != nil {
