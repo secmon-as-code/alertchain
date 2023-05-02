@@ -7,6 +7,5 @@ type regoPrintHook struct {
 }
 
 func (x *regoPrintHook) Print(ctx print.Context, msg string) error {
-	x.callback(ctx.Location.File, ctx.Location.Row, msg)
-	return nil
+	return x.callback(ctx.Location.File, ctx.Location.Row, msg)
 }
