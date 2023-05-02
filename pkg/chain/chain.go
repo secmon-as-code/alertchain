@@ -91,14 +91,7 @@ func (x *Chain) HandleAlert(ctx *model.Context, schema types.Schema, data any) e
 			policy.WithPackageSuffix("main"),
 		}
 		if x.enablePrint {
-			mainOpt = append(mainOpt, policy.WithRegoPrint(func(file string, row int, msg string) error {
-				ctx.Logger().Info("rego print",
-					slog.String("file", file),
-					slog.Int("row", row),
-					slog.String("msg", msg),
-				)
-				return nil
-			}))
+			mainOpt = append(mainOpt, policy.WithRegoPrint(makeRegoPrint(ctx)))
 		}
 
 		ctx.Logger().Debug("[input] query action policy", slog.String("policy", "main"), slog.Any("alert", alert))
@@ -125,6 +118,9 @@ func (x *Chain) detectAlert(ctx *model.Context, schema types.Schema, data any) (
 	var alertResult model.AlertPolicyResult
 	opt := []policy.QueryOption{
 		policy.WithPackageSuffix(string(schema)),
+	}
+	if x.enablePrint {
+		opt = append(opt, policy.WithRegoPrint(makeRegoPrint(ctx)))
 	}
 
 	if err := x.alertPolicy.Query(ctx, data, &alertResult, opt...); err != nil {
@@ -211,4 +207,15 @@ func (x *Chain) runAction(ctx *model.Context, base model.Alert, tgt model.Action
 	}
 
 	return nil
+}
+
+func makeRegoPrint(ctx *model.Context) policy.RegoPrint {
+	return func(file string, row int, msg string) error {
+		ctx.Logger().Info("rego print",
+			slog.String("file", file),
+			slog.Int("row", row),
+			slog.String("msg", msg),
+		)
+		return nil
+	}
 }

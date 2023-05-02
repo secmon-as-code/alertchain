@@ -75,6 +75,10 @@ func buildChain(cfg model.Config, options ...chain.Option) (*chain.Chain, error)
 		return nil, err
 	}
 
+	if cfg.Policy.Print {
+		options = append(options, chain.WithEnablePrint())
+	}
+
 	options = append(options, chain.WithAction(actions...))
 	options = append(options, policyOptions...)
 

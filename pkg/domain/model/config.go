@@ -16,7 +16,7 @@ type Config struct {
 type PolicyConfig struct {
 	Path    string              `json:"path"`
 	Package PolicyPackageConfig `json:"package"`
-	Print   bool                `json:"bool"`
+	Print   bool                `json:"print"`
 }
 
 type PolicyPackageConfig struct {
