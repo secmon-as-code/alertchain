@@ -3,27 +3,31 @@ package model
 import "github.com/m-mizutani/alertchain/pkg/domain/types"
 
 type Parameter struct {
-	Key   types.ParamKey      `json:"key"`
+	ID    types.ParamID       `json:"id"`
+	Name  types.ParamName     `json:"name"`
 	Value types.ParamValue    `json:"value"`
 	Type  types.ParameterType `json:"type"`
 }
 
 type Parameters []Parameter
 
-func (x Parameters) Overwrite(src Parameters) Parameters {
-	resp := x[:]
-	exists := map[types.ParamKey]int{}
-	for i, p := range x {
-		exists[p.Key] = i
-	}
+func TidyParameters(params Parameters) Parameters {
+	var ret Parameters
 
-	for _, p := range src {
-		if idx, ok := exists[p.Key]; ok {
-			resp[idx] = p
+	idMap := map[types.ParamID]int{}
+
+	for _, p := range params {
+		if p.ID == "" {
+			p.ID = types.NewParamID()
+		}
+
+		if _, ok := idMap[p.ID]; ok {
+			ret[idMap[p.ID]] = p
 		} else {
-			resp = append(resp, p)
+			ret = append(ret, p)
+			idMap[p.ID] = len(ret) - 1
 		}
 	}
 
-	return resp
+	return ret
 }

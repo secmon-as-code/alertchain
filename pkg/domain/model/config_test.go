@@ -20,11 +20,6 @@ func TestParseConfig(t *testing.T) {
 		},
 	}
 	gt.NoError(t, model.ParseConfig("testdata/config1.jsonnet", config1, vars, &cfg))
-	gt.Array(t, cfg.Actions).Length(1).At(0, func(t testing.TB, v model.ActionConfig) {
-		gt.V(t, v.ID).Equal("test-scc")
-		gt.V(t, v.Uses).Equal("scc")
-		gt.Map(t, v.Config).EqualAt("data", "orange")
-	})
 }
 
 func TestParseConfigWithNoFileName(t *testing.T) {

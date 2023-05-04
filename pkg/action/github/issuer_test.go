@@ -24,23 +24,23 @@ func TestIssueTemplate(t *testing.T) {
 			Description: "orange",
 			Params: []model.Parameter{
 				{
-					Key:   "magic",
+					Name:  "magic",
 					Value: "five",
 				},
 				{
-					Key:   "star",
+					Name:  "star",
 					Value: "light",
 				},
 				{
-					Key:   "int",
+					Name:  "int",
 					Value: 123,
 				},
 				{
-					Key:   "struct",
+					Name:  "struct",
 					Value: struct{ Foo string }{Foo: "bar"},
 				},
 				{
-					Key:   "md-title",
+					Name:  "md-title",
 					Value: "*md-test*",
 					Type:  types.MarkDown,
 				},
@@ -74,19 +74,19 @@ func TestIssueTemplateNoMarkdown(t *testing.T) {
 			Description: "orange",
 			Params: []model.Parameter{
 				{
-					Key:   "magic",
+					Name:  "magic",
 					Value: "five",
 				},
 				{
-					Key:   "star",
+					Name:  "star",
 					Value: "light",
 				},
 				{
-					Key:   "int",
+					Name:  "int",
 					Value: 123,
 				},
 				{
-					Key:   "struct",
+					Name:  "struct",
 					Value: struct{ Foo string }{Foo: "bar"},
 				},
 			},
@@ -104,9 +104,9 @@ func TestIssuer(t *testing.T) {
 		t.Skip("Skipping test because TEST_GITHUB_ISSUER is not set")
 	}
 
-	cfg := model.ActionConfigValues{
-		"app_id":      float64(gt.R1(strconv.Atoi(os.Getenv("TEST_GITHUB_APP_ID"))).NoError(t)),
-		"install_id":  float64(gt.R1(strconv.Atoi(os.Getenv("TEST_GITHUB_INSTALL_ID"))).NoError(t)),
+	cfg := model.ActionArgs{
+		"app_id":      int(gt.R1(strconv.Atoi(os.Getenv("TEST_GITHUB_APP_ID"))).NoError(t)),
+		"install_id":  int(gt.R1(strconv.Atoi(os.Getenv("TEST_GITHUB_INSTALL_ID"))).NoError(t)),
 		"private_key": os.Getenv("TEST_GITHUB_PRIVATE_KEY"),
 		"owner":       os.Getenv("TEST_GITHUB_OWNER"),
 		"repo":        os.Getenv("TEST_GITHUB_REPO"),
@@ -117,9 +117,6 @@ func TestIssuer(t *testing.T) {
 		gt.V(t, cfg[key]).NotEqual("")
 	}
 
-	factory := &github.IssuerFactory{}
-	issuer := gt.R1(factory.New("test", cfg)).NoError(t)
-
 	ctx := model.NewContext()
 	alert := model.Alert{
 		AlertMetaData: model.AlertMetaData{
@@ -127,7 +124,7 @@ func TestIssuer(t *testing.T) {
 			Description: "orange",
 			Params: []model.Parameter{
 				{
-					Key:   "magic",
+					Name:  "magic",
 					Value: "five",
 				},
 			},
@@ -140,7 +137,7 @@ func TestIssuer(t *testing.T) {
 		"assignee": "m-mizutani",
 		"labels":   []string{"bug", "help wanted", "dummy"},
 	}
-	resp := gt.R1(issuer.Run(ctx, alert, args)).NoError(t)
+	resp := gt.R1(github.CreateIssue(ctx, alert, args)).NoError(t)
 	issue := gt.Cast[*gh.Issue](t, resp)
 	gt.V(t, issue.Title).Must().NotNil().Equal(&alert.Title)
 }
@@ -174,77 +171,73 @@ jM1rsSGIP5FFS056O92OpA3f3r7MPd2LFTBrQoxNIIqn9Lq+F+dX
 -----END RSA PRIVATE KEY-----`
 
 func TestIssuerFactoryPass(t *testing.T) {
-	factory := &github.IssuerFactory{}
-	action, err := factory.New("test-id", model.ActionConfigValues{
-		"app_id":      float64(123),
-		"install_id":  float64(123),
+	ctx := model.NewContext(model.WithDryRunMode())
+	_, err := github.CreateIssue(ctx, model.Alert{}, model.ActionArgs{
+		"app_id":      int(123),
+		"install_id":  int(123),
 		"private_key": dummyPrivateKey,
 		"owner":       "owner",
 		"repo":        "repo",
 	})
 	gt.NoError(t, err)
-	gt.V(t, action.ID()).Equal("test-id")
 }
 
 func TestIssuerFactoryFail(t *testing.T) {
-	factory := &github.IssuerFactory{}
-	gt.V(t, factory.Name()).Equal("github-issuer")
-
 	testCases := map[string]struct {
-		cfg model.ActionConfigValues
+		cfg model.ActionArgs
 	}{
 		"missing app_id": {
-			cfg: model.ActionConfigValues{
-				"install_id":  float64(123),
+			cfg: model.ActionArgs{
+				"install_id":  123,
 				"private_key": dummyPrivateKey,
 				"owner":       "owner",
 				"repo":        "repo",
 			},
 		},
 		"missing install_id": {
-			cfg: model.ActionConfigValues{
-				"app_id":      float64(123),
+			cfg: model.ActionArgs{
+				"app_id":      123,
 				"private_key": dummyPrivateKey,
 				"owner":       "owner",
 				"repo":        "repo",
 			},
 		},
 		"missing private_key": {
-			cfg: model.ActionConfigValues{
-				"app_id":     float64(123),
-				"install_id": float64(123),
+			cfg: model.ActionArgs{
+				"app_id":     123,
+				"install_id": 123,
 				"owner":      "owner",
 				"repo":       "repo",
 			},
 		},
 		"missing owner": {
-			cfg: model.ActionConfigValues{
-				"app_id":      float64(123),
-				"install_id":  float64(123),
+			cfg: model.ActionArgs{
+				"app_id":      123,
+				"install_id":  123,
 				"private_key": dummyPrivateKey,
 				"repo":        "repo",
 			},
 		},
 		"missing repo": {
-			cfg: model.ActionConfigValues{
-				"app_id":      float64(123),
-				"install_id":  float64(123),
+			cfg: model.ActionArgs{
+				"app_id":      123,
+				"install_id":  123,
 				"private_key": dummyPrivateKey,
 				"owner":       "owner",
 			},
 		},
 		"app_id is not a int": {
-			cfg: model.ActionConfigValues{
+			cfg: model.ActionArgs{
 				"app_id":      "123",
-				"install_id":  float64(123),
+				"install_id":  123,
 				"private_key": dummyPrivateKey,
 				"owner":       "owner",
 				"repo":        "repo",
 			},
 		},
 		"install_id is not a int": {
-			cfg: model.ActionConfigValues{
-				"app_id":      float64(123),
+			cfg: model.ActionArgs{
+				"app_id":      123,
 				"install_id":  "123",
 				"private_key": dummyPrivateKey,
 				"owner":       "owner",
@@ -252,9 +245,9 @@ func TestIssuerFactoryFail(t *testing.T) {
 			},
 		},
 		"private_key is not RSA format": {
-			cfg: model.ActionConfigValues{
-				"app_id":      float64(123),
-				"install_id":  float64(123),
+			cfg: model.ActionArgs{
+				"app_id":      123,
+				"install_id":  123,
 				"private_key": "xxx",
 				"owner":       "owner",
 				"repo":        "repo",
@@ -264,7 +257,8 @@ func TestIssuerFactoryFail(t *testing.T) {
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			_, err := factory.New("test", tc.cfg)
+			ctx := model.NewContext(model.WithDryRunMode())
+			_, err := github.CreateIssue(ctx, model.Alert{}, tc.cfg)
 			gt.Error(t, err)
 		})
 	}

@@ -20,11 +20,6 @@ func newError(msg string) *Error {
 }
 
 var (
-	ErrConfigNoActionID   = newError("no action ID")
-	ErrConfigNoActionName = newError("no action name")
-	ErrConfigNoProbeID    = newError("no probe ID")
-	ErrConfigNoProbeName  = newError("no probe name")
-
 	ErrConfigConflictActionID = newError("conflict action ID")
 	ErrConfigConflictProbeID  = newError("conflict probe ID")
 	ErrConfigNoPolicyPath     = newError("no policy path")
@@ -43,5 +38,6 @@ var (
 	ErrNoPolicyResult     = newError("no policy result")
 
 	// runtime errors
-	ErrMaxStackDepth = newError("max stack depth")
+	ErrMaxStackDepth  = newError("max stack depth")
+	ErrActionNotFound = newError("action not found")
 )

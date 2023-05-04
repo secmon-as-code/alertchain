@@ -4,13 +4,11 @@ import (
 	"encoding/json"
 
 	"github.com/google/go-jsonnet"
-	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/goerr"
 )
 
 type Config struct {
-	Policy  PolicyConfig   `json:"policy"`
-	Actions []ActionConfig `json:"actions"`
+	Policy PolicyConfig `json:"policy"`
 }
 
 type PolicyConfig struct {
@@ -22,22 +20,6 @@ type PolicyConfig struct {
 type PolicyPackageConfig struct {
 	Alert  string `json:"alert"`
 	Action string `json:"action"`
-}
-
-type ActionConfig struct {
-	ID     types.ActionID     `json:"id"`
-	Uses   types.ActionName   `json:"uses"`
-	Config ActionConfigValues `json:"config"`
-}
-
-func (x ActionConfig) Validate() error {
-	if x.ID == "" {
-		return goerr.Wrap(types.ErrConfigNoActionID)
-	}
-	if x.Uses == "" {
-		return goerr.Wrap(types.ErrConfigNoActionName).With("id", x.ID)
-	}
-	return nil
 }
 
 type ActionConfigValues map[string]any

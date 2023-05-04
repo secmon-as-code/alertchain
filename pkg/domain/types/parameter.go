@@ -1,10 +1,17 @@
 package types
 
+import "github.com/google/uuid"
+
 type (
-	ParamKey      string
+	ParamID       string
+	ParamName     string
 	ParamValue    any
 	ParameterType string
 )
+
+func NewParamID() ParamID {
+	return ParamID(uuid.NewString())
+}
 
 const (
 	IPAddr     ParameterType = "ipaddr"

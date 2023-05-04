@@ -2,14 +2,9 @@ package chain
 
 import (
 	"github.com/m-mizutani/alertchain/pkg/domain/interfaces"
+	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/infra/policy"
 )
-
-func WithAction(actions ...interfaces.Action) Option {
-	return func(c *Chain) {
-		c.actions = append(c.actions, actions...)
-	}
-}
 
 func WithPolicyAlert(p *policy.Client) Option {
 	return func(c *Chain) {
@@ -32,6 +27,15 @@ func WithDisableAction() Option {
 func WithEnablePrint() Option {
 	return func(c *Chain) {
 		c.enablePrint = true
+	}
+}
+
+func WithExtraAction(name types.ActionName, action interfaces.RunAction) Option {
+	return func(c *Chain) {
+		if _, ok := c.actionMap[name]; ok {
+			panic("action name is already registered: " + name)
+		}
+		c.actionMap[name] = action
 	}
 }
 
