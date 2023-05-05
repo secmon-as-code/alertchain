@@ -8,8 +8,8 @@ import (
 )
 
 var actionMap = map[types.ActionName]interfaces.RunAction{
-	"github.create-issue":   github.CreateIssue,
-	"chatgpt.comment-alert": chatgpt.CommentAlert,
+	"github.create_issue":   github.CreateIssue,
+	"chatgpt.comment_alert": chatgpt.CommentAlert,
 }
 
 func Map() map[types.ActionName]interfaces.RunAction {

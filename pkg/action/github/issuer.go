@@ -46,29 +46,29 @@ func CreateIssue(ctx *model.Context, alert model.Alert, args model.ActionArgs) (
 	// Required arguments
 	appID, ok := args["app_id"].(int)
 	if !ok {
-		return nil, goerr.Wrap(types.ErrActionInvalidConfig, "app_id is required")
+		return nil, goerr.Wrap(types.ErrActionInvalidArgument, "app_id is required")
 	}
 
 	installID, ok := args["install_id"].(int)
 	if !ok {
-		return nil, goerr.Wrap(types.ErrActionInvalidConfig, "install_id is required")
+		return nil, goerr.Wrap(types.ErrActionInvalidArgument, "install_id is required")
 	}
 
-	privateKey, ok := args["private_key"].(string)
+	privateKey, ok := args["secret_private_key"].(string)
 	if !ok {
-		return nil, goerr.Wrap(types.ErrActionInvalidConfig, "private_key is required")
+		return nil, goerr.Wrap(types.ErrActionInvalidArgument, "private_key is required")
 	} else if !isRSAPrivateKey(privateKey) {
-		return nil, goerr.Wrap(types.ErrActionInvalidConfig, "private_key must be RSA private key")
+		return nil, goerr.Wrap(types.ErrActionInvalidArgument, "private_key must be RSA private key")
 	}
 
 	owner, ok := args["owner"].(string)
 	if !ok {
-		return nil, goerr.Wrap(types.ErrActionInvalidConfig, "owner is required")
+		return nil, goerr.Wrap(types.ErrActionInvalidArgument, "owner is required")
 	}
 
 	repo, ok := args["repo"].(string)
 	if !ok {
-		return nil, goerr.Wrap(types.ErrActionInvalidConfig, "repo is required")
+		return nil, goerr.Wrap(types.ErrActionInvalidArgument, "repo is required")
 	}
 
 	// Optional arguments
