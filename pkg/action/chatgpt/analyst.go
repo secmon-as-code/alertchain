@@ -14,7 +14,7 @@ import (
 func CommentAlert(ctx *model.Context, alert model.Alert, args model.ActionArgs) (any, error) {
 	apiKey, ok := args["api_key"].(string)
 	if !ok {
-		return nil, goerr.Wrap(types.ErrActionInvalidConfig, "api_key is required")
+		return nil, goerr.Wrap(types.ErrActionInvalidArgument, "api_key is required")
 	}
 
 	client := openai.NewClient(apiKey)

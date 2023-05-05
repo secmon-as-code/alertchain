@@ -8,7 +8,7 @@ import (
 )
 
 var actionMap = map[types.ActionName]interfaces.RunAction{
-	"github.create-issue":   github.CreateIssue,
+	"github.create_issue":   github.CreateIssue,
 	"chatgpt.comment-alert": chatgpt.CommentAlert,
 }
 

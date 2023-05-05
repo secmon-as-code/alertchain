@@ -14,6 +14,7 @@ require (
 	github.com/m-mizutani/gt v0.0.5-0.20230429043555-1babe5ce62ab
 	github.com/open-policy-agent/opa v0.52.0
 	github.com/sashabaranov/go-openai v1.9.1
+	github.com/slack-go/slack v0.12.2
 	github.com/urfave/cli/v2 v2.25.3
 	golang.org/x/exp v0.0.0-20230425010034-47ecfdc1ba53
 )
@@ -31,6 +32,7 @@ require (
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/go-github/v52 v52.0.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
+	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
