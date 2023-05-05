@@ -53,7 +53,7 @@ func encodeAlertData(a any) string {
 }
 
 func NewAlert(meta AlertMetaData, schema types.Schema, data any) Alert {
-	return Alert{
+	alert := Alert{
 		AlertMetaData: meta,
 		ID:            types.NewAlertID(),
 		Schema:        schema,
@@ -61,19 +61,7 @@ func NewAlert(meta AlertMetaData, schema types.Schema, data any) Alert {
 		CreatedAt:     time.Now(),
 		Raw:           encodeAlertData(data),
 	}
-}
+	alert.AlertMetaData.Params = TidyParameters(alert.AlertMetaData.Params)
 
-func (x Alert) Clone(newParams ...Parameter) Alert {
-	newAlert := Alert{
-		AlertMetaData: x.AlertMetaData,
-		ID:            x.ID,
-		Schema:        x.Schema,
-		Data:          x.Data,
-		CreatedAt:     x.CreatedAt,
-		Raw:           x.Raw,
-	}
-
-	newAlert.Params = newAlert.Params.Overwrite(newParams)
-
-	return newAlert
+	return alert
 }

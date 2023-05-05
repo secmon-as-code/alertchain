@@ -17,8 +17,8 @@ type AlertLog struct {
 }
 
 type ActionLog struct {
-	Action Action   `json:"action"`
-	Next   []Action `json:"next"`
+	Action Process   `json:"action"`
+	Next   []Process `json:"next"`
 
 	StartedAt int `json:"started_at"`
 	EndedAt   int `json:"ended_at"`

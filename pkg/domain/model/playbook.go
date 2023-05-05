@@ -37,13 +37,13 @@ func (x *Playbook) Validate() error {
 }
 
 type Scenario struct {
-	ID      types.ScenarioID         `json:"id"`
-	Title   types.ScenarioTitle      `json:"title"`
-	Alert   any                      `json:"alert"`
-	Schema  types.Schema             `json:"schema"`
-	Results map[types.ActionID][]any `json:"results"`
+	ID      types.ScenarioID           `json:"id"`
+	Title   types.ScenarioTitle        `json:"title"`
+	Alert   any                        `json:"alert"`
+	Schema  types.Schema               `json:"schema"`
+	Results map[types.ActionName][]any `json:"results"`
 
-	actionIndex map[types.ActionID]int
+	actionIndex map[types.ActionName]int
 }
 
 func (x *Scenario) Validate() error {
@@ -67,21 +67,21 @@ func (x *Scenario) ToLog() ScenarioLog {
 	}
 }
 
-func (x *Scenario) GetResult(actionID types.ActionID) any {
+func (x *Scenario) GetResult(actionName types.ActionName) any {
 	if x.actionIndex == nil {
-		x.actionIndex = map[types.ActionID]int{}
+		x.actionIndex = map[types.ActionName]int{}
 	}
 
-	idx, ok := x.actionIndex[actionID]
+	idx, ok := x.actionIndex[actionName]
 	if !ok {
 		idx = 0
 	}
-	if len(x.Results[actionID]) <= idx {
+	if len(x.Results[actionName]) <= idx {
 		return nil
 	}
-	x.actionIndex[actionID] = idx + 1
+	x.actionIndex[actionName] = idx + 1
 
-	return x.Results[actionID][idx]
+	return x.Results[actionName][idx]
 }
 
 type embedImporter struct {
@@ -114,5 +114,5 @@ func ParsePlaybook(entryFile string, readFile ReadFile, book *Playbook) error {
 		return goerr.Wrap(err, "unmarshal playbook by jsonnet")
 	}
 
-	return nil
+	return book.Validate()
 }

@@ -5,8 +5,12 @@ alert[msg] {
         "title": "test alert",
         "params": [
             {
-                "key": "k1",
+                "name": "k1",
                 "value": "v1",
+            },
+            {
+                "name": "k2",
+                "value": "v2",
             },
         ]
     }

@@ -9,16 +9,16 @@
 
 ## Parameters
 
-| Key | Value | Type |
-|-----|-------|------|
-{{range .Params}}{{ if ne .Type "markdown" }} | {{ .Key }} | `{{ .Value }}` | {{ .Type }} |
+| Name | Value | Type |
+|------|-------|------|
+{{range .Params}}{{ if ne .Type "markdown" }} | {{ .Name }} | `{{ .Value }}` | {{ .Type }} |
 {{else}}{{ $countMarkdown = add $countMarkdown 1 }}{{end}}{{end}}
 
 {{ if gt $countMarkdown 0 }}
 ## Comments
 
 {{range .Params}}{{ if eq .Type "markdown" }}
-### {{ .Key }}
+### {{ .Name }}
 
 {{ .Value }}
 

@@ -3,65 +3,51 @@ package chain_test
 import (
 	"embed"
 	"encoding/json"
+	"path/filepath"
 
 	"testing"
 
 	"github.com/m-mizutani/alertchain/pkg/chain"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
-	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/infra/logger"
 	"github.com/m-mizutani/alertchain/pkg/infra/policy"
 	"github.com/m-mizutani/gt"
 )
 
-//go:embed testdata/test1/alert.rego
-var test1AlertRego string
+//go:embed testdata/**
+var testDataFS embed.FS
 
-//go:embed testdata/test1/action.rego
-var test1ActionRego string
-
-//go:embed testdata/test1/input/scc.json
-var sccData string
-
-type mockAction struct {
-	id       types.ActionID
-	callback func(ctx *model.Context, alert model.Alert, params model.ActionArgs) (any, error)
-}
-
-func (x *mockAction) ID() types.ActionID {
-	return x.id
-}
-
-func (x *mockAction) Run(ctx *model.Context, alert model.Alert, params model.ActionArgs) (any, error) {
-	return x.callback(ctx, alert, params)
+func read(path string) ([]byte, error) {
+	return testDataFS.ReadFile(filepath.Clean(path))
 }
 
 func TestBasic(t *testing.T) {
 	var alertData any
+	sccData := gt.R1(read("testdata/basic/input/scc.json")).NoError(t)
 	gt.NoError(t, json.Unmarshal([]byte(sccData), &alertData))
 
 	alertPolicy := gt.R1(policy.New(
 		policy.WithPackage("alert"),
-		policy.WithPolicyData("alert.rego", test1AlertRego),
+		policy.WithFile("testdata/basic/alert.rego"),
+		policy.WithReadFile(read),
 	)).NoError(t)
 
 	actionPolicy := gt.R1(policy.New(
 		policy.WithPackage("action"),
-		policy.WithPolicyData("action.rego", test1ActionRego),
+		policy.WithFile("testdata/basic/action.rego"),
+		policy.WithReadFile(read),
 	)).NoError(t)
 
 	var called int
-	mock := &mockAction{
-		id: "mock",
-		callback: func(ctx *model.Context, alert model.Alert, params model.ActionArgs) (any, error) {
-			called++
-			return nil, nil
-		},
+	mock := func(ctx *model.Context, _ model.Alert, _ model.ActionArgs) (any, error) {
+		called++
+		return nil, nil
 	}
+
 	c := gt.R1(chain.New(
 		chain.WithPolicyAlert(alertPolicy),
 		chain.WithPolicyAction(actionPolicy),
-		chain.WithAction(mock),
+		chain.WithExtraAction("mock", mock),
 	)).NoError(t)
 
 	ctx := model.NewContext()
@@ -71,31 +57,31 @@ func TestBasic(t *testing.T) {
 
 func TestDisableAction(t *testing.T) {
 	var alertData any
+	sccData := gt.R1(read("testdata/basic/input/scc.json")).NoError(t)
 	gt.NoError(t, json.Unmarshal([]byte(sccData), &alertData))
 
 	alertPolicy := gt.R1(policy.New(
 		policy.WithPackage("alert"),
-		policy.WithPolicyData("alert.rego", test1AlertRego),
+		policy.WithFile("testdata/basic/alert.rego"),
+		policy.WithReadFile(read),
 	)).NoError(t)
 
 	actionPolicy := gt.R1(policy.New(
 		policy.WithPackage("action"),
-		policy.WithPolicyData("action.rego", test1ActionRego),
+		policy.WithFile("testdata/basic/action.rego"),
+		policy.WithReadFile(read),
 	)).NoError(t)
 
 	var called int
-	mock := &mockAction{
-		id: "mock",
-		callback: func(ctx *model.Context, alert model.Alert, params model.ActionArgs) (any, error) {
-			called++
-			return nil, nil
-		},
+	mock := func(ctx *model.Context, _ model.Alert, _ model.ActionArgs) (any, error) {
+		called++
+		return nil, nil
 	}
 
 	c := gt.R1(chain.New(
 		chain.WithPolicyAlert(alertPolicy),
 		chain.WithPolicyAction(actionPolicy),
-		chain.WithAction(mock),
+		chain.WithExtraAction("mock", mock),
 		chain.WithDisableAction(),
 	)).NoError(t)
 
@@ -104,74 +90,61 @@ func TestDisableAction(t *testing.T) {
 	gt.N(t, called).Equal(0) // Action should not be called
 }
 
-//go:embed testdata/test2/alert.rego
-var test2AlertRego string
-
-//go:embed testdata/test2/action.rego
-var test2ActionRego string
-
-//go:embed testdata/test2/action.mock.rego
-var test2ActionMockRego string
-
 func TestChainControl(t *testing.T) {
 	var alertData any
 
 	alertPolicy := gt.R1(policy.New(
 		policy.WithPackage("alert"),
-		policy.WithPolicyData("alert.rego", test2AlertRego),
+		policy.WithFile("testdata/control/alert.rego"),
+		policy.WithReadFile(read),
 	)).NoError(t)
 
 	actionPolicy := gt.R1(policy.New(
 		policy.WithPackage("action"),
-		policy.WithPolicyData("action.rego", test2ActionRego),
-		policy.WithPolicyData("action.mock.rego", test2ActionMockRego),
+		policy.WithFile("testdata/control/action.rego"),
+		policy.WithReadFile(read),
 	)).NoError(t)
 
 	var calledMock, calledMockAfter int
-	mock := &mockAction{
-		id: "mock",
-		callback: func(ctx *model.Context, alert model.Alert, args model.ActionArgs) (any, error) {
-			gt.A(t, alert.Params).Length(2).
-				Have(model.Parameter{
-					Key:   "k1",
-					Value: "v1a",
-				}).
-				Have(model.Parameter{
-					Key:   "k2",
-					Value: "v2",
-				})
-			calledMock++
-			return nil, nil
-		},
+	mock := func(ctx *model.Context, alert model.Alert, _ model.ActionArgs) (any, error) {
+		gt.A(t, alert.Params).Length(2).
+			At(0, func(t testing.TB, v model.Parameter) {
+				gt.V(t, v.Name).Equal("k1")
+				gt.V(t, v.Value).Equal("v1")
+			}).
+			At(1, func(t testing.TB, v model.Parameter) {
+				gt.V(t, v.Name).Equal("k2")
+				gt.V(t, v.Value).Equal("v2")
+			})
+		calledMock++
+
+		return nil, nil
 	}
 
-	mockAfter := &mockAction{
-		id: "mock.after",
-		callback: func(ctx *model.Context, alert model.Alert, args model.ActionArgs) (any, error) {
-			gt.A(t, alert.Params).Length(3).
-				Have(model.Parameter{
-					Key:   "k1",
-					Value: "v1a",
-				}).
-				Have(model.Parameter{
-					Key:   "k2",
-					Value: "v2a",
-				}).
-				Have(model.Parameter{
-					Key:   "k3",
-					Value: "v3",
-				})
+	mockAfter := func(ctx *model.Context, alert model.Alert, _ model.ActionArgs) (any, error) {
+		gt.A(t, alert.Params).Length(3).
+			At(0, func(t testing.TB, v model.Parameter) {
+				gt.V(t, v.Name).Equal("k1")
+				gt.V(t, v.Value).Equal("v1")
+			}).
+			At(1, func(t testing.TB, v model.Parameter) {
+				gt.V(t, v.Name).Equal("k2")
+				gt.V(t, v.Value).Equal("v2a")
+			}).
+			At(2, func(t testing.TB, v model.Parameter) {
+				gt.V(t, v.Name).Equal("k3")
+				gt.V(t, v.Value).Equal("v3")
+			})
 
-			calledMockAfter++
-			return nil, nil
-		},
+		calledMockAfter++
+		return nil, nil
 	}
 
 	c := gt.R1(chain.New(
 		chain.WithPolicyAlert(alertPolicy),
 		chain.WithPolicyAction(actionPolicy),
-		chain.WithAction(mock),
-		chain.WithAction(mockAfter),
+		chain.WithExtraAction("mock", mock),
+		chain.WithExtraAction("mock.after", mockAfter),
 	)).NoError(t)
 
 	ctx := model.NewContext()
@@ -180,76 +153,54 @@ func TestChainControl(t *testing.T) {
 	gt.N(t, calledMockAfter).Equal(1)
 }
 
-//go:embed testdata/test3/alert.rego
-var test3AlertRego string
-
-//go:embed testdata/test3/action.main.rego
-var test3ActionMainRego string
-
-//go:embed testdata/test3/action.mock.rego
-var test3ActionMockRego string
-
 func TestChainLoop(t *testing.T) {
 	var alertData any
 
 	alertPolicy := gt.R1(policy.New(
 		policy.WithPackage("alert"),
-		policy.WithPolicyData("alert.rego", test3AlertRego),
+		policy.WithFile("testdata/loop/alert.rego"),
+		policy.WithReadFile(read),
 	)).NoError(t)
 
 	actionPolicy := gt.R1(policy.New(
 		policy.WithPackage("action"),
-		policy.WithPolicyData("action.main.rego", test3ActionMainRego),
-		policy.WithPolicyData("action.mock.rego", test3ActionMockRego),
+		policy.WithFile("testdata/loop/action.rego"),
+		policy.WithReadFile(read),
 	)).NoError(t)
 
 	var calledMock int
-	mock := &mockAction{
-		id: "mock",
-		callback: func(ctx *model.Context, alert model.Alert, args model.ActionArgs) (any, error) {
-			gt.A(t, alert.Params).Length(1)
-			calledMock++
-			return nil, nil
-		},
+	mock := func(ctx *model.Context, alert model.Alert, _ model.ActionArgs) (any, error) {
+		gt.A(t, alert.Params).Length(1)
+		calledMock++
+		return nil, nil
 	}
 
 	c := gt.R1(chain.New(
 		chain.WithPolicyAlert(alertPolicy),
 		chain.WithPolicyAction(actionPolicy),
-		chain.WithAction(mock),
+		chain.WithExtraAction("mock", mock),
 	)).NoError(t)
 
 	ctx := model.NewContext()
 	gt.NoError(t, c.HandleAlert(ctx, "my_test", alertData))
-	gt.N(t, calledMock).Equal(10)
+	gt.N(t, calledMock).Equal(9)
 }
-
-//go:embed testdata/play/alert.rego
-var testPlayAlertRego string
-
-//go:embed testdata/play/action.main.rego
-var testPlayActionMainRego string
-
-//go:embed testdata/play/action.mock.rego
-var testPlayActionMockRego string
-
-//go:embed testdata/play/*.jsonnet
-var testPlaybookFS embed.FS
 
 func TestPlaybook(t *testing.T) {
 	alertPolicy := gt.R1(policy.New(
 		policy.WithPackage("alert"),
-		policy.WithPolicyData("alert.rego", testPlayAlertRego),
+		policy.WithFile("testdata/play/alert.rego"),
+		policy.WithReadFile(read),
 	)).NoError(t)
 
 	actionPolicy := gt.R1(policy.New(
 		policy.WithPackage("action"),
-		policy.WithPolicyData("action.main.rego", testPlayActionMainRego),
-		policy.WithPolicyData("action.mock.rego", testPlayActionMockRego),
+		policy.WithFile("testdata/play/action.rego"),
+		policy.WithReadFile(read),
 	)).NoError(t)
 
 	var playbook model.Playbook
-	gt.NoError(t, model.ParsePlaybook("testdata/play/playbook.jsonnet", testPlaybookFS.ReadFile, &playbook))
+	gt.NoError(t, model.ParsePlaybook("testdata/play/playbook.jsonnet", read, &playbook))
 	gt.A(t, playbook.Scenarios).Length(1).At(0, func(t testing.TB, v *model.Scenario) {
 		gt.V(t, v.ID).Equal("s1")
 		alert := gt.Cast[map[string]any](t, v.Alert)
@@ -259,20 +210,17 @@ func TestPlaybook(t *testing.T) {
 	})
 
 	var calledMock int
-	mock := &mockAction{
-		id: "my_action",
-		callback: func(ctx *model.Context, alert model.Alert, args model.ActionArgs) (any, error) {
-			gt.A(t, alert.Params).Length(1)
-			calledMock++
-			return nil, nil
-		},
+	mock := func(ctx *model.Context, alert model.Alert, _ model.ActionArgs) (any, error) {
+		gt.A(t, alert.Params).Length(1)
+		calledMock++
+		return nil, nil
 	}
 
 	recorder := logger.NewMemory(playbook.Scenarios[0])
 	c := gt.R1(chain.New(
 		chain.WithPolicyAlert(alertPolicy),
 		chain.WithPolicyAction(actionPolicy),
-		chain.WithAction(mock),
+		chain.WithExtraAction("mock", mock),
 		chain.WithActionMock(playbook.Scenarios[0]),
 		chain.WithScenarioLogger(recorder),
 	)).NoError(t)
@@ -287,7 +235,9 @@ func TestPlaybook(t *testing.T) {
 	gt.A(t, recorder.Log.AlertLog).Length(1).At(0, func(t testing.TB, v *model.AlertLog) {
 		gt.V(t, v.Alert.Title).Equal("test alert")
 		gt.A(t, v.Alert.Params).Length(1).At(0, func(t testing.TB, v model.Parameter) {
-			gt.V(t, v.Key).Equal("c")
+			gt.V(t, v.Name).Equal("c")
+
+			// Value has been converted to float64 by encoding/decoding json
 			gt.V(t, v.Value).Equal(float64(1))
 		})
 	})

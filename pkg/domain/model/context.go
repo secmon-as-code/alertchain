@@ -9,8 +9,9 @@ import (
 
 type Context struct {
 	context.Context
-	stack int
-	alert *Alert
+	stack  int
+	alert  *Alert
+	dryRun bool
 }
 
 type CtxOption func(ctx *Context)
@@ -18,6 +19,10 @@ type CtxOption func(ctx *Context)
 func NewContext(options ...CtxOption) *Context {
 	ctx := &Context{
 		Context: context.Background(),
+	}
+
+	for _, opt := range options {
+		opt(ctx)
 	}
 
 	return ctx
@@ -41,6 +46,12 @@ func WithStackIncrement() CtxOption {
 	}
 }
 
+func WithDryRunMode() CtxOption {
+	return func(ctx *Context) {
+		ctx.dryRun = true
+	}
+}
+
 func (x *Context) New(options ...CtxOption) *Context {
 	ctx := x
 
@@ -53,6 +64,7 @@ func (x *Context) New(options ...CtxOption) *Context {
 
 func (x *Context) Stack() int   { return x.stack }
 func (x *Context) Alert() Alert { return *x.alert }
+func (x *Context) DryRun() bool { return x.dryRun }
 
 func (x *Context) Logger() *slog.Logger {
 	logger := utils.Logger()
