@@ -21,7 +21,7 @@ type workflow struct {
 	options []policy.QueryOption
 
 	// mutable variables
-	calledProc []model.Process
+	calledProc []model.Action
 }
 
 func (x *Chain) newWorkflow(alert model.Alert, options []policy.QueryOption) (*workflow, error) {
@@ -77,7 +77,7 @@ func (x *workflow) run(ctx *model.Context) error {
 	return nil
 }
 
-func (x *workflow) alreadyCalled(id types.ProcessID) bool {
+func (x *workflow) alreadyCalled(id types.ActionID) bool {
 	for _, p := range x.calledProc {
 		if p.ID == id {
 			return true
@@ -88,7 +88,7 @@ func (x *workflow) alreadyCalled(id types.ProcessID) bool {
 
 type runActionResponse struct {
 	Exits  []model.Exit
-	Called []model.Process
+	Called []model.Action
 }
 
 func (x *workflow) runAction(ctx *model.Context, runReq *model.ActionRunRequest) (*runActionResponse, error) {
@@ -103,7 +103,7 @@ func (x *workflow) runAction(ctx *model.Context, runReq *model.ActionRunRequest)
 
 	for _, p := range runResp.Runs {
 		if p.ID == "" {
-			p.ID = types.NewProcessID()
+			p.ID = types.NewActionID()
 		} else if x.alreadyCalled(p.ID) {
 			continue
 		}
@@ -118,7 +118,7 @@ func (x *workflow) runAction(ctx *model.Context, runReq *model.ActionRunRequest)
 
 		exitReq := model.ActionExitRequest{
 			Alert:  runReq.Alert,
-			Proc:   p,
+			Action: p,
 			Called: x.calledProc,
 		}
 		var exitResp model.ActionExitResponse
@@ -135,7 +135,7 @@ func (x *workflow) runAction(ctx *model.Context, runReq *model.ActionRunRequest)
 	return &resp, nil
 }
 
-func (x *workflow) runProc(ctx *model.Context, p model.Process, alert model.Alert) (any, error) {
+func (x *workflow) runProc(ctx *model.Context, p model.Action, alert model.Alert) (any, error) {
 	run, ok := x.chain.actionMap[p.Uses]
 	if !ok {
 		return nil, goerr.Wrap(types.ErrActionNotFound).With("uses", p.Uses)

@@ -8,7 +8,7 @@ run[res] {
 }
 
 exit[res] {
-    input.proc.id == "run_mock"
+    input.action.id == "run_mock"
     input.alert.params[k2].name == "k2"
     res := {
         "params": {

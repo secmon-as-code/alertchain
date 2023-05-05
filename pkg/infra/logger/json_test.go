@@ -43,7 +43,7 @@ func TestJSONLogger(t *testing.T) {
 
 	alertLogger := jsonLogger.NewAlertLogger(alertLog)
 	actionLog := &model.ActionLog{
-		Action: model.Process{ID: "test-action"},
+		Action: model.Action{ID: "test-action"},
 	}
 
 	alertLogger.Log(actionLog)

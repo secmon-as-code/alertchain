@@ -7,22 +7,20 @@ type AlertPolicyResult struct {
 }
 
 type ActionRunRequest struct {
-	Called []Process `json:"called"`
-
 	Alert   Alert         `json:"alert"`
 	EnvVars types.EnvVars `json:"env"`
 	Seq     int           `json:"seq"`
+	Called  []Action      `json:"called"`
 }
 
 type ActionRunResponse struct {
-	Runs []Process `json:"run"`
+	Runs []Action `json:"run"`
 }
 
-type Process struct {
-	ID      types.ProcessID  `json:"id"`
-	Uses    types.ActionName `json:"uses"`
-	Args    ActionArgs       `json:"args"`
-	Secrets ActionSecrets    `json:"secrets"`
+type Action struct {
+	ID   types.ActionID   `json:"id"`
+	Uses types.ActionName `json:"uses"`
+	Args ActionArgs       `json:"args"`
 
 	Result any `json:"result"`
 }
@@ -32,12 +30,12 @@ type Exit struct {
 	Params []Parameter `json:"params"`
 
 	// Set by runAction
-	Proc Process `json:"-"`
+	Proc Action `json:"-"`
 }
 
 type ActionExitRequest struct {
-	Proc   Process   `json:"proc"`
-	Called []Process `json:"called"`
+	Action Action   `json:"action"`
+	Called []Action `json:"called"`
 
 	Alert   Alert         `json:"alert"`
 	EnvVars types.EnvVars `json:"env"`
