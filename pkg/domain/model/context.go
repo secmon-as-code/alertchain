@@ -21,6 +21,10 @@ func NewContext(options ...CtxOption) *Context {
 		Context: context.Background(),
 	}
 
+	for _, opt := range options {
+		opt(ctx)
+	}
+
 	return ctx
 }
 

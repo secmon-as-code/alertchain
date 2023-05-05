@@ -5,7 +5,7 @@ alert[msg] {
         "title": "test alert",
         "params": [
             {
-                "key": "c",
+                "name": "c",
                 "value": 1,
             },
         ]

@@ -28,6 +28,7 @@ exit[res] {
 run[res] {
     input.called[_].id == "run_mock"
     res := {
+        "id": "run2",
         "uses": "mock.after",
     }
 }

@@ -170,7 +170,7 @@ g8q/tHQfeJbEoHTJUxPoCeMar/F30A2BFT0aKr2A9rcwDKF4WZl/zb5MkwP6o/rs
 jM1rsSGIP5FFS056O92OpA3f3r7MPd2LFTBrQoxNIIqn9Lq+F+dX
 -----END RSA PRIVATE KEY-----`
 
-func TestIssuerFactoryPass(t *testing.T) {
+func TestIssuerDryRun(t *testing.T) {
 	ctx := model.NewContext(model.WithDryRunMode())
 	_, err := github.CreateIssue(ctx, model.Alert{}, model.ActionArgs{
 		"app_id":      int(123),
@@ -182,7 +182,7 @@ func TestIssuerFactoryPass(t *testing.T) {
 	gt.NoError(t, err)
 }
 
-func TestIssuerFactoryFail(t *testing.T) {
+func TestIssuerValidationFail(t *testing.T) {
 	testCases := map[string]struct {
 		cfg model.ActionArgs
 	}{

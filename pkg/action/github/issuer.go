@@ -2,7 +2,9 @@ package github
 
 import (
 	"bytes"
+	"crypto/x509"
 	_ "embed"
+	"encoding/pem"
 	"text/template"
 
 	"net/http"
@@ -55,6 +57,8 @@ func CreateIssue(ctx *model.Context, alert model.Alert, args model.ActionArgs) (
 	privateKey, ok := args["private_key"].(string)
 	if !ok {
 		return nil, goerr.Wrap(types.ErrActionInvalidConfig, "private_key is required")
+	} else if !isRSAPrivateKey(privateKey) {
+		return nil, goerr.Wrap(types.ErrActionInvalidConfig, "private_key must be RSA private key")
 	}
 
 	owner, ok := args["owner"].(string)
@@ -102,4 +106,14 @@ func CreateIssue(ctx *model.Context, alert model.Alert, args model.ActionArgs) (
 	)
 
 	return issue, nil
+}
+
+func isRSAPrivateKey(s string) bool {
+	block, _ := pem.Decode([]byte(s))
+	if block == nil {
+		return false
+	}
+
+	_, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	return err == nil
 }

@@ -14,8 +14,7 @@ import (
 	"github.com/m-mizutani/gt"
 )
 
-//go:embed testdata/*/*.rego
-//go:embed testdata/*/*/*.json
+//go:embed testdata/**
 var testDataFS embed.FS
 
 func read(path string) ([]byte, error) {
@@ -154,27 +153,19 @@ func TestChainControl(t *testing.T) {
 	gt.N(t, calledMockAfter).Equal(1)
 }
 
-//go:embed testdata/test3/alert.rego
-var test3AlertRego string
-
-//go:embed testdata/test3/action.main.rego
-var test3ActionMainRego string
-
-//go:embed testdata/test3/action.mock.rego
-var test3ActionMockRego string
-
 func TestChainLoop(t *testing.T) {
 	var alertData any
 
 	alertPolicy := gt.R1(policy.New(
 		policy.WithPackage("alert"),
-		policy.WithPolicyData("alert.rego", test3AlertRego),
+		policy.WithFile("testdata/loop/alert.rego"),
+		policy.WithReadFile(read),
 	)).NoError(t)
 
 	actionPolicy := gt.R1(policy.New(
 		policy.WithPackage("action"),
-		policy.WithPolicyData("action.main.rego", test3ActionMainRego),
-		policy.WithPolicyData("action.mock.rego", test3ActionMockRego),
+		policy.WithFile("testdata/loop/action.rego"),
+		policy.WithReadFile(read),
 	)).NoError(t)
 
 	var calledMock int
@@ -192,35 +183,24 @@ func TestChainLoop(t *testing.T) {
 
 	ctx := model.NewContext()
 	gt.NoError(t, c.HandleAlert(ctx, "my_test", alertData))
-	gt.N(t, calledMock).Equal(10)
+	gt.N(t, calledMock).Equal(9)
 }
-
-//go:embed testdata/play/alert.rego
-var testPlayAlertRego string
-
-//go:embed testdata/play/action.main.rego
-var testPlayActionMainRego string
-
-//go:embed testdata/play/action.mock.rego
-var testPlayActionMockRego string
-
-//go:embed testdata/play/*.jsonnet
-var testPlaybookFS embed.FS
 
 func TestPlaybook(t *testing.T) {
 	alertPolicy := gt.R1(policy.New(
 		policy.WithPackage("alert"),
-		policy.WithPolicyData("alert.rego", testPlayAlertRego),
+		policy.WithFile("testdata/play/alert.rego"),
+		policy.WithReadFile(read),
 	)).NoError(t)
 
 	actionPolicy := gt.R1(policy.New(
 		policy.WithPackage("action"),
-		policy.WithPolicyData("action.main.rego", testPlayActionMainRego),
-		policy.WithPolicyData("action.mock.rego", testPlayActionMockRego),
+		policy.WithFile("testdata/play/action.rego"),
+		policy.WithReadFile(read),
 	)).NoError(t)
 
 	var playbook model.Playbook
-	gt.NoError(t, model.ParsePlaybook("testdata/play/playbook.jsonnet", testPlaybookFS.ReadFile, &playbook))
+	gt.NoError(t, model.ParsePlaybook("testdata/play/playbook.jsonnet", read, &playbook))
 	gt.A(t, playbook.Scenarios).Length(1).At(0, func(t testing.TB, v *model.Scenario) {
 		gt.V(t, v.ID).Equal("s1")
 		alert := gt.Cast[map[string]any](t, v.Alert)
@@ -256,6 +236,8 @@ func TestPlaybook(t *testing.T) {
 		gt.V(t, v.Alert.Title).Equal("test alert")
 		gt.A(t, v.Alert.Params).Length(1).At(0, func(t testing.TB, v model.Parameter) {
 			gt.V(t, v.Name).Equal("c")
+
+			// Value has been converted to float64 by encoding/decoding json
 			gt.V(t, v.Value).Equal(float64(1))
 		})
 	})

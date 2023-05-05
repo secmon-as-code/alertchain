@@ -18,7 +18,7 @@
 ## Comments
 
 {{range .Params}}{{ if eq .Type "markdown" }}
-### {{ .Key }}
+### {{ .Name }}
 
 {{ .Value }}
 
