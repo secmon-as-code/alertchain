@@ -4,17 +4,17 @@ Actions for github.com
 
 ## `github.create_issue`
 
-The action will create an issue as alert handling ticket.
+This action creates an issue in the specified GitHub repository to serve as an alert handling ticket.
 
 ### Prerequisite
 
-You need to create your GitHub App. An instruction is [here](https://docs.github.com/en/apps/creating-github-apps/creating-github-apps/creating-a-github-app).
+You need to create a GitHub App. You can find instructions on how to do so [here](https://docs.github.com/en/apps/creating-github-apps/creating-github-apps/creating-a-github-app).
 
-The GitHub App requires `Read and Write` permission for `Issues` and you need to install into target repository.
+The GitHub App requires `Read and Write` permissions for `Issues`, and you need to install it into the target repository.
 
 ### Arguments
 
-Example policy
+Example policy:
 
 ```rego
 run[res] {
@@ -32,12 +32,12 @@ run[res] {
 }
 ```
 
-- `app_id` (number, required): The app_id field specifies the ID of the GitHub App.
-- `install_id` (number, required): The install_id field specifies the installation ID of the GitHub account to run the action.
-- `owner` (string, required): The owner field specifies the owner name of the GitHub account to run the action.
-- `repo` (string, required): The repo field specifies the repository name of the GitHub account to run the action.
-- `secret_private_key` (string, required): The private_key field specifies the private key of the GitHub App.
-- `assignee` (string, optional): Specify the GitHub user to be assigned.
-- `labels` (array of strings, optional): Specify the labels.
+- `app_id` (number, required): Specifies the ID of the GitHub App.
+- `install_id` (number, required): Specifies the installation ID of the GitHub account where the action will be executed.
+- `owner` (string, required): Specifies the owner name of the GitHub account where the action will be executed.
+- `repo` (string, required): Specifies the repository name of the GitHub account where the action will be executed.
+- `secret_private_key` (string, required): Specifies the private key of the GitHub App.
+- `assignee` (string, optional): Specifies the GitHub user to be assigned to the issue.
+- `labels` (array of strings, optional): Specifies the labels to be applied to the issue.
 
 Note: If you wish to use `assignee` or `labels`, the GitHub App must also have `Read and Write` permissions for `Content`.
