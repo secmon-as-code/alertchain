@@ -21,12 +21,12 @@ run[res] {
   res := {
     id: "your-action",
     uses: "github.create_issue",
-    config: {
-      app_id: 134650,
-      install_id: 19102538,
-      owner: "m-mizutani",
-      repo: "security-alert",
-      secret_private_key: input.env.GITHUB_PRIVATE_KEY,
+    args: {
+      "app_id": 134650,
+      "install_id": 19102538,
+      "owner": "m-mizutani",
+      "repo": "security-alert",
+      "secret_private_key": input.env.GITHUB_PRIVATE_KEY,
     },
   },
 }
@@ -41,3 +41,7 @@ run[res] {
 - `labels` (array of strings, optional): Specifies the labels to be applied to the issue.
 
 Note: If you wish to use `assignee` or `labels`, the GitHub App must also have `Read and Write` permissions for `Content`.
+
+### Response
+
+See https://docs.github.com/en/rest/issues/issues?apiVersion=2022-11-28#create-an-issue

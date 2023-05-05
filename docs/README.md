@@ -13,5 +13,5 @@ AlertChain has 4 phases to handle an alert.
 
 - [Configuration](config.md)
 - [Policy](policy.md)
-- [Actions](./action/)
+- [Actions](./../pkg/action/)
 - [Test](test.md)
