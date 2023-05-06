@@ -116,11 +116,16 @@ func buildSlackMessage(notify *notifyContents, event interface{}) *slack.Webhook
 		)
 	}
 
+	raw := notify.Raw
+	if len(raw) > 2990 {
+		raw = raw[:2990] + "..."
+	}
+
 	blocks = append(blocks,
 		slack.NewDividerBlock(),
 		slack.NewSectionBlock(&slack.TextBlockObject{
 			Type: slack.MarkdownType,
-			Text: fmt.Sprintf("```%s```", notify.Raw),
+			Text: fmt.Sprintf("```%s```", raw),
 		}, nil, nil),
 	)
 

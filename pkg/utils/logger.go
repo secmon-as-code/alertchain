@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/m-mizutani/goerr"
+	"github.com/m-mizutani/masq"
 	"golang.org/x/exp/slog"
 )
 
@@ -46,6 +47,10 @@ func ReconfigureLogger(format, level, output string) error {
 	opt := slog.HandlerOptions{
 		AddSource: logLevel <= slog.LevelDebug,
 		Level:     logLevel,
+		ReplaceAttr: masq.New(
+			masq.WithTag("secret"),
+			masq.WithFieldPrefix("secret_"),
+		),
 	}
 
 	var newLogger *slog.Logger

@@ -16,19 +16,18 @@ AlertChain is a versatile software that accepts structured event data through HT
 
 ### Action
 
-Actions, the basic units of operation, are primarily implemented within AlertChain using Go code. For example, there is an action called [github-issuer](docs/action/github-issuer.md) which creates an issue on GitHub. Users can define any number of actions in a configuration written in Jsonnet, each of which needs a unique ID. Basic settings, such as the username and API key required to execute the action, are defined within [the Jsonnet configuration](docs/config.md). Additionally, runtime adjustments, such as specifying labels when creating a GitHub issue, can be made within the policy itself.
+Actions, the basic units of operation, are primarily implemented within AlertChain using Go code. For example, there is an action called [chatgpt.comment_alert](pkg/action/chatgpt/README.md#chatgptcomment_alert) which creates an issue on GitHub. Users can define any number of actions in a configuration written in Rego, each of which needs a unique ID.
 
 ### Policy
 
-There are two main types of policies in AlertChain:
+There are two main types of policies in AlertChain, Alert Policy and Action Policy.
 
-1. Alert Policy: This policy evaluates the input structured data and determines whether the event should trigger an alert. Users can add any parameters as metadata during the evaluation process. The policy is invoked only once.
-
-2. Action Policy: This policy decides how to respond if an event is determined to be an alert. The `action.main` policy is always invoked first to determine the initial action to be taken. Actions are specified by their unique ID defined in the Jsonnet configuration, and if the action accepts arguments, they can be specified by the policy. After an action is executed, the `action.<action ID>` policy is invoked, allowing users to specify further actions or end the process. Parameters can be added or overwritten for calling new actions, allowing for alert state maintenance and enabling conditional branching and repetition if necessary.
+1. **Alert Policy**: Responsible for determining whether the incoming event data from external sources should be treated as an alert or not. For example, when receiving notifications from external services, you may want to handle only alerts related to specific categories, or you may want to exclude events that meet certain conditions (such as specific users or hosts). The Alert Policy can be used to achieve these goals by excluding certain events or including only specific events as alerts.
+2. **Action Policy**: Determines the appropriate response for detected alerts. For example, when an issue is detected on a cloud instance, the response may differ depending on the type of alert or the elements involved in the alert, such as stopping the instance, restricting the instance's communication, or notifying an administrator. You may also want to retrieve reputation information from external services and adjust the response accordingly. The Action Policy is responsible for defining and controlling these response procedures.
 
 Overall, AlertChain provides a flexible and powerful framework for handling structured event data and determining appropriate actions based on user-defined policies.
 
-## Installation
+## Usage
 
 To install AlertChain, run the following command:
 
@@ -40,46 +39,31 @@ Refer to the [documentation](./docs) for details on configuration and alert/acti
 
 ## Example
 
-To configure AlertChain, users need to create at least three files:
+In this example, we will demonstrate how AlertChain operates using an event detected by AWS GuardDuty. The policies and data used in this example can be found in the [examples](./examples/) directory.
 
-1. Configuration file (config.jsonnet)
-2. Alert policy (alert.rego)
-3. Action policy (action.rego)
+### 1. Write Alert Policy
 
-**config.jsonnet**
-```jsonnet
-{
-  policy: {
-    path: './policy',
-  },
-  actions: [
-    {
-      id: 'my_create_github_issue',
-      uses: 'github-issuer',
-      config: {
-        app_id: 12345,
-        install_id: 67890,
-        private_key: std.extVar('GITHUB_PRIVATE_KEY'),
-        owner: 'm-mizutani',
-        repo: 'security-alert',
-      },
-    },
-  ],
-}
-```
+First, prepare an Alert Policy to detect alerts from the input event data.
 
-`github-issuer` is an action that creates a GitHub issue as an alert ticket using GitHub Apps.
-
-**alert.rego**
+**policy/alert.rego**
 ```rego
 package alert.aws_guardduty
 
 alert[res] {
-    startswith(input.Findings[x].Type, "Trojan:")
-    input.Findings[_].Severity > 7
+    f := input.Findings[_]
+    startswith(f.Type, "Trojan:")
+    f.Severity > 7
+
     res := {
-        "title": input.Findings[x].Type,
+        "title": f.Type,
         "source": "aws",
+        "description": f.Description,
+        "params": [
+          {
+            "name": "instance ID",
+            "value": f.Resource.InstanceDetails.InstanceId,
+          }
+        ],
     }
 }
 ```
@@ -90,24 +74,53 @@ This example alert policy is designed for [AWS GuardDuty](https://docs.aws.amazo
 - The severity is greater than 7, and
 - If these conditions are met, a new alert is created
 
+Additionally, this policy stores the detected instance's ID as a parameter, allowing it to be used in a subsequent Action.
+
+### 2. Write Action Policy
+
+Next, prepare an Action Policy. In this example, the action requests a summary and recommended response for the alert from [ChatGPT](https://platform.openai.com/docs/guides/chat), and posts the result to a Slack channel.
+
 **policy/action.rego**
 ```rego
-package action.main
+package action
 
-action[res] {
+run[res] {
     input.alert.source == "aws"
     res := {
-        "id": "my_create_github_issue",
+        "id": "ask-gpt",
+        "uses": "chatgpt.comment_alert",
+        "args": {
+            "secret_api_key": input.env.CHATGPT_API_KEY,
+        },
     }
+}
+
+run[res] {
+  gtp := input.called[_]
+  gtp.id == "ask-gpt"
+
+	res := {
+		"id": "notify-slack",
+		"uses": "slack.post",
+		"args": {
+			"secret_url": input.env.SLACK_WEBHOOK_URL,
+			"channel": "alert",
+      "body": gtp.result.choices[0].message.content,
+		},
+	}
 }
 ```
 
-The action policy triggers the `my_create_github_issue` action defined in the configuration file if the alert source is from `aws`.
+Action policies are triggered by writing `run` rules. In this case, the first rule is triggered when the `source` of the alert is set to `aws` by the Alert Policy. The `uses` field specifies the Action Name to be executed. The `chatgpt.comment_alert` action requires a `secret_api_key` argument to access ChatGPT via API. The API key is retrieved from the `input.env` environment variables, and the action is executed to make a query to ChatGPT.
+
+The second rule is triggered only if an action with the ID `ask-gpt` has already been executed. The `called` field contains not only information about the executed action but also its result. The result of the query to ChatGPT is retrieved and set as the `body` field, and a message is posted to Slack.
+
+### 3. Run AlertChain as server
 
 After preparing these files, you can start AlertChain using the following command:
 
 ```bash
-$ alertchain -c config.json serve
+$ alertchain -d policy serve
 ```
 
 Now, let's create an alert using AWS GuardDuty event data (guardduty.json):
@@ -135,8 +148,13 @@ $ curl -XPOST http://127.0.0.1:8080/alert/aws_guardduty -d @guardduty.json
 Upon receiving the data, AlertChain performs the following actions:
 
 1. Evaluates the event data using the alert policy and creates a new alert
-2. Evaluates the `action.main` policy with the new alert, selecting the `my_create_github_issue` action
-3. Executes the `my_create_github_issue` action that uses `github-issuer` to create a new GitHub issue
+2. Evaluates the `action` policy with the new alert, executes `chatgpt.comment_alert`.
+3. Evaluate the `action` policy again with not only the alert but also results of executed action, and executes `slack.post` next
+4. Evaluate the `action` policy again and no action is triggered. Then stop workflow for the alert
+
+Finally, we can find a Slack message as shown below:
+
+<img width="680" src="https://user-images.githubusercontent.com/605953/236592991-f2411b46-501d-4a4f-9a0d-ff7cf2defc84.png">
 
 ## License
 

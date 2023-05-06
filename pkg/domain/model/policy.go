@@ -8,7 +8,7 @@ type AlertPolicyResult struct {
 
 type ActionRunRequest struct {
 	Alert   Alert         `json:"alert"`
-	EnvVars types.EnvVars `json:"env"`
+	EnvVars types.EnvVars `json:"env" masq:"secret"`
 	Seq     int           `json:"seq"`
 	Called  []Action      `json:"called"`
 }
@@ -38,7 +38,7 @@ type ActionExitRequest struct {
 	Called []Action `json:"called"`
 
 	Alert   Alert         `json:"alert"`
-	EnvVars types.EnvVars `json:"env"`
+	EnvVars types.EnvVars `json:"env" masq:"secret"`
 	Seq     int           `json:"seq"`
 }
 

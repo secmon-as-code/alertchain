@@ -29,7 +29,7 @@ run[res] {
 - `prompt` (optional, string): The ChatGPT prompt. The default is:
 
 ```
-Summarize the following json formatted data of security alert and propose security administrator's action:
+Please analyze and summarize the given JSON-formatted security alert data, and suggest appropriate actions for the security administrator to respond to the alert:
 ```
 
 ## Response

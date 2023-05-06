@@ -25,6 +25,7 @@ func cmdPlay(cfg *model.Config) *cli.Command {
 		Aliases: []string{"p"},
 		Usage:   "Simulate alertchain policy",
 		Flags: []cli.Flag{
+
 			&cli.StringFlag{
 				Name:        "playbook",
 				Aliases:     []string{"b"},

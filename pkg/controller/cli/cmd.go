@@ -1,10 +1,6 @@
 package cli
 
 import (
-	"os"
-	"path/filepath"
-	"strings"
-
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/goerr"
@@ -18,16 +14,13 @@ type CLI struct {
 
 func New() *CLI {
 	var (
-		logLevel    string
-		logFormat   string
-		logOutput   string
-		enablePrint bool
-
-		configFile string
-		configData string
+		logLevel  string
+		logFormat string
+		logOutput string
 
 		cfg model.Config
 	)
+
 	app := &cli.App{
 		Name: "alertchain",
 		Flags: []cli.Flag{
@@ -62,23 +55,15 @@ func New() *CLI {
 				EnvVars:     []string{"ALERTCHAIN_ENABLE_PRINT"},
 				Usage:       "Enable print feature in Rego. The cli option is priority than config file.",
 				Value:       false,
-				Destination: &enablePrint,
+				Destination: &cfg.Policy.Print,
 			},
 			&cli.StringFlag{
-				Name:        "config-file",
-				Aliases:     []string{"c"},
-				Category:    "config",
-				EnvVars:     []string{"ALERTCHAIN_CONFIG_FILE"},
-				Usage:       "Set config jsonnet file path",
-				Destination: &configFile,
-			},
-			&cli.StringFlag{
-				Name:        "config-data",
+				Name:        "policy-dir",
 				Aliases:     []string{"d"},
-				Category:    "config",
-				EnvVars:     []string{"ALERTCHAIN_CONFIG_DATA"},
-				Usage:       "Set config jsonnet data content",
-				Destination: &configData,
+				Usage:       "directory path of policy files",
+				EnvVars:     []string{"ALERTCHAIN_POLICY_DIR"},
+				Required:    true,
+				Destination: &cfg.Policy.Path,
 			},
 		},
 
@@ -87,39 +72,12 @@ func New() *CLI {
 				return err
 			}
 
-			data := configData
-			if configFile != "" {
-				raw, err := os.ReadFile(filepath.Clean(configFile))
-				if err != nil {
-					return goerr.Wrap(err, "reading config file")
-				}
-				data = string(raw)
-			}
-
-			var envVars []model.EnvVar
-			for _, env := range os.Environ() {
-				keyValue := strings.SplitN(env, "=", 2)
-				envVars = append(envVars, model.EnvVar{
-					Key:   keyValue[0],
-					Value: keyValue[1],
-				})
-			}
-
-			if err := model.ParseConfig(configFile, data, envVars, &cfg); err != nil {
-				return err
-			}
-
-			if enablePrint {
-				cfg.Policy.Print = true
-			}
-
 			utils.Logger().Debug("config loaded", slog.Any("config", cfg))
 
 			return nil
 		},
 
 		Commands: []*cli.Command{
-			cmdConfig(&cfg),
 			cmdServe(&cfg),
 			cmdRun(&cfg),
 			cmdPlay(&cfg),

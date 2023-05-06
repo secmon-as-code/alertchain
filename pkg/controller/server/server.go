@@ -86,6 +86,7 @@ func New(route interfaces.Router) *Server {
 	}
 
 	r := chi.NewRouter()
+	r.Use(Logging)
 	r.Route("/alert", func(r chi.Router) {
 		r.Post("/raw/{schema}", wrap(handleRawAlert))
 		r.Post("/pubsub/{schema}", wrap(handlePubSubAlert))

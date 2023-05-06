@@ -12,14 +12,14 @@ import (
 )
 
 func CommentAlert(ctx *model.Context, alert model.Alert, args model.ActionArgs) (any, error) {
-	apiKey, ok := args["api_key"].(string)
+	apiKey, ok := args["secret_api_key"].(string)
 	if !ok {
-		return nil, goerr.Wrap(types.ErrActionInvalidArgument, "api_key is required")
+		return nil, goerr.Wrap(types.ErrActionInvalidArgument, "secret_api_key is required")
 	}
 
 	client := openai.NewClient(apiKey)
 
-	prompt := "Summarize the following json formatted data of security alert and propose security administrator's action: "
+	prompt := "Please analyze and summarize the given JSON-formatted security alert data, and suggest appropriate actions for the security administrator to respond to the alert: "
 	if v, ok := args["prompt"].(string); ok {
 		prompt = v
 	}

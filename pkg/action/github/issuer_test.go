@@ -105,14 +105,14 @@ func TestIssuer(t *testing.T) {
 	}
 
 	cfg := model.ActionArgs{
-		"app_id":      int(gt.R1(strconv.Atoi(os.Getenv("TEST_GITHUB_APP_ID"))).NoError(t)),
-		"install_id":  int(gt.R1(strconv.Atoi(os.Getenv("TEST_GITHUB_INSTALL_ID"))).NoError(t)),
-		"private_key": os.Getenv("TEST_GITHUB_PRIVATE_KEY"),
-		"owner":       os.Getenv("TEST_GITHUB_OWNER"),
-		"repo":        os.Getenv("TEST_GITHUB_REPO"),
+		"app_id":             int(gt.R1(strconv.Atoi(os.Getenv("TEST_GITHUB_APP_ID"))).NoError(t)),
+		"install_id":         int(gt.R1(strconv.Atoi(os.Getenv("TEST_GITHUB_INSTALL_ID"))).NoError(t)),
+		"secret_private_key": os.Getenv("TEST_GITHUB_PRIVATE_KEY"),
+		"owner":              os.Getenv("TEST_GITHUB_OWNER"),
+		"repo":               os.Getenv("TEST_GITHUB_REPO"),
 	}
 
-	requiredVars := []string{"app_id", "install_id", "private_key", "owner", "repo"}
+	requiredVars := []string{"app_id", "install_id", "secret_private_key", "owner", "repo"}
 	for _, key := range requiredVars {
 		gt.V(t, cfg[key]).NotEqual("")
 	}
@@ -173,11 +173,11 @@ jM1rsSGIP5FFS056O92OpA3f3r7MPd2LFTBrQoxNIIqn9Lq+F+dX
 func TestIssuerDryRun(t *testing.T) {
 	ctx := model.NewContext(model.WithDryRunMode())
 	_, err := github.CreateIssue(ctx, model.Alert{}, model.ActionArgs{
-		"app_id":      int(123),
-		"install_id":  int(123),
-		"private_key": dummyPrivateKey,
-		"owner":       "owner",
-		"repo":        "repo",
+		"app_id":             int(123),
+		"install_id":         int(123),
+		"secret_private_key": dummyPrivateKey,
+		"owner":              "owner",
+		"repo":               "repo",
 	})
 	gt.NoError(t, err)
 }
@@ -188,18 +188,18 @@ func TestIssuerValidationFail(t *testing.T) {
 	}{
 		"missing app_id": {
 			cfg: model.ActionArgs{
-				"install_id":  123,
-				"private_key": dummyPrivateKey,
-				"owner":       "owner",
-				"repo":        "repo",
+				"install_id":         123,
+				"secret_private_key": dummyPrivateKey,
+				"owner":              "owner",
+				"repo":               "repo",
 			},
 		},
 		"missing install_id": {
 			cfg: model.ActionArgs{
-				"app_id":      123,
-				"private_key": dummyPrivateKey,
-				"owner":       "owner",
-				"repo":        "repo",
+				"app_id":             123,
+				"secret_private_key": dummyPrivateKey,
+				"owner":              "owner",
+				"repo":               "repo",
 			},
 		},
 		"missing private_key": {
@@ -212,45 +212,45 @@ func TestIssuerValidationFail(t *testing.T) {
 		},
 		"missing owner": {
 			cfg: model.ActionArgs{
-				"app_id":      123,
-				"install_id":  123,
-				"private_key": dummyPrivateKey,
-				"repo":        "repo",
+				"app_id":             123,
+				"install_id":         123,
+				"secret_private_key": dummyPrivateKey,
+				"repo":               "repo",
 			},
 		},
 		"missing repo": {
 			cfg: model.ActionArgs{
-				"app_id":      123,
-				"install_id":  123,
-				"private_key": dummyPrivateKey,
-				"owner":       "owner",
+				"app_id":             123,
+				"install_id":         123,
+				"secret_private_key": dummyPrivateKey,
+				"owner":              "owner",
 			},
 		},
 		"app_id is not a int": {
 			cfg: model.ActionArgs{
-				"app_id":      "123",
-				"install_id":  123,
-				"private_key": dummyPrivateKey,
-				"owner":       "owner",
-				"repo":        "repo",
+				"app_id":             "123",
+				"install_id":         123,
+				"secret_private_key": dummyPrivateKey,
+				"owner":              "owner",
+				"repo":               "repo",
 			},
 		},
 		"install_id is not a int": {
 			cfg: model.ActionArgs{
-				"app_id":      123,
-				"install_id":  "123",
-				"private_key": dummyPrivateKey,
-				"owner":       "owner",
-				"repo":        "repo",
+				"app_id":             123,
+				"install_id":         "123",
+				"secret_private_key": dummyPrivateKey,
+				"owner":              "owner",
+				"repo":               "repo",
 			},
 		},
 		"private_key is not RSA format": {
 			cfg: model.ActionArgs{
-				"app_id":      123,
-				"install_id":  123,
-				"private_key": "xxx",
-				"owner":       "owner",
-				"repo":        "repo",
+				"app_id":             123,
+				"install_id":         123,
+				"secret_private_key": "xxx",
+				"owner":              "owner",
+				"repo":               "repo",
 			},
 		},
 	}

@@ -18,14 +18,14 @@ run[res] {
     "id": "your-action",
     "uses": "slack.post",
     "args": {
-      "secret_private_key": input.env.GITHUB_PRIVATE_KEY,
+      "secret_url": input.env.SLACK_WEBHOOK_URL,
       "channel": "alert",
     },
   },
 }
 ```
 
-- `secret_private_key` (required, string): The Slack webhook URL used to post messages to your Slack channel.
+- `secret_url` (required, string): The Slack webhook URL used to post messages to your Slack channel.
 - `channel` (required, string): The name of the Slack channel where the message will be posted. The `#` symbol is not required.
 - `text` (optional, string): The title of the Slack message. The default value is `Notification from AlertChain`.
 - `body` (optional, string): The body of the Slack message. The default value is the alert title and description.
