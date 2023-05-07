@@ -27,6 +27,10 @@ There are two main types of policies in AlertChain, Alert Policy and Action Poli
 
 Overall, AlertChain provides a flexible and powerful framework for handling structured event data and determining appropriate actions based on user-defined policies.
 
+### Test
+
+AlertChain is an advanced tool that not only allows you to detect alerts through Alert Policies but also enables you to intentionally execute actions using Action Policies. For more information on how to test these features, please refer to the [Test](./docs/test.md) documentation.
+
 ## Usage
 
 To install AlertChain, run the following command:
