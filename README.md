@@ -50,21 +50,19 @@ First, prepare an Alert Policy to detect alerts from the input event data.
 package alert.aws_guardduty
 
 alert[res] {
-    f := input.Findings[_]
-    startswith(f.Type, "Trojan:")
-    f.Severity > 7
+	f := input.Findings[_]
+	startswith(f.Type, "Trojan:")
+	f.Severity > 7
 
-    res := {
-        "title": f.Type,
-        "source": "aws",
-        "description": f.Description,
-        "params": [
-          {
-            "name": "instance ID",
-            "value": f.Resource.InstanceDetails.InstanceId,
-          }
-        ],
-    }
+	res := {
+		"title": f.Type,
+		"source": "aws",
+		"description": f.Description,
+		"params": [{
+			"name": "instance ID",
+			"value": f.Resource.InstanceDetails.InstanceId,
+		}],
+	}
 }
 ```
 
@@ -85,19 +83,17 @@ Next, prepare an Action Policy. In this example, the action requests a summary a
 package action
 
 run[res] {
-    input.alert.source == "aws"
-    res := {
-        "id": "ask-gpt",
-        "uses": "chatgpt.comment_alert",
-        "args": {
-            "secret_api_key": input.env.CHATGPT_API_KEY,
-        },
-    }
+	input.alert.source == "aws"
+	res := {
+		"id": "ask-gpt",
+		"uses": "chatgpt.comment_alert",
+		"args": {"secret_api_key": input.env.CHATGPT_API_KEY},
+	}
 }
 
 run[res] {
-  gtp := input.called[_]
-  gtp.id == "ask-gpt"
+	gtp := input.called[_]
+	gtp.id == "ask-gpt"
 
 	res := {
 		"id": "notify-slack",
