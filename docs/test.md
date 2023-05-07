@@ -89,7 +89,6 @@ test_ignore_type {
 	count(result) == 0
 }
 ```
-
 ## Testing Action Policy
 
 Action Policy is a policy that controls the behavior of actions. As such, testing its behavior requires interactions with external services. However, using responses from external services directly in tests can be inconvenient due to constraints such as inconsistent responses or difficulty in preparing expected answers. To address this, AlertChain has implemented a "play" mode. In play mode, you can pre-define a playbook, which describes scenarios specifying how actions should respond.
@@ -104,117 +103,144 @@ Here is an example of a Playbook jsonnet file:
 {
   scenarios: [
     {
-      id: 'aws_guardduty_test1',
-      alert: import 'aws_guardduty/data.json',
+      id: 'scenario1',
+      title: 'Test 1',
+      event: import 'event/guardduty.json',
       schema: 'aws_guardduty',
       results: {
-        query_chatgpt: [
-          {
-            choices: [
-              {
-                message: {
-                  role: 'assistant',
-                  content: 'this is a test message',
-                },
-              },
-            ],
-          },
+        'chatgpt.comment_alert': [
+          import 'results/chatgpt.json',
         ],
       },
     },
   ],
+  env: {
+    CHATGPT_API_KEY: 'test_api_key_xxxxxxxxxx',
+    SLACK_WEBHOOK_URL: 'https://hooks.slack.com/services/xxxxxxxxx',
+  },
 }
 ```
 
 A scenario is composed of the following fields:
 
-- `id`: Specify any string, ensuring it is unique within the playbook. This serves as a key to identify the scenario when writing tests using Rego.
-- `alert`: This field is used to import the alert data required for the scenario. The data is usually stored in a separate JSON file, which is imported using the `import` keyword. In this example, the alert data is imported from the 'aws_guardduty/data.json' file.
-- `schema`: This field specifies the schema to be used for the scenario. The schema specifies a policy to evaluate the alert. In the given example, the schema is set to 'aws_guardduty'.
-- `results`: This field contains the expected results for each action involved in the scenario. The results are defined as key-value pairs, where the key represents the action ID and the value is an array of expected responses for that action. In the example provided, the `query_chatgpt` action has an expected response containing a message with the role 'assistant' and the content 'this is a test message'.
+- `scenarios`
+  - `id`: Specify any string, ensuring it is unique within the playbook. This serves as a key to identify the scenario when writing tests using Rego.
+  - `event`: This field is used to import the alert data required for the scenario.
+  - `schema`: This field specifies the schema to be used for the scenario.
+  - `results`: This field contains the expected results for each action involved in the scenario. The results are defined as key-value pairs, where the key represents the action Name and the value is an array of expected responses for that action.
+- `env`: Environment variables that will be used in play mode.
 
 By defining multiple scenarios within the playbook, you can effectively test various use cases and ensure that your Action Policy behaves as expected under different circumstances. This allows for comprehensive testing and validation of your SOAR implementation, leading to more robust and reliable automated response systems.
 
 ### Testing logs with OPA/Rego
 
-```rego
-package action.main
+To execute the play mode with the policy, refer to the [examples](../examples/test) directory. Run the following command:
 
-action[msg] {
-    msg := {
-        "id": "query_chatgpt",
-    }
-}
+```bash
+$ alertchain -d ./policy/ play -b playbook.jsonnet
 ```
 
-```rego
-package action.query_chatgpt
-
-action[msg] {
-    msg := {
-        "id": "create_github_issue",
-        "params": [
-            {
-                "key": "analyst comment",
-                "value": input.result.choices[0].message.content,
-            }
-        ]
-    }
-}
-```
-
+This will generate a file named `output/scenario1/data.json`. A sample file would look like this:
 
 ```json
 {
-  "id": "aws_guardduty_test1",
-  "title": "",
-  "alerts": [
+  "id": "scenario1",
+  "title": "Test 1",
+  "results": [
     {
       "alert": {
-        "title": "Trojan:EC2/DriveBySourceTraffic!DNS",
-        "description": "",
+        "title": "Trojan:EC2/DropPoint!DNS",
+        "description": "EC2 instance i-99999999 is querying a domain name of a remote host that is known to hold credentials and other stolen data captured by malware.",
         "source": "aws",
-        "params": [],
-        "id": "4671c703-5c83-4cfe-a956-f1581be6406c",
+        "params": [
+          {
+            "id": "e6fc6cbc-dd90-47b8-a73f-b392a53addcd",
+            "name": "instance ID",
+            "value": "i-99999999",
+            "type": ""
+          }
+        ],
+        "id": "9d64a4b4-15c2-4e64-a4ff-6af253b80b95",
         "schema": "aws_guardduty",
-        "created_at": "2023-05-01T09:22:20.02218+09:00"
+        "created_at": "2023-05-07T12:17:56.929635+09:00"
       },
-      "created_at": 22416000,
+      "created_at": 1683429476929848000,
       "actions": [
         {
           "action": {
-            "id": "inquery_chatgpt",
-            "args": null,
-            "params": []
+            "id": "ask-gpt",
+            "uses": "chatgpt.comment_alert",
+            "args": {
+              "secret_api_key": "test_api_key_xxxxxxxxxx"
+            },
+            "result": null
           },
-          "next": [
-            {
-              "id": "create_github_issue",
-              "args": null,
-              "params": [
-                {
-                  "key": "analyst comment",
-                  "value": "this is a test message",
-                  "type": ""
-                }
-              ]
-            }
-          ],
-          "started_at": 22549000,
-          "ended_at": 22781000
+          "started_at": 1683429476930182000,
+          "ended_at": 1683429476930215000
         },
         {
           "action": {
-            "id": "create_github_issue",
-            "args": null,
-            "params": [],
+            "id": "notify-slack",
+            "uses": "slack.post",
+            "args": {
+              "body": "This is a test message.",
+              "channel": "alert",
+              "secret_url": "https://hooks.slack.com/services/xxxxxxxxx"
+            },
+            "result": null
           },
-          "next": null,
-          "started_at": 22783000,
-          "ended_at": 22910000
+          "started_at": 1683429476930597000,
+          "ended_at": 1683429476930616000
         }
       ]
     }
   ]
 }
 ```
+
+One JSON file will be generated for each scenario. This JSON file contains information about the execution results such as:
+
+- Which alerts were detected
+- In what order actions were triggered for the detected alert
+- What arguments were specified for each action
+- Whether any errors occurred during execution
+
+You can test if the actions were triggered as expected by examining these JSON files. You can use any language or framework for testing, but in this case, we will use Rego.
+
+**test.rego**
+```rego
+package test
+
+test_play_result {
+    # Only one alert should be detected
+    count(data.output.scenario1.results) == 1
+    result := data.output.scenario1.results[0]
+
+    # Alert should be of type "Trojan:EC2/DropPoint!DNS"
+    result.alert.title == "Trojan:EC2/DropPoint!DNS"
+
+    # The alert should trigger two actions
+    count(result.actions) == 2
+
+    # test first action
+    result.actions[0].action.id == "ask-gpt"
+    result.actions[0].action.args.secret_api_key == "test_api_key_xxxxxxxxxx"
+
+    # test second action
+    result.actions[1].action.id == "notify-slack"
+    result.actions[1].action.args.secret_url == "https://hooks.slack.com/services/xxxxxxxxx"
+
+}
+```
+
+Once you have prepared this file, you can run the test using the OPA command as follows:
+
+```bash
+$ opa test -v .
+test.rego:
+data.test.test_play_result: PASS (323.125µs)
+--------------------------------------------------------------------------------
+PASS: 1/1
+```
+
+Using this approach, you can continuously and automatically inspect whether the entire workflow is functioning correctly.
