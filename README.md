@@ -39,7 +39,7 @@ Refer to the [documentation](./docs) for details on configuration and alert/acti
 
 ## Example
 
-In this example, we will demonstrate how AlertChain operates using an event detected by AWS GuardDuty. The policies and data used in this example can be found in the [examples](./examples/) directory.
+In this example, we will demonstrate how AlertChain operates using an event detected by AWS GuardDuty. The policies and data used in this example can be found in the [examples](./examples/basic) directory.
 
 ### 1. Write Alert Policy
 
