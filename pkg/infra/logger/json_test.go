@@ -56,8 +56,8 @@ func TestJSONLogger(t *testing.T) {
 	gt.NoError(t, err)
 
 	gt.V(t, scenario.ID).Equal(resultLog.ID)
-	gt.A(t, resultLog.AlertLog).Length(1)
-	gt.V(t, alertLog.Alert.ID).Equal(resultLog.AlertLog[0].Alert.ID)
-	gt.A(t, resultLog.AlertLog[0].Actions).Length(1)
-	gt.V(t, actionLog.Action.ID).Equal(resultLog.AlertLog[0].Actions[0].Action.ID)
+	gt.A(t, resultLog.Results).Length(1)
+	gt.V(t, alertLog.Alert.ID).Equal(resultLog.Results[0].Alert.ID)
+	gt.A(t, resultLog.Results[0].Actions).Length(1)
+	gt.V(t, actionLog.Action.ID).Equal(resultLog.Results[0].Actions[0].Action.ID)
 }

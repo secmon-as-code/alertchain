@@ -6,8 +6,8 @@ type ScenarioLog struct {
 	ID    types.ScenarioID    `json:"id"`
 	Title types.ScenarioTitle `json:"title"`
 
-	AlertLog []*AlertLog `json:"alerts,omitempty"`
-	Error    string      `json:"error,omitempty"`
+	Results []*AlertLog `json:"results,omitempty"`
+	Error   string      `json:"error,omitempty"`
 }
 
 type AlertLog struct {

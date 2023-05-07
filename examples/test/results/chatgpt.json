@@ -1,0 +1,9 @@
+{
+  "choices": [
+    {
+      "message": {
+        "content": "This is a test message."
+      }
+    }
+  ]
+}

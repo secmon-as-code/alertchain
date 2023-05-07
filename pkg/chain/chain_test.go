@@ -232,7 +232,7 @@ func TestPlaybook(t *testing.T) {
 
 	gt.V(t, recorder.Log.ID).Equal("s1")
 	gt.V(t, recorder.Log.Title).Equal("Scenario 1")
-	gt.A(t, recorder.Log.AlertLog).Length(1).At(0, func(t testing.TB, v *model.AlertLog) {
+	gt.A(t, recorder.Log.Results).Length(1).At(0, func(t testing.TB, v *model.AlertLog) {
 		gt.V(t, v.Alert.Title).Equal("test alert")
 		gt.A(t, v.Alert.Params).Length(1).At(0, func(t testing.TB, v model.Parameter) {
 			gt.V(t, v.Name).Equal("c")

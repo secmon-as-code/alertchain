@@ -16,7 +16,7 @@ func NewMemory(s *model.Scenario) *Memory {
 }
 
 func (x *Memory) NewAlertLogger(log *model.AlertLog) interfaces.AlertLogger {
-	x.Log.AlertLog = append(x.Log.AlertLog, log)
+	x.Log.Results = append(x.Log.Results, log)
 	return &MemoryAlertLogger{
 		alertLog: log,
 	}

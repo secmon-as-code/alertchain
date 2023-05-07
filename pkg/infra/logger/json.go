@@ -22,7 +22,7 @@ func NewJSONLogger(w io.WriteCloser, s *model.Scenario) *JSONLogger {
 }
 
 func (x *JSONLogger) NewAlertLogger(log *model.AlertLog) interfaces.AlertLogger {
-	x.log.AlertLog = append(x.log.AlertLog, log)
+	x.log.Results = append(x.log.Results, log)
 	return &JSONAlertLogger{
 		alertLog: log,
 	}
