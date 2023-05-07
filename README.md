@@ -105,7 +105,7 @@ run[res] {
 		"args": {
 			"secret_url": input.env.SLACK_WEBHOOK_URL,
 			"channel": "alert",
-      "body": gtp.result.choices[0].message.content,
+			"body": gtp.result.choices[0].message.content,
 		},
 	}
 }
