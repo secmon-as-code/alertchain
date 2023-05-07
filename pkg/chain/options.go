@@ -50,3 +50,9 @@ func WithScenarioLogger(logger interfaces.ScenarioLogger) Option {
 		c.scenarioLogger = logger
 	}
 }
+
+func WithEnv(f interfaces.Env) Option {
+	return func(c *Chain) {
+		c.Env = f
+	}
+}

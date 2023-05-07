@@ -7,6 +7,7 @@ import (
 
 	"github.com/m-mizutani/alertchain/pkg/chain"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
+	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/infra/logger"
 	"github.com/m-mizutani/goerr"
 	"github.com/urfave/cli/v2"
@@ -67,7 +68,7 @@ func cmdPlay(cfg *model.Config) *cli.Command {
 				ctx.Logger().Debug("Start scenario",
 					slog.String("id", string(s.ID)),
 					slog.String("title", string(s.Title)),
-					slog.Any("alert", s.Alert),
+					slog.Any("event", s.Event),
 				)
 
 				w, err := openLogFile(outDir, string(s.ID))
@@ -80,18 +81,25 @@ func cmdPlay(cfg *model.Config) *cli.Command {
 					}
 				}()
 
+				lg := logger.NewJSONLogger(w, s)
 				options := append(baseOptions,
-					chain.WithScenarioLogger(logger.NewJSONLogger(w, s)),
+					chain.WithScenarioLogger(lg),
 					chain.WithActionMock(s),
 				)
+
+				if playbook.Env != nil {
+					options = append(options, chain.WithEnv(func() types.EnvVars {
+						return playbook.Env
+					}))
+				}
 
 				chain, err := buildChain(*cfg, options...)
 				if err != nil {
 					return err
 				}
 
-				if err := chain.HandleAlert(ctx, s.Schema, s.Alert); err != nil {
-					return goerr.Wrap(err, "failed to handle alert")
+				if err := chain.HandleAlert(ctx, s.Schema, s.Event); err != nil {
+					lg.LogError(err)
 				}
 			}
 

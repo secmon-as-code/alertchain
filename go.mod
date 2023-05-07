@@ -11,7 +11,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/m-mizutani/goerr v0.1.8
 	github.com/m-mizutani/gots v0.0.0-20221001005148-0f712425c01d
-	github.com/m-mizutani/gt v0.0.5-0.20230429043555-1babe5ce62ab
+	github.com/m-mizutani/gt v0.0.5-0.20230507014937-72dbbb16bf3a
 	github.com/open-policy-agent/opa v0.52.0
 	github.com/sashabaranov/go-openai v1.9.1
 	github.com/slack-go/slack v0.12.2

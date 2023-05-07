@@ -22,6 +22,10 @@ func (x *Memory) NewAlertLogger(log *model.AlertLog) interfaces.AlertLogger {
 	}
 }
 
+func (x *Memory) LogError(err error) {
+	x.Log.Error = err.Error()
+}
+
 func (x *Memory) Flush() error {
 	return nil
 }

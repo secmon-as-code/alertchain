@@ -203,8 +203,8 @@ func TestPlaybook(t *testing.T) {
 	gt.NoError(t, model.ParsePlaybook("testdata/play/playbook.jsonnet", read, &playbook))
 	gt.A(t, playbook.Scenarios).Length(1).At(0, func(t testing.TB, v *model.Scenario) {
 		gt.V(t, v.ID).Equal("s1")
-		alert := gt.Cast[map[string]any](t, v.Alert)
-		gt.V(t, alert).Equal(map[string]any{
+		event := gt.Cast[map[string]any](t, v.Event)
+		gt.V(t, event).Equal(map[string]any{
 			"class": "threat",
 		})
 	})

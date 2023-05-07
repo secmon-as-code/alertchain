@@ -28,6 +28,10 @@ func (x *JSONLogger) NewAlertLogger(log *model.AlertLog) interfaces.AlertLogger 
 	}
 }
 
+func (x *JSONLogger) LogError(err error) {
+	x.log.Error = err.Error()
+}
+
 func (x *JSONLogger) Flush() error {
 	if err := json.NewEncoder(x.w).Encode(x.log); err != nil {
 		return goerr.Wrap(err, "Failed to encode JSON scenario log")

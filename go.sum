@@ -108,6 +108,8 @@ github.com/m-mizutani/gots v0.0.0-20221001005148-0f712425c01d h1:/9u6H8Rus9+0Lta
 github.com/m-mizutani/gots v0.0.0-20221001005148-0f712425c01d/go.mod h1:rKNIo/wNOWmUNwMTvWOvGgr52CoL9scU+4Gg2f5uaNw=
 github.com/m-mizutani/gt v0.0.5-0.20230429043555-1babe5ce62ab h1:UFZc9uo/GR7S6eXu08BkmPailOS1XbgaO+SeZn7vMH0=
 github.com/m-mizutani/gt v0.0.5-0.20230429043555-1babe5ce62ab/go.mod h1:0MPYSfGBLmYjTduzADVmIqD58ELQ5IfBFiK/f0FmB3k=
+github.com/m-mizutani/gt v0.0.5-0.20230507014937-72dbbb16bf3a h1:+kfB7G0ycX68yTVSIbrs278IY6ZvtBGYg2QHIwB0ag0=
+github.com/m-mizutani/gt v0.0.5-0.20230507014937-72dbbb16bf3a/go.mod h1:0MPYSfGBLmYjTduzADVmIqD58ELQ5IfBFiK/f0FmB3k=
 github.com/m-mizutani/masq v0.0.0-20230107021737-3cd6189e1e35 h1:Q+WiJ8ttHcAkzvUtU5ih4BKCYd7ODFhNPSpJTosPe8g=
 github.com/m-mizutani/masq v0.0.0-20230107021737-3cd6189e1e35/go.mod h1:V5r28TYbAwA+zvwpQSiwF0k1B8Uxq1RGZ6eT7wA0QCs=
 github.com/m-mizutani/masq v0.0.0-20230506014525-1cf6b1f7e9be h1:Xg/0Gr0K3PyzXG50EZb7kw+TIiS45JujwlbfAMLEc/A=

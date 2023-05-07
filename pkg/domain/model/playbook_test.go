@@ -19,7 +19,7 @@ func TestParsePlaybook(t *testing.T) {
 		gt.V(t, v.ID).Equal("test1")
 		gt.V(t, v.Title).Equal("test1_title")
 
-		alert := gt.Cast[map[string]any](t, v.Alert)
+		alert := gt.Cast[map[string]any](t, v.Event)
 		gt.M(t, alert).EqualAt("color", "blue")
 
 		gt.V(t, v.Schema).Equal("scc")

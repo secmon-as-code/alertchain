@@ -32,7 +32,7 @@ func (x *Chain) newWorkflow(alert model.Alert, options []policy.QueryOption) (*w
 
 	logger := x.scenarioLogger.NewAlertLogger(&model.AlertLog{
 		Alert:     copied,
-		CreatedAt: x.now().Nanosecond(),
+		CreatedAt: x.now().UnixNano(),
 	})
 
 	hdlr := &workflow{
@@ -48,7 +48,7 @@ func (x *Chain) newWorkflow(alert model.Alert, options []policy.QueryOption) (*w
 func (x *workflow) run(ctx *model.Context) error {
 	ctx = ctx.New(model.WithAlert(x.alert))
 
-	envVars := buildEnvVars()
+	envVars := x.chain.Env()
 
 	for i := 0; i < x.chain.maxStackDepth; i++ {
 		runReq := &model.ActionRunRequest{
@@ -140,18 +140,31 @@ func (x *workflow) runProc(ctx *model.Context, p model.Action, alert model.Alert
 	if !ok {
 		return nil, goerr.Wrap(types.ErrActionNotFound).With("uses", p.Uses)
 	}
+	log := &model.ActionLog{
+		Action:    p,
+		StartedAt: x.chain.now().UnixNano(),
+	}
+	defer x.logger.Log(log)
+
 	utils.Logger().Info("run action", slog.Any("proc", p))
 
 	// Run action. If actionMock is set, use it instead of action.Run()
+	var result any
 	if x.chain.actionMock != nil {
-		return x.chain.actionMock.GetResult(p.Uses), nil
+		result = x.chain.actionMock.GetResult(p.Uses)
 	} else if !x.chain.disableAction {
-		return run(ctx, alert, p.Args)
+		resp, err := run(ctx, alert, p.Args)
+		if err != nil {
+			return nil, err
+		}
+		result = resp
 	}
-	return nil, nil
+	log.EndedAt = x.chain.now().UnixNano()
+
+	return result, nil
 }
 
-func buildEnvVars() types.EnvVars {
+func Env() types.EnvVars {
 	vars := types.EnvVars{}
 	for _, env := range os.Environ() {
 		pair := strings.SplitN(env, "=", 2)

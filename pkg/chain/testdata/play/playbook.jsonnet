@@ -3,7 +3,7 @@
     {
       id: 's1',
       title: 'Scenario 1',
-      alert: {
+      event: {
         class: 'threat',
       },
       schema: 'my_test',

@@ -7,19 +7,19 @@ type ScenarioLog struct {
 	Title types.ScenarioTitle `json:"title"`
 
 	AlertLog []*AlertLog `json:"alerts,omitempty"`
+	Error    string      `json:"error,omitempty"`
 }
 
 type AlertLog struct {
 	Alert     Alert `json:"alert"`
-	CreatedAt int   `json:"created_at"`
+	CreatedAt int64 `json:"created_at"`
 
 	Actions []*ActionLog `json:"actions"`
 }
 
 type ActionLog struct {
-	Action Action   `json:"action"`
-	Next   []Action `json:"next"`
+	Action Action `json:"action"`
 
-	StartedAt int `json:"started_at"`
-	EndedAt   int `json:"ended_at"`
+	StartedAt int64 `json:"started_at"`
+	EndedAt   int64 `json:"ended_at"`
 }

@@ -10,7 +10,8 @@ import (
 )
 
 type Playbook struct {
-	Scenarios []*Scenario `json:"scenarios"`
+	Scenarios []*Scenario   `json:"scenarios"`
+	Env       types.EnvVars `json:"env"`
 }
 
 func (x *Playbook) Validate() error {
@@ -39,7 +40,7 @@ func (x *Playbook) Validate() error {
 type Scenario struct {
 	ID      types.ScenarioID           `json:"id"`
 	Title   types.ScenarioTitle        `json:"title"`
-	Alert   any                        `json:"alert"`
+	Event   any                        `json:"event"`
 	Schema  types.Schema               `json:"schema"`
 	Results map[types.ActionName][]any `json:"results"`
 

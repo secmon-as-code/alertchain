@@ -25,6 +25,7 @@ type Chain struct {
 	maxStackDepth int
 
 	now func() time.Time
+	Env interfaces.Env
 }
 
 type Option func(c *Chain)
@@ -35,6 +36,7 @@ func New(options ...Option) (*Chain, error) {
 		scenarioLogger: &dummyScenarioLogger{},
 		maxStackDepth:  types.DefaultMaxStackDepth,
 		now:            time.Now,
+		Env:            Env,
 	}
 
 	for _, opt := range options {
