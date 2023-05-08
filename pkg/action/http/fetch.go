@@ -42,7 +42,11 @@ func Fetch(ctx *model.Context, _ model.Alert, args model.ActionArgs) (any, error
 	if err != nil {
 		return nil, goerr.Wrap(err, "Fail to send HTTP request")
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			ctx.Logger().Warn("Fail to close HTTP response body", "err", err)
+		}
+	}()
 
 	var result any
 	respBody, err := io.ReadAll(resp.Body)
