@@ -17,7 +17,7 @@ func TestFetch(t *testing.T) {
 			gt.Value(t, r.Method).Equal("GET")
 			gt.Value(t, r.URL.Path).Equal("/test")
 			w.Header().Add("Content-Type", "application/json")
-			w.Write([]byte(`{"message":"Hello"}`))
+			gt.R1(w.Write([]byte(`{"message":"Hello"}`))).NoError(t)
 		}))
 		defer ts.Close()
 
@@ -50,7 +50,7 @@ func TestFetch(t *testing.T) {
 	t.Run("Invalid JSON response", func(t *testing.T) {
 		ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Add("Content-Type", "application/json")
-			w.Write([]byte(`{"message"}`))
+			gt.R1(w.Write([]byte(`{"message"}`))).NoError(t)
 		}))
 		defer ts.Close()
 
