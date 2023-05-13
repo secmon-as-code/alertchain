@@ -4,6 +4,7 @@ import (
 	"github.com/m-mizutani/alertchain/pkg/action/chatgpt"
 	"github.com/m-mizutani/alertchain/pkg/action/github"
 	"github.com/m-mizutani/alertchain/pkg/action/http"
+	"github.com/m-mizutani/alertchain/pkg/action/otx"
 	"github.com/m-mizutani/alertchain/pkg/action/slack"
 	"github.com/m-mizutani/alertchain/pkg/domain/interfaces"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
@@ -14,6 +15,7 @@ var actionMap = map[types.ActionName]interfaces.RunAction{
 	"chatgpt.comment_alert": chatgpt.CommentAlert,
 	"slack.post":            slack.Post,
 	"http.fetch":            http.Fetch,
+	"otx.indicator":         otx.Indicator,
 }
 
 func Map() map[types.ActionName]interfaces.RunAction {

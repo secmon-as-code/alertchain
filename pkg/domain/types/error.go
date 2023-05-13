@@ -40,4 +40,5 @@ var (
 	// runtime errors
 	ErrMaxStackDepth  = newError("max stack depth")
 	ErrActionNotFound = newError("action not found")
+	ErrActionFailed   = newError("action failed")
 )
