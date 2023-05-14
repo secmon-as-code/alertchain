@@ -70,6 +70,7 @@ func cmdServe(cfg *model.Config) *cli.Command {
 
 			utils.Logger().Info("starting alertchain with serve mode", slog.String("addr", addr))
 			if err := server.New(chain.HandleAlert).Run(addr); err != nil {
+				sentry.CaptureException(err)
 				return err
 			}
 
