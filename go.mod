@@ -12,6 +12,7 @@ require (
 	github.com/m-mizutani/goerr v0.1.8
 	github.com/m-mizutani/gots v0.0.0-20221001005148-0f712425c01d
 	github.com/m-mizutani/gt v0.0.5-0.20230507014937-72dbbb16bf3a
+	github.com/m-mizutani/masq v0.0.0-20230506014525-1cf6b1f7e9be
 	github.com/open-policy-agent/opa v0.52.0
 	github.com/sashabaranov/go-openai v1.9.1
 	github.com/slack-go/slack v0.12.2
@@ -23,6 +24,7 @@ require (
 	github.com/OneOfOne/xxhash v1.2.8 // indirect
 	github.com/ProtonMail/go-crypto v0.0.0-20230426101702-58e86b294756 // indirect
 	github.com/agnivade/levenshtein v1.1.1 // indirect
+	github.com/aws/aws-lambda-go v1.41.0 // indirect
 	github.com/cloudflare/circl v1.3.3 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/ghodss/yaml v1.0.0 // indirect
@@ -33,7 +35,6 @@ require (
 	github.com/google/go-github/v52 v52.0.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
-	github.com/m-mizutani/masq v0.0.0-20230506014525-1cf6b1f7e9be // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
