@@ -12,9 +12,9 @@ import (
 
 func TestLogger(t *testing.T) {
 	t.Run("default logger", func(t *testing.T) {
-		defer utils.ReconfigureLogger()
+		defer gt.NoError(t, utils.ReconfigureLogger())
 		var buf bytes.Buffer
-		utils.ReconfigureLogger(slogger.WithWriter(&buf))
+		gt.NoError(t, utils.ReconfigureLogger(slogger.WithWriter(&buf)))
 		utils.Logger().Info("hello",
 			slog.String("secret_key", "xxx"),
 			slog.String("normal_key", "aaa"),
