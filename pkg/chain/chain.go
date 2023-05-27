@@ -54,12 +54,12 @@ func (x *Chain) HandleAlert(ctx *model.Context, schema types.Schema, data any) e
 		}
 	}()
 
-	ctx.Logger().Debug("[input] detect alert", slog.Any("data", data))
+	ctx.Logger().Info("[input] detect alert", slog.Any("data", data), slog.Any("schema", schema))
 	alerts, err := x.detectAlert(ctx, schema, data)
 	if err != nil {
 		return goerr.Wrap(err)
 	}
-	ctx.Logger().Debug("[output] detect alert", slog.Any("alerts", alerts))
+	ctx.Logger().Info("[output] detect alert", slog.Any("alerts", alerts))
 
 	if x.actionPolicy == nil {
 		return nil

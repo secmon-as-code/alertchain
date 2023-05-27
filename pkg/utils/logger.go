@@ -1,13 +1,13 @@
 package utils
 
 import (
-	"io"
-	"os"
-	"path/filepath"
+	"reflect"
 	"sync"
+	"time"
 
 	"github.com/m-mizutani/goerr"
 	"github.com/m-mizutani/masq"
+	"github.com/m-mizutani/slogger"
 	"golang.org/x/exp/slog"
 )
 
@@ -18,49 +18,18 @@ func Logger() *slog.Logger {
 	return logger
 }
 
-func ReconfigureLogger(format, level, output string) error {
-	logLevelMap := map[string]slog.Level{
-		"debug": slog.LevelDebug,
-		"info":  slog.LevelInfo,
-		"warn":  slog.LevelWarn,
-		"error": slog.LevelError,
-	}
-	logLevel, ok := logLevelMap[level]
-	if !ok {
-		return goerr.New("invalid log format, should be 'debug', 'info', 'warn' or 'error'").With("actual", level)
-	}
+func ReconfigureLogger(options ...slogger.Option) error {
+	filter := masq.New(
+		masq.WithTag("secret"),
+		masq.WithFieldPrefix("secret_"),
+		masq.WithAllowedType(reflect.TypeOf(time.Time{})),
+	)
 
-	var w io.Writer
-	switch output {
-	case "-", "stdout":
-		w = os.Stdout
-	case "stderr":
-		w = os.Stderr
-	default:
-		fd, err := os.Create(filepath.Clean(output))
-		if err != nil {
-			return goerr.Wrap(err, "opening log file")
-		}
-		w = fd
-	}
+	options = append(options, slogger.WithReplacer(filter))
 
-	opt := slog.HandlerOptions{
-		AddSource: logLevel <= slog.LevelDebug,
-		Level:     logLevel,
-		ReplaceAttr: masq.New(
-			masq.WithTag("secret"),
-			masq.WithFieldPrefix("secret_"),
-		),
-	}
-
-	var newLogger *slog.Logger
-	switch format {
-	case "text":
-		newLogger = slog.New(opt.NewTextHandler(w))
-	case "json":
-		newLogger = slog.New(opt.NewJSONHandler(w))
-	default:
-		return goerr.New("invalid log format, should be 'text' or 'json'").With("actual", format)
+	newLogger, err := slogger.NewWithError(options...)
+	if err != nil {
+		return goerr.Wrap(err, "fail to initialize logger")
 	}
 
 	loggerMutex.Lock()
@@ -68,4 +37,23 @@ func ReconfigureLogger(format, level, output string) error {
 	loggerMutex.Unlock()
 
 	return nil
+}
+
+func ErrToAttrs(err error) []any {
+	if err == nil {
+		return nil
+	}
+
+	attrs := []any{
+		slog.String("errmsg", err.Error()),
+	}
+	if e := goerr.Unwrap(err); e != nil {
+		for k, v := range e.Values() {
+			attrs = append(attrs, slog.Any("error."+k, v))
+		}
+
+		attrs = append(attrs, slog.Any("stacktrace", e.StackTrace()))
+	}
+
+	return attrs
 }

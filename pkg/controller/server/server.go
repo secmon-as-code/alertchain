@@ -30,7 +30,7 @@ func loggingError(msg string, err error) {
 		}
 	}
 
-	utils.Logger().Error(msg, errValues...)
+	utils.Logger().Error(msg, utils.ErrToAttrs(err)...)
 }
 
 func respondError(w http.ResponseWriter, err error) {
