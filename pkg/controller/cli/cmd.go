@@ -4,6 +4,7 @@ import (
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/goerr"
+	"github.com/m-mizutani/slogger"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/exp/slog"
 )
@@ -68,7 +69,12 @@ func New() *CLI {
 		},
 
 		Before: func(ctx *cli.Context) error {
-			if err := utils.ReconfigureLogger(logFormat, logLevel, logOutput); err != nil {
+			loggerOptions := []slogger.Option{
+				slogger.WithLevel(logLevel),
+				slogger.WithFormat(logFormat),
+				slogger.WithOutput(logOutput),
+			}
+			if err := utils.ReconfigureLogger(loggerOptions...); err != nil {
 				return err
 			}
 

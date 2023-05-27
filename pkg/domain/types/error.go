@@ -31,7 +31,8 @@ var (
 
 	ErrInvalidScenario = newError("invalid play scenario")
 
-	ErrInvalidHTTPRequest = newError("invalid HTTP request")
+	ErrInvalidHTTPRequest   = newError("invalid HTTP request")
+	ErrInvalidLambdaRequest = newError("invalid Lambda request")
 
 	ErrPolicyClientFailed = newError("policy client failed")
 	ErrNoPolicyData       = newError("no policy data")

@@ -4,10 +4,12 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/aws/aws-lambda-go/events"
 	"github.com/m-mizutani/alertchain/pkg/chain"
+	"github.com/m-mizutani/alertchain/pkg/domain/model"
+	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/goerr"
+	"github.com/m-mizutani/slogger"
 )
 
 type config struct {
@@ -37,11 +39,15 @@ func WithReadFile(f func(string) ([]byte, error)) Option {
 	}
 }
 
-func New(options ...Option) func(context.Context, any) (any, error) {
-	cfg := &config{}
+type Callback func(context.Context, types.Schema, any) error
+
+type Handler func(ctx context.Context, event any, cb Callback) error
+
+func New(handler Handler, options ...Option) func(context.Context, any) (any, error) {
+	var cfg config
 
 	for _, opt := range options {
-		opt(cfg)
+		opt(&cfg)
 	}
 
 	c, err := chain.New()
@@ -49,9 +55,14 @@ func New(options ...Option) func(context.Context, any) (any, error) {
 		utils.Logger().Error("Fail to initialize chain: %+v", err)
 		panic(err)
 	}
-	if err := utils.ReconfigureLogger("json", "info", "-"); err != nil {
+	loggerOptions := []slogger.Option{
+		slogger.WithLevel("info"),
+		slogger.WithFormat("json"),
+		slogger.WithOutput("-"),
+	}
+	if err := utils.ReconfigureLogger(loggerOptions...); err != nil {
 		utils.Logger().Error("Fail to initialize logger: %+v", err)
-		parse(err)
+		panic(err)
 	}
 
 	return func(ctx context.Context, data any) (any, error) {
@@ -61,34 +72,16 @@ func New(options ...Option) func(context.Context, any) (any, error) {
 			}
 		}()
 
-		event, err := parse(data)
-		if err != nil {
-			return "internal server error", goerr.Wrap(err, "fail to parse data")
+		callback := func(ctx context.Context, schema types.Schema, data any) error {
+			return c.HandleAlert(model.NewContext(model.WithBase(ctx)), schema, data)
 		}
 
-		switch v := event.(type) {
-		case *events.LambdaFunctionURLRequest:
-			return handleFunctionalURL(ctx, c, v)
-		default:
-			return "internal server error", goerr.Wrap(err, "unsupported event type")
+		if err := handler(ctx, data, callback); err != nil {
+			return nil, goerr.Wrap(err, "fail to handle alert")
 		}
+
+		return "OK", nil
 	}
-}
-
-func parse(data any) (any, error) {
-	// try to parse as LambdaFunctionURLRequest
-	{
-		var event events.LambdaFunctionURLRequest
-		if err := remapEvent(data, &event); err != nil {
-			return nil, goerr.Wrap(err, "fail to remap event")
-		}
-
-		if event.RawPath != "" && event.RequestContext.HTTP.Method != "" {
-			return &event, nil
-		}
-	}
-
-	return data, nil
 }
 
 func remapEvent(src, dst any) error {
@@ -96,6 +89,7 @@ func remapEvent(src, dst any) error {
 	if err != nil {
 		return goerr.Wrap(err, "fail to marshal event")
 	}
+
 	if err := json.Unmarshal(raw, dst); err != nil {
 		return goerr.Wrap(err, "fail to unmarshal event")
 	}
