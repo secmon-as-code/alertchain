@@ -15,7 +15,6 @@ require (
 	github.com/m-mizutani/gots v0.0.0-20221001005148-0f712425c01d
 	github.com/m-mizutani/gt v0.0.5
 	github.com/m-mizutani/masq v0.0.0-20230521011742-5dfbb1d85dcc
-	github.com/m-mizutani/slogger v0.1.0
 	github.com/open-policy-agent/opa v0.52.0
 	github.com/sashabaranov/go-openai v1.9.4
 	github.com/slack-go/slack v0.12.2
