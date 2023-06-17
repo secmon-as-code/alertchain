@@ -5,10 +5,33 @@ import (
 
 	"github.com/google/go-jsonnet"
 	"github.com/m-mizutani/goerr"
+	"github.com/urfave/cli/v2"
 )
 
 type Config struct {
 	Policy PolicyConfig `json:"policy"`
+}
+
+func (x *Config) Flags() []cli.Flag {
+	return []cli.Flag{
+		&cli.BoolFlag{
+			Name:        "enable-print",
+			Category:    "logging",
+			Aliases:     []string{"p"},
+			EnvVars:     []string{"ALERTCHAIN_ENABLE_PRINT"},
+			Usage:       "Enable print feature in Rego. The cli option is priority than config file.",
+			Value:       false,
+			Destination: &x.Policy.Print,
+		},
+		&cli.StringFlag{
+			Name:        "policy-dir",
+			Aliases:     []string{"d"},
+			Usage:       "directory path of policy files",
+			EnvVars:     []string{"ALERTCHAIN_POLICY_DIR"},
+			Required:    true,
+			Destination: &x.Policy.Path,
+		},
+	}
 }
 
 type PolicyConfig struct {

@@ -1,10 +1,11 @@
 package cli
 
 import (
+	"github.com/m-mizutani/alertchain/pkg/controller/cli/flag"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
+	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/goerr"
-	"github.com/m-mizutani/slogger"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/exp/slog"
 )
@@ -15,9 +16,9 @@ type CLI struct {
 
 func New() *CLI {
 	var (
-		logLevel  string
-		logFormat string
-		logOutput string
+		logLevel  flag.LogLevel
+		logFormat flag.LogFormat
+		logOutput flag.LogOutput
 
 		cfg model.Config
 	)
@@ -25,58 +26,38 @@ func New() *CLI {
 	app := &cli.App{
 		Name: "alertchain",
 		Flags: []cli.Flag{
-			&cli.StringFlag{
+			&cli.GenericFlag{
 				Name:        "log-level",
-				Aliases:     []string{"l"},
 				Category:    "logging",
+				Aliases:     []string{"l"},
+				EnvVars:     []string{"ALERTCHAIN_LOG_LEVEL"},
 				Usage:       "Set log level [debug|info|warn|error]",
-				Value:       "info",
 				Destination: &logLevel,
 			},
-			&cli.StringFlag{
+			&cli.GenericFlag{
 				Name:        "log-format",
-				Aliases:     []string{"f"},
 				Category:    "logging",
-				Usage:       "Set log format [text|json]",
-				Value:       "text",
+				Aliases:     []string{"f"},
+				EnvVars:     []string{"ALERTCHAIN_LOG_FORMAT"},
+				Usage:       "Set log format [console|json]",
 				Destination: &logFormat,
 			},
-			&cli.StringFlag{
+			&cli.GenericFlag{
 				Name:        "log-output",
+				Category:    "logging",
 				Aliases:     []string{"o"},
-				Category:    "logging",
+				EnvVars:     []string{"ALERTCHAIN_LOG_OUTPUT"},
 				Usage:       "Set log output (create file other than '-', 'stdout', 'stderr')",
-				Value:       "-",
 				Destination: &logOutput,
-			},
-			&cli.BoolFlag{
-				Name:        "enable-print",
-				Aliases:     []string{"p"},
-				Category:    "logging",
-				EnvVars:     []string{"ALERTCHAIN_ENABLE_PRINT"},
-				Usage:       "Enable print feature in Rego. The cli option is priority than config file.",
-				Value:       false,
-				Destination: &cfg.Policy.Print,
-			},
-			&cli.StringFlag{
-				Name:        "policy-dir",
-				Aliases:     []string{"d"},
-				Usage:       "directory path of policy files",
-				EnvVars:     []string{"ALERTCHAIN_POLICY_DIR"},
-				Required:    true,
-				Destination: &cfg.Policy.Path,
 			},
 		},
 
 		Before: func(ctx *cli.Context) error {
-			loggerOptions := []slogger.Option{
-				slogger.WithLevel(logLevel),
-				slogger.WithFormat(logFormat),
-				slogger.WithOutput(logOutput),
-			}
-			if err := utils.ReconfigureLogger(loggerOptions...); err != nil {
-				return err
-			}
+			utils.ReconfigureLogger(
+				logOutput.Writer(),
+				logLevel.Level(),
+				logFormat.Format(),
+			)
 
 			utils.Logger().Debug("config loaded", slog.Any("config", cfg))
 
@@ -87,6 +68,15 @@ func New() *CLI {
 			cmdServe(&cfg),
 			cmdRun(&cfg),
 			cmdPlay(&cfg),
+			{
+				Name:    "version",
+				Aliases: []string{"v"},
+				Usage:   "Show version",
+				Action: func(c *cli.Context) error {
+					println("alertchain", types.AppVersion)
+					return nil
+				},
+			},
 		},
 	}
 	return &CLI{app: app}

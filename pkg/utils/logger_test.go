@@ -4,17 +4,16 @@ import (
 	"bytes"
 	"testing"
 
+	"github.com/m-mizutani/alertchain/pkg/controller/cli/flag"
 	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/gt"
-	"github.com/m-mizutani/slogger"
 	"golang.org/x/exp/slog"
 )
 
 func TestLogger(t *testing.T) {
 	t.Run("default logger", func(t *testing.T) {
-		defer gt.NoError(t, utils.ReconfigureLogger())
 		var buf bytes.Buffer
-		gt.NoError(t, utils.ReconfigureLogger(slogger.WithWriter(&buf)))
+		utils.ReconfigureLogger(&buf, slog.LevelInfo, flag.LogFormatJSON)
 		utils.Logger().Info("hello",
 			slog.String("secret_key", "xxx"),
 			slog.String("normal_key", "aaa"),
