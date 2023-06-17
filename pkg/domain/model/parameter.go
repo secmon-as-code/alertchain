@@ -11,6 +11,19 @@ type Parameter struct {
 
 type Parameters []Parameter
 
+func (x Parameters) Copy() Parameters {
+	newParams := make(Parameters, len(x))
+	for i, p := range x {
+		newParams[i] = Parameter{
+			ID:    p.ID,
+			Name:  p.Name,
+			Value: p.Value,
+			Type:  p.Type,
+		}
+	}
+	return newParams
+}
+
 func TidyParameters(params Parameters) Parameters {
 	var ret Parameters
 
