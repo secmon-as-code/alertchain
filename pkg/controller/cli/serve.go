@@ -15,13 +15,12 @@ func cmdServe(cfg *model.Config) *cli.Command {
 	var (
 		addr          string
 		disableAction bool
-		enablePrint   bool
 		enableSentry  bool
 	)
 	return &cli.Command{
 		Name:    "serve",
 		Aliases: []string{"s"},
-		Flags: []cli.Flag{
+		Flags: append([]cli.Flag{
 			&cli.StringFlag{
 				Name:        "addr",
 				Usage:       "Bind address",
@@ -37,19 +36,12 @@ func cmdServe(cfg *model.Config) *cli.Command {
 				Destination: &disableAction,
 			},
 			&cli.BoolFlag{
-				Name:        "enable-print",
-				Aliases:     []string{"p"},
-				Usage:       "enable print feature in Rego",
-				EnvVars:     []string{"ALERTCHAIN_PRINT"},
-				Destination: &enablePrint,
-			},
-			&cli.BoolFlag{
 				Name:        "enable-sentry",
 				Usage:       "Enable sentry logging, you need to set SENTRY_DSN environment variable",
 				EnvVars:     []string{"ALERTCHAIN_ENABLE_SENTRY"},
 				Destination: &enableSentry,
 			},
-		},
+		}, cfg.Flags()...),
 
 		Action: func(ctx *cli.Context) error {
 			var options []chain.Option

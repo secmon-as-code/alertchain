@@ -17,7 +17,6 @@ import (
 func cmdPlay(cfg *model.Config) *cli.Command {
 	var (
 		playbookPath string
-		enablePrint  bool
 		outDir       string
 	)
 
@@ -25,8 +24,7 @@ func cmdPlay(cfg *model.Config) *cli.Command {
 		Name:    "play",
 		Aliases: []string{"p"},
 		Usage:   "Simulate alertchain policy",
-		Flags: []cli.Flag{
-
+		Flags: append([]cli.Flag{
 			&cli.StringFlag{
 				Name:        "playbook",
 				Aliases:     []string{"b"},
@@ -34,13 +32,6 @@ func cmdPlay(cfg *model.Config) *cli.Command {
 				EnvVars:     []string{"ALERTCHAIN_PLAYBOOK"},
 				Required:    true,
 				Destination: &playbookPath,
-			},
-			&cli.BoolFlag{
-				Name:        "enable-print",
-				Aliases:     []string{"p"},
-				Usage:       "enable print feature in Rego",
-				EnvVars:     []string{"ALERTCHAIN_ENABLE_PRINT"},
-				Destination: &enablePrint,
 			},
 			&cli.StringFlag{
 				Name:        "output",
@@ -50,7 +41,7 @@ func cmdPlay(cfg *model.Config) *cli.Command {
 				Destination: &outDir,
 				Value:       "./output",
 			},
-		},
+		}, cfg.Flags()...),
 
 		Action: func(c *cli.Context) error {
 			var baseOptions []chain.Option

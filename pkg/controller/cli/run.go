@@ -16,16 +16,15 @@ import (
 
 func cmdRun(cfg *model.Config) *cli.Command {
 	var (
-		input       string
-		schema      types.Schema
-		enablePrint bool
+		input  string
+		schema types.Schema
 	)
 
 	return &cli.Command{
 		Name:    "run",
 		Aliases: []string{"r"},
 		Usage:   "Run alertchain policy at once and exit in",
-		Flags: []cli.Flag{
+		Flags: append([]cli.Flag{
 			&cli.StringFlag{
 				Name:        "input",
 				Aliases:     []string{"i"},
@@ -43,14 +42,7 @@ func cmdRun(cfg *model.Config) *cli.Command {
 				Required:    true,
 				Destination: (*string)(&schema),
 			},
-			&cli.BoolFlag{
-				Name:        "enable-print",
-				Aliases:     []string{"p"},
-				Usage:       "enable print feature in Rego",
-				EnvVars:     []string{"ALERTCHAIN_ENABLE_PRINT"},
-				Destination: &enablePrint,
-			},
-		},
+		}, cfg.Flags()...),
 
 		Action: func(c *cli.Context) error {
 			var chainOptions []chain.Option

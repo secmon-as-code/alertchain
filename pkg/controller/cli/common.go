@@ -5,7 +5,9 @@ import (
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/infra/policy"
+	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/goerr"
+	"golang.org/x/exp/slog"
 )
 
 func setupPolicy(cfg model.PolicyConfig) ([]chain.Option, error) {
@@ -38,6 +40,10 @@ func setupPolicy(cfg model.PolicyConfig) ([]chain.Option, error) {
 			pkgName = c.pkgName
 		}
 
+		utils.Logger().Info("loading policy",
+			slog.String("package", pkgName),
+			slog.String("path", cfg.Path),
+		)
 		client, err := policy.New(policy.WithDir(cfg.Path), policy.WithPackage(pkgName))
 		if err != nil {
 			return nil, goerr.Wrap(err, "creating new policy.Client")
@@ -56,6 +62,7 @@ func buildChain(cfg model.Config, options ...chain.Option) (*chain.Chain, error)
 	}
 
 	if cfg.Policy.Print {
+		utils.Logger().Info("enable print mode")
 		options = append(options, chain.WithEnablePrint())
 	}
 

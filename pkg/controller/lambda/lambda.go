@@ -3,13 +3,15 @@ package lambda
 import (
 	"context"
 	"encoding/json"
+	"os"
 
 	"github.com/m-mizutani/alertchain/pkg/chain"
+	"github.com/m-mizutani/alertchain/pkg/controller/cli/flag"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/goerr"
-	"github.com/m-mizutani/slogger"
+	"golang.org/x/exp/slog"
 )
 
 type config struct {
@@ -55,15 +57,8 @@ func New(handler Handler, options ...Option) func(context.Context, any) (any, er
 		utils.Logger().Error("Fail to initialize chain: %+v", err)
 		panic(err)
 	}
-	loggerOptions := []slogger.Option{
-		slogger.WithLevel("info"),
-		slogger.WithFormat("json"),
-		slogger.WithOutput("-"),
-	}
-	if err := utils.ReconfigureLogger(loggerOptions...); err != nil {
-		utils.Logger().Error("Fail to initialize logger: %+v", err)
-		panic(err)
-	}
+
+	utils.ReconfigureLogger(os.Stdout, slog.LevelInfo, flag.LogFormatJSON)
 
 	return func(ctx context.Context, data any) (any, error) {
 		defer func() {

@@ -1,13 +1,15 @@
 package utils
 
 import (
+	"io"
 	"reflect"
 	"sync"
 	"time"
 
+	"github.com/m-mizutani/alertchain/pkg/controller/cli/flag"
+	"github.com/m-mizutani/clog"
 	"github.com/m-mizutani/goerr"
 	"github.com/m-mizutani/masq"
-	"github.com/m-mizutani/slogger"
 	"golang.org/x/exp/slog"
 )
 
@@ -18,25 +20,36 @@ func Logger() *slog.Logger {
 	return logger
 }
 
-func ReconfigureLogger(options ...slogger.Option) error {
+func ReconfigureLogger(w io.Writer, level slog.Level, format flag.LogFormatType) {
 	filter := masq.New(
 		masq.WithTag("secret"),
 		masq.WithFieldPrefix("secret_"),
 		masq.WithAllowedType(reflect.TypeOf(time.Time{})),
 	)
 
-	options = append(options, slogger.WithReplacer(filter))
+	var handler slog.Handler
+	switch format {
+	case flag.LogFormatConsole:
+		handler = clog.New(
+			clog.WithWriter(w),
+			clog.WithLevel(level),
+			clog.WithReplaceAttr(filter),
+		)
 
-	newLogger, err := slogger.NewWithError(options...)
-	if err != nil {
-		return goerr.Wrap(err, "fail to initialize logger")
+	case flag.LogFormatJSON:
+		handler = slog.NewJSONHandler(w, &slog.HandlerOptions{
+			AddSource:   true,
+			Level:       level,
+			ReplaceAttr: filter,
+		})
+
+	default:
+		panic("Log format is not supported: " + format.String())
 	}
 
 	loggerMutex.Lock()
-	logger = newLogger
+	logger = slog.New(handler)
 	loggerMutex.Unlock()
-
-	return nil
 }
 
 func ErrToAttrs(err error) []any {

@@ -23,6 +23,7 @@ var (
 	ErrConfigConflictActionID = newError("conflict action ID")
 	ErrConfigConflictProbeID  = newError("conflict probe ID")
 	ErrConfigNoPolicyPath     = newError("no policy path")
+	ErrInvalidOption          = newError("invalid option")
 
 	ErrActionInvalidArgument = newError("invalid action argument")
 
