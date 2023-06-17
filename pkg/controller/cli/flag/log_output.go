@@ -3,6 +3,7 @@ package flag
 import (
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/m-mizutani/goerr"
@@ -21,7 +22,7 @@ func (x *LogOutput) Set(value string) error {
 	case "stderr":
 		w = os.Stderr
 	default:
-		f, err := os.Create(value)
+		f, err := os.Create(filepath.Clean(value))
 		if err != nil {
 			return goerr.Wrap(err, "Failed to open log file").With("path", value)
 		}
