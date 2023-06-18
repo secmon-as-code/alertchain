@@ -1,6 +1,6 @@
 # ChatGPT
 
-## `chatgpt.comment_alert`
+## `chatgpt.query`
 
 This action provides a summary and suggested response to a security alert using ChatGPT.
 
@@ -17,7 +17,7 @@ Example policy:
 run[res] {
   res := {
     "id": "your-action",
-    "uses": "chatgpt.comment_alert",
+    "uses": "chatgpt.query",
     "args": {
       "secret_api_key": input.env.CHATGPT_API_KEY,
     },
@@ -31,6 +31,7 @@ run[res] {
 ```
 Please analyze and summarize the given JSON-formatted security alert data, and suggest appropriate actions for the security administrator to respond to the alert:
 ```
+and stringified JSON-formatted security alert data.
 
 ## Response
 

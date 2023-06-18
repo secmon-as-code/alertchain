@@ -21,15 +21,6 @@ func TestAnalystInquiry(t *testing.T) {
 		t.Skip("Skipping test because TEST_CHATGPT_ANALYST is not set")
 	}
 
-	cfg := model.ActionArgs{
-		"api_key": os.Getenv("TEST_CHATGPT_API_KEY"),
-	}
-
-	requiredVars := []string{"api_key"}
-	for _, key := range requiredVars {
-		gt.V(t, cfg[key]).NotEqual("")
-	}
-
 	var body any
 	gt.NoError(t, json.Unmarshal(alertData, &body))
 
@@ -43,7 +34,9 @@ func TestAnalystInquiry(t *testing.T) {
 		CreatedAt: time.Now(),
 	}
 
-	resp := gt.R1(chatgpt.CommentAlert(ctx, alert, model.ActionArgs{})).NoError(t)
+	resp := gt.R1(chatgpt.Query(ctx, alert, model.ActionArgs{
+		"secret_api_key": os.Getenv("TEST_CHATGPT_API_KEY"),
+	})).NoError(t)
 	data := gt.Cast[openai.ChatCompletionResponse](t, resp)
 	gt.A(t, data.Choices).Length(1)
 	t.Log(data.Choices[0].Message.Content)

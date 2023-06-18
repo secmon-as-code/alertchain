@@ -11,7 +11,7 @@ import (
 	"github.com/m-mizutani/goerr"
 )
 
-func CommentAlert(ctx *model.Context, alert model.Alert, args model.ActionArgs) (any, error) {
+func Query(ctx *model.Context, alert model.Alert, args model.ActionArgs) (any, error) {
 	apiKey, ok := args["secret_api_key"].(string)
 	if !ok {
 		return nil, goerr.Wrap(types.ErrActionInvalidArgument, "secret_api_key is required")
@@ -19,14 +19,15 @@ func CommentAlert(ctx *model.Context, alert model.Alert, args model.ActionArgs) 
 
 	client := openai.NewClient(apiKey)
 
-	prompt := "Please analyze and summarize the given JSON-formatted security alert data, and suggest appropriate actions for the security administrator to respond to the alert: "
-	if v, ok := args["prompt"].(string); ok {
-		prompt = v
-	}
-
 	data, err := json.Marshal(alert.Data)
 	if err != nil {
 		return nil, goerr.Wrap(err, "Failed to marshal alert data")
+	}
+
+	prompt := "Please analyze and summarize the given JSON-formatted security alert data, and suggest appropriate actions for the security administrator to respond to the alert: " + string(data)
+
+	if v, ok := args["prompt"].(string); ok {
+		prompt = v
 	}
 
 	if ctx.DryRun() {
@@ -40,7 +41,7 @@ func CommentAlert(ctx *model.Context, alert model.Alert, args model.ActionArgs) 
 			Messages: []openai.ChatCompletionMessage{
 				{
 					Role:    openai.ChatMessageRoleUser,
-					Content: prompt + string(data),
+					Content: prompt,
 				},
 			},
 		},
