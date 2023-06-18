@@ -3,7 +3,7 @@ package alert.scc
 alert[msg] {
 	msg := {
 		"title": input.finding.category,
-		"params": [
+		"attrs": [
 			{
 				"key": "db_name",
 				"value": input.finding.database.displayName,

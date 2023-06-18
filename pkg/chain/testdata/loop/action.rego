@@ -1,7 +1,7 @@
 package action
 
 run[res] {
-	p := input.alert.params[_]
+	p := input.alert.attrs[_]
 	p.name == "c"
 	p.value < 10
 
@@ -9,10 +9,10 @@ run[res] {
 }
 
 exit[res] {
-	p := input.alert.params[_]
+	p := input.alert.attrs[_]
 	p.name == "c"
 
-	res := {"params": {{
+	res := {"attrs": {{
 		"id": p.id,
 		"name": "c",
 		"value": p.value + 1,

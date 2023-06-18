@@ -13,7 +13,7 @@ type AlertMetaData struct {
 	Title       string     `json:"title"`
 	Description string     `json:"description"`
 	Source      string     `json:"source"`
-	Params      Parameters `json:"params"`
+	Attrs       Attributes `json:"attrs"`
 }
 
 func (x AlertMetaData) Copy() AlertMetaData {
@@ -21,7 +21,7 @@ func (x AlertMetaData) Copy() AlertMetaData {
 		Title:       x.Title,
 		Description: x.Description,
 		Source:      x.Source,
-		Params:      x.Params.Copy(),
+		Attrs:       x.Attrs.Copy(),
 	}
 	return newMeta
 }
@@ -64,7 +64,7 @@ func NewAlert(meta AlertMetaData, schema types.Schema, data any) Alert {
 		CreatedAt:     time.Now(),
 		Raw:           encodeAlertData(data),
 	}
-	alert.AlertMetaData.Params = TidyParameters(alert.AlertMetaData.Params)
+	alert.AlertMetaData.Attrs = TidyAttributes(alert.AlertMetaData.Attrs)
 
 	return alert
 }

@@ -29,9 +29,9 @@ func TestPost(t *testing.T) {
 			Title:       "test_title",
 			Description: "test_description",
 			Source:      "test_source",
-			Params: []model.Parameter{
+			Attrs: []model.Attribute{
 				{
-					Name:  "test_param",
+					Name:  "test_pattr",
 					Value: "test_value",
 				},
 			},

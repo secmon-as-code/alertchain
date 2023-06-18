@@ -44,7 +44,7 @@ This data is stored in Rego's `input`. The policy will determine whether this da
 
 Once the alert determination is made, store the data with the schema below in the `alert` rule. The stored data will be treated as an alert. Output schema is according to Alert structure.
 
-The `params` field (parameter) serves not only to extract event data fields but also to accommodate user-defined values. For instance, users can add their own `severity` key parameter to determine the appropriate action. Parameters bind the alert and can be added or replaced by the action policy. (Refer to the Action Policy section for more details)
+The `attrs` field (Attribute) serves not only to extract event data fields but also to accommodate user-defined values. For instance, users can add their own `severity` key Attribute to determine the appropriate action. Attributes bind the alert and can be added or replaced by the action policy. (Refer to the Action Policy section for more details)
 
 ### Example
 
@@ -55,7 +55,7 @@ alert[res] {
     input.name == "hoge"
     res := {
         "title": "detected hoge",
-        "params": [
+        "attrs": [
             {
                 "key": "color",
                 "value": "blue",
@@ -65,7 +65,7 @@ alert[res] {
 }
 ```
 
-In this example, the policy checks if the input contains the name "hoge". If it does, an alert will be created with the title "detected hoge" and a parameter of "color" set to "blue".
+In this example, the policy checks if the input contains the name "hoge". If it does, an alert will be created with the title "detected hoge" and a Attribute of "color" set to "blue".
 
 ## Action Policy
 
@@ -75,7 +75,7 @@ An Action Policy is responsible for defining the following:
   - Choose the next action to execute
   - Provide arguments for the next action
 - `exit` rule
-  - Create new or replace parameters for the next action
+  - Create new or replace Attributes for the next action
   - Abort all action processes if necessary
 
 The relationship between the `run` and `exit` rules in the Action Policy and the execution order of actions is illustrated in the diagram below.
@@ -90,7 +90,7 @@ package action
 run[res] {
     input.seq == 0
     res := {
-        "uses": "chatgpt.comment-alert",
+        "uses": "chatgpt.query",
         "args": {
             "secret_api_key": input.env.CHATGPT_API_KEY,
         },
@@ -98,9 +98,9 @@ run[res] {
 }
 ```
 
-In this example, an action called `chatgpt.comment-alert` is launched to query the alert content to ChatGPT. The action to be launched is specified by `uses`, and the required arguments are specified by `args`. The `input.seq` value increments by 1 each time the `run` rule is called. Therefore, when the `run` rule is called for the second time, the result of `input.seq == 0` will be false, making the rule invalid, and no subsequent actions will be specified. If no actions are specified, the entire process will stop.
+In this example, an action called `chatgpt.query` is launched to query the alert content to ChatGPT. The action to be launched is specified by `uses`, and the required arguments are specified by `args`. The `input.seq` value increments by 1 each time the `run` rule is called. Therefore, when the `run` rule is called for the second time, the result of `input.seq == 0` will be false, making the rule invalid, and no subsequent actions will be specified. If no actions are specified, the entire process will stop.
 
-The `exit` rule primarily handles the transfer of parameters obtained from the results of actions. Let's modify the ChatGPT calling rule slightly.
+The `exit` rule primarily handles the transfer of Attributes obtained from the results of actions. Let's modify the ChatGPT calling rule slightly.
 
 ```rego
 package action
@@ -109,7 +109,7 @@ run[res] {
     input.seq == 0
     res := {
         "id": "ask-chatgpt",
-        "uses": "chatgpt.comment-alert",
+        "uses": "chatgpt.query",
         "args": {
             "secret_api_key": input.env.CHATGPT_API_KEY,
         },
@@ -119,7 +119,7 @@ run[res] {
 exit[res] {
     input.action.id == "ask-chatgpt"
     res := {
-        "params": [
+        "attrs": [
             {
                 "name": "ChatGPT's comment",
                 "value": input.action.result.choices[0].message.content,
@@ -129,7 +129,7 @@ exit[res] {
 }
 ```
 
-We added the `id` value `ask-chatgpt` to the `run` rule, and then checked for it in the `exit` rule with `input.action.id == "ask-chatgpt"`. This ensures that the `exit` rule is only valid after the first `run` rule has been executed. In this `exit` rule, we extract the response message stored in the result of the ChatGPT action (https://platform.openai.com/docs/guides/chat/response-format) and store it as a parameter. The stored parameter will then be available for use in subsequent `run` and `exit` rules.
+We added the `id` value `ask-chatgpt` to the `run` rule, and then checked for it in the `exit` rule with `input.action.id == "ask-chatgpt"`. This ensures that the `exit` rule is only valid after the first `run` rule has been executed. In this `exit` rule, we extract the response message stored in the result of the ChatGPT action (https://platform.openai.com/docs/guides/chat/response-format) and store it as a Attribute. The stored Attribute will then be available for use in subsequent `run` and `exit` rules.
 
 After the `exit` rule is called, the `run` rule is called again. For example, by adding the following `run` rule, we can ensure that the `run` rule is only valid after the `ask-chatgpt` action has been executed.
 
@@ -159,7 +159,7 @@ An Action Policy accepts the following input:
 - `input.seq` (number): Sequence number of actions, starting from 0.
 - `input.called`: Array of [Action](#action): Actions that have already been called.
 
-Using this input, the action policy can process the alert data and determine the most appropriate action to perform next, along with the necessary arguments and parameters.
+Using this input, the action policy can process the alert data and determine the most appropriate action to perform next, along with the necessary arguments and Attributes.
 
 #### Output
 
@@ -176,7 +176,7 @@ After evaluating the action policy, if the next action is required, set the `act
 
 #### Output
 
-- `params`: Array of [Parameter](#parameter).
+- `attrs`: Array of [Attribute](#Attribute).
 
 ## Basic data structures
 
@@ -185,16 +185,16 @@ After evaluating the action policy, if the next action is required, set the `act
 - `title` (string, required): Title of the alert
 - `description` (string, optional): Human-readable explanation about the alert
 - `source` (string, optional): Data source
-- `params` (array, optional): Array of [Parameter](#parameter)
+- `attrs` (array, optional): Array of [Attribute](#Attribute)
 
-### Parameter
+### Attribute
 
-- `name` (string, required): Name of the parameter
-- `value` (any, required): Value of the parameter
-- `id` (string, optional): ID of the parameter. If not set, it will be assigned automatically.
-- `type` (string, optional): Type of the parameter
+- `name` (string, required): Name of the Attribute
+- `value` (any, required): Value of the Attribute
+- `id` (string, optional): ID of the Attribute. If not set, it will be assigned automatically.
+- `type` (string, optional): Type of the Attribute
 
-In a single alert, the `name` of a Parameter can be duplicated, but the `id` must be unique. If duplicate `id`s are passed, the later-specified Parameter will overwrite the earlier one. Keep in mind that the execution order of actions within the same sequence is not guaranteed, so be careful of duplication when specifying IDs. If you want to modify a Parameter, you can intentionally overwrite it by specifying its ID.
+In a single alert, the `name` of a Attribute can be duplicated, but the `id` must be unique. If duplicate `id`s are passed, the later-specified Attribute will overwrite the earlier one. Keep in mind that the execution order of actions within the same sequence is not guaranteed, so be careful of duplication when specifying IDs. If you want to modify a Attribute, you can intentionally overwrite it by specifying its ID.
 
 ### Action
 

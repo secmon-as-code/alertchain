@@ -7,17 +7,17 @@
 ## Description
 {{.Description}}
 
-## Parameters
+## Attributes
 
 | Name | Value | Type |
 |------|-------|------|
-{{range .Params}}{{ if ne .Type "markdown" }} | {{ .Name }} | `{{ .Value }}` | {{ .Type }} |
+{{range .Attrs}}{{ if ne .Type "markdown" }} | {{ .Name }} | `{{ .Value }}` | {{ .Type }} |
 {{else}}{{ $countMarkdown = add $countMarkdown 1 }}{{end}}{{end}}
 
 {{ if gt $countMarkdown 0 }}
 ## Comments
 
-{{range .Params}}{{ if eq .Type "markdown" }}
+{{range .Attrs}}{{ if eq .Type "markdown" }}
 ### {{ .Name }}
 
 {{ .Value }}
