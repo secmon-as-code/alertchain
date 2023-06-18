@@ -26,8 +26,8 @@ type Action struct {
 }
 
 type Exit struct {
-	Abort  bool        `json:"abort"`
-	Params []Parameter `json:"params"`
+	Abort bool        `json:"abort"`
+	Attrs []Attribute `json:"attrs"`
 
 	// Set by runAction
 	Proc Action `json:"-"`

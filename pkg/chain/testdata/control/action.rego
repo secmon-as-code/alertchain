@@ -9,10 +9,10 @@ run[res] {
 
 exit[res] {
 	input.action.id == "run_mock"
-	input.alert.params[k2].name == "k2"
-	res := {"params": {
+	input.alert.attrs[k2].name == "k2"
+	res := {"attrs": {
 		{
-			"id": input.alert.params[k2].id,
+			"id": input.alert.attrs[k2].id,
 			"name": "k2",
 			"value": "v2a",
 		},

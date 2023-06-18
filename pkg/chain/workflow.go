@@ -63,11 +63,11 @@ func (x *workflow) run(ctx *model.Context) error {
 		}
 		x.calledProc = append(x.calledProc, resp.Called...)
 
-		paramAll := x.alert.Params[:]
+		pattrAll := x.alert.Attrs[:]
 		for _, e := range resp.Exits {
-			paramAll = append(paramAll, e.Params...)
+			pattrAll = append(pattrAll, e.Attrs...)
 		}
-		x.alert.Params = model.TidyParameters(paramAll)
+		x.alert.Attrs = model.TidyAttributes(pattrAll)
 
 		if len(resp.Called) == 0 {
 			break

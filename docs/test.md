@@ -152,7 +152,7 @@ This will generate a file named `output/scenario1/data.json`. A sample file woul
         "title": "Trojan:EC2/DropPoint!DNS",
         "description": "EC2 instance i-99999999 is querying a domain name of a remote host that is known to hold credentials and other stolen data captured by malware.",
         "source": "aws",
-        "params": [
+        "attrs": [
           {
             "id": "e6fc6cbc-dd90-47b8-a73f-b392a53addcd",
             "name": "instance ID",

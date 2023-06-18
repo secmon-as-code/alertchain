@@ -69,7 +69,7 @@ alert[res] {
 		"title": f.Type,
 		"source": "aws",
 		"description": f.Description,
-		"params": [{
+		"attrs": [{
 			"name": "instance ID",
 			"value": f.Resource.InstanceDetails.InstanceId,
 		}],
@@ -83,7 +83,7 @@ This example alert policy is designed for [AWS GuardDuty](https://docs.aws.amazo
 - The severity is greater than 7, and
 - If these conditions are met, a new alert is created
 
-Additionally, this policy stores the detected instance's ID as a parameter, allowing it to be used in a subsequent Action.
+Additionally, this policy stores the detected instance's ID as a Attribute, allowing it to be used in a subsequent Action.
 
 ### 2. Write Action Policy
 

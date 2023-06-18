@@ -107,12 +107,12 @@ func TestChainControl(t *testing.T) {
 
 	var calledMock, calledMockAfter int
 	mock := func(ctx *model.Context, alert model.Alert, _ model.ActionArgs) (any, error) {
-		gt.A(t, alert.Params).Length(2).
-			At(0, func(t testing.TB, v model.Parameter) {
+		gt.A(t, alert.Attrs).Length(2).
+			At(0, func(t testing.TB, v model.Attribute) {
 				gt.V(t, v.Name).Equal("k1")
 				gt.V(t, v.Value).Equal("v1")
 			}).
-			At(1, func(t testing.TB, v model.Parameter) {
+			At(1, func(t testing.TB, v model.Attribute) {
 				gt.V(t, v.Name).Equal("k2")
 				gt.V(t, v.Value).Equal("v2")
 			})
@@ -122,16 +122,16 @@ func TestChainControl(t *testing.T) {
 	}
 
 	mockAfter := func(ctx *model.Context, alert model.Alert, _ model.ActionArgs) (any, error) {
-		gt.A(t, alert.Params).Length(3).
-			At(0, func(t testing.TB, v model.Parameter) {
+		gt.A(t, alert.Attrs).Length(3).
+			At(0, func(t testing.TB, v model.Attribute) {
 				gt.V(t, v.Name).Equal("k1")
 				gt.V(t, v.Value).Equal("v1")
 			}).
-			At(1, func(t testing.TB, v model.Parameter) {
+			At(1, func(t testing.TB, v model.Attribute) {
 				gt.V(t, v.Name).Equal("k2")
 				gt.V(t, v.Value).Equal("v2a")
 			}).
-			At(2, func(t testing.TB, v model.Parameter) {
+			At(2, func(t testing.TB, v model.Attribute) {
 				gt.V(t, v.Name).Equal("k3")
 				gt.V(t, v.Value).Equal("v3")
 			})
@@ -170,7 +170,7 @@ func TestChainLoop(t *testing.T) {
 
 	var calledMock int
 	mock := func(ctx *model.Context, alert model.Alert, _ model.ActionArgs) (any, error) {
-		gt.A(t, alert.Params).Length(1)
+		gt.A(t, alert.Attrs).Length(1)
 		calledMock++
 		return nil, nil
 	}
@@ -211,7 +211,7 @@ func TestPlaybook(t *testing.T) {
 
 	var calledMock int
 	mock := func(ctx *model.Context, alert model.Alert, _ model.ActionArgs) (any, error) {
-		gt.A(t, alert.Params).Length(1)
+		gt.A(t, alert.Attrs).Length(1)
 		calledMock++
 		return nil, nil
 	}
@@ -234,7 +234,7 @@ func TestPlaybook(t *testing.T) {
 	gt.V(t, recorder.Log.Title).Equal("Scenario 1")
 	gt.A(t, recorder.Log.Results).Length(1).At(0, func(t testing.TB, v *model.AlertLog) {
 		gt.V(t, v.Alert.Title).Equal("test alert")
-		gt.A(t, v.Alert.Params).Length(1).At(0, func(t testing.TB, v model.Parameter) {
+		gt.A(t, v.Alert.Attrs).Length(1).At(0, func(t testing.TB, v model.Attribute) {
 			gt.V(t, v.Name).Equal("c")
 
 			// Value has been converted to float64 by encoding/decoding json

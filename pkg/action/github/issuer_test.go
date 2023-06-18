@@ -22,7 +22,7 @@ func TestIssueTemplate(t *testing.T) {
 		AlertMetaData: model.AlertMetaData{
 			Title:       "blue",
 			Description: "orange",
-			Params: []model.Parameter{
+			Attrs: []model.Attribute{
 				{
 					Name:  "magic",
 					Value: "five",
@@ -72,7 +72,7 @@ func TestIssueTemplateNoMarkdown(t *testing.T) {
 		AlertMetaData: model.AlertMetaData{
 			Title:       "blue",
 			Description: "orange",
-			Params: []model.Parameter{
+			Attrs: []model.Attribute{
 				{
 					Name:  "magic",
 					Value: "five",
@@ -122,7 +122,7 @@ func TestIssuer(t *testing.T) {
 		AlertMetaData: model.AlertMetaData{
 			Title:       "blue",
 			Description: "orange",
-			Params: []model.Parameter{
+			Attrs: []model.Attribute{
 				{
 					Name:  "magic",
 					Value: "five",
