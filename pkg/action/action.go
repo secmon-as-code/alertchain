@@ -11,11 +11,11 @@ import (
 )
 
 var actionMap = map[types.ActionName]interfaces.RunAction{
-	"github.create_issue":   github.CreateIssue,
-	"chatgpt.comment_alert": chatgpt.CommentAlert,
-	"slack.post":            slack.Post,
-	"http.fetch":            http.Fetch,
-	"otx.indicator":         otx.Indicator,
+	"github.create_issue": github.CreateIssue,
+	"chatgpt.query":       chatgpt.Query,
+	"slack.post":          slack.Post,
+	"http.fetch":          http.Fetch,
+	"otx.indicator":       otx.Indicator,
 }
 
 func Map() map[types.ActionName]interfaces.RunAction {
