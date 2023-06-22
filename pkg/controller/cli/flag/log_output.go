@@ -14,6 +14,10 @@ type LogOutput struct {
 	w io.Writer
 }
 
+func NewLogOutput(w io.Writer) *LogOutput {
+	return &LogOutput{w: w, v: "default"}
+}
+
 func (x *LogOutput) Set(value string) error {
 	var w io.Writer
 	switch strings.ToLower(value) {

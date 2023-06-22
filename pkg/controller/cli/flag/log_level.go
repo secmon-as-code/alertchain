@@ -11,6 +11,10 @@ type LogLevel struct {
 	level slog.Level
 }
 
+func NewLogLevel(level slog.Level) *LogLevel {
+	return &LogLevel{level: level}
+}
+
 func (x *LogLevel) Set(value string) error {
 	levelMap := map[string]slog.Level{
 		"debug": slog.LevelDebug,

@@ -29,6 +29,10 @@ type LogFormat struct {
 	fmtType LogFormatType
 }
 
+func NewLogFormat(fmtType LogFormatType) *LogFormat {
+	return &LogFormat{fmtType: fmtType}
+}
+
 func (x *LogFormat) Set(value string) error {
 	formatMap := map[string]LogFormatType{
 		"console": LogFormatConsole,
