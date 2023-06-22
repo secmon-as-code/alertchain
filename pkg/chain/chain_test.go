@@ -39,7 +39,14 @@ func TestBasic(t *testing.T) {
 	)).NoError(t)
 
 	var called int
-	mock := func(ctx *model.Context, _ model.Alert, _ model.ActionArgs) (any, error) {
+	mock := func(ctx *model.Context, _ model.Alert, args model.ActionArgs) (any, error) {
+		s, ok := args["s"].(string)
+		gt.B(t, ok).True()
+		gt.V(t, s).Equal("blue")
+
+		n, ok := args["n"].(float64)
+		gt.B(t, ok).True()
+		gt.V(t, n).Equal(5)
 		called++
 		return nil, nil
 	}

@@ -77,9 +77,15 @@ func New(route interfaces.Router) *Server {
 				return
 			}
 
+			body, err := json.Marshal(resp.Data)
+			if err != nil {
+				respondError(w, err)
+				return
+			}
+
 			w.WriteHeader(resp.Code)
-			if err := json.NewEncoder(w).Encode(resp.Data); err != nil {
-				loggingError("failed to convert error message", err)
+			if _, err := w.Write(body); err != nil {
+				respondError(w, err)
 				return
 			}
 		}

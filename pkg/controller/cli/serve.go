@@ -44,6 +44,13 @@ func cmdServe(cfg *model.Config) *cli.Command {
 		}, cfg.Flags()...),
 
 		Action: func(ctx *cli.Context) error {
+			utils.Logger().Info("starting alertchain with serve mode",
+				slog.String("addr", addr),
+				slog.Bool("disable-action", disableAction),
+				slog.Bool("enable-sentry", enableSentry),
+				slog.Any("config", cfg),
+			)
+
 			var options []chain.Option
 			if disableAction {
 				options = append(options, chain.WithDisableAction())

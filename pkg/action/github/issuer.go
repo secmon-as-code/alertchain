@@ -44,12 +44,12 @@ func CreateIssue(ctx *model.Context, alert model.Alert, args model.ActionArgs) (
 	}
 
 	// Required arguments
-	appID, ok := args["app_id"].(int)
+	appID, ok := args["app_id"].(float64)
 	if !ok {
 		return nil, goerr.Wrap(types.ErrActionInvalidArgument, "app_id is required")
 	}
 
-	installID, ok := args["install_id"].(int)
+	installID, ok := args["install_id"].(float64)
 	if !ok {
 		return nil, goerr.Wrap(types.ErrActionInvalidArgument, "install_id is required")
 	}
