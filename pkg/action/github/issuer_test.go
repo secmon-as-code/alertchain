@@ -105,8 +105,8 @@ func TestIssuer(t *testing.T) {
 	}
 
 	cfg := model.ActionArgs{
-		"app_id":             int(gt.R1(strconv.Atoi(os.Getenv("TEST_GITHUB_APP_ID"))).NoError(t)),
-		"install_id":         int(gt.R1(strconv.Atoi(os.Getenv("TEST_GITHUB_INSTALL_ID"))).NoError(t)),
+		"app_id":             float64(gt.R1(strconv.Atoi(os.Getenv("TEST_GITHUB_APP_ID"))).NoError(t)),
+		"install_id":         float64(gt.R1(strconv.Atoi(os.Getenv("TEST_GITHUB_INSTALL_ID"))).NoError(t)),
 		"secret_private_key": os.Getenv("TEST_GITHUB_PRIVATE_KEY"),
 		"owner":              os.Getenv("TEST_GITHUB_OWNER"),
 		"repo":               os.Getenv("TEST_GITHUB_REPO"),
@@ -173,8 +173,8 @@ jM1rsSGIP5FFS056O92OpA3f3r7MPd2LFTBrQoxNIIqn9Lq+F+dX
 func TestIssuerDryRun(t *testing.T) {
 	ctx := model.NewContext(model.WithDryRunMode())
 	_, err := github.CreateIssue(ctx, model.Alert{}, model.ActionArgs{
-		"app_id":             int(123),
-		"install_id":         int(123),
+		"app_id":             float64(123),
+		"install_id":         float64(123),
 		"secret_private_key": dummyPrivateKey,
 		"owner":              "owner",
 		"repo":               "repo",
@@ -188,7 +188,7 @@ func TestIssuerValidationFail(t *testing.T) {
 	}{
 		"missing app_id": {
 			cfg: model.ActionArgs{
-				"install_id":         123,
+				"install_id":         float64(123),
 				"secret_private_key": dummyPrivateKey,
 				"owner":              "owner",
 				"repo":               "repo",
@@ -196,7 +196,7 @@ func TestIssuerValidationFail(t *testing.T) {
 		},
 		"missing install_id": {
 			cfg: model.ActionArgs{
-				"app_id":             123,
+				"app_id":             float64(123),
 				"secret_private_key": dummyPrivateKey,
 				"owner":              "owner",
 				"repo":               "repo",
@@ -204,41 +204,59 @@ func TestIssuerValidationFail(t *testing.T) {
 		},
 		"missing private_key": {
 			cfg: model.ActionArgs{
-				"app_id":     123,
-				"install_id": 123,
+				"app_id":     float64(123),
+				"install_id": float64(123),
 				"owner":      "owner",
 				"repo":       "repo",
 			},
 		},
 		"missing owner": {
 			cfg: model.ActionArgs{
-				"app_id":             123,
-				"install_id":         123,
+				"app_id":             float64(123),
+				"install_id":         float64(123),
 				"secret_private_key": dummyPrivateKey,
 				"repo":               "repo",
 			},
 		},
 		"missing repo": {
 			cfg: model.ActionArgs{
-				"app_id":             123,
-				"install_id":         123,
+				"app_id":             float64(123),
+				"install_id":         float64(123),
 				"secret_private_key": dummyPrivateKey,
 				"owner":              "owner",
 			},
 		},
-		"app_id is not a int": {
+		"app_id is not a float64": {
 			cfg: model.ActionArgs{
 				"app_id":             "123",
-				"install_id":         123,
+				"install_id":         float64(123),
 				"secret_private_key": dummyPrivateKey,
 				"owner":              "owner",
 				"repo":               "repo",
 			},
 		},
-		"install_id is not a int": {
+		"install_id is not a float64": {
+			cfg: model.ActionArgs{
+				"app_id":             float64(123),
+				"install_id":         "123",
+				"secret_private_key": dummyPrivateKey,
+				"owner":              "owner",
+				"repo":               "repo",
+			},
+		},
+		"app_id is not a float64, but int": {
 			cfg: model.ActionArgs{
 				"app_id":             123,
-				"install_id":         "123",
+				"install_id":         float64(123),
+				"secret_private_key": dummyPrivateKey,
+				"owner":              "owner",
+				"repo":               "repo",
+			},
+		},
+		"install_id is not a float64, but int": {
+			cfg: model.ActionArgs{
+				"app_id":             float64(123),
+				"install_id":         123,
 				"secret_private_key": dummyPrivateKey,
 				"owner":              "owner",
 				"repo":               "repo",
@@ -246,8 +264,8 @@ func TestIssuerValidationFail(t *testing.T) {
 		},
 		"private_key is not RSA format": {
 			cfg: model.ActionArgs{
-				"app_id":             123,
-				"install_id":         123,
+				"app_id":             float64(123),
+				"install_id":         float64(123),
 				"secret_private_key": "xxx",
 				"owner":              "owner",
 				"repo":               "repo",
