@@ -155,7 +155,7 @@ This will generate a file named `output/scenario1/data.json`. A sample file woul
         "attrs": [
           {
             "id": "e6fc6cbc-dd90-47b8-a73f-b392a53addcd",
-            "name": "instance ID",
+            "key": "instance ID",
             "value": "i-99999999",
             "type": ""
           }

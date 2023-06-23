@@ -65,10 +65,10 @@ func Post(ctx *model.Context, alert model.Alert, args model.ActionArgs) (any, er
 		notify.Color = v
 	}
 
-	for _, pattr := range alert.Attrs {
+	for _, attr := range alert.Attrs {
 		notify.Fields = append(notify.Fields, &notifyField{
-			Name:  string(pattr.Name),
-			Value: fmt.Sprintf("%v", pattr.Value),
+			Name:  string(attr.Key),
+			Value: fmt.Sprintf("%v", attr.Value),
 		})
 	}
 

@@ -34,7 +34,7 @@ From the Pub/Sub schema, `message.data` is extracted, and `eyJuYW1lIjoiaG9nZSJ9C
 
 ```json
 {
-    "name": "hoge"
+    "key": "hoge"
 }
 ```
 
@@ -121,7 +121,7 @@ exit[res] {
     res := {
         "attrs": [
             {
-                "name": "ChatGPT's comment",
+                "key": "ChatGPT's comment",
                 "value": input.action.result.choices[0].message.content,
             }
         ]

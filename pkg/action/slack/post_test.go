@@ -31,7 +31,7 @@ func TestPost(t *testing.T) {
 			Source:      "test_source",
 			Attrs: []model.Attribute{
 				{
-					Name:  "test_pattr",
+					Key:   "test_attr",
 					Value: "test_value",
 				},
 			},

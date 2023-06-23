@@ -4,7 +4,7 @@ import "github.com/google/uuid"
 
 type (
 	AttrID        string
-	AttrName      string
+	AttrKey       string
 	AttrValue     any
 	AttributeType string
 )
