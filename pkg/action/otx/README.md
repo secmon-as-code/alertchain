@@ -62,7 +62,7 @@ The response is a JSON object containing the requested information about the ind
     "pulses": [
       {
         "id": "xxxxxxxxxxxxxxx",
-        "name": "IP Addresses Logged by the Rosethorn PotNet",
+        "key": "IP Addresses Logged by the Rosethorn PotNet",
         "description": "Malicious activity detections from a small network of honeypots that spans multiple ISPs and geographic locations.\n\nBehavior is logged on ports 23, 80, 3306, and 5900.",
         "modified": "2023-05-13T00:18:43.306000",
         "created": "2023-03-27T16:17:36.094000",

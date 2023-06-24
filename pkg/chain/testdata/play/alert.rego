@@ -4,7 +4,7 @@ alert[msg] {
 	msg := {
 		"title": "test alert",
 		"attrs": [{
-			"name": "c",
+			"key": "c",
 			"value": 1,
 		}],
 	}

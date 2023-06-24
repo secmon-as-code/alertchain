@@ -4,7 +4,7 @@ import "github.com/m-mizutani/alertchain/pkg/domain/types"
 
 type Attribute struct {
 	ID    types.AttrID        `json:"id"`
-	Name  types.AttrName      `json:"name"`
+	Key   types.AttrKey       `json:"key"`
 	Value types.AttrValue     `json:"value"`
 	Type  types.AttributeType `json:"type"`
 }
@@ -16,7 +16,7 @@ func (x Attributes) Copy() Attributes {
 	for i, p := range x {
 		newAttrs[i] = Attribute{
 			ID:    p.ID,
-			Name:  p.Name,
+			Key:   p.Key,
 			Value: p.Value,
 			Type:  p.Type,
 		}

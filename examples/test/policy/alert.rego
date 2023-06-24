@@ -10,7 +10,7 @@ alert[res] {
 		"source": "aws",
 		"description": f.Description,
 		"attrs": [{
-			"name": "instance ID",
+			"key": "instance ID",
 			"value": f.Resource.InstanceDetails.InstanceId,
 		}],
 	}

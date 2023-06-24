@@ -11,14 +11,14 @@
 
 | Name | Value | Type |
 |------|-------|------|
-{{range .Attrs}}{{ if ne .Type "markdown" }} | {{ .Name }} | `{{ .Value }}` | {{ .Type }} |
+{{range .Attrs}}{{ if ne .Type "markdown" }} | {{ .Key }} | `{{ .Value }}` | {{ .Type }} |
 {{else}}{{ $countMarkdown = add $countMarkdown 1 }}{{end}}{{end}}
 
 {{ if gt $countMarkdown 0 }}
 ## Comments
 
 {{range .Attrs}}{{ if eq .Type "markdown" }}
-### {{ .Name }}
+### {{ .Key }}
 
 {{ .Value }}
 

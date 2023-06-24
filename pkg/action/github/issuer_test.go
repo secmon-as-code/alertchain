@@ -24,23 +24,23 @@ func TestIssueTemplate(t *testing.T) {
 			Description: "orange",
 			Attrs: []model.Attribute{
 				{
-					Name:  "magic",
+					Key:   "magic",
 					Value: "five",
 				},
 				{
-					Name:  "star",
+					Key:   "star",
 					Value: "light",
 				},
 				{
-					Name:  "int",
+					Key:   "int",
 					Value: 123,
 				},
 				{
-					Name:  "struct",
+					Key:   "struct",
 					Value: struct{ Foo string }{Foo: "bar"},
 				},
 				{
-					Name:  "md-title",
+					Key:   "md-title",
 					Value: "*md-test*",
 					Type:  types.MarkDown,
 				},
@@ -74,19 +74,19 @@ func TestIssueTemplateNoMarkdown(t *testing.T) {
 			Description: "orange",
 			Attrs: []model.Attribute{
 				{
-					Name:  "magic",
+					Key:   "magic",
 					Value: "five",
 				},
 				{
-					Name:  "star",
+					Key:   "star",
 					Value: "light",
 				},
 				{
-					Name:  "int",
+					Key:   "int",
 					Value: 123,
 				},
 				{
-					Name:  "struct",
+					Key:   "struct",
 					Value: struct{ Foo string }{Foo: "bar"},
 				},
 			},
@@ -124,7 +124,7 @@ func TestIssuer(t *testing.T) {
 			Description: "orange",
 			Attrs: []model.Attribute{
 				{
-					Name:  "magic",
+					Key:   "magic",
 					Value: "five",
 				},
 			},

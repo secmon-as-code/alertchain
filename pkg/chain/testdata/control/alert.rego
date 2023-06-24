@@ -5,11 +5,11 @@ alert[msg] {
 		"title": "test alert",
 		"attrs": [
 			{
-				"name": "k1",
+				"key": "k1",
 				"value": "v1",
 			},
 			{
-				"name": "k2",
+				"key": "k2",
 				"value": "v2",
 			},
 		],
