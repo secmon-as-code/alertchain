@@ -186,6 +186,7 @@ After evaluating the action policy, if the next action is required, set the `act
 - `description` (string, optional): Human-readable explanation about the alert
 - `source` (string, optional): Data source
 - `attrs` (array, optional): Array of [Attribute](#Attribute)
+- `data` (any, optional): Original data of the alert. This field does not need to be filled in by the Alert Policy. It will be provided in Action Policy.
 
 ### Attribute
 
