@@ -30,7 +30,7 @@ type Alert struct {
 	AlertMetaData
 	ID        types.AlertID `json:"id"`
 	Schema    types.Schema  `json:"schema"`
-	Data      any           `json:"-"`
+	Data      any           `json:"data"`
 	CreatedAt time.Time     `json:"created_at"`
 
 	Raw string `json:"-"`
