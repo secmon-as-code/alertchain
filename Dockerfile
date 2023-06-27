@@ -1,4 +1,5 @@
 FROM golang:1.20.2 AS build-go
+ENV CGO_ENABLED=0
 ARG BUILD_VERSION
 COPY . /app
 WORKDIR /app
