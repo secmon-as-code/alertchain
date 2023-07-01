@@ -190,12 +190,12 @@ After evaluating the action policy, if the next action is required, set the `act
 
 ### Attribute
 
-- `name` (string, required): Name of the Attribute
+- `key` (string, required): Name of the Attribute
 - `value` (any, required): Value of the Attribute
 - `id` (string, optional): ID of the Attribute. If not set, it will be assigned automatically.
 - `type` (string, optional): Type of the Attribute
 
-In a single alert, the `name` of a Attribute can be duplicated, but the `id` must be unique. If duplicate `id`s are passed, the later-specified Attribute will overwrite the earlier one. Keep in mind that the execution order of actions within the same sequence is not guaranteed, so be careful of duplication when specifying IDs. If you want to modify a Attribute, you can intentionally overwrite it by specifying its ID.
+In a single alert, the `key` of a Attribute can be duplicated, but the `id` must be unique. If duplicate `id`s are passed, the later-specified Attribute will overwrite the earlier one. Keep in mind that the execution order of actions within the same sequence is not guaranteed, so be careful of duplication when specifying IDs. If you want to modify a Attribute, you can intentionally overwrite it by specifying its ID.
 
 ### Action
 
