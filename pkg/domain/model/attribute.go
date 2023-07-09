@@ -3,10 +3,14 @@ package model
 import "github.com/m-mizutani/alertchain/pkg/domain/types"
 
 type Attribute struct {
-	ID    types.AttrID        `json:"id"`
-	Key   types.AttrKey       `json:"key"`
-	Value types.AttrValue     `json:"value"`
-	Type  types.AttributeType `json:"type"`
+	ID    types.AttrID        `json:"id" firestore:"id"`
+	Key   types.AttrKey       `json:"key" firestore:"key"`
+	Value types.AttrValue     `json:"value" firestore:"value"`
+	Type  types.AttributeType `json:"type" firestore:"type"`
+	TTL   int64               `json:"ttl" firestore:"ttl"`
+
+	// for DB only
+	ExpiresAt int64 `json:"-" firestore:"expires_at"`
 }
 
 type Attributes []Attribute
