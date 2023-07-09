@@ -16,6 +16,8 @@ type (
 	EnvVarValue string
 
 	ActionSecret any
+
+	Namespace string
 )
 
 // EnvVars is a set of environment variables

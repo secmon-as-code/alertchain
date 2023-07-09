@@ -1,6 +1,8 @@
 package interfaces
 
 import (
+	"time"
+
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
 )
@@ -29,3 +31,13 @@ type AlertLogger interface {
 type Router func(ctx *model.Context, schema types.Schema, data any) error
 
 type Env func() types.EnvVars
+
+type TxProc func(ctx *model.Context, input model.Attributes) (model.Attributes, error)
+
+type Database interface {
+	GetAttrs(ctx *model.Context, ns types.Namespace) (model.Attributes, error)
+	PutAttrs(ctx *model.Context, ns types.Namespace, attrs model.Attributes) error
+	Lock(ctx *model.Context, ns types.Namespace, timeout time.Time) error
+	Unlock(ctx *model.Context, ns types.Namespace) error
+	Close() error
+}
