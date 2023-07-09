@@ -82,7 +82,9 @@ func (x *Client) PutAttrs(ctx *model.Context, ns types.Namespace, attrs model.At
 				}
 			} else {
 				ref := collection.Doc(string(attr.ID))
-				tx.Create(ref, attr)
+				if err := tx.Create(ref, attr); err != nil {
+					return goerr.Wrap(err, "failed to create attribute")
+				}
 			}
 		}
 
