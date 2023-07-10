@@ -4,12 +4,14 @@ import (
 	"embed"
 	"encoding/json"
 	"path/filepath"
+	"sync"
 
 	"testing"
 
 	"github.com/m-mizutani/alertchain/pkg/chain"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/infra/logger"
+	"github.com/m-mizutani/alertchain/pkg/infra/memory"
 	"github.com/m-mizutani/alertchain/pkg/infra/policy"
 	"github.com/m-mizutani/gt"
 )
@@ -210,10 +212,13 @@ func TestPlaybook(t *testing.T) {
 	gt.NoError(t, model.ParsePlaybook("testdata/play/playbook.jsonnet", read, &playbook))
 	gt.A(t, playbook.Scenarios).Length(1).At(0, func(t testing.TB, v *model.Scenario) {
 		gt.V(t, v.ID).Equal("s1")
-		event := gt.Cast[map[string]any](t, v.Event)
-		gt.V(t, event).Equal(map[string]any{
-			"class": "threat",
-		})
+
+		for _, event := range v.Events {
+			gt.V(t, event.Schema).Equal("my_test")
+			gt.V(t, event.Input).Equal(map[string]any{
+				"class": "threat",
+			})
+		}
 	})
 
 	var calledMock int
@@ -228,7 +233,7 @@ func TestPlaybook(t *testing.T) {
 		chain.WithPolicyAlert(alertPolicy),
 		chain.WithPolicyAction(actionPolicy),
 		chain.WithExtraAction("mock", mock),
-		chain.WithActionMock(playbook.Scenarios[0]),
+		chain.WithActionMock(&playbook.Scenarios[0].Events[0]),
 		chain.WithScenarioLogger(recorder),
 	)).NoError(t)
 
@@ -247,5 +252,91 @@ func TestPlaybook(t *testing.T) {
 			// Value has been converted to float64 by encoding/decoding json
 			gt.V(t, v.Value).Equal(float64(1))
 		})
+	})
+}
+
+func TestGlobalAttr(t *testing.T) {
+	var alertData any
+
+	alertPolicy := gt.R1(policy.New(
+		policy.WithPackage("alert"),
+		policy.WithFile("testdata/global_attr/alert.rego"),
+		policy.WithReadFile(read),
+	)).NoError(t)
+
+	actionPolicy := gt.R1(policy.New(
+		policy.WithPackage("action"),
+		policy.WithFile("testdata/global_attr/action.rego"),
+		policy.WithReadFile(read),
+	)).NoError(t)
+
+	var calledMock int
+	mock := func(ctx *model.Context, alert model.Alert, _ model.ActionArgs) (any, error) {
+		calledMock++
+		return nil, nil
+	}
+
+	c := gt.R1(chain.New(
+		chain.WithPolicyAlert(alertPolicy),
+		chain.WithPolicyAction(actionPolicy),
+		chain.WithExtraAction("mock", mock),
+	)).NoError(t)
+
+	ctx := model.NewContext()
+
+	// call HandleAlert twice, but mock action should be called only once
+	gt.NoError(t, c.HandleAlert(ctx, "my_alert", alertData))
+	gt.NoError(t, c.HandleAlert(ctx, "my_alert", alertData))
+	gt.N(t, calledMock).Equal(1)
+}
+
+func TestGlobalAttrRaceCondition(t *testing.T) {
+	var alertData any
+
+	alertPolicy := gt.R1(policy.New(
+		policy.WithPackage("alert"),
+		policy.WithFile("testdata/countup/alert.rego"),
+		policy.WithReadFile(read),
+	)).NoError(t)
+
+	actionPolicy := gt.R1(policy.New(
+		policy.WithPackage("action"),
+		policy.WithFile("testdata/countup/action.rego"),
+		policy.WithReadFile(read),
+	)).NoError(t)
+
+	cache := memory.New()
+
+	var calledMock int
+	mock := func(ctx *model.Context, alert model.Alert, _ model.ActionArgs) (any, error) {
+		calledMock++
+		return nil, nil
+	}
+
+	threadNum := 64
+
+	c := gt.R1(chain.New(
+		chain.WithPolicyAlert(alertPolicy),
+		chain.WithPolicyAction(actionPolicy),
+		chain.WithExtraAction("mock", mock),
+		chain.WithDatabase(cache),
+	)).NoError(t)
+
+	ctx := model.NewContext()
+	wg := sync.WaitGroup{}
+	for i := 0; i < threadNum; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			gt.NoError(t, c.HandleAlert(ctx, "my_alert", alertData))
+		}()
+	}
+	wg.Wait()
+
+	gt.N(t, calledMock).Equal(threadNum)
+	attrs := gt.R1(cache.GetAttrs(ctx, "default")).NoError(t)
+	gt.A(t, attrs).Length(1).At(0, func(t testing.TB, v model.Attribute) {
+		gt.V(t, v.Key).Equal("counter")
+		gt.V(t, v.Value).Equal(float64(threadNum))
 	})
 }

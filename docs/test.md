@@ -105,13 +105,17 @@ Here is an example of a Playbook jsonnet file:
     {
       id: 'scenario1',
       title: 'Test 1',
-      event: import 'event/guardduty.json',
-      schema: 'aws_guardduty',
-      results: {
-        'chatgpt.comment_alert': [
-          import 'results/chatgpt.json',
-        ],
-      },
+      events: [
+        {
+          input: import 'event/guardduty.json',
+          schema: 'aws_guardduty',
+          results: {
+            'chatgpt.comment_alert': [
+              import 'results/chatgpt.json',
+            ],
+          },
+        },
+      ],
     },
   ],
   env: {
@@ -169,7 +173,7 @@ This will generate a file named `output/scenario1/data.json`. A sample file woul
         {
           "action": {
             "id": "ask-gpt",
-            "uses": "chatgpt.comment_alert",
+            "uses": "chatgpt.query",
             "args": {
               "secret_api_key": "test_api_key_xxxxxxxxxx"
             },

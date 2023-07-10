@@ -7,6 +7,7 @@ import (
 	"github.com/m-mizutani/alertchain/pkg/domain/interfaces"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
+	"github.com/m-mizutani/alertchain/pkg/infra/memory"
 	"github.com/m-mizutani/alertchain/pkg/infra/policy"
 	"github.com/m-mizutani/goerr"
 	"golang.org/x/exp/slog"
@@ -15,6 +16,8 @@ import (
 type Chain struct {
 	alertPolicy  *policy.Client
 	actionPolicy *policy.Client
+	dbClient     interfaces.Database
+	timeout      time.Duration
 
 	scenarioLogger interfaces.ScenarioLogger
 	actionMock     interfaces.ActionMock
@@ -25,18 +28,20 @@ type Chain struct {
 	maxStackDepth int
 
 	now func() time.Time
-	Env interfaces.Env
+	env interfaces.Env
 }
 
 type Option func(c *Chain)
 
 func New(options ...Option) (*Chain, error) {
 	c := &Chain{
+		dbClient:       memory.New(),
+		timeout:        5 * time.Minute,
 		actionMap:      action.Map(),
 		scenarioLogger: &dummyScenarioLogger{},
 		maxStackDepth:  types.DefaultMaxStackDepth,
 		now:            time.Now,
-		Env:            Env,
+		env:            Env,
 	}
 
 	for _, opt := range options {

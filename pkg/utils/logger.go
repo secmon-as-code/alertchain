@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"io"
 	"reflect"
 	"sync"
@@ -13,8 +14,11 @@ import (
 	"golang.org/x/exp/slog"
 )
 
-var logger = slog.Default()
-var loggerMutex sync.Mutex
+var (
+	logger      = slog.Default()
+	loggerMutex sync.Mutex
+	logFormat   flag.LogFormatType
+)
 
 func Logger() *slog.Logger {
 	return logger
@@ -33,6 +37,7 @@ func ReconfigureLogger(w io.Writer, level slog.Level, format flag.LogFormatType)
 		handler = clog.New(
 			clog.WithWriter(w),
 			clog.WithLevel(level),
+			clog.WithTimeFmt("15:04:05.000"),
 			clog.WithReplaceAttr(filter),
 		)
 
@@ -49,24 +54,39 @@ func ReconfigureLogger(w io.Writer, level slog.Level, format flag.LogFormatType)
 
 	loggerMutex.Lock()
 	logger = slog.New(handler)
+	logFormat = format
 	loggerMutex.Unlock()
 }
 
-func ErrToAttrs(err error) []any {
+func ErrLog(err error) any {
 	if err == nil {
 		return nil
 	}
 
 	attrs := []any{
-		slog.String("errmsg", err.Error()),
+		slog.String("message", err.Error()),
 	}
-	if e := goerr.Unwrap(err); e != nil {
-		for k, v := range e.Values() {
-			attrs = append(attrs, slog.Any("error."+k, v))
+
+	if goErr := goerr.Unwrap(err); goErr != nil {
+		var values []any
+		for k, v := range goErr.Values() {
+			values = append(values, slog.Any(k, v))
+		}
+		attrs = append(attrs, slog.Group("values", values...))
+
+		var stacktrace any
+		if logFormat == flag.LogFormatJSON {
+			var traces []string
+			for _, st := range goErr.StackTrace() {
+				traces = append(traces, fmt.Sprintf("%+v", st))
+			}
+			stacktrace = traces
+		} else {
+			stacktrace = goErr.StackTrace()
 		}
 
-		attrs = append(attrs, slog.Any("stacktrace", e.StackTrace()))
+		attrs = append(attrs, slog.Any("stacktrace", stacktrace))
 	}
 
-	return attrs
+	return slog.Group("error", attrs...)
 }
