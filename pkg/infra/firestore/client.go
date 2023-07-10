@@ -113,6 +113,7 @@ func exponentialBackoff(attempt int) time.Duration {
 		delay = expBackOffMaxDelay
 	}
 
+	// #nosec
 	jitter := rand.Float64() * delay / 2
 	backoff := delay + jitter
 

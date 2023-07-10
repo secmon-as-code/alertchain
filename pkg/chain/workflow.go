@@ -46,32 +46,88 @@ func (x *Chain) newWorkflow(alert model.Alert, options []policy.QueryOption) (*w
 }
 
 func (x *workflow) run(ctx *model.Context) error {
-	ctx = ctx.New(model.WithAlert(x.alert))
 
-	envVars := x.chain.Env()
+	envVars := x.chain.env()
 
-	for i := 0; i < x.chain.maxStackDepth; i++ {
-		runReq := &model.ActionRunRequest{
-			Alert:   x.alert,
-			EnvVars: envVars,
-			Called:  x.calledProc,
+	if x.alert.Namespace != "" {
+		timeoutAt := x.chain.now().Add(x.chain.timeout)
+		if err := x.chain.dbClient.Lock(ctx, x.alert.Namespace, timeoutAt); err != nil {
+			return goerr.Wrap(err, "failed to lock namespace")
 		}
+		defer func() {
+			if err := x.chain.dbClient.Unlock(ctx, x.alert.Namespace); err != nil {
+				ctx.Logger().Error("failed to unlock", slog.Any("alert", x.alert))
+			}
+		}()
 
-		resp, err := x.runAction(ctx, runReq)
+		global, err := x.chain.dbClient.GetAttrs(ctx, x.alert.Namespace)
 		if err != nil {
-			return err
+			return goerr.Wrap(err, "failed to get global attrs")
 		}
-		x.calledProc = append(x.calledProc, resp.Called...)
+		ctx.Logger().Info("loaded global attributes", slog.Any("attrs", global))
 
-		attrAll := x.alert.Attrs[:]
-		for _, e := range resp.Exits {
-			attrAll = append(attrAll, e.Attrs...)
-		}
-		x.alert.Attrs = attrAll.Tidy()
+		x.alert.Attrs = append(x.alert.Attrs, global...).Tidy()
+	}
 
-		if len(resp.Called) == 0 {
-			break
+	initReq := model.ActionInitRequest{
+		Alert:   x.alert,
+		EnvVars: envVars,
+	}
+	var initResp model.ActionInitResponse
+
+	ctx = ctx.New(model.WithAlert(x.alert))
+	ctx.Logger().Debug("request action.init policy", slog.Any("request", initReq))
+	if err := x.chain.actionPolicy.Query(ctx, initReq, &initResp, x.options...); err != nil && !errors.Is(err, types.ErrNoPolicyResult) {
+		return goerr.Wrap(err, "failed to evaluate action.init").With("request", initReq)
+	}
+	ctx.Logger().Debug("response action.init policy", slog.Any("response", initResp))
+
+	x.alert.Attrs = append(x.alert.Attrs, initResp.Attrs()...).Tidy()
+
+	if !initResp.Abort() {
+		for i := 0; i < x.chain.maxStackDepth; i++ {
+			runReq := &model.ActionRunRequest{
+				Alert:   x.alert,
+				EnvVars: envVars,
+				Called:  x.calledProc,
+			}
+
+			resp, err := x.runAction(ctx, runReq)
+			if err != nil {
+				return err
+			}
+			x.calledProc = append(x.calledProc, resp.Called...)
+
+			attrAll := x.alert.Attrs[:]
+			for _, e := range resp.Exits {
+				attrAll = append(attrAll, e.Attrs...)
+			}
+			x.alert.Attrs = attrAll.Tidy()
+
+			if len(resp.Called) == 0 || resp.Abort() {
+				break
+			}
 		}
+	}
+
+	if x.alert.Namespace != "" {
+		var global model.Attributes
+		for i := range x.alert.Attrs {
+			if x.alert.Attrs[i].Global {
+				ttl := types.DefaultAttributeTTL
+				if x.alert.Attrs[i].TTL > 0 {
+					ttl = x.alert.Attrs[i].TTL
+				}
+				x.alert.Attrs[i].ExpiresAt = x.chain.now().UTC().Unix() + ttl
+				global = append(global, x.alert.Attrs[i])
+			}
+		}
+
+		if err := x.chain.dbClient.PutAttrs(ctx, x.alert.Namespace, global); err != nil {
+			return goerr.Wrap(err, "failed to put global attrs")
+		}
+
+		ctx.Logger().Info("saved global attributes", slog.Any("attrs", global))
 	}
 
 	return nil
@@ -87,8 +143,17 @@ func (x *workflow) alreadyCalled(id types.ActionID) bool {
 }
 
 type runActionResponse struct {
-	Exits  []model.Exit
+	Exits  []model.Chore
 	Called []model.Action
+}
+
+func (x *runActionResponse) Abort() bool {
+	for _, e := range x.Exits {
+		if e.Abort {
+			return true
+		}
+	}
+	return false
 }
 
 func (x *workflow) runAction(ctx *model.Context, runReq *model.ActionRunRequest) (*runActionResponse, error) {

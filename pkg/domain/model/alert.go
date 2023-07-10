@@ -10,10 +10,11 @@ import (
 )
 
 type AlertMetaData struct {
-	Title       string     `json:"title"`
-	Description string     `json:"description"`
-	Source      string     `json:"source"`
-	Attrs       Attributes `json:"attrs"`
+	Title       string          `json:"title"`
+	Description string          `json:"description"`
+	Source      string          `json:"source"`
+	Namespace   types.Namespace `json:"namespace"`
+	Attrs       Attributes      `json:"attrs"`
 }
 
 func (x AlertMetaData) Copy() AlertMetaData {

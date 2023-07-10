@@ -53,6 +53,12 @@ func WithScenarioLogger(logger interfaces.ScenarioLogger) Option {
 
 func WithEnv(f interfaces.Env) Option {
 	return func(c *Chain) {
-		c.Env = f
+		c.env = f
+	}
+}
+
+func WithDatabase(db interfaces.Database) Option {
+	return func(c *Chain) {
+		c.dbClient = db
 	}
 }

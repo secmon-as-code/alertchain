@@ -5,5 +5,5 @@ const (
 
 	DefaultMaxStackDepth = 32
 
-	DefaultAttributeTTL = 3600 * 24 // 1 day
+	DefaultAttributeTTL int64 = 3600 * 24 // 1 day
 )
