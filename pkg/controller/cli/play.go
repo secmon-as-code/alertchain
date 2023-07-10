@@ -70,7 +70,8 @@ func cmdPlay(cfg *model.Config) *cli.Command {
 
 				for _, ev := range s.Events {
 					lg := logger.NewJSONLogger(w, s)
-					options := append(baseOptions,
+					options := baseOptions[:]
+					options = append(options,
 						chain.WithScenarioLogger(lg),
 						chain.WithActionMock(&ev),
 					)
