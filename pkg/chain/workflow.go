@@ -67,7 +67,7 @@ func (x *workflow) run(ctx *model.Context) error {
 		for _, e := range resp.Exits {
 			attrAll = append(attrAll, e.Attrs...)
 		}
-		x.alert.Attrs = model.TidyAttributes(attrAll)
+		x.alert.Attrs = attrAll.Tidy()
 
 		if len(resp.Called) == 0 {
 			break

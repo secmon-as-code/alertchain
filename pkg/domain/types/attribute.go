@@ -3,10 +3,11 @@ package types
 import "github.com/google/uuid"
 
 type (
-	AttrID        string
-	AttrKey       string
-	AttrValue     any
-	AttributeType string
+	AttrID    string
+	AttrKey   string
+	AttrValue any
+	AttrType  string
+	AttrTTL   int64
 )
 
 func NewAttrID() AttrID {
@@ -14,9 +15,9 @@ func NewAttrID() AttrID {
 }
 
 const (
-	IPAddr     AttributeType = "ipaddr"
-	DomainName AttributeType = "domain"
-	FileSha256 AttributeType = "file.sha256"
-	FileSha512 AttributeType = "file.sha512"
-	MarkDown   AttributeType = "markdown"
+	IPAddr     AttrType = "ipaddr"
+	DomainName AttrType = "domain"
+	FileSha256 AttrType = "file.sha256"
+	FileSha512 AttrType = "file.sha512"
+	MarkDown   AttrType = "markdown"
 )

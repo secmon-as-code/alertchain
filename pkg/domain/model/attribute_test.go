@@ -21,6 +21,6 @@ func TestTidyAttributes(t *testing.T) {
 		{ID: "3", Key: "attr3", Value: "value3", Type: "type3"},
 	}
 
-	result := model.TidyAttributes(attrs)
+	result := attrs.Tidy()
 	gt.A(t, result).Equal(expected)
 }

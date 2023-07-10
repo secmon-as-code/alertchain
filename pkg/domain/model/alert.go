@@ -64,7 +64,7 @@ func NewAlert(meta AlertMetaData, schema types.Schema, data any) Alert {
 		CreatedAt:     time.Now(),
 		Raw:           encodeAlertData(data),
 	}
-	alert.AlertMetaData.Attrs = TidyAttributes(alert.AlertMetaData.Attrs)
+	alert.AlertMetaData.Attrs = alert.AlertMetaData.Attrs.Tidy()
 
 	return alert
 }

@@ -1,4 +1,4 @@
-package firestore_test
+package infra_test
 
 import (
 	"math/rand"
@@ -8,13 +8,19 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/m-mizutani/alertchain/pkg/domain/interfaces"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/infra/firestore"
+	"github.com/m-mizutani/alertchain/pkg/infra/memory"
 	"github.com/m-mizutani/gt"
 )
 
-func setupClient(t *testing.T, ctx *model.Context) *firestore.Client {
+func TestMemory(t *testing.T) {
+	testClient(t, memory.New())
+}
+
+func TestFirestore(t *testing.T) {
 	projectID, ok := os.LookupEnv("TEST_FIRESTORE_PROJECT_ID")
 	if !ok {
 		t.Skip("TEST_FIRESTORE_PROJECT_ID not set")
@@ -25,15 +31,26 @@ func setupClient(t *testing.T, ctx *model.Context) *firestore.Client {
 		t.Skip("TEST_FIRESTORE_COLLECTION not set")
 	}
 
+	ctx := model.NewContext()
 	client := gt.R1(firestore.New(ctx, projectID, collection)).NoError(t)
 
-	return client
+	testClient(t, client)
 }
 
-func TestPutGet(t *testing.T) {
+func testClient(t *testing.T, client interfaces.Database) {
+	t.Run("PutGet", func(t *testing.T) {
+		testPutGet(t, client)
+	})
+	t.Run("Lock", func(t *testing.T) {
+		testLock(t, client)
+	})
+	t.Run("LockExpire", func(t *testing.T) {
+		testLockExpires(t, client)
+	})
+}
+
+func testPutGet(t *testing.T, client interfaces.Database) {
 	ctx := model.NewContext()
-	client := setupClient(t, ctx)
-	defer client.Close()
 
 	attrs1 := model.Attributes{
 		{
@@ -101,11 +118,9 @@ func TestPutGet(t *testing.T) {
 	})
 }
 
-func TestLock(t *testing.T) {
-	client := setupClient(t, model.NewContext())
-
+func testLock(t *testing.T, client interfaces.Database) {
 	ns := types.Namespace(uuid.New().String())
-	taskNum := 4
+	taskNum := 10
 	type record struct {
 		ts    time.Time
 		label string
@@ -128,10 +143,10 @@ func TestLock(t *testing.T) {
 			defer wg.Done()
 			gt.NoError(t, client.Lock(ctx, ns, now.Add(10*time.Second)))
 
-			println("lock")
+			t.Log("lock")
 			records <- &record{time.Now(), "lock"}
 			time.Sleep(time.Duration(rand.Intn(300)) * time.Millisecond)
-			println("unlock")
+			t.Log("unlock")
 			records <- &record{time.Now(), "unlock"}
 			if err := client.Unlock(ctx, ns); err != nil {
 				t.Error(err)
@@ -157,8 +172,7 @@ func TestLock(t *testing.T) {
 	gt.Array(t, results).Length(taskNum * 2)
 }
 
-func TestLockExpires(t *testing.T) {
-	client := setupClient(t, model.NewContext())
+func testLockExpires(t *testing.T, client interfaces.Database) {
 	ns := types.Namespace(uuid.New().String())
 
 	ctx := model.NewContext(

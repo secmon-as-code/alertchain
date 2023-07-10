@@ -136,7 +136,6 @@ func (x *Client) Lock(ctx *model.Context, ns types.Namespace, timeout time.Time)
 		}
 
 		wait := exponentialBackoff(i)
-		println("lock failed, waiting", wait.String(), "and retry")
 
 		select {
 		case <-ctx.Done():
