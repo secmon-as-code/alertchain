@@ -19,14 +19,16 @@ func TestParsePlaybook(t *testing.T) {
 		gt.V(t, v.ID).Equal("test1")
 		gt.V(t, v.Title).Equal("test1_title")
 
-		alert := gt.Cast[map[string]any](t, v.Event)
-		gt.M(t, alert).EqualAt("color", "blue")
+		gt.Array(t, v.Events).Length(1).At(0, func(t testing.TB, v model.Event) {
+			alert := gt.Cast[map[string]any](t, v.Input)
+			gt.M(t, alert).EqualAt("color", "blue")
 
-		gt.V(t, v.Schema).Equal("scc")
-		gt.M(t, v.Results).At("ticket", func(t testing.TB, v []any) {
-			gt.Array(t, v).Length(1).At(0, func(t testing.TB, v any) {
-				r := gt.Cast[map[string]any](t, v)
-				gt.Map(t, r).EqualAt("name", "test1")
+			gt.V(t, v.Schema).Equal("scc")
+			gt.M(t, v.Results).At("ticket", func(t testing.TB, v []any) {
+				gt.Array(t, v).Length(1).At(0, func(t testing.TB, v any) {
+					r := gt.Cast[map[string]any](t, v)
+					gt.Map(t, r).EqualAt("name", "test1")
+				})
 			})
 		})
 	})

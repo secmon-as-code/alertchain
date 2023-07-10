@@ -56,11 +56,7 @@ func cmdPlay(cfg *model.Config) *cli.Command {
 			ctx.Logger().Info("starting alertchain with play mode", slog.Any("playbook", playbookPath))
 
 			for _, s := range playbook.Scenarios {
-				ctx.Logger().Debug("Start scenario",
-					slog.String("id", string(s.ID)),
-					slog.String("title", string(s.Title)),
-					slog.Any("event", s.Event),
-				)
+				ctx.Logger().Debug("Start scenario", slog.Any("scenario", s))
 
 				w, err := openLogFile(outDir, string(s.ID))
 				if err != nil {
@@ -72,25 +68,27 @@ func cmdPlay(cfg *model.Config) *cli.Command {
 					}
 				}()
 
-				lg := logger.NewJSONLogger(w, s)
-				options := append(baseOptions,
-					chain.WithScenarioLogger(lg),
-					chain.WithActionMock(s),
-				)
+				for _, ev := range s.Events {
+					lg := logger.NewJSONLogger(w, s)
+					options := append(baseOptions,
+						chain.WithScenarioLogger(lg),
+						chain.WithActionMock(&ev),
+					)
 
-				if playbook.Env != nil {
-					options = append(options, chain.WithEnv(func() types.EnvVars {
-						return playbook.Env
-					}))
-				}
+					if playbook.Env != nil {
+						options = append(options, chain.WithEnv(func() types.EnvVars {
+							return playbook.Env
+						}))
+					}
 
-				chain, err := buildChain(*cfg, options...)
-				if err != nil {
-					return err
-				}
+					chain, err := buildChain(*cfg, options...)
+					if err != nil {
+						return err
+					}
 
-				if err := chain.HandleAlert(ctx, s.Schema, s.Event); err != nil {
-					lg.LogError(err)
+					if err := chain.HandleAlert(ctx, ev.Schema, ev.Input); err != nil {
+						lg.LogError(err)
+					}
 				}
 			}
 

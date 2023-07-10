@@ -33,6 +33,7 @@ func ReconfigureLogger(w io.Writer, level slog.Level, format flag.LogFormatType)
 		handler = clog.New(
 			clog.WithWriter(w),
 			clog.WithLevel(level),
+			clog.WithTimeFmt("15:04:05.000"),
 			clog.WithReplaceAttr(filter),
 		)
 

@@ -210,10 +210,13 @@ func TestPlaybook(t *testing.T) {
 	gt.NoError(t, model.ParsePlaybook("testdata/play/playbook.jsonnet", read, &playbook))
 	gt.A(t, playbook.Scenarios).Length(1).At(0, func(t testing.TB, v *model.Scenario) {
 		gt.V(t, v.ID).Equal("s1")
-		event := gt.Cast[map[string]any](t, v.Event)
-		gt.V(t, event).Equal(map[string]any{
-			"class": "threat",
-		})
+
+		for _, event := range v.Events {
+			gt.V(t, event.Schema).Equal("my_test")
+			gt.V(t, event.Input).Equal(map[string]any{
+				"class": "threat",
+			})
+		}
 	})
 
 	var calledMock int
@@ -228,7 +231,7 @@ func TestPlaybook(t *testing.T) {
 		chain.WithPolicyAlert(alertPolicy),
 		chain.WithPolicyAction(actionPolicy),
 		chain.WithExtraAction("mock", mock),
-		chain.WithActionMock(playbook.Scenarios[0]),
+		chain.WithActionMock(&playbook.Scenarios[0].Events[0]),
 		chain.WithScenarioLogger(recorder),
 	)).NoError(t)
 

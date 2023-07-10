@@ -37,14 +37,18 @@ func (x *Playbook) Validate() error {
 	return nil
 }
 
-type Scenario struct {
-	ID      types.ScenarioID           `json:"id"`
-	Title   types.ScenarioTitle        `json:"title"`
-	Event   any                        `json:"event"`
+type Event struct {
+	Input   any                        `json:"input"`
 	Schema  types.Schema               `json:"schema"`
 	Results map[types.ActionName][]any `json:"results"`
 
 	actionIndex map[types.ActionName]int
+}
+
+type Scenario struct {
+	ID     types.ScenarioID    `json:"id"`
+	Title  types.ScenarioTitle `json:"title"`
+	Events []Event             `json:"events"`
 }
 
 func (x *Scenario) Validate() error {
@@ -54,10 +58,21 @@ func (x *Scenario) Validate() error {
 	if x.Title == "" {
 		return goerr.Wrap(types.ErrInvalidScenario, "scenario title is empty")
 	}
+
+	// check event schema
+	for _, e := range x.Events {
+		if err := e.Validate(); err != nil {
+			return goerr.Wrap(err, "invalid event")
+		}
+	}
+
+	return nil
+}
+
+func (x *Event) Validate() error {
 	if x.Schema == "" {
 		return goerr.Wrap(types.ErrInvalidScenario, "schema is empty")
 	}
-
 	return nil
 }
 
@@ -68,7 +83,7 @@ func (x *Scenario) ToLog() ScenarioLog {
 	}
 }
 
-func (x *Scenario) GetResult(actionName types.ActionName) any {
+func (x *Event) GetResult(actionName types.ActionName) any {
 	if x.actionIndex == nil {
 		x.actionIndex = map[types.ActionName]int{}
 	}
