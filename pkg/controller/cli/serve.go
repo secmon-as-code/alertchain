@@ -52,7 +52,7 @@ func cmdServe(cfg *model.Config) *cli.Command {
 			&cli.StringFlag{
 				Name:        "db-type",
 				Usage:       "Database type (memory, firestore)",
-				Aliases:     []string{"d"},
+				Aliases:     []string{"t"},
 				EnvVars:     []string{"ALERTCHAIN_DB_TYPE"},
 				Value:       "memory",
 				Destination: &dbType,
