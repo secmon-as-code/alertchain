@@ -44,8 +44,6 @@ func cmdPlay(cfg *model.Config) *cli.Command {
 		}, cfg.Flags()...),
 
 		Action: func(c *cli.Context) error {
-			var baseOptions []chain.Option
-
 			// Load playbook
 			var playbook model.Playbook
 			if err := model.ParsePlaybook(playbookPath, os.ReadFile, &playbook); err != nil {
@@ -56,46 +54,57 @@ func cmdPlay(cfg *model.Config) *cli.Command {
 			ctx.Logger().Info("starting alertchain with play mode", slog.Any("playbook", playbookPath))
 
 			for _, s := range playbook.Scenarios {
-				ctx.Logger().Debug("Start scenario", slog.Any("scenario", s))
-
-				w, err := openLogFile(outDir, string(s.ID))
-				if err != nil {
+				if err := playScenario(ctx, s, cfg, outDir, playbook.Env); err != nil {
 					return err
-				}
-				defer func() {
-					if err := w.Close(); err != nil {
-						ctx.Logger().Warn("Failed to close log file", slog.String("err", err.Error()))
-					}
-				}()
-
-				for i, ev := range s.Events {
-					lg := logger.NewJSONLogger(w, s)
-					options := baseOptions[:]
-					options = append(options,
-						chain.WithScenarioLogger(lg),
-						chain.WithActionMock(&s.Events[i]),
-					)
-
-					if playbook.Env != nil {
-						options = append(options, chain.WithEnv(func() types.EnvVars {
-							return playbook.Env
-						}))
-					}
-
-					chain, err := buildChain(*cfg, options...)
-					if err != nil {
-						return err
-					}
-
-					if err := chain.HandleAlert(ctx, ev.Schema, ev.Input); err != nil {
-						lg.LogError(err)
-					}
 				}
 			}
 
 			return nil
 		},
 	}
+}
+
+func playScenario(ctx *model.Context, scenario *model.Scenario, cfg *model.Config, outDir string, envVars types.EnvVars) error {
+	ctx.Logger().Debug("Start scenario", slog.Any("scenario", scenario))
+
+	w, err := openLogFile(outDir, string(scenario.ID))
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err := w.Close(); err != nil {
+			ctx.Logger().Warn("Failed to close log file", slog.String("err", err.Error()))
+		}
+	}()
+	lg := logger.NewJSONLogger(w, scenario)
+
+	for i, ev := range scenario.Events {
+		options := []chain.Option{
+			chain.WithScenarioLogger(lg),
+			chain.WithActionMock(&scenario.Events[i]),
+		}
+
+		if envVars != nil {
+			options = append(options, chain.WithEnv(func() types.EnvVars {
+				return envVars
+			}))
+		}
+
+		chain, err := buildChain(*cfg, options...)
+		if err != nil {
+			return err
+		}
+
+		if err := chain.HandleAlert(ctx, ev.Schema, ev.Input); err != nil {
+			lg.LogError(err)
+		}
+	}
+
+	if err := lg.Flush(); err != nil {
+		ctx.Logger().Error("Failed to close scenario logger", "err", err)
+	}
+
+	return nil
 }
 
 func openLogFile(dir, name string) (io.WriteCloser, error) {

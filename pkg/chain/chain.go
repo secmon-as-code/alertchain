@@ -53,12 +53,6 @@ func New(options ...Option) (*Chain, error) {
 
 // HandleAlert is main function of alert chain. It receives alert data and execute actions according to the Rego policies.
 func (x *Chain) HandleAlert(ctx *model.Context, schema types.Schema, data any) error {
-	defer func() {
-		if err := x.scenarioLogger.Flush(); err != nil {
-			ctx.Logger().Error("Failed to close scenario logger", "err", err)
-		}
-	}()
-
 	ctx.Logger().Info("[input] detect alert", slog.Any("data", data), slog.Any("schema", schema))
 	alerts, err := x.detectAlert(ctx, schema, data)
 	if err != nil {
