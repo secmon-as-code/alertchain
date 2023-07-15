@@ -72,6 +72,9 @@ In this example, the policy checks if the input contains the name "suspicious_ac
 
 An Action Policy is responsible for defining the following:
 
+- `init` rule
+  - Check alert data at first in action workflow
+  - Abort all action processes if necessary
 - `run` rule
   - Choose the next action to execute
   - Provide arguments for the next action
@@ -79,11 +82,11 @@ An Action Policy is responsible for defining the following:
   - Create new or replace Attributes for the next action
   - Abort all action processes if necessary
 
-The relationship between the `run` and `exit` rules in the Action Policy and the execution order of actions is illustrated in the diagram below.
+The relationship between the `init`, `run` and `exit` rules in the Action Policy and the execution order of actions is illustrated in the diagram below.
 
-![AlertChain - Frame 1](https://user-images.githubusercontent.com/605953/236360762-af2675db-9adc-47a0-bf00-030196e8ec9a.jpg)
+![Action Policy Evaluation Workflow](https://github.com/m-mizutani/alertchain/assets/605953/b1c731e3-ceaa-4c77-a008-d4c0766c81a7)
 
-When an alert is detected by the Alert Policy, the `run` and `exit` rules within the Action Policy are called alternately. The `run` rule can specify the execution of multiple actions. Also, the `exit` rule is called after each action is completed. If no actions are selected by the `run` rule, all operations will terminate.
+When an alert is detected by the Alert Policy, the `init`, `run` and `exit` rules within the Action Policy are called alternately. The `init` rules can check alert data before calling `run` rules. The `run` rule can specify the execution of multiple actions. Also, the `exit` rule is called after each action is completed. If no actions are selected by the `run` rule, all operations will terminate.
 
 ```rego
 package action

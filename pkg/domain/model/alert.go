@@ -23,6 +23,7 @@ func (x AlertMetaData) Copy() AlertMetaData {
 		Description: x.Description,
 		Source:      x.Source,
 		Attrs:       x.Attrs.Copy(),
+		Namespace:   x.Namespace,
 	}
 	return newMeta
 }
@@ -37,12 +38,19 @@ type Alert struct {
 	Raw string `json:"-"`
 }
 
-func (x Alert) Copy() (Alert, error) {
+func (x Alert) Copy() Alert {
 	newAlert := Alert{
 		AlertMetaData: x.AlertMetaData.Copy(),
+
+		ID:        x.ID,
+		Schema:    x.Schema,
+		Data:      x.Data,
+		CreatedAt: x.CreatedAt,
+
+		Raw: x.Raw,
 	}
 
-	return newAlert, nil
+	return newAlert
 }
 
 func encodeAlertData(a any) string {
@@ -63,7 +71,8 @@ func NewAlert(meta AlertMetaData, schema types.Schema, data any) Alert {
 		Schema:        schema,
 		Data:          data,
 		CreatedAt:     time.Now(),
-		Raw:           encodeAlertData(data),
+
+		Raw: encodeAlertData(data),
 	}
 	alert.AlertMetaData.Attrs = alert.AlertMetaData.Attrs.Tidy()
 

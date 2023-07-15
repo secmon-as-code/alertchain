@@ -9,8 +9,9 @@ import (
 	"testing"
 
 	"github.com/m-mizutani/alertchain/pkg/chain"
+	"github.com/m-mizutani/alertchain/pkg/chain/core"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
-	"github.com/m-mizutani/alertchain/pkg/infra/logger"
+	"github.com/m-mizutani/alertchain/pkg/infra/logging"
 	"github.com/m-mizutani/alertchain/pkg/infra/memory"
 	"github.com/m-mizutani/alertchain/pkg/infra/policy"
 	"github.com/m-mizutani/gt"
@@ -54,9 +55,9 @@ func TestBasic(t *testing.T) {
 	}
 
 	c := gt.R1(chain.New(
-		chain.WithPolicyAlert(alertPolicy),
-		chain.WithPolicyAction(actionPolicy),
-		chain.WithExtraAction("mock", mock),
+		core.WithPolicyAlert(alertPolicy),
+		core.WithPolicyAction(actionPolicy),
+		core.WithExtraAction("mock", mock),
 	)).NoError(t)
 
 	ctx := model.NewContext()
@@ -88,10 +89,10 @@ func TestDisableAction(t *testing.T) {
 	}
 
 	c := gt.R1(chain.New(
-		chain.WithPolicyAlert(alertPolicy),
-		chain.WithPolicyAction(actionPolicy),
-		chain.WithExtraAction("mock", mock),
-		chain.WithDisableAction(),
+		core.WithPolicyAlert(alertPolicy),
+		core.WithPolicyAction(actionPolicy),
+		core.WithExtraAction("mock", mock),
+		core.WithDisableAction(),
 	)).NoError(t)
 
 	ctx := model.NewContext()
@@ -150,10 +151,10 @@ func TestChainControl(t *testing.T) {
 	}
 
 	c := gt.R1(chain.New(
-		chain.WithPolicyAlert(alertPolicy),
-		chain.WithPolicyAction(actionPolicy),
-		chain.WithExtraAction("mock", mock),
-		chain.WithExtraAction("mock.after", mockAfter),
+		core.WithPolicyAlert(alertPolicy),
+		core.WithPolicyAction(actionPolicy),
+		core.WithExtraAction("mock", mock),
+		core.WithExtraAction("mock.after", mockAfter),
 	)).NoError(t)
 
 	ctx := model.NewContext()
@@ -185,9 +186,9 @@ func TestChainLoop(t *testing.T) {
 	}
 
 	c := gt.R1(chain.New(
-		chain.WithPolicyAlert(alertPolicy),
-		chain.WithPolicyAction(actionPolicy),
-		chain.WithExtraAction("mock", mock),
+		core.WithPolicyAlert(alertPolicy),
+		core.WithPolicyAction(actionPolicy),
+		core.WithExtraAction("mock", mock),
 	)).NoError(t)
 
 	ctx := model.NewContext()
@@ -228,13 +229,13 @@ func TestPlaybook(t *testing.T) {
 		return nil, nil
 	}
 
-	recorder := logger.NewMemory(playbook.Scenarios[0])
+	recorder := logging.NewMemory(playbook.Scenarios[0])
 	c := gt.R1(chain.New(
-		chain.WithPolicyAlert(alertPolicy),
-		chain.WithPolicyAction(actionPolicy),
-		chain.WithExtraAction("mock", mock),
-		chain.WithActionMock(&playbook.Scenarios[0].Events[0]),
-		chain.WithScenarioLogger(recorder),
+		core.WithPolicyAlert(alertPolicy),
+		core.WithPolicyAction(actionPolicy),
+		core.WithExtraAction("mock", mock),
+		core.WithActionMock(&playbook.Scenarios[0].Events[0]),
+		core.WithScenarioLogger(recorder),
 	)).NoError(t)
 
 	var alertData any
@@ -244,7 +245,7 @@ func TestPlaybook(t *testing.T) {
 
 	gt.V(t, recorder.Log.ID).Equal("s1")
 	gt.V(t, recorder.Log.Title).Equal("Scenario 1")
-	gt.A(t, recorder.Log.Results).Length(1).At(0, func(t testing.TB, v *model.AlertLog) {
+	gt.A(t, recorder.Log.Results).Length(1).At(0, func(t testing.TB, v *model.PlayLog) {
 		gt.V(t, v.Alert.Title).Equal("test alert")
 		gt.A(t, v.Alert.Attrs).Length(1).At(0, func(t testing.TB, v model.Attribute) {
 			gt.V(t, v.Key).Equal("c")
@@ -277,9 +278,9 @@ func TestGlobalAttr(t *testing.T) {
 	}
 
 	c := gt.R1(chain.New(
-		chain.WithPolicyAlert(alertPolicy),
-		chain.WithPolicyAction(actionPolicy),
-		chain.WithExtraAction("mock", mock),
+		core.WithPolicyAlert(alertPolicy),
+		core.WithPolicyAction(actionPolicy),
+		core.WithExtraAction("mock", mock),
 	)).NoError(t)
 
 	ctx := model.NewContext()
@@ -316,10 +317,10 @@ func TestGlobalAttrRaceCondition(t *testing.T) {
 	threadNum := 64
 
 	c := gt.R1(chain.New(
-		chain.WithPolicyAlert(alertPolicy),
-		chain.WithPolicyAction(actionPolicy),
-		chain.WithExtraAction("mock", mock),
-		chain.WithDatabase(cache),
+		core.WithPolicyAlert(alertPolicy),
+		core.WithPolicyAction(actionPolicy),
+		core.WithExtraAction("mock", mock),
+		core.WithDatabase(cache),
 	)).NoError(t)
 
 	ctx := model.NewContext()

@@ -171,6 +171,7 @@ This will generate a file named `output/scenario1/data.json`. A sample file woul
       },
       "actions": [
         {
+          "seq": 0,
           "init": [
             {
               "attrs": [
@@ -181,9 +182,6 @@ This will generate a file named `output/scenario1/data.json`. A sample file woul
               ]
             }
           ]
-        },
-        {
-          "seq": 0,
           "run": [
             {
               "id": "ask-gpt",

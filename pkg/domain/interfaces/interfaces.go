@@ -17,14 +17,21 @@ type ActionMock interface {
 
 // ScenarioLogger records the "play" result of the alert chain, which is used for debugging and testing purposes. A logger should be created by the LoggerFactory for each scenario. The LoggerFactory is registered as an option within the chain.Chain.
 type ScenarioLogger interface {
-	NewAlertLogger(log *model.AlertLog) AlertLogger
+	NewAlertLogger(alert *model.Alert) AlertLogger
 	LogError(err error)
 	Flush() error
 }
 
 // AlertLogger records the "play" Action results of the chain, which is used for debugging and testing purposes. An AlertLogger should be created by the ScenarioLogger for each alert. The ScenarioLogger is registered as an option within the chain.Chain.
 type AlertLogger interface {
-	Log(log *model.ActionLog)
+	NewActionLogger() ActionLogger
+}
+
+// ActionLogger records the "play" result of each action, which is used for debugging and testing purposes. An ActionLogger should be created by the AlertLogger for each action. The AlertLogger is registered as an option within the chain.Chain.
+type ActionLogger interface {
+	LogInit(logs []model.Chore)
+	LogRun(logs []model.Action)
+	LogExit(logs []model.Chore)
 }
 
 // Router is a function to route the alert to the next action. The router is registered as an option within the chain.Chain.

@@ -33,10 +33,10 @@ func (x *ActionInitResponse) Attrs() Attributes {
 }
 
 type ActionRunRequest struct {
-	Alert   Alert         `json:"alert"`
-	EnvVars types.EnvVars `json:"env" masq:"secret"`
-	Seq     int           `json:"seq"`
-	Called  []Action      `json:"called"`
+	Alert   Alert          `json:"alert"`
+	EnvVars types.EnvVars  `json:"env" masq:"secret"`
+	Seq     int            `json:"seq"`
+	Called  []ActionResult `json:"called"`
 }
 
 type ActionRunResponse struct {
@@ -45,10 +45,14 @@ type ActionRunResponse struct {
 
 type Action struct {
 	ID   types.ActionID   `json:"id"`
+	Name string           `json:"name"`
 	Uses types.ActionName `json:"uses"`
 	Args ActionArgs       `json:"args"`
+}
 
-	Result any `json:"result"`
+type ActionResult struct {
+	Action
+	Result any `json:"result,omitempty"`
 }
 
 type Chore struct {
@@ -60,8 +64,8 @@ type Chore struct {
 }
 
 type ActionExitRequest struct {
-	Action Action   `json:"action"`
-	Called []Action `json:"called"`
+	Action Action         `json:"action"`
+	Called []ActionResult `json:"called"`
 
 	Alert   Alert         `json:"alert"`
 	EnvVars types.EnvVars `json:"env" masq:"secret"`
