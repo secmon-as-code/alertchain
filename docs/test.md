@@ -243,7 +243,7 @@ One JSON file will be generated for each scenario.
 - `init`: Array of the result of `init` rule evaluation.
 - `run`: Array of the result of `run` rule evaluation.
 - `exit`: Array of the result of `exit` rule evaluation.
-- `seq`: Sequence number of the action. This is not provided for `init` rule evaluation result.
+- `seq`: Sequence number of the action. It starts from 0 and is incremented by 1 for each action.
 
 #### Testing with Rego
 

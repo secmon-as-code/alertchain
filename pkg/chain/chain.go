@@ -30,11 +30,11 @@ func (x *Chain) HandleAlert(ctx *model.Context, schema types.Schema, data any) e
 	ctx.Logger().Info("[output] detect alert", slog.Any("alerts", alerts))
 
 	for _, alert := range alerts {
-		w, err := x.newWorkflow(alert)
+		w, err := newWorkflow(x.core, alert)
 		if err != nil {
 			return err
 		}
-		if err := w.run(ctx); err != nil {
+		if err := w.Run(ctx); err != nil {
 			return err
 		}
 	}

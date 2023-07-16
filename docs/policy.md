@@ -323,3 +323,15 @@ For `run`, you can write as usual, and of course, you can use the already loaded
 In `exit`, you are writing the addition of Global Attributes. Here you are setting an Attribute with the key `called`, which is incorporated into the condition of the previous `init` rule. By specifying `true` in the `global` field, it is treated as a Global Attribute. The evaluation of `run` and `exit` is repeated, and at the end of all processing, only the Attributes with `global` set to `true` are saved to the database.
 
 During this series of processes, the Action of the alert with the same namespace is not executed. Therefore, there will be no conflict within AlertChain.
+
+## FAQ
+
+### なぜinitとexitの2つのルールが必要なのか？
+
+initおよびexitは、両方とも実際のアクションの合間に呼ばれます。そのため、どちらかだけでいいのではという疑問を持つかもしれません。
+
+この2つの大きな違いは、exit = アクションが終了するたびに呼び出される、init = 一つ前のrunルールから呼び出されるアクション全てが完了した後に呼び出される、という点です。複数のアクションの結果をもとに保持するattributeを決めたり、処理を続行するか判断したい場合はinitを利用します。一方、アクションの結果をもとにattributeを更新したり、処理を中断したい場合はexitを利用します。
+
+また、initはAction Policyの中で最初に評価されるルールです。そのため、過去のアラートに紐づいた情報（Global Attribute）を参照してはじめに処理を続行するか、あるいは中断するかを判断するのにも役立てられます。
+
+### なぜinitとexitの2つのルールが必要なのか？

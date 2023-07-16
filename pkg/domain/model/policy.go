@@ -7,6 +7,7 @@ type AlertPolicyResult struct {
 }
 
 type ActionInitRequest struct {
+	Seq     int           `json:"seq"`
 	Alert   Alert         `json:"alert"`
 	EnvVars types.EnvVars `json:"env" masq:"secret"`
 }
@@ -64,7 +65,7 @@ type Chore struct {
 }
 
 type ActionExitRequest struct {
-	Action Action         `json:"action"`
+	Action ActionResult   `json:"action"`
 	Called []ActionResult `json:"called"`
 
 	Alert   Alert         `json:"alert"`

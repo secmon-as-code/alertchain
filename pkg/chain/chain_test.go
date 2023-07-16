@@ -1,9 +1,7 @@
 package chain_test
 
 import (
-	"embed"
 	"encoding/json"
-	"path/filepath"
 	"sync"
 
 	"testing"
@@ -16,13 +14,6 @@ import (
 	"github.com/m-mizutani/alertchain/pkg/infra/policy"
 	"github.com/m-mizutani/gt"
 )
-
-//go:embed testdata/**
-var testDataFS embed.FS
-
-func read(path string) ([]byte, error) {
-	return testDataFS.ReadFile(filepath.Clean(path))
-}
 
 func TestBasic(t *testing.T) {
 	var alertData any

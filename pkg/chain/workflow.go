@@ -16,19 +16,20 @@ type workflow struct {
 	options []policy.QueryOption
 }
 
-func (x *Chain) newWorkflow(alert model.Alert) (*workflow, error) {
+func newWorkflow(c *core.Core, alert model.Alert) (*workflow, error) {
 
 	hdlr := &workflow{
-		core:  x.core,
+		core:  c,
 		alert: alert,
 	}
 
 	return hdlr, nil
 }
 
-func (x *workflow) run(ctx *model.Context) error {
+func (x *workflow) Run(ctx *model.Context) error {
 	copied := x.alert.Copy()
 	logger := x.core.ScenarioLogger().NewAlertLogger(&copied)
+	defer x.core.ScenarioLogger().Flush()
 
 	envVars := x.core.Env()
 
@@ -68,8 +69,13 @@ func (x *workflow) run(ctx *model.Context) error {
 		if err := p.evaluate(ctx); err != nil {
 			return err
 		}
-		actionLogger := logger.NewActionLogger()
-		actionLogger.LogInit(p.init)
+
+		if len(p.init) > 0 || len(p.run) > 0 || len(p.exit) > 0 {
+			actionLogger := logger.NewActionLogger()
+			actionLogger.LogInit(p.init)
+			actionLogger.LogRun(p.run)
+			actionLogger.LogExit(p.exit)
+		}
 
 		if len(p.run) == 0 || p.aborted() {
 			break
@@ -153,6 +159,7 @@ func (x *proc) aborted() bool {
 func (x *proc) evaluate(ctx *model.Context) error {
 	// Evaluate `init` rules
 	initReq := model.ActionInitRequest{
+		Seq:     x.seq,
 		Alert:   x.alert,
 		EnvVars: x.envVars,
 	}
@@ -190,20 +197,23 @@ func (x *proc) evaluate(ctx *model.Context) error {
 		}
 
 		x.run = append(x.run, p)
-		result, err := x.executeAction(ctx, p, runReq.Alert)
+		result, err := x.executeAction(ctx, p, x.alert)
 		if err != nil {
 			return err
 		}
 
-		x.history.add(model.ActionResult{
+		actionResult := model.ActionResult{
 			Action: p,
 			Result: result,
-		})
+		}
+		x.history.add(actionResult)
 
 		exitReq := model.ActionExitRequest{
-			Alert:  runReq.Alert,
-			Action: p,
-			Called: x.history.called,
+			Seq:     x.seq,
+			Alert:   x.alert,
+			Action:  actionResult,
+			EnvVars: x.envVars,
+			Called:  x.history.called,
 		}
 		var exitResp model.ActionExitResponse
 		if err := x.core.QueryActionPolicy(ctx, exitReq, &exitResp); err != nil {
