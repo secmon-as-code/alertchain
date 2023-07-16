@@ -15,7 +15,7 @@ require (
 	github.com/m-mizutani/goerr v0.1.8
 	github.com/m-mizutani/gots v0.0.0-20230529013424-0639119b2cdd
 	github.com/m-mizutani/gt v0.0.6-0.20230708234934-97ecdb8cc874
-	github.com/m-mizutani/masq v0.1.1
+	github.com/m-mizutani/masq v0.1.2-0.20230711225639-9efb054419ee
 	github.com/open-policy-agent/opa v0.52.0
 	github.com/sashabaranov/go-openai v1.12.0
 	github.com/slack-go/slack v0.12.2

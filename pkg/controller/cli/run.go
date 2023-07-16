@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/m-mizutani/alertchain/pkg/chain"
+	"github.com/m-mizutani/alertchain/pkg/chain/core"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/goerr"
@@ -45,7 +45,7 @@ func cmdRun(cfg *model.Config) *cli.Command {
 		}, cfg.Flags()...),
 
 		Action: func(c *cli.Context) error {
-			var chainOptions []chain.Option
+			var chainOptions []core.Option
 
 			chain, err := buildChain(*cfg, chainOptions...)
 			if err != nil {

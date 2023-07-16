@@ -55,9 +55,6 @@ func (x *Scenario) Validate() error {
 	if x.ID == "" {
 		return goerr.Wrap(types.ErrInvalidScenario, "scenario ID is empty")
 	}
-	if x.Title == "" {
-		return goerr.Wrap(types.ErrInvalidScenario, "scenario title is empty")
-	}
 
 	// check event schema
 	for _, e := range x.Events {

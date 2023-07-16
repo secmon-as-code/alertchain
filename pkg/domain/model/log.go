@@ -6,20 +6,19 @@ type ScenarioLog struct {
 	ID    types.ScenarioID    `json:"id"`
 	Title types.ScenarioTitle `json:"title"`
 
-	Results []*AlertLog `json:"results,omitempty"`
-	Error   string      `json:"error,omitempty"`
+	Results []*PlayLog `json:"results,omitempty"`
+	Error   string     `json:"error,omitempty"`
 }
 
-type AlertLog struct {
-	Alert     Alert `json:"alert"`
-	CreatedAt int64 `json:"created_at"`
+type PlayLog struct {
+	Alert Alert `json:"alert"`
 
 	Actions []*ActionLog `json:"actions"`
 }
 
 type ActionLog struct {
-	Action Action `json:"action"`
-
-	StartedAt int64 `json:"started_at"`
-	EndedAt   int64 `json:"ended_at"`
+	Seq  int      `json:"seq"`
+	Init []Chore  `json:"init,omitempty"`
+	Run  []Action `json:"run,omitempty"`
+	Exit []Chore  `json:"exit,omitempty"`
 }

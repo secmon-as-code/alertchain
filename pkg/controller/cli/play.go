@@ -5,10 +5,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/m-mizutani/alertchain/pkg/chain"
+	"github.com/m-mizutani/alertchain/pkg/chain/core"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
-	"github.com/m-mizutani/alertchain/pkg/infra/logger"
+	"github.com/m-mizutani/alertchain/pkg/infra/logging"
 	"github.com/m-mizutani/goerr"
 	"github.com/urfave/cli/v2"
 	"golang.org/x/exp/slog"
@@ -64,6 +64,14 @@ func cmdPlay(cfg *model.Config) *cli.Command {
 	}
 }
 
+type actionMockWrapper struct {
+	ev *model.Event
+}
+
+func (x *actionMockWrapper) GetResult(name types.ActionName) any {
+	return x.ev.GetResult(name)
+}
+
 func playScenario(ctx *model.Context, scenario *model.Scenario, cfg *model.Config, outDir string, envVars types.EnvVars) error {
 	ctx.Logger().Debug("Start scenario", slog.Any("scenario", scenario))
 
@@ -76,27 +84,30 @@ func playScenario(ctx *model.Context, scenario *model.Scenario, cfg *model.Confi
 			ctx.Logger().Warn("Failed to close log file", slog.String("err", err.Error()))
 		}
 	}()
-	lg := logger.NewJSONLogger(w, scenario)
+	lg := logging.NewJSONLogger(w, scenario)
+
+	mockWrapper := &actionMockWrapper{}
+	options := []core.Option{
+		core.WithScenarioLogger(lg),
+		core.WithActionMock(mockWrapper),
+	}
+
+	if envVars != nil {
+		options = append(options, core.WithEnv(func() types.EnvVars {
+			return envVars
+		}))
+	}
+
+	chain, err := buildChain(*cfg, options...)
+	if err != nil {
+		return err
+	}
 
 	for i, ev := range scenario.Events {
-		options := []chain.Option{
-			chain.WithScenarioLogger(lg),
-			chain.WithActionMock(&scenario.Events[i]),
-		}
-
-		if envVars != nil {
-			options = append(options, chain.WithEnv(func() types.EnvVars {
-				return envVars
-			}))
-		}
-
-		chain, err := buildChain(*cfg, options...)
-		if err != nil {
-			return err
-		}
-
+		mockWrapper.ev = &scenario.Events[i]
 		if err := chain.HandleAlert(ctx, ev.Schema, ev.Input); err != nil {
 			lg.LogError(err)
+			break
 		}
 	}
 

@@ -2,7 +2,7 @@ package cli
 
 import (
 	"github.com/getsentry/sentry-go"
-	"github.com/m-mizutani/alertchain/pkg/chain"
+	"github.com/m-mizutani/alertchain/pkg/chain/core"
 	"github.com/m-mizutani/alertchain/pkg/controller/server"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
@@ -84,16 +84,16 @@ func cmdServe(cfg *model.Config) *cli.Command {
 				slog.Any("config", cfg),
 			)
 
-			var options []chain.Option
+			var options []core.Option
 			if disableAction {
-				options = append(options, chain.WithDisableAction())
+				options = append(options, core.WithDisableAction())
 			}
 
 			ctx := model.NewContext(model.WithBase(c.Context))
 
 			switch dbType {
 			case "memory":
-				options = append(options, chain.WithDatabase(memory.New()))
+				options = append(options, core.WithDatabase(memory.New()))
 
 			case "firestore":
 				if firestoreProjectID == "" {
@@ -113,7 +113,7 @@ func cmdServe(cfg *model.Config) *cli.Command {
 					}
 				}()
 
-				options = append(options, chain.WithDatabase(client))
+				options = append(options, core.WithDatabase(client))
 
 			default:
 				return goerr.Wrap(types.ErrInvalidOption, "invalid db-type").With("db-type", dbType)

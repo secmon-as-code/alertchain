@@ -72,6 +72,9 @@ In this example, the policy checks if the input contains the name "suspicious_ac
 
 An Action Policy is responsible for defining the following:
 
+- `init` rule
+  - Check alert data at first in action workflow
+  - Abort all action processes if necessary
 - `run` rule
   - Choose the next action to execute
   - Provide arguments for the next action
@@ -79,11 +82,11 @@ An Action Policy is responsible for defining the following:
   - Create new or replace Attributes for the next action
   - Abort all action processes if necessary
 
-The relationship between the `run` and `exit` rules in the Action Policy and the execution order of actions is illustrated in the diagram below.
+The relationship between the `init`, `run` and `exit` rules in the Action Policy and the execution order of actions is illustrated in the diagram below.
 
-![AlertChain - Frame 1](https://user-images.githubusercontent.com/605953/236360762-af2675db-9adc-47a0-bf00-030196e8ec9a.jpg)
+![Action Policy Evaluation Workflow](https://github.com/m-mizutani/alertchain/assets/605953/b1c731e3-ceaa-4c77-a008-d4c0766c81a7)
 
-When an alert is detected by the Alert Policy, the `run` and `exit` rules within the Action Policy are called alternately. The `run` rule can specify the execution of multiple actions. Also, the `exit` rule is called after each action is completed. If no actions are selected by the `run` rule, all operations will terminate.
+When an alert is detected by the Alert Policy, the `init`, `run` and `exit` rules within the Action Policy are called alternately. The `init` rules can check alert data before calling `run` rules. The `run` rule can specify the execution of multiple actions. Also, the `exit` rule is called after each action is completed. If no actions are selected by the `run` rule, all operations will terminate.
 
 ```rego
 package action
@@ -320,3 +323,15 @@ For `run`, you can write as usual, and of course, you can use the already loaded
 In `exit`, you are writing the addition of Global Attributes. Here you are setting an Attribute with the key `called`, which is incorporated into the condition of the previous `init` rule. By specifying `true` in the `global` field, it is treated as a Global Attribute. The evaluation of `run` and `exit` is repeated, and at the end of all processing, only the Attributes with `global` set to `true` are saved to the database.
 
 During this series of processes, the Action of the alert with the same namespace is not executed. Therefore, there will be no conflict within AlertChain.
+
+## FAQ
+
+### なぜinitとexitの2つのルールが必要なのか？
+
+initおよびexitは、両方とも実際のアクションの合間に呼ばれます。そのため、どちらかだけでいいのではという疑問を持つかもしれません。
+
+この2つの大きな違いは、exit = アクションが終了するたびに呼び出される、init = 一つ前のrunルールから呼び出されるアクション全てが完了した後に呼び出される、という点です。複数のアクションの結果をもとに保持するattributeを決めたり、処理を続行するか判断したい場合はinitを利用します。一方、アクションの結果をもとにattributeを更新したり、処理を中断したい場合はexitを利用します。
+
+また、initはAction Policyの中で最初に評価されるルールです。そのため、過去のアラートに紐づいた情報（Global Attribute）を参照してはじめに処理を続行するか、あるいは中断するかを判断するのにも役立てられます。
+
+### なぜinitとexitの2つのルールが必要なのか？

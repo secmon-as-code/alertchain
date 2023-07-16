@@ -2,6 +2,7 @@ package cli
 
 import (
 	"github.com/m-mizutani/alertchain/pkg/chain"
+	"github.com/m-mizutani/alertchain/pkg/chain/core"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/infra/policy"
@@ -10,7 +11,7 @@ import (
 	"golang.org/x/exp/slog"
 )
 
-func setupPolicy(cfg model.PolicyConfig) ([]chain.Option, error) {
+func setupPolicy(cfg model.PolicyConfig) ([]core.Option, error) {
 	if cfg.Path == "" {
 		return nil, goerr.Wrap(types.ErrConfigNoPolicyPath)
 	}
@@ -18,21 +19,21 @@ func setupPolicy(cfg model.PolicyConfig) ([]chain.Option, error) {
 	configs := []struct {
 		pkgName     string
 		defaultName string
-		f           func(*policy.Client) chain.Option
+		f           func(*policy.Client) core.Option
 	}{
 		{
 			pkgName:     cfg.Package.Alert,
 			defaultName: "alert",
-			f:           chain.WithPolicyAlert,
+			f:           core.WithPolicyAlert,
 		},
 		{
 			pkgName:     cfg.Package.Action,
 			defaultName: "action",
-			f:           chain.WithPolicyAction,
+			f:           core.WithPolicyAction,
 		},
 	}
 
-	var options []chain.Option
+	var options []core.Option
 
 	for _, c := range configs {
 		pkgName := c.defaultName
@@ -55,7 +56,7 @@ func setupPolicy(cfg model.PolicyConfig) ([]chain.Option, error) {
 	return options, nil
 }
 
-func buildChain(cfg model.Config, options ...chain.Option) (*chain.Chain, error) {
+func buildChain(cfg model.Config, options ...core.Option) (*chain.Chain, error) {
 	policyOptions, err := setupPolicy(cfg.Policy)
 	if err != nil {
 		return nil, err
@@ -63,7 +64,7 @@ func buildChain(cfg model.Config, options ...chain.Option) (*chain.Chain, error)
 
 	if cfg.Policy.Print {
 		utils.Logger().Info("enable print mode")
-		options = append(options, chain.WithEnablePrint())
+		options = append(options, core.WithEnablePrint())
 	}
 
 	options = append(options, policyOptions...)
