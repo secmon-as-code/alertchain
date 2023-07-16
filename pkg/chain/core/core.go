@@ -52,9 +52,6 @@ func (x *Core) DBClient() interfaces.Database             { return x.dbClient }
 func (x *Core) Timeout() time.Duration                    { return x.timeout }
 func (x *Core) ScenarioLogger() interfaces.ScenarioLogger { return x.scenarioLogger }
 func (x *Core) ActionMock() interfaces.ActionMock         { return x.actionMock }
-func (x *Core) ActionMap() map[types.ActionName]interfaces.RunAction {
-	return x.actionMap
-}
 
 func (x *Core) DisableAction() bool { return x.disableAction }
 func (x *Core) MaxSequences() int   { return x.maxSequences }
