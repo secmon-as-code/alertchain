@@ -77,11 +77,11 @@ func (x *workflow) Run(ctx *model.Context) error {
 			actionLogger.LogExit(p.exit)
 		}
 
+		x.alert.Attrs = p.finalized
+
 		if len(p.run) == 0 || p.aborted() {
 			break
 		}
-
-		x.alert.Attrs = p.finalized
 	}
 
 	if x.alert.Namespace != "" {
@@ -169,12 +169,12 @@ func (x *proc) evaluate(ctx *model.Context) error {
 	}
 
 	x.init = initResp.Init
+	x.alert.Attrs = append(x.alert.Attrs, initResp.Attrs()...).Tidy()
+	x.finalized = x.alert.Attrs[:]
+
 	if initResp.Abort() {
 		return nil
 	}
-
-	x.alert.Attrs = append(x.alert.Attrs, initResp.Attrs()...).Tidy()
-	x.finalized = x.alert.Attrs[:]
 
 	// Evaluate `run` rules
 	runReq := &model.ActionRunRequest{

@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"os"
 
 	"github.com/m-mizutani/alertchain/pkg/controller/cli/flag"
@@ -87,8 +88,8 @@ func New() *CLI {
 	return &CLI{app: app}
 }
 
-func (x *CLI) Run(argv []string) error {
-	if err := x.app.Run(argv); err != nil {
+func (x *CLI) Run(ctx context.Context, argv []string) error {
+	if err := x.app.RunContext(ctx, argv); err != nil {
 		attrs := []any{
 			slog.String("error", err.Error()),
 		}

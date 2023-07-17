@@ -1,13 +1,15 @@
 package main
 
 import (
+	"context"
 	"os"
 
 	"github.com/m-mizutani/alertchain/pkg/controller/cli"
 )
 
 func main() {
-	if err := cli.New().Run(os.Args); err != nil {
+	ctx := context.Background()
+	if err := cli.New().Run(ctx, os.Args); err != nil {
 		os.Exit(1)
 	}
 }

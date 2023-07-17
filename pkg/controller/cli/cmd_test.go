@@ -1,6 +1,7 @@
 package cli_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/m-mizutani/alertchain/pkg/controller/cli"
@@ -8,5 +9,6 @@ import (
 )
 
 func TestCLI(t *testing.T) {
-	gt.NoError(t, cli.New().Run([]string{"alertchain"}))
+	ctx := context.Background()
+	gt.NoError(t, cli.New().Run(ctx, []string{"alertchain"}))
 }
