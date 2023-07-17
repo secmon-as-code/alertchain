@@ -29,7 +29,6 @@ func newWorkflow(c *core.Core, alert model.Alert) (*workflow, error) {
 func (x *workflow) Run(ctx *model.Context) error {
 	copied := x.alert.Copy()
 	logger := x.core.ScenarioLogger().NewAlertLogger(&copied)
-	defer x.core.ScenarioLogger().Flush()
 
 	envVars := x.core.Env()
 
