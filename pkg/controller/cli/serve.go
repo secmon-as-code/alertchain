@@ -31,6 +31,7 @@ func cmdServe(cfg *model.Config) *cli.Command {
 			&cli.StringFlag{
 				Name:        "addr",
 				Usage:       "Bind address",
+				Aliases:     []string{"a"},
 				EnvVars:     []string{"ALERTCHAIN_ADDR"},
 				Value:       "127.0.0.1:8080",
 				Destination: &addr,
