@@ -57,6 +57,7 @@ func TestWorkflow(t *testing.T) {
 
 	wf := gt.R1(chain.NewWorkflow(c, alert)).NoError(t)
 	gt.NoError(t, wf.Run(ctx))
+	recorder.Flush()
 
 	var log model.ScenarioLog
 	gt.NoError(t, json.NewDecoder(bytes.NewReader(buf.Bytes())).Decode(&log))
