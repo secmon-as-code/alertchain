@@ -29,8 +29,9 @@ func newWorkflow(c *core.Core, alert model.Alert) (*workflow, error) {
 func (x *workflow) Run(ctx *model.Context) error {
 	copied := x.alert.Copy()
 	logger := x.core.ScenarioLogger().NewAlertLogger(&copied)
-
 	envVars := x.core.Env()
+
+	ctx = ctx.New(model.WithAlert(x.alert))
 
 	if x.alert.Namespace != "" {
 		timeoutAt := x.core.Now().Add(x.core.Timeout())
@@ -52,7 +53,6 @@ func (x *workflow) Run(ctx *model.Context) error {
 		x.alert.Attrs = append(x.alert.Attrs, global...).Tidy()
 	}
 
-	ctx = ctx.New(model.WithAlert(x.alert))
 	var history actionHistory
 
 	for i := 0; i < x.core.MaxSequences(); i++ {
