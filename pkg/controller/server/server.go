@@ -20,19 +20,6 @@ type Server struct {
 	mux *chi.Mux
 }
 
-func loggingError(msg string, err error) {
-	errValues := []any{
-		slog.String("error", err.Error()),
-	}
-	if goErr := goerr.Unwrap(err); goErr != nil {
-		for key, value := range goErr.Values() {
-			errValues = append(errValues, slog.Any(key, value))
-		}
-	}
-
-	utils.Logger().Error(msg, utils.ErrLog(err))
-}
-
 func respondError(w http.ResponseWriter, err error) {
 	body := struct {
 		Error string `json:"error"`
@@ -42,7 +29,7 @@ func respondError(w http.ResponseWriter, err error) {
 
 	sentry.CaptureException(err)
 
-	loggingError("respond error", err)
+	utils.Logger().Error("respond error", utils.ErrLog(err))
 
 	w.WriteHeader(http.StatusBadRequest)
 	if err := json.NewEncoder(w).Encode(body); err != nil {
