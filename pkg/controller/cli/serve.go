@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"os"
+
 	"github.com/getsentry/sentry-go"
 	"github.com/m-mizutani/alertchain/pkg/chain/core"
 	"github.com/m-mizutani/alertchain/pkg/controller/server"
@@ -121,8 +123,8 @@ func cmdServe(cfg *model.Config) *cli.Command {
 			}
 
 			if enableSentry {
-				if err := sentry.Init(sentry.ClientOptions{}); err != nil {
-					return goerr.Wrap(err, "Failed to initialize sentry")
+				if err := initSentry(); err != nil {
+					return err
 				}
 			}
 
@@ -140,4 +142,23 @@ func cmdServe(cfg *model.Config) *cli.Command {
 			return nil
 		},
 	}
+}
+
+func initSentry() error {
+	dsn, ok := os.LookupEnv("SENTRY_DSN")
+	if !ok {
+		return goerr.Wrap(types.ErrInvalidOption, "SENTRY_DSN is required for sentry")
+	}
+
+	env := os.Getenv("SENTRY_ENVIRONMENT")
+	utils.Logger().Info("initializing sentry", slog.String("dsn", dsn), slog.String("env", env))
+
+	if err := sentry.Init(sentry.ClientOptions{
+		Dsn:         dsn,
+		Environment: env,
+	}); err != nil {
+		return goerr.Wrap(err, "Failed to initialize sentry")
+	}
+
+	return nil
 }
