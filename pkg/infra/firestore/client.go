@@ -44,14 +44,21 @@ func (x *Client) GetAttrs(ctx *model.Context, ns types.Namespace) (model.Attribu
 		return nil, goerr.Wrap(err, "failed to get attributes from firestore")
 	}
 
-	attrs := make([]model.Attribute, len(docs))
-
-	for i, doc := range docs {
-		if doc.Exists() {
-			if err := doc.DataTo(&attrs[i]); err != nil {
-				return nil, goerr.Wrap(err, "failed to unmarshal attribute from firestore")
-			}
+	now := time.Now().UTC()
+	var attrs model.Attributes
+	for _, doc := range docs {
+		if !doc.Exists() {
+			continue
 		}
+
+		var attr attribute
+		if err := doc.DataTo(&attr); err != nil {
+			return nil, goerr.Wrap(err, "failed to unmarshal attribute from firestore")
+		}
+		if attr.ExpiresAt.Before(now) {
+			continue
+		}
+		attrs = append(attrs, attr.Attribute)
 	}
 
 	return attrs, nil
@@ -75,11 +82,16 @@ func (x *Client) PutAttrs(ctx *model.Context, ns types.Namespace, attrs model.At
 			attrRefMap[attr.ID] = doc.Ref
 		}
 
-		now := time.Now().UTC().Unix()
+		now := time.Now().UTC()
 
-		for _, attr := range attrs {
-			if attr.ExpiresAt == 0 {
-				attr.ExpiresAt = now + types.DefaultAttributeTTL
+		for _, base := range attrs {
+			ttl := base.TTL
+			if ttl == 0 {
+				ttl = types.DefaultAttributeTTL
+			}
+			attr := attribute{
+				Attribute: base,
+				ExpiresAt: now.Add(time.Duration(ttl) * time.Second),
 			}
 
 			if ref, ok := attrRefMap[attr.ID]; ok {
@@ -106,9 +118,14 @@ func (x *Client) PutAttrs(ctx *model.Context, ns types.Namespace, attrs model.At
 	return nil
 }
 
+type attribute struct {
+	model.Attribute
+	ExpiresAt time.Time `firestore:"expires_at"`
+}
+
 type lock struct {
 	AlertID   types.AlertID `firestore:"alert_id"`
-	ExpiresAt int64         `firestore:"expires_at"`
+	ExpiresAt time.Time     `firestore:"expires_at"`
 }
 
 const (
@@ -162,7 +179,7 @@ var (
 
 func (x *Client) tryLock(ctx *model.Context, ns types.Namespace, timeout time.Time) error {
 	key := lockKeyPrefix + hashNamespace(ns)
-	now := time.Now().UTC().Unix()
+	now := time.Now().UTC()
 	alert := ctx.Alert()
 
 	err := x.client.RunTransaction(ctx, func(ctx context.Context, tx *firestore.Transaction) error {
@@ -178,7 +195,7 @@ func (x *Client) tryLock(ctx *model.Context, ns types.Namespace, timeout time.Ti
 
 		newLock := lock{
 			AlertID:   alert.ID,
-			ExpiresAt: timeout.UTC().Unix(),
+			ExpiresAt: timeout.UTC(),
 		}
 
 		if doc == nil {
@@ -194,7 +211,7 @@ func (x *Client) tryLock(ctx *model.Context, ns types.Namespace, timeout time.Ti
 				return goerr.Wrap(err, "failed to unmarshal lock")
 			}
 
-			if current.ExpiresAt > now {
+			if current.ExpiresAt.After(now) {
 				return goerr.Wrap(errLockFailed, "lock is already acquired")
 			}
 

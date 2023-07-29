@@ -49,18 +49,9 @@ func (x *workflow) Run(ctx *model.Context) error {
 			return goerr.Wrap(err, "failed to get global attrs")
 		}
 
-		now := x.core.Now().UTC().Unix()
+		ctx.Logger().Info("loaded global attributes", slog.Any("attrs", global))
 
-		var available model.Attributes
-		for i, attr := range global {
-			if attr.ExpiresAt > now {
-				available = append(available, global[i])
-			}
-		}
-
-		ctx.Logger().Info("loaded global attributes", slog.Any("attrs", available))
-
-		x.alert.Attrs = append(x.alert.Attrs, available...).Tidy()
+		x.alert.Attrs = append(x.alert.Attrs, global...).Tidy()
 	}
 
 	var history actionHistory
@@ -97,11 +88,6 @@ func (x *workflow) Run(ctx *model.Context) error {
 		var global model.Attributes
 		for i := range x.alert.Attrs {
 			if x.alert.Attrs[i].Global {
-				ttl := types.DefaultAttributeTTL
-				if x.alert.Attrs[i].TTL > 0 {
-					ttl = x.alert.Attrs[i].TTL
-				}
-				x.alert.Attrs[i].ExpiresAt = x.core.Now().UTC().Unix() + ttl
 				global = append(global, x.alert.Attrs[i])
 			}
 		}

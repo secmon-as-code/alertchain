@@ -1,6 +1,8 @@
 package model
 
-import "github.com/m-mizutani/alertchain/pkg/domain/types"
+import (
+	"github.com/m-mizutani/alertchain/pkg/domain/types"
+)
 
 type Attribute struct {
 	ID     types.AttrID    `json:"id" firestore:"id"`
@@ -9,9 +11,6 @@ type Attribute struct {
 	Type   types.AttrType  `json:"type" firestore:"type"`
 	Global bool            `json:"global" firestore:"global"`
 	TTL    int64           `json:"ttl" firestore:"ttl"`
-
-	// for DB only
-	ExpiresAt int64 `json:"-" firestore:"expires_at"`
 }
 
 type Attributes []Attribute
