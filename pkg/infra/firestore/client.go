@@ -2,6 +2,8 @@ package firestore
 
 import (
 	"context"
+	"crypto/sha512"
+	"encoding/hex"
 	"errors"
 	"math"
 	"math/rand"
@@ -27,9 +29,16 @@ const (
 	lockKeyPrefix = "lock:"
 )
 
+func hashNamespace(input types.Namespace) string {
+	hash := sha512.New()
+	hash.Write([]byte(input))
+	hashed := hash.Sum(nil)
+	return hex.EncodeToString(hashed)
+}
+
 // GetAttrs implements interfaces.Database.
 func (x *Client) GetAttrs(ctx *model.Context, ns types.Namespace) (model.Attributes, error) {
-	key := attrKeyPrefix + string(ns)
+	key := attrKeyPrefix + hashNamespace(ns)
 	docs, err := x.client.Collection(x.collection).Doc(key).Collection("attributes").Documents(ctx).GetAll()
 	if err != nil {
 		return nil, goerr.Wrap(err, "failed to get attributes from firestore")
@@ -51,7 +60,7 @@ func (x *Client) GetAttrs(ctx *model.Context, ns types.Namespace) (model.Attribu
 // PutAttrs implements interfaces.Database.
 func (x *Client) PutAttrs(ctx *model.Context, ns types.Namespace, attrs model.Attributes) error {
 	err := x.client.RunTransaction(ctx, func(ctx context.Context, tx *firestore.Transaction) error {
-		key := attrKeyPrefix + string(ns)
+		key := attrKeyPrefix + hashNamespace(ns)
 		collection := x.client.Collection(x.collection).Doc(key).Collection("attributes")
 
 		attrRefMap := map[types.AttrID]*firestore.DocumentRef{}
@@ -152,7 +161,7 @@ var (
 )
 
 func (x *Client) tryLock(ctx *model.Context, ns types.Namespace, timeout time.Time) error {
-	key := lockKeyPrefix + string(ns)
+	key := lockKeyPrefix + hashNamespace(ns)
 	now := time.Now().UTC().Unix()
 	alert := ctx.Alert()
 
@@ -206,7 +215,7 @@ func (x *Client) tryLock(ctx *model.Context, ns types.Namespace, timeout time.Ti
 
 // Unlock implements interfaces.Database.
 func (x *Client) Unlock(ctx *model.Context, ns types.Namespace) error {
-	key := lockKeyPrefix + string(ns)
+	key := lockKeyPrefix + hashNamespace(ns)
 
 	if _, err := x.client.Collection(x.collection).Doc(key).Delete(ctx); err != nil {
 		return goerr.Wrap(err, "failed to delete lock")
