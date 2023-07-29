@@ -63,7 +63,6 @@ func (x *Client) PutAttrs(ctx *model.Context, ns types.Namespace, attrs model.At
 	for i, src := range attrs {
 		if dst, ok := x.attrs[ns][src.ID]; ok {
 			dst.Value = src.Value
-			dst.ExpiresAt = src.ExpiresAt
 		} else {
 			x.attrs[ns][src.ID] = &attrs[i]
 		}
