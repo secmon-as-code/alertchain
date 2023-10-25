@@ -3,6 +3,7 @@ module github.com/m-mizutani/alertchain
 go 1.20
 
 require (
+	cloud.google.com/go/firestore v1.9.0
 	firebase.google.com/go v3.13.0+incompatible
 	github.com/aws/aws-lambda-go v1.41.0
 	github.com/bradleyfalzon/ghinstallation/v2 v2.5.0
@@ -21,13 +22,13 @@ require (
 	github.com/slack-go/slack v0.12.2
 	github.com/urfave/cli/v2 v2.25.7
 	golang.org/x/exp v0.0.0-20230522175609-2e198f4a06a1
+	google.golang.org/grpc v1.56.3
 )
 
 require (
 	cloud.google.com/go v0.110.2 // indirect
 	cloud.google.com/go/compute v1.19.3 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
-	cloud.google.com/go/firestore v1.9.0 // indirect
 	cloud.google.com/go/iam v1.1.0 // indirect
 	cloud.google.com/go/longrunning v0.4.2 // indirect
 	cloud.google.com/go/storage v1.31.0 // indirect
@@ -74,7 +75,6 @@ require (
 	google.golang.org/genproto v0.0.0-20230530153820-e85fd2cbaebc // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20230530153820-e85fd2cbaebc // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230530153820-e85fd2cbaebc // indirect
-	google.golang.org/grpc v1.55.0 // indirect
 	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect

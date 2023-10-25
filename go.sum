@@ -153,12 +153,8 @@ github.com/m-mizutani/goerr v0.1.8 h1:6UtsMmOkJsaYNtAsMNLvWIteZPl1NOxpKFYK5m65vp
 github.com/m-mizutani/goerr v0.1.8/go.mod h1:fQkXuu06q+oLlp4FkbiTFzI/N/+WAK/Mz1W5kPZ6yzs=
 github.com/m-mizutani/gots v0.0.0-20230529013424-0639119b2cdd h1:mmuUG300WqGOvGNIIK3ELod2LpZZBV94fEgXK36xM0o=
 github.com/m-mizutani/gots v0.0.0-20230529013424-0639119b2cdd/go.mod h1:MDYrqsaKL6z6djDZpy6admhX6GOOCvyST+c0VnLbT4w=
-github.com/m-mizutani/gt v0.0.5 h1:mnFJDOfNe5adq2zOxhN1MABX9euu/+086xMRKG/oDgc=
-github.com/m-mizutani/gt v0.0.5/go.mod h1:0MPYSfGBLmYjTduzADVmIqD58ELQ5IfBFiK/f0FmB3k=
 github.com/m-mizutani/gt v0.0.6-0.20230708234934-97ecdb8cc874 h1:zGmsSQCkuHoL9SUcDJT204sYD+ugL2gWgqXRZy7ZFO4=
 github.com/m-mizutani/gt v0.0.6-0.20230708234934-97ecdb8cc874/go.mod h1:0MPYSfGBLmYjTduzADVmIqD58ELQ5IfBFiK/f0FmB3k=
-github.com/m-mizutani/masq v0.1.1 h1:Q+MD2N6vSevQGIF71JE3fhqc4tENtCogcdWCUyyYAEA=
-github.com/m-mizutani/masq v0.1.1/go.mod h1:0DMb1XrlQcNONMWTgm3VnLQ3cqobspVI7f8kQJ2qb+M=
 github.com/m-mizutani/masq v0.1.2-0.20230711225639-9efb054419ee h1:+Xt6mzki6NXGa3qzVuf4juMjANAwbiI948cf7xdmIkM=
 github.com/m-mizutani/masq v0.1.2-0.20230711225639-9efb054419ee/go.mod h1:0DMb1XrlQcNONMWTgm3VnLQ3cqobspVI7f8kQJ2qb+M=
 github.com/mattn/go-colorable v0.1.13 h1:fFA4WZxdEF4tXPZVKMLwD8oUnCTTo08duU7wxecdEvA=
@@ -339,8 +335,8 @@ google.golang.org/grpc v1.33.1/go.mod h1:fr5YgcSWrqhRRxogOsw7RzIpsmvOZ6IcH4kBYTp
 google.golang.org/grpc v1.33.2/go.mod h1:JMHMWHQWaTccqQQlmk3MJZS+GWXOdAesneDmEnv2fbc=
 google.golang.org/grpc v1.36.0/go.mod h1:qjiiYl8FncCW8feJPdyg3v6XW24KsRHe+dy9BAGRRjU=
 google.golang.org/grpc v1.45.0/go.mod h1:lN7owxKUQEqMfSyQikvvk5tf/6zMPsrK+ONuO11+0rQ=
-google.golang.org/grpc v1.55.0 h1:3Oj82/tFSCeUrRTg/5E/7d/W5A1tj6Ky1ABAuZuv5ag=
-google.golang.org/grpc v1.55.0/go.mod h1:iYEXKGkEBhg1PjZQvoYEVPTDkHo1/bjTnfwTeGONTY8=
+google.golang.org/grpc v1.56.3 h1:8I4C0Yq1EjstUzUJzpcRVbuYA2mODtEmpWiQoN/b2nc=
+google.golang.org/grpc v1.56.3/go.mod h1:I9bI3vqKfayGqPUAwGdOSu7kt6oIJLixfffKrpXqQ9s=
 google.golang.org/protobuf v0.0.0-20200109180630-ec00e32a8dfd/go.mod h1:DFci5gLYBciE7Vtevhsrf46CRTquxDuWsQurQQe4oz8=
 google.golang.org/protobuf v0.0.0-20200221191635-4d8936d0db64/go.mod h1:kwYJMbMJ01Woi6D6+Kah6886xMZcty6N08ah7+eCXa0=
 google.golang.org/protobuf v0.0.0-20200228230310-ab0ca4ff8a60/go.mod h1:cfTl7dwQJ+fmap5saPgwCLgHXTUD7jkjRqWcaiX5VyM=
