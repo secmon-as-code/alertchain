@@ -3,11 +3,12 @@ package core
 import (
 	"errors"
 
+	"log/slog"
+
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/infra/policy"
 	"github.com/m-mizutani/goerr"
-	"golang.org/x/exp/slog"
 )
 
 func (x *Core) QueryAlertPolicy(ctx *model.Context, schema types.Schema, in, out any) error {

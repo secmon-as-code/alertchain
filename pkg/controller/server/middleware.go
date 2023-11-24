@@ -3,8 +3,9 @@ package server
 import (
 	"net/http"
 
+	"log/slog"
+
 	"github.com/m-mizutani/alertchain/pkg/utils"
-	"golang.org/x/exp/slog"
 )
 
 type StatusCodeWriter struct {

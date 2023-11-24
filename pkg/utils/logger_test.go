@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"testing"
 
+	"log/slog"
+
 	"github.com/m-mizutani/alertchain/pkg/controller/cli/flag"
 	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/gt"
-	"golang.org/x/exp/slog"
 )
 
 func TestLogger(t *testing.T) {

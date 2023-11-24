@@ -5,6 +5,8 @@ import (
 
 	"net/http"
 
+	"log/slog"
+
 	"github.com/bradleyfalzon/ghinstallation/v2"
 	"github.com/google/go-github/github"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
@@ -12,7 +14,6 @@ import (
 	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/goerr"
 	"github.com/m-mizutani/gots/ptr"
-	"golang.org/x/exp/slog"
 )
 
 func CreateComment(ctx *model.Context, alert model.Alert, args model.ActionArgs) (any, error) {

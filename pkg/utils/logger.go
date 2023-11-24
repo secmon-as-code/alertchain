@@ -3,15 +3,16 @@ package utils
 import (
 	"fmt"
 	"io"
+	"log/slog"
 	"reflect"
 	"sync"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/m-mizutani/alertchain/pkg/controller/cli/flag"
 	"github.com/m-mizutani/clog"
 	"github.com/m-mizutani/goerr"
 	"github.com/m-mizutani/masq"
-	"golang.org/x/exp/slog"
 )
 
 var (
@@ -37,8 +38,22 @@ func ReconfigureLogger(w io.Writer, level slog.Level, format flag.LogFormatType)
 		handler = clog.New(
 			clog.WithWriter(w),
 			clog.WithLevel(level),
-			clog.WithTimeFmt("15:04:05.000"),
 			clog.WithReplaceAttr(filter),
+			clog.WithSource(true),
+			// clog.WithTimeFmt("2006-01-02 15:04:05"),
+			clog.WithColorMap(&clog.ColorMap{
+				Level: map[slog.Level]*color.Color{
+					slog.LevelDebug: color.New(color.FgGreen, color.Bold),
+					slog.LevelInfo:  color.New(color.FgCyan, color.Bold),
+					slog.LevelWarn:  color.New(color.FgYellow, color.Bold),
+					slog.LevelError: color.New(color.FgRed, color.Bold),
+				},
+				LevelDefault: color.New(color.FgBlue, color.Bold),
+				Time:         color.New(color.FgWhite),
+				Message:      color.New(color.FgHiWhite),
+				AttrKey:      color.New(color.FgHiCyan),
+				AttrValue:    color.New(color.FgHiWhite),
+			}),
 		)
 
 	case flag.LogFormatJSON:

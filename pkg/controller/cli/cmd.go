@@ -4,13 +4,14 @@ import (
 	"context"
 	"os"
 
+	"log/slog"
+
 	"github.com/m-mizutani/alertchain/pkg/controller/cli/flag"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/goerr"
 	"github.com/urfave/cli/v2"
-	"golang.org/x/exp/slog"
 )
 
 type CLI struct {

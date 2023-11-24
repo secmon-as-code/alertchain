@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"time"
 
+	"log/slog"
+
 	"github.com/getsentry/sentry-go"
 	"github.com/go-chi/chi/v5"
 	"github.com/m-mizutani/alertchain/pkg/domain/interfaces"
@@ -13,7 +15,6 @@ import (
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/goerr"
-	"golang.org/x/exp/slog"
 )
 
 type Server struct {

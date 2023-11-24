@@ -1,7 +1,7 @@
 package flag
 
 import (
-	"golang.org/x/exp/slog"
+	"log/slog"
 
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/goerr"
