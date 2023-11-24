@@ -1,11 +1,12 @@
 package chain
 
 import (
+	"log/slog"
+
 	"github.com/m-mizutani/alertchain/pkg/chain/core"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/goerr"
-	"golang.org/x/exp/slog"
 )
 
 type Chain struct {

@@ -3,6 +3,8 @@ package cli
 import (
 	"os"
 
+	"log/slog"
+
 	"github.com/getsentry/sentry-go"
 	"github.com/m-mizutani/alertchain/pkg/chain/core"
 	"github.com/m-mizutani/alertchain/pkg/controller/server"
@@ -13,7 +15,6 @@ import (
 	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/goerr"
 	"github.com/urfave/cli/v2"
-	"golang.org/x/exp/slog"
 )
 
 func cmdServe(cfg *model.Config) *cli.Command {

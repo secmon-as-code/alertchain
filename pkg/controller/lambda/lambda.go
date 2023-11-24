@@ -5,13 +5,14 @@ import (
 	"encoding/json"
 	"os"
 
+	"log/slog"
+
 	"github.com/m-mizutani/alertchain/pkg/chain"
 	"github.com/m-mizutani/alertchain/pkg/controller/cli/flag"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/goerr"
-	"golang.org/x/exp/slog"
 )
 
 type config struct {

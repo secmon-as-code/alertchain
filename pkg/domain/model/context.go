@@ -3,8 +3,9 @@ package model
 import (
 	"context"
 
+	"log/slog"
+
 	"github.com/m-mizutani/alertchain/pkg/utils"
-	"golang.org/x/exp/slog"
 )
 
 type Context struct {
