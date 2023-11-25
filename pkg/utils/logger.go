@@ -9,23 +9,27 @@ import (
 	"time"
 
 	"github.com/fatih/color"
-	"github.com/m-mizutani/alertchain/pkg/controller/cli/flag"
 	"github.com/m-mizutani/clog"
-	"github.com/m-mizutani/goerr"
 	"github.com/m-mizutani/masq"
+)
+
+type LogFormat int
+
+const (
+	LogFormatConsole LogFormat = iota + 1
+	LogFormatJSON
 )
 
 var (
 	logger      = slog.Default()
 	loggerMutex sync.Mutex
-	logFormat   flag.LogFormatType
 )
 
 func Logger() *slog.Logger {
 	return logger
 }
 
-func ReconfigureLogger(w io.Writer, level slog.Level, format flag.LogFormatType) {
+func ReconfigureLogger(w io.Writer, level slog.Level, format LogFormat) {
 	filter := masq.New(
 		masq.WithTag("secret"),
 		masq.WithFieldPrefix("secret_"),
@@ -34,7 +38,7 @@ func ReconfigureLogger(w io.Writer, level slog.Level, format flag.LogFormatType)
 
 	var handler slog.Handler
 	switch format {
-	case flag.LogFormatConsole:
+	case LogFormatConsole:
 		handler = clog.New(
 			clog.WithWriter(w),
 			clog.WithLevel(level),
@@ -56,7 +60,7 @@ func ReconfigureLogger(w io.Writer, level slog.Level, format flag.LogFormatType)
 			}),
 		)
 
-	case flag.LogFormatJSON:
+	case LogFormatJSON:
 		handler = slog.NewJSONHandler(w, &slog.HandlerOptions{
 			AddSource:   true,
 			Level:       level,
@@ -64,44 +68,12 @@ func ReconfigureLogger(w io.Writer, level slog.Level, format flag.LogFormatType)
 		})
 
 	default:
-		panic("Log format is not supported: " + format.String())
+		panic("Unsupported log format: " + fmt.Sprintf("%d", format))
 	}
 
 	loggerMutex.Lock()
 	logger = slog.New(handler)
-	logFormat = format
 	loggerMutex.Unlock()
 }
 
-func ErrLog(err error) any {
-	if err == nil {
-		return nil
-	}
-
-	attrs := []any{
-		slog.String("message", err.Error()),
-	}
-
-	if goErr := goerr.Unwrap(err); goErr != nil {
-		var values []any
-		for k, v := range goErr.Values() {
-			values = append(values, slog.Any(k, v))
-		}
-		attrs = append(attrs, slog.Group("values", values...))
-
-		var stacktrace any
-		if logFormat == flag.LogFormatJSON {
-			var traces []string
-			for _, st := range goErr.StackTrace() {
-				traces = append(traces, fmt.Sprintf("%+v", st))
-			}
-			stacktrace = traces
-		} else {
-			stacktrace = goErr.StackTrace()
-		}
-
-		attrs = append(attrs, slog.Any("stacktrace", stacktrace))
-	}
-
-	return slog.Group("error", attrs...)
-}
+func ErrLog(err error) slog.Attr { return slog.Any("error", err) }
