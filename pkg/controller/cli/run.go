@@ -9,46 +9,50 @@ import (
 	"log/slog"
 
 	"github.com/m-mizutani/alertchain/pkg/chain/core"
+	"github.com/m-mizutani/alertchain/pkg/controller/cli/config"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/goerr"
 	"github.com/urfave/cli/v2"
 )
 
-func cmdRun(cfg *model.Config) *cli.Command {
+func cmdRun() *cli.Command {
 	var (
-		input  string
-		schema types.Schema
+		input     string
+		schema    types.Schema
+		policyCfg config.Policy
 	)
+
+	flags := []cli.Flag{
+		&cli.StringFlag{
+			Name:        "input",
+			Aliases:     []string{"i"},
+			Usage:       "input file or '-' for stdin",
+			EnvVars:     []string{"ALERTCHAIN_INPUT"},
+			Required:    true,
+			Destination: &input,
+			Category:    "run",
+		},
+		&cli.StringFlag{
+			Name:        "schema",
+			Aliases:     []string{"s"},
+			Usage:       "schema type",
+			EnvVars:     []string{"ALERTCHAIN_SCHEMA"},
+			Required:    true,
+			Destination: (*string)(&schema),
+		},
+	}
+	flags = append(flags, policyCfg.Flags()...)
 
 	return &cli.Command{
 		Name:    "run",
 		Aliases: []string{"r"},
 		Usage:   "Run alertchain policy at once and exit in",
-		Flags: append([]cli.Flag{
-			&cli.StringFlag{
-				Name:        "input",
-				Aliases:     []string{"i"},
-				Usage:       "input file or '-' for stdin",
-				EnvVars:     []string{"ALERTCHAIN_INPUT"},
-				Required:    true,
-				Destination: &input,
-				Category:    "run",
-			},
-			&cli.StringFlag{
-				Name:        "schema",
-				Aliases:     []string{"s"},
-				Usage:       "schema type",
-				EnvVars:     []string{"ALERTCHAIN_SCHEMA"},
-				Required:    true,
-				Destination: (*string)(&schema),
-			},
-		}, cfg.Flags()...),
-
+		Flags:   flags,
 		Action: func(c *cli.Context) error {
 			var chainOptions []core.Option
 
-			chain, err := buildChain(*cfg, chainOptions...)
+			chain, err := buildChain(&policyCfg, chainOptions...)
 			if err != nil {
 				return err
 			}

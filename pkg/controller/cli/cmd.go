@@ -6,7 +6,6 @@ import (
 	"log/slog"
 
 	"github.com/m-mizutani/alertchain/pkg/controller/cli/config"
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/goerr"
@@ -19,7 +18,6 @@ type CLI struct {
 
 func New() *CLI {
 	var (
-		cfg          model.Config
 		loggerConfig config.Logger
 	)
 	flags := []cli.Flag{}
@@ -47,9 +45,9 @@ func New() *CLI {
 		},
 
 		Commands: []*cli.Command{
-			cmdServe(&cfg),
-			cmdRun(&cfg),
-			cmdPlay(&cfg),
+			cmdServe(),
+			cmdRun(),
+			cmdPlay(),
 			{
 				Name:    "version",
 				Aliases: []string{"v"},

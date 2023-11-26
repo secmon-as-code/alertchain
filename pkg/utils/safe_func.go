@@ -1,8 +1,10 @@
 package utils
 
-import "io"
+type Closer interface {
+	Close() error
+}
 
-func SafeClose(c io.WriteCloser) {
+func SafeClose(c Closer) {
 	if err := c.Close(); err != nil {
 		Logger().Error("Fail to close io.WriteCloser", ErrLog(err))
 	}
