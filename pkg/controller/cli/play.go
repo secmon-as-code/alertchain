@@ -8,6 +8,7 @@ import (
 	"log/slog"
 
 	"github.com/m-mizutani/alertchain/pkg/chain/core"
+	"github.com/m-mizutani/alertchain/pkg/controller/cli/config"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/infra/logging"
@@ -15,34 +16,39 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func cmdPlay(cfg *model.Config) *cli.Command {
+func cmdPlay() *cli.Command {
 	var (
 		playbookPath string
 		outDir       string
+
+		policyCfg config.Policy
 	)
+
+	flags := []cli.Flag{
+		&cli.StringFlag{
+			Name:        "playbook",
+			Aliases:     []string{"b"},
+			Usage:       "playbook file",
+			EnvVars:     []string{"ALERTCHAIN_PLAYBOOK"},
+			Required:    true,
+			Destination: &playbookPath,
+		},
+		&cli.StringFlag{
+			Name:        "output",
+			Aliases:     []string{"o"},
+			Usage:       "output directory",
+			EnvVars:     []string{"ALERTCHAIN_OUTPUT"},
+			Destination: &outDir,
+			Value:       "./output",
+		},
+	}
+	flags = append(flags, policyCfg.Flags()...)
 
 	return &cli.Command{
 		Name:    "play",
 		Aliases: []string{"p"},
 		Usage:   "Simulate alertchain policy",
-		Flags: append([]cli.Flag{
-			&cli.StringFlag{
-				Name:        "playbook",
-				Aliases:     []string{"b"},
-				Usage:       "playbook file",
-				EnvVars:     []string{"ALERTCHAIN_PLAYBOOK"},
-				Required:    true,
-				Destination: &playbookPath,
-			},
-			&cli.StringFlag{
-				Name:        "output",
-				Aliases:     []string{"o"},
-				Usage:       "output directory",
-				EnvVars:     []string{"ALERTCHAIN_OUTPUT"},
-				Destination: &outDir,
-				Value:       "./output",
-			},
-		}, cfg.Flags()...),
+		Flags:   flags,
 
 		Action: func(c *cli.Context) error {
 			// Load playbook
@@ -55,7 +61,7 @@ func cmdPlay(cfg *model.Config) *cli.Command {
 			ctx.Logger().Info("starting alertchain with play mode", slog.Any("playbook", playbookPath))
 
 			for _, s := range playbook.Scenarios {
-				if err := playScenario(ctx, s, cfg, outDir, playbook.Env); err != nil {
+				if err := playScenario(ctx, s, &policyCfg, outDir, playbook.Env); err != nil {
 					return err
 				}
 			}
@@ -73,7 +79,7 @@ func (x *actionMockWrapper) GetResult(name types.ActionName) any {
 	return x.ev.GetResult(name)
 }
 
-func playScenario(ctx *model.Context, scenario *model.Scenario, cfg *model.Config, outDir string, envVars types.EnvVars) error {
+func playScenario(ctx *model.Context, scenario *model.Scenario, cfg *config.Policy, outDir string, envVars types.EnvVars) error {
 	ctx.Logger().Debug("Start scenario", slog.Any("scenario", scenario))
 
 	w, err := openLogFile(outDir, string(scenario.ID))
@@ -99,7 +105,7 @@ func playScenario(ctx *model.Context, scenario *model.Scenario, cfg *model.Confi
 		}))
 	}
 
-	chain, err := buildChain(*cfg, options...)
+	chain, err := buildChain(cfg, options...)
 	if err != nil {
 		return err
 	}

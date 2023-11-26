@@ -8,7 +8,6 @@ import (
 	"log/slog"
 
 	"github.com/m-mizutani/alertchain/pkg/chain"
-	"github.com/m-mizutani/alertchain/pkg/controller/cli/flag"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/utils"
@@ -59,7 +58,7 @@ func New(handler Handler, options ...Option) func(context.Context, any) (any, er
 		panic(err)
 	}
 
-	utils.ReconfigureLogger(os.Stdout, slog.LevelInfo, flag.LogFormatJSON)
+	utils.ReconfigureLogger(os.Stdout, slog.LevelInfo, utils.LogFormatJSON)
 
 	return func(ctx context.Context, data any) (any, error) {
 		defer func() {
