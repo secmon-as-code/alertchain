@@ -25,6 +25,15 @@
 {{end}}{{end}}
 {{end}}
 
+{{ if .Refs }}
+## References
+
+{{range .Refs}}
+- [{{ .Title }}]({{ .URL }})
+{{end}}
+{{end}}
+
+
 ## Alert
 
 <details>

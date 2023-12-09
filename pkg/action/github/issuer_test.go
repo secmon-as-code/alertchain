@@ -281,3 +281,31 @@ func TestIssuerValidationFail(t *testing.T) {
 		})
 	}
 }
+
+func TestRenderReference(t *testing.T) {
+	t.Run("test rendering .Refs by template", func(t *testing.T) {
+		alert := model.Alert{
+			AlertMetaData: model.AlertMetaData{
+				Refs: []model.Reference{
+					{
+						Title: "Test Title",
+						URL:   "http://test.url",
+					},
+				},
+			},
+		}
+
+		var buf bytes.Buffer
+		if err := github.ExecuteTemplate(&buf, alert); err != nil {
+			t.Fatal(err)
+		}
+
+		got := buf.String()
+		if !strings.Contains(got, "# References") {
+			t.Errorf("expected 'References' as H1 to be included in the output, got %s", got)
+		}
+		if !strings.Contains(got, "- [Test Title](http://test.url)") {
+			t.Errorf("expected title and link 'http://test.url' to be included in the output, got %s", got)
+		}
+	})
+}

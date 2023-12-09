@@ -15,6 +15,7 @@ type AlertMetaData struct {
 	Source      string          `json:"source"`
 	Namespace   types.Namespace `json:"namespace"`
 	Attrs       Attributes      `json:"attrs"`
+	Refs        References      `json:"refs"`
 }
 
 func (x AlertMetaData) Copy() AlertMetaData {
@@ -22,8 +23,9 @@ func (x AlertMetaData) Copy() AlertMetaData {
 		Title:       x.Title,
 		Description: x.Description,
 		Source:      x.Source,
-		Attrs:       x.Attrs.Copy(),
 		Namespace:   x.Namespace,
+		Attrs:       x.Attrs.Copy(),
+		Refs:        x.Refs.Copy(),
 	}
 	return newMeta
 }
