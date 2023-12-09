@@ -2,8 +2,6 @@ module github.com/m-mizutani/alertchain
 
 go 1.21
 
-toolchain go1.21.0
-
 require (
 	cloud.google.com/go/firestore v1.14.0
 	firebase.google.com/go v3.13.0+incompatible
