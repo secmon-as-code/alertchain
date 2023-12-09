@@ -204,6 +204,7 @@ After evaluating the action policy, if the next action is required, set the `act
 - `description` (string, optional): Human-readable explanation about the alert
 - `source` (string, optional): Data source
 - `attrs` (array, optional): Array of [Attribute](#Attribute)
+- `refs` (array, optional): Array of [Reference](#Reference)
 - `namespace` (string, optional): Namespace of Attributes (attrs). Global attributes are shared among alerts and actions that have the same namespace. If not set, global attribute feature is not enabled.
 
 ### Attribute
@@ -215,7 +216,14 @@ After evaluating the action policy, if the next action is required, set the `act
 - `global`: (boolean, optional): If set to true, the Attribute will be available to all alert and action that has same namespace. If set to false, the Attribute will only be available to the action that created it. Default is false.
 - `ttl` (number, optional): Retention period of the Attribute in seconds. It's available only when `global` is true. Default is 86400.
 
-In a single alert, the `key` of a Attribute can be duplicated, but the `id` must be unique. If duplicate `id`s are passed, the later-specified Attribute will overwrite the earlier one. Keep in mind that the execution order of actions within the same sequence is not guaranteed, so be careful of duplication when specifying IDs. If you want to modify a Attribute, you can intentionally overwrite it by specifying its ID.
+Within a single alert, the `key` of an Attribute can be duplicated, but the `id` must be unique. If duplicate `id`s are provided, the Attribute specified later will overwrite the earlier one. Please note that the execution order of actions within the same sequence is not guaranteed, so caution is advised when specifying IDs to avoid duplication. If you need to modify an Attribute, you can intentionally overwrite it by specifying its ID.
+
+### Reference
+
+Referring to an external document or service resource via URL.
+
+- `url`: (string, required)
+- `title`: (string, optional)
 
 ### Action
 
@@ -225,6 +233,7 @@ In a single alert, the `key` of a Attribute can be duplicated, but the `id` must
 - `result`: When called in the `exit` rule, the result of the action is stored.
 
 NOTE: Arguments with the `secret_` prefix in `args` have a special meaning. This indicates that the value is confidential (e.g., API keys) and will not be output in logs or similar records.
+
 ## Global Attribute
 
 The Global Attribute is a mechanism designed to share states between different alerts. It requires an external database to function. The databases presently supported are as follows:
