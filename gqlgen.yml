@@ -1,0 +1,43 @@
+# Where are all the schema files located? globs are supported eg  src/**/*.graphqls
+schema:
+  - graphql/*.graphqls
+
+# Where should the generated server code go?
+exec:
+  filename: pkg/controller/graphql/generated.go
+  package: graphql
+
+# Where should any generated models go?
+model:
+  filename: pkg/domain/model/graphql.go
+  package: model
+
+# Where should the resolver implementations go?
+resolver:
+  layout: follow-schema
+  dir: pkg/controller/graphql
+  package: graphql
+  filename_template: "{name}.resolvers.go"
+  # Optional: turn on to not generate template comments above resolvers
+  # omit_template_comment: false
+
+# gqlgen will search for any type names in the schema in these go packages
+# if they match it will use them, otherwise it will generate them.
+autobind:
+#  - "github.com/m-mizutani/graphqltest/graph/model"
+
+# This section declares type mapping between the GraphQL and go type systems
+#
+# The first line in each type will be used as defaults for resolver arguments and
+# modelgen, the others will be allowed when binding to fields. Configure them to
+# your liking
+models:
+  ID:
+    model:
+      - github.com/99designs/gqlgen/graphql.UUID
+  UUID:
+    model:
+      - github.com/99designs/gqlgen/graphql.UUID
+  Timestamp:
+    model:
+      - github.com/99designs/gqlgen/graphql.Time

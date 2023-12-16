@@ -2,17 +2,21 @@ package model
 
 import (
 	"context"
+	"time"
 
 	"log/slog"
 
 	"github.com/m-mizutani/alertchain/pkg/utils"
 )
 
+type Clock func() time.Time
+
 type Context struct {
 	context.Context
 	stack  int
 	alert  *Alert
 	dryRun bool
+	clock  Clock
 }
 
 type CtxOption func(ctx *Context)
@@ -20,6 +24,7 @@ type CtxOption func(ctx *Context)
 func NewContext(options ...CtxOption) *Context {
 	ctx := &Context{
 		Context: context.Background(),
+		clock:   time.Now,
 	}
 
 	for _, opt := range options {
@@ -53,6 +58,12 @@ func WithDryRunMode() CtxOption {
 	}
 }
 
+func WithClock(clock Clock) CtxOption {
+	return func(ctx *Context) {
+		ctx.clock = clock
+	}
+}
+
 func (x *Context) New(options ...CtxOption) *Context {
 	ctx := x
 
@@ -63,9 +74,10 @@ func (x *Context) New(options ...CtxOption) *Context {
 	return ctx
 }
 
-func (x *Context) Stack() int   { return x.stack }
-func (x *Context) Alert() Alert { return *x.alert }
-func (x *Context) DryRun() bool { return x.dryRun }
+func (x *Context) Stack() int     { return x.stack }
+func (x *Context) Alert() Alert   { return *x.alert }
+func (x *Context) DryRun() bool   { return x.dryRun }
+func (x *Context) Now() time.Time { return x.clock() }
 
 func (x *Context) Logger() *slog.Logger {
 	logger := utils.Logger()

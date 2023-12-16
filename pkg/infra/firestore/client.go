@@ -15,6 +15,7 @@ import (
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/goerr"
+	"google.golang.org/api/iterator"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -25,8 +26,9 @@ type Client struct {
 }
 
 const (
-	attrKeyPrefix = "attr:"
-	lockKeyPrefix = "lock:"
+	attrKeyPrefix     = "attr:"
+	lockKeyPrefix     = "lock:"
+	workflowKeyPrefix = "workflow:"
 )
 
 func hashNamespace(input types.Namespace) string {
@@ -116,6 +118,48 @@ func (x *Client) PutAttrs(ctx *model.Context, ns types.Namespace, attrs model.At
 	}
 
 	return nil
+}
+
+func (x *Client) PutWorkflow(ctx *model.Context, workflow model.WorkflowRecord) error {
+	key := workflowKeyPrefix + string(workflow.ID)
+	record := struct {
+		model.WorkflowRecord
+		RecordType string
+	}{
+		WorkflowRecord: workflow,
+		RecordType:     "workflow",
+	}
+
+	if _, err := x.client.Collection(x.collection).Doc(key).Set(ctx, record); err != nil {
+		return goerr.Wrap(err, "failed to put workflow")
+	}
+	return nil
+}
+
+func (x *Client) GetWorkflows(ctx *model.Context, offset, limit int) ([]model.WorkflowRecord, error) {
+	var workflows []model.WorkflowRecord
+	iter := x.client.Collection(x.collection).
+		Where("RecordType", "==", "workflow").
+		OrderBy("CreatedAt", firestore.Desc).
+		Offset(offset).
+		Limit(limit).
+		Documents(ctx)
+
+	for {
+		doc, err := iter.Next()
+		if err != nil {
+			if errors.Is(err, iterator.Done) {
+				return workflows, nil
+			}
+			return nil, goerr.Wrap(err, "failed to get workflow")
+		}
+
+		var workflow model.WorkflowRecord
+		if err := doc.DataTo(&workflow); err != nil {
+			return nil, goerr.Wrap(err, "failed to unmarshal workflow")
+		}
+		workflows = append(workflows, workflow)
+	}
 }
 
 type attribute struct {

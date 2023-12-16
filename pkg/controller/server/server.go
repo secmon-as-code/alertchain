@@ -8,8 +8,11 @@ import (
 
 	"log/slog"
 
+	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/getsentry/sentry-go"
 	"github.com/go-chi/chi/v5"
+	"github.com/m-mizutani/alertchain/pkg/controller/graphql"
 	"github.com/m-mizutani/alertchain/pkg/domain/interfaces"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
@@ -18,7 +21,23 @@ import (
 )
 
 type Server struct {
-	mux *chi.Mux
+	mux            *chi.Mux
+	resolver       *graphql.Resolver
+	enableGrappiQL bool
+}
+
+type Option func(cfg *Server)
+
+func WithResolver(resolver *graphql.Resolver) Option {
+	return func(cfg *Server) {
+		cfg.resolver = resolver
+	}
+}
+
+func WithEnableGraphiQL() Option {
+	return func(cfg *Server) {
+		cfg.enableGrappiQL = true
+	}
 }
 
 func respondError(w http.ResponseWriter, err error) {
@@ -48,8 +67,11 @@ func getSchema(r *http.Request) (types.Schema, error) {
 	return types.Schema(schema), nil
 }
 
-func New(route interfaces.Router) *Server {
+func New(route interfaces.Router, options ...Option) *Server {
 	s := &Server{}
+	for _, opt := range options {
+		opt(s)
+	}
 
 	wrap := func(handler apiHandler) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
@@ -85,6 +107,17 @@ func New(route interfaces.Router) *Server {
 		r.Post("/raw/{schema}", wrap(handleRawAlert))
 		r.Post("/pubsub/{schema}", wrap(handlePubSubAlert))
 	})
+
+	if s.resolver != nil {
+		gql := handler.NewDefaultServer(graphql.NewExecutableSchema(graphql.Config{
+			Resolvers: s.resolver,
+		}))
+		r.Handle("/graphql", gql)
+
+		if s.enableGrappiQL {
+			r.Handle("/graphiql", playground.Handler("playground", "/graphql"))
+		}
+	}
 
 	s.mux = r
 

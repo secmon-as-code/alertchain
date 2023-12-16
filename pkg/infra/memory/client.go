@@ -15,8 +15,9 @@ type lock struct {
 }
 
 type Client struct {
-	attrs map[types.Namespace]map[types.AttrID]*model.Attribute
-	locks map[types.Namespace]*lock
+	attrs     map[types.Namespace]map[types.AttrID]*model.Attribute
+	locks     map[types.Namespace]*lock
+	workflows []model.WorkflowRecord
 
 	attrMutex sync.RWMutex
 	lockMutex sync.Mutex
@@ -69,6 +70,24 @@ func (x *Client) PutAttrs(ctx *model.Context, ns types.Namespace, attrs model.At
 	}
 
 	return nil
+}
+
+func (x *Client) PutWorkflow(ctx *model.Context, workflow model.WorkflowRecord) error {
+	x.workflows = append(x.workflows, workflow)
+	return nil
+}
+
+func (x *Client) GetWorkflows(ctx *model.Context, offset, limit int) ([]model.WorkflowRecord, error) {
+	if offset >= len(x.workflows) {
+		return nil, nil
+	}
+
+	end := offset + limit
+	if end > len(x.workflows) {
+		end = len(x.workflows)
+	}
+
+	return x.workflows[offset:end], nil
 }
 
 // Lock implements interfaces.Database.

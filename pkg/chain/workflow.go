@@ -129,9 +129,9 @@ type proc struct {
 	envVars types.EnvVars
 
 	// logs
-	init []model.Chore
+	init []model.Next
 	run  []model.Action
-	exit []model.Chore
+	exit []model.Next
 
 	history   *actionHistory
 	finalized model.Attributes

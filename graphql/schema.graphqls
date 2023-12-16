@@ -1,0 +1,70 @@
+# GraphQL schema
+
+scalar Timestamp
+scalar WorkflowID
+scalar AlertID
+
+type WorkflowRecord {
+  id: WorkflowID!
+  createdAt: Timestamp!
+  alert: AlertRecord!
+  actions: [ActionRecord!]!
+}
+
+type AlertRecord {
+  id: AlertID!
+  schema: String!
+  data: String!
+  createdAt: Timestamp!
+
+  # From AlertMetaData
+  title: String!
+  description: String!
+  source: String!
+  namespace: String
+  initAttrs: [AttributeRecord!]!
+  lastAttrs: [AttributeRecord!]!
+  refs: [ReferenceRecord!]!
+}
+
+type AttributeRecord {
+  id: String!
+  key: String!
+  value: String!
+  type: String
+  global: Boolean!
+  ttl: Int!
+}
+
+type ReferenceRecord {
+  title: String
+  url: String
+}
+
+type ActionRecord {
+  id: String!
+  seq: Int!
+  uses: String!
+  args: [ArgumentRecord!]!
+  result: String
+  next: [NextRecord!]!
+  error: String
+
+  startedAt: Timestamp!
+  finishedAt: Timestamp!
+}
+
+type ArgumentRecord {
+  key: String!
+  value: String!
+}
+
+type NextRecord {
+  abort: Boolean!
+  attrs: [AttributeRecord!]!
+}
+
+type Query {
+  workflows(offset: Int, limit: Int): [WorkflowRecord!]!
+  Workflow(id: String!): WorkflowRecord!
+}
