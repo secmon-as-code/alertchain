@@ -8,7 +8,7 @@ Actions for jira.com
 - **Account ID**: You need to know your account ID. You can find account ID from URL of your profile page. e.g. `https://your-domain.atlassian.net/jira/people/5f6c3a1c1a2b3c4d5e6f7a8b` and `5f6c3a1c1a2b3c4d5e6f7a8b` is your account ID.
 - **API token**: You need to create an API token. You can find instructions on how to do so [here](https://support.atlassian.com/atlassian-account/docs/manage-api-tokens-for-your-atlassian-account/).
 
-## `jira.create_ticket`
+## `jira.create_issue`
 
 This action creates a ticket in the specified Jira project to serve as an alert handling ticket.
 

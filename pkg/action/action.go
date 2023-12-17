@@ -14,8 +14,9 @@ import (
 var actionMap = map[types.ActionName]interfaces.RunAction{
 	"github.create_issue":   github.CreateIssue,
 	"github.create_comment": github.CreateComment,
-	"github.add_attachment": github.CreateComment,
 	"jira.create_issue":     jira.CreateIssue,
+	"jira.add_comment":      jira.AddComment,
+	"jira.add_attachment":   jira.AddAttachment,
 	"chatgpt.query":         chatgpt.Query,
 	"slack.post":            slack.Post,
 	"http.fetch":            http.Fetch,
