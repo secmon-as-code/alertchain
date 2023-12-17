@@ -1,0 +1,34 @@
+{{$countMarkdown := 0}}
+- ID: {{ .ID }}
+- Created At: {{ .CreatedAt }}
+- Schema: {{ .Schema }}
+- Detected by: {{ .Source }}
+
+h2. Description
+
+{{.Description}}
+
+h2. Attributes
+
+|| Name || Value || Type ||
+{{range .Attrs}}{{ if ne .Type "markdown" }} | {{ .Key }} | {{"{{"}}{{ .Value }}{{"}}"}} | {{ .Type }} |
+{{else}}{{ $countMarkdown = add $countMarkdown 1 }}{{end}}{{end}}
+
+{{ if gt $countMarkdown 0 }}
+h2. Comments
+
+{{range .Attrs}}{{ if eq .Type "markdown" }}
+.h2 {{ .Key }}
+
+{{ .Value }}
+
+{{end}}{{end}}
+{{end}}
+
+{{ if .Refs }}
+h2. References
+
+{{range .Refs}}
+- [{{ .Title }}|{{ .URL }}]
+{{end}}
+{{end}}

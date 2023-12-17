@@ -5,6 +5,7 @@ An Action is an element of a workflow that is executed within an AlertChain. By 
 ## Supported actions
 
 - [github](./github/)
+- [jira](./jira/)
 - [chatgpt](./chatgpt/)
 - [slack](./slack/)
 - [http](./http)
