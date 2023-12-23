@@ -1,6 +1,8 @@
 package types
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+)
 
 type (
 	AttrID    string
@@ -21,3 +23,6 @@ const (
 	FileSha512 AttrType = "file.sha512"
 	MarkDown   AttrType = "markdown"
 )
+
+func (x AttrID) String() string  { return string(x) }
+func (x AttrKey) String() string { return string(x) }

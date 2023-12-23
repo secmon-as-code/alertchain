@@ -30,3 +30,5 @@ func NewAlertID() AlertID {
 func NewActionID() ActionID {
 	return ActionID(uuid.New().String())
 }
+
+func (x AlertID) String() string { return string(x) }

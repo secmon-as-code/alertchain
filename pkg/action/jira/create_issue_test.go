@@ -2,34 +2,13 @@ package jira_test
 
 import (
 	_ "embed"
-	"os"
 	"testing"
 
 	"github.com/m-mizutani/alertchain/pkg/action/jira"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
-	"github.com/m-mizutani/goerr"
+	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/gt"
 )
-
-func env(key string, dst *string) func() error {
-	return func() error {
-		v, ok := os.LookupEnv(key)
-		if !ok {
-			return goerr.New("No such env: %s", key)
-		}
-		*dst = v
-		return nil
-	}
-}
-
-func loadEnv(envs ...func() error) error {
-	for _, env := range envs {
-		if err := env(); err != nil {
-			return err
-		}
-	}
-	return nil
-}
 
 func TestCreateIssue(t *testing.T) {
 	var (
@@ -40,12 +19,12 @@ func TestCreateIssue(t *testing.T) {
 		project   string
 	)
 
-	if err := loadEnv(
-		env("TEST_JIRA_ACCOUNT_ID", &accountID),
-		env("TEST_JIRA_USER", &userName),
-		env("TEST_JIRA_TOKEN", &token),
-		env("TEST_JIRA_BASE_URL", &baseURL),
-		env("TEST_JIRA_PROJECT", &project),
+	if err := utils.LoadEnv(
+		utils.Env("TEST_JIRA_ACCOUNT_ID", &accountID),
+		utils.Env("TEST_JIRA_USER", &userName),
+		utils.Env("TEST_JIRA_TOKEN", &token),
+		utils.Env("TEST_JIRA_BASE_URL", &baseURL),
+		utils.Env("TEST_JIRA_PROJECT", &project),
 	); err != nil {
 		t.Skipf("Skip test due to missing env: %v", err)
 	}

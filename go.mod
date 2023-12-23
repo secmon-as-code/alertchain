@@ -20,6 +20,7 @@ require (
 	github.com/m-mizutani/gt v0.0.6-0.20230708234934-97ecdb8cc874
 	github.com/m-mizutani/masq v0.1.5
 	github.com/open-policy-agent/opa v0.60.0
+	github.com/opsgenie/opsgenie-go-sdk-v2 v1.2.22
 	github.com/sashabaranov/go-openai v1.17.9
 	github.com/slack-go/slack v0.12.3
 	github.com/urfave/cli/v2 v2.26.0
@@ -55,6 +56,8 @@ require (
 	github.com/googleapis/gax-go/v2 v2.12.0 // indirect
 	github.com/gorilla/mux v1.8.1 // indirect
 	github.com/gorilla/websocket v1.5.1 // indirect
+	github.com/hashicorp/go-cleanhttp v0.5.0 // indirect
+	github.com/hashicorp/go-retryablehttp v0.5.1 // indirect
 	github.com/k0kubun/pp/v3 v3.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
