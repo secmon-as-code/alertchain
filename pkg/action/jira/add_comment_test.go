@@ -7,6 +7,7 @@ import (
 
 	"github.com/m-mizutani/alertchain/pkg/action/jira"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
+	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/gt"
 )
 
@@ -19,12 +20,12 @@ func TestAddComment(t *testing.T) {
 		issueID   string
 	)
 
-	if err := loadEnv(
-		env("TEST_JIRA_ACCOUNT_ID", &accountID),
-		env("TEST_JIRA_USER", &userName),
-		env("TEST_JIRA_TOKEN", &token),
-		env("TEST_JIRA_BASE_URL", &baseURL),
-		env("TEST_JIRA_ISSUE_ID", &issueID),
+	if err := utils.LoadEnv(
+		utils.Env("TEST_JIRA_ACCOUNT_ID", &accountID),
+		utils.Env("TEST_JIRA_USER", &userName),
+		utils.Env("TEST_JIRA_TOKEN", &token),
+		utils.Env("TEST_JIRA_BASE_URL", &baseURL),
+		utils.Env("TEST_JIRA_ISSUE_ID", &issueID),
 	); err != nil {
 		t.Skipf("Skip test due to missing env: %v", err)
 	}

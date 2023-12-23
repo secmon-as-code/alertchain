@@ -1,6 +1,8 @@
 package model
 
 import (
+	"encoding/json"
+
 	"github.com/m-mizutani/goerr"
 )
 
@@ -18,12 +20,17 @@ func ArgDef[T any](key string, dst *T, options ...ArgOption) ArgParser {
 			if opt.Optional {
 				return nil
 			}
-			return goerr.New("No such Optional key in action args: %s", key)
+			return goerr.New("No such Optional key in action args").With("key", key)
 		}
 
-		src, ok := v.(T)
-		if !ok {
-			return goerr.New("Invalid type of action args: %s", key)
+		raw, err := json.Marshal(v)
+		if err != nil {
+			return goerr.Wrap(err, "Failed to marshal action args").With("key", key)
+		}
+
+		var src T
+		if err := json.Unmarshal(raw, &src); err != nil {
+			return goerr.Wrap(err, "Failed to unmarshal action args").With("key", key)
 		}
 
 		*dst = src

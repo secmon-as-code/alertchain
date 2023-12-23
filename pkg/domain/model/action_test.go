@@ -13,6 +13,7 @@ func TestActionArgsParser(t *testing.T) {
 		"bar": int64(123),
 		"baz": float64(3.14),
 		"raw": []byte("raw"),
+		"ss":  []string{"a", "b"},
 	}
 
 	t.Run("parse all", func(t *testing.T) {
@@ -20,17 +21,20 @@ func TestActionArgsParser(t *testing.T) {
 		var bar int64
 		var baz float64
 		var raw []byte
+		var ss []string
 
 		gt.NoError(t, args.Parse(
 			model.ArgDef("foo", &foo),
 			model.ArgDef("bar", &bar),
 			model.ArgDef("baz", &baz),
 			model.ArgDef("raw", &raw),
+			model.ArgDef("ss", &ss),
 		))
 		gt.Equal(t, "bar", foo)
 		gt.Equal(t, int64(123), bar)
 		gt.Equal(t, float64(3.14), baz)
 		gt.Equal(t, []byte("raw"), raw)
+		gt.A(t, ss).Length(2).Have("a").Have("b")
 	})
 
 	t.Run("parse partial", func(t *testing.T) {

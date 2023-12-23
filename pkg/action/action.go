@@ -5,6 +5,7 @@ import (
 	"github.com/m-mizutani/alertchain/pkg/action/github"
 	"github.com/m-mizutani/alertchain/pkg/action/http"
 	"github.com/m-mizutani/alertchain/pkg/action/jira"
+	"github.com/m-mizutani/alertchain/pkg/action/opsgenie"
 	"github.com/m-mizutani/alertchain/pkg/action/otx"
 	"github.com/m-mizutani/alertchain/pkg/action/slack"
 	"github.com/m-mizutani/alertchain/pkg/domain/interfaces"
@@ -17,6 +18,7 @@ var actionMap = map[types.ActionName]interfaces.RunAction{
 	"jira.create_issue":     jira.CreateIssue,
 	"jira.add_comment":      jira.AddComment,
 	"jira.add_attachment":   jira.AddAttachment,
+	`opsgenie.create_alert`: opsgenie.CreateAlert,
 	"chatgpt.query":         chatgpt.Query,
 	"slack.post":            slack.Post,
 	"http.fetch":            http.Fetch,
