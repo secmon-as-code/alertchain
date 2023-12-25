@@ -77,7 +77,6 @@ func New(options ...Option) (*Client, error) {
 		opt(client)
 	}
 
-	policies := make(map[string]string)
 	var targetFiles []string
 	for _, dirPath := range client.dirs {
 		err := filepath.WalkDir(dirPath, func(path string, d fs.DirEntry, err error) error {
@@ -107,18 +106,18 @@ func New(options ...Option) (*Client, error) {
 			return nil, goerr.Wrap(err, "Failed to read policy file").With("path", filePath)
 		}
 
-		policies[filePath] = string(raw)
+		client.policies[filePath] = string(raw)
 	}
 
 	for k, v := range client.policies {
-		policies[k] = v
+		client.policies[k] = v
 	}
 
-	if len(policies) == 0 {
+	if len(client.policies) == 0 {
 		return nil, goerr.Wrap(types.ErrNoPolicyData)
 	}
 
-	compiler, err := ast.CompileModulesWithOpt(policies, ast.CompileOpts{
+	compiler, err := ast.CompileModulesWithOpt(client.policies, ast.CompileOpts{
 		EnablePrintStatements: true,
 	})
 	if err != nil {

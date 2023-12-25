@@ -13,6 +13,7 @@ import (
 	"github.com/m-mizutani/alertchain/pkg/domain/interfaces"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
+	"github.com/m-mizutani/alertchain/pkg/infra/policy"
 	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/goerr"
 )
@@ -48,7 +49,7 @@ func getSchema(r *http.Request) (types.Schema, error) {
 	return types.Schema(schema), nil
 }
 
-func New(route interfaces.Router) *Server {
+func New(route interfaces.Router, authz *policy.Client) *Server {
 	s := &Server{}
 
 	wrap := func(handler apiHandler) http.HandlerFunc {
@@ -81,6 +82,14 @@ func New(route interfaces.Router) *Server {
 
 	r := chi.NewRouter()
 	r.Use(Logging)
+	r.Use(Authorize(authz))
+	r.Route("/health", func(r chi.Router) {
+		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+			utils.SafeWrite(w, []byte("OK"))
+		})
+	})
+
 	r.Route("/alert", func(r chi.Router) {
 		r.Post("/raw/{schema}", wrap(handleRawAlert))
 		r.Post("/pubsub/{schema}", wrap(handlePubSubAlert))

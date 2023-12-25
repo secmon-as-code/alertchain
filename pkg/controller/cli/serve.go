@@ -81,8 +81,13 @@ func cmdServe() *cli.Command {
 				return err
 			}
 
+			authz, err := policyCfg.Load("authz")
+			if err != nil {
+				return err
+			}
+
 			utils.Logger().Info("starting alertchain with serve mode", slog.String("addr", addr))
-			if err := server.New(chain.HandleAlert).Run(addr); err != nil {
+			if err := server.New(chain.HandleAlert, authz).Run(addr); err != nil {
 				sentry.CaptureException(err)
 				return err
 			}
