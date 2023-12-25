@@ -47,6 +47,7 @@ $ go install github.com/m-mizutani/alertchain@latest
 - [Actions](./pkg/action/README.md)
 - [Test](docs/test.md)
 - [Deployment](docs/deployment.md)
+- [Authorization](docs/authz.md)
 
 ## Example
 

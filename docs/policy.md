@@ -335,12 +335,10 @@ During this series of processes, the Action of the alert with the same namespace
 
 ## FAQ
 
-### なぜinitとexitの2つのルールが必要なのか？
+### Why are two rules, init and exit, necessary?
 
-initおよびexitは、両方とも実際のアクションの合間に呼ばれます。そのため、どちらかだけでいいのではという疑問を持つかもしれません。
+Both init and exit are called in between actual actions. Therefore, you might wonder if only one of them would be sufficient.
 
-この2つの大きな違いは、exit = アクションが終了するたびに呼び出される、init = 一つ前のrunルールから呼び出されるアクション全てが完了した後に呼び出される、という点です。複数のアクションの結果をもとに保持するattributeを決めたり、処理を続行するか判断したい場合はinitを利用します。一方、アクションの結果をもとにattributeを更新したり、処理を中断したい場合はexitを利用します。
+The major difference between these two is that exit is called each time an action finishes, while init is called after all actions called from the previous run rule have completed. If you want to decide on attributes to retain based on the results of multiple actions, or decide whether to continue processing, you use init. On the other hand, if you want to update attributes based on the results of an action, or interrupt processing, you use exit.
 
-また、initはAction Policyの中で最初に評価されるルールです。そのため、過去のアラートに紐づいた情報（Global Attribute）を参照してはじめに処理を続行するか、あるいは中断するかを判断するのにも役立てられます。
-
-### なぜinitとexitの2つのルールが必要なのか？
+Also, init is the first rule evaluated in the Action Policy. Therefore, it can also be used to decide whether to continue or interrupt processing by referring to information associated with past alerts (Global Attribute).

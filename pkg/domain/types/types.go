@@ -31,3 +31,5 @@ type EnvVars map[EnvVarName]EnvVarValue
 func NewAlertID() AlertID       { return AlertID(uuid.New().String()) }
 func NewActionID() ActionID     { return ActionID(uuid.New().String()) }
 func NewWorkflowID() WorkflowID { return WorkflowID(uuid.New().String()) }
+
+func (x AlertID) String() string { return string(x) }

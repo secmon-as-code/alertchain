@@ -16,12 +16,14 @@ import (
 	"github.com/m-mizutani/alertchain/pkg/domain/interfaces"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
+	"github.com/m-mizutani/alertchain/pkg/infra/policy"
 	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/goerr"
 )
 
 type Server struct {
 	mux            *chi.Mux
+	authz          *policy.Client
 	resolver       *graphql.Resolver
 	enableGrappiQL bool
 }
@@ -37,6 +39,12 @@ func WithResolver(resolver *graphql.Resolver) Option {
 func WithEnableGraphiQL() Option {
 	return func(cfg *Server) {
 		cfg.enableGrappiQL = true
+	}
+}
+
+func WithAuthzPolicy(authz *policy.Client) Option {
+	return func(cfg *Server) {
+		cfg.authz = authz
 	}
 }
 
@@ -103,6 +111,14 @@ func New(route interfaces.Router, options ...Option) *Server {
 
 	r := chi.NewRouter()
 	r.Use(Logging)
+	r.Use(Authorize(s.authz))
+	r.Route("/health", func(r chi.Router) {
+		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+			utils.SafeWrite(w, []byte("OK"))
+		})
+	})
+
 	r.Route("/alert", func(r chi.Router) {
 		r.Post("/raw/{schema}", wrap(handleRawAlert))
 		r.Post("/pubsub/{schema}", wrap(handlePubSubAlert))
