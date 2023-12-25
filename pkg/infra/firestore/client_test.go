@@ -56,6 +56,7 @@ func TestWorkflow(t *testing.T) {
 	workflows := gt.R1(client.GetWorkflows(ctx, 1, 1)).NoError(t)
 	gt.A(t, workflows).Length(1).At(0, func(t testing.TB, v model.WorkflowRecord) {
 		gt.Equal(t, v.ID, workflow1.ID)
+		gt.V(t, v.Alert).Must().NotNil()
 		gt.Equal(t, v.Alert.Title, "testing")
 		gt.Equal(t, v.Alert.InitAttrs[0].Key, "key1")
 		gt.Equal(t, v.Alert.InitAttrs[0].Value, "value1")

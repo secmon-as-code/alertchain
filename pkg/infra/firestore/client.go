@@ -121,7 +121,7 @@ func (x *Client) PutAttrs(ctx *model.Context, ns types.Namespace, attrs model.At
 }
 
 func (x *Client) PutWorkflow(ctx *model.Context, workflow model.WorkflowRecord) error {
-	key := workflowKeyPrefix + string(workflow.ID)
+	key := workflowKeyPrefix + workflow.CreatedAt.Format("20060102_150405:") + string(workflow.ID)
 	record := struct {
 		model.WorkflowRecord
 		RecordType string
@@ -140,7 +140,7 @@ func (x *Client) GetWorkflows(ctx *model.Context, offset, limit int) ([]model.Wo
 	var workflows []model.WorkflowRecord
 	iter := x.client.Collection(x.collection).
 		Where("RecordType", "==", "workflow").
-		OrderBy("CreatedAt", firestore.Desc).
+		OrderBy(firestore.DocumentID, firestore.Desc).
 		Offset(offset).
 		Limit(limit).
 		Documents(ctx)
