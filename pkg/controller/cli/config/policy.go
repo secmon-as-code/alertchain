@@ -1,6 +1,10 @@
 package config
 
 import (
+	"log/slog"
+
+	"github.com/m-mizutani/alertchain/pkg/infra/policy"
+	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/urfave/cli/v2"
 )
 
@@ -35,4 +39,12 @@ func (x *Policy) Flags() []cli.Flag {
 			Destination: &x.path,
 		},
 	}
+}
+
+func (x *Policy) Load(pkgName string) (*policy.Client, error) {
+	utils.Logger().Info("loading policy",
+		slog.String("package", pkgName),
+		slog.String("path", x.path),
+	)
+	return policy.New(policy.WithDir(x.path), policy.WithPackage(pkgName))
 }

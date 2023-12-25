@@ -56,7 +56,7 @@ func NewFunctionalURLHandler() func(ctx context.Context, data any, cb Callback) 
 
 		s := server.New(func(ctx *model.Context, schema types.Schema, data any) error {
 			return cb(ctx, schema, data)
-		})
+		}, nil)
 
 		body, err := base64.StdEncoding.DecodeString(event.Body)
 		if err != nil {

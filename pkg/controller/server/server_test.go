@@ -27,7 +27,7 @@ func TestSCC(t *testing.T) {
 		name := gt.Cast[string](t, alert["notificationConfigName"])
 		gt.V(t, name).Equal("organizations/000000123456/notificationConfigs/pubsub_notification")
 		return nil
-	})
+	}, nil)
 
 	req := httptest.NewRequest("POST", "/alert/raw/scc", bytes.NewReader(sccData))
 	w := httptest.NewRecorder()
@@ -45,7 +45,7 @@ func TestPubSub(t *testing.T) {
 		name := gt.Cast[string](t, alert["color"])
 		gt.V(t, name).Equal("blue")
 		return nil
-	})
+	}, nil)
 
 	req := model.PubSubRequest{
 		Message: model.PubSubMessage{
