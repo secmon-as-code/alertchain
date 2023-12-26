@@ -75,13 +75,13 @@ func getSchema(r *http.Request) (types.Schema, error) {
 	return types.Schema(schema), nil
 }
 
-func New(route interfaces.Router, options ...Option) *Server {
+func New(hdlr interfaces.AlertHandler, options ...Option) *Server {
 	s := &Server{}
 	for _, opt := range options {
 		opt(s)
 	}
 
-	wrap := func(handler apiHandler) http.HandlerFunc {
+	wrap := func(handler apiAlertHandler) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			defer func() {
 				if err := recover(); err != nil {
@@ -89,20 +89,20 @@ func New(route interfaces.Router, options ...Option) *Server {
 				}
 			}()
 
-			resp, err := handler(r, route)
+			resp, err := handler(r, hdlr)
 			if err != nil {
 				respondError(w, err)
 				return
 			}
 
-			body, err := json.Marshal(resp.Data)
-			if err != nil {
-				respondError(w, err)
-				return
+			body := struct {
+				Alerts []*model.Alert `json:"alerts"`
+			}{
+				Alerts: resp.Alerts,
 			}
 
 			w.WriteHeader(resp.Code)
-			if _, err := w.Write(body); err != nil {
+			if err := json.NewEncoder(w).Encode(body); err != nil {
 				respondError(w, err)
 				return
 			}
@@ -140,14 +140,14 @@ func New(route interfaces.Router, options ...Option) *Server {
 	return s
 }
 
-type apiResponse struct {
-	Code int
-	Data any
+type apiAlertResponse struct {
+	Code   int
+	Alerts []*model.Alert
 }
 
-type apiHandler func(r *http.Request, route interfaces.Router) (*apiResponse, error)
+type apiAlertHandler func(r *http.Request, route interfaces.AlertHandler) (*apiAlertResponse, error)
 
-func handleRawAlert(r *http.Request, route interfaces.Router) (*apiResponse, error) {
+func handleRawAlert(r *http.Request, route interfaces.AlertHandler) (*apiAlertResponse, error) {
 	var data any
 	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
 		return nil, goerr.Wrap(err, "failed to decode request body")
@@ -159,17 +159,18 @@ func handleRawAlert(r *http.Request, route interfaces.Router) (*apiResponse, err
 	}
 
 	ctx := model.NewContext(model.WithBase(r.Context()))
-	if err := route(ctx, schema, data); err != nil {
+	alerts, err := route(ctx, schema, data)
+	if err != nil {
 		return nil, err
 	}
 
-	return &apiResponse{
-		Code: http.StatusOK,
-		Data: "OK",
+	return &apiAlertResponse{
+		Code:   http.StatusOK,
+		Alerts: alerts,
 	}, nil
 }
 
-func handlePubSubAlert(r *http.Request, route interfaces.Router) (*apiResponse, error) {
+func handlePubSubAlert(r *http.Request, route interfaces.AlertHandler) (*apiAlertResponse, error) {
 	schema, err := getSchema(r)
 	if err != nil {
 		return nil, err
@@ -192,13 +193,14 @@ func handlePubSubAlert(r *http.Request, route interfaces.Router) (*apiResponse, 
 	}
 
 	ctx := model.NewContext(model.WithBase(r.Context()))
-	if err := route(ctx, schema, data); err != nil {
+	alerts, err := route(ctx, schema, data)
+	if err != nil {
 		return nil, err
 	}
 
-	return &apiResponse{
-		Code: http.StatusOK,
-		Data: "OK",
+	return &apiAlertResponse{
+		Code:   http.StatusOK,
+		Alerts: alerts,
 	}, nil
 }
 

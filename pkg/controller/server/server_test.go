@@ -20,13 +20,13 @@ var sccData []byte
 
 func TestSCC(t *testing.T) {
 	var called int
-	srv := server.New(func(ctx *model.Context, schema types.Schema, data any) error {
+	srv := server.New(func(ctx *model.Context, schema types.Schema, data any) ([]*model.Alert, error) {
 		called++
 		gt.V(t, schema).Equal("scc")
 		alert := gt.Cast[map[string]any](t, data)
 		name := gt.Cast[string](t, alert["notificationConfigName"])
 		gt.V(t, name).Equal("organizations/000000123456/notificationConfigs/pubsub_notification")
-		return nil
+		return nil, nil
 	})
 
 	req := httptest.NewRequest("POST", "/alert/raw/scc", bytes.NewReader(sccData))
@@ -38,13 +38,13 @@ func TestSCC(t *testing.T) {
 
 func TestPubSub(t *testing.T) {
 	var called int
-	srv := server.New(func(ctx *model.Context, schema types.Schema, data any) error {
+	srv := server.New(func(ctx *model.Context, schema types.Schema, data any) ([]*model.Alert, error) {
 		called++
 		gt.V(t, schema).Equal("scc")
 		alert := gt.Cast[map[string]any](t, data)
 		name := gt.Cast[string](t, alert["color"])
 		gt.V(t, name).Equal("blue")
-		return nil
+		return nil, nil
 	})
 
 	req := model.PubSubRequest{

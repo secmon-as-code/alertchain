@@ -34,8 +34,8 @@ type ActionLogger interface {
 	LogExit(logs []model.Next)
 }
 
-// Router is a function to route the alert to the next action. The router is registered as an option within the chain.Chain.
-type Router func(ctx *model.Context, schema types.Schema, data any) error
+// AlertHandler is a function to handle the alert from data source. The handler is registered as an option within the chain.Chain.
+type AlertHandler func(ctx *model.Context, schema types.Schema, data any) ([]*model.Alert, error)
 
 type Env func() types.EnvVars
 

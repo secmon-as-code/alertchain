@@ -52,7 +52,7 @@ func TestBasic(t *testing.T) {
 	)).NoError(t)
 
 	ctx := model.NewContext()
-	gt.NoError(t, c.HandleAlert(ctx, "scc", alertData))
+	gt.R1(c.HandleAlert(ctx, "scc", alertData)).NoError(t)
 	gt.N(t, called).Equal(1)
 }
 
@@ -87,7 +87,7 @@ func TestDisableAction(t *testing.T) {
 	)).NoError(t)
 
 	ctx := model.NewContext()
-	gt.NoError(t, c.HandleAlert(ctx, "scc", alertData))
+	gt.R1(c.HandleAlert(ctx, "scc", alertData)).NoError(t)
 	gt.N(t, called).Equal(0) // Action should not be called
 }
 
@@ -149,7 +149,7 @@ func TestChainControl(t *testing.T) {
 	)).NoError(t)
 
 	ctx := model.NewContext()
-	gt.NoError(t, c.HandleAlert(ctx, "my_test", alertData))
+	gt.R1(c.HandleAlert(ctx, "my_test", alertData)).NoError(t)
 	gt.N(t, calledMock).Equal(1)
 	gt.N(t, calledMockAfter).Equal(1)
 }
@@ -183,7 +183,7 @@ func TestChainLoop(t *testing.T) {
 	)).NoError(t)
 
 	ctx := model.NewContext()
-	gt.NoError(t, c.HandleAlert(ctx, "my_test", alertData))
+	gt.R1(c.HandleAlert(ctx, "my_test", alertData)).NoError(t)
 	gt.N(t, calledMock).Equal(9)
 }
 
@@ -231,7 +231,7 @@ func TestPlaybook(t *testing.T) {
 
 	var alertData any
 	ctx := model.NewContext()
-	gt.NoError(t, c.HandleAlert(ctx, "my_test", alertData))
+	gt.R1(c.HandleAlert(ctx, "my_test", alertData)).NoError(t)
 	gt.N(t, calledMock).Equal(0)
 
 	gt.V(t, recorder.Log.ID).Equal("s1")
@@ -277,8 +277,8 @@ func TestGlobalAttr(t *testing.T) {
 	ctx := model.NewContext()
 
 	// call HandleAlert twice, but mock action should be called only once
-	gt.NoError(t, c.HandleAlert(ctx, "my_alert", alertData))
-	gt.NoError(t, c.HandleAlert(ctx, "my_alert", alertData))
+	gt.R1(c.HandleAlert(ctx, "my_alert", alertData)).NoError(t)
+	gt.R1(c.HandleAlert(ctx, "my_alert", alertData)).NoError(t)
 	gt.N(t, calledMock).Equal(1)
 }
 
@@ -320,7 +320,7 @@ func TestGlobalAttrRaceCondition(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			gt.NoError(t, c.HandleAlert(ctx, "my_alert", alertData))
+			gt.R1(c.HandleAlert(ctx, "my_alert", alertData)).NoError(t)
 		}()
 	}
 	wg.Wait()
