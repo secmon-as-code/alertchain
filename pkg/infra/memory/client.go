@@ -1,6 +1,7 @@
 package memory
 
 import (
+	"sort"
 	"sync"
 	"time"
 
@@ -74,6 +75,12 @@ func (x *Client) PutAttrs(ctx *model.Context, ns types.Namespace, attrs model.At
 
 func (x *Client) PutWorkflow(ctx *model.Context, workflow model.WorkflowRecord) error {
 	x.workflows = append(x.workflows, workflow)
+
+	// sort x.workflows by CreatedAt
+	sort.Slice(x.workflows, func(i, j int) bool {
+		return x.workflows[i].CreatedAt.After(x.workflows[j].CreatedAt)
+	})
+
 	return nil
 }
 
