@@ -1,7 +1,6 @@
 package firestore_test
 
 import (
-	"os"
 	"testing"
 	"time"
 
@@ -9,24 +8,32 @@ import (
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/infra/firestore"
+	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/gots/ptr"
 	"github.com/m-mizutani/gt"
 )
 
 func TestWorkflow(t *testing.T) {
-	projectID, ok := os.LookupEnv("TEST_FIRESTORE_PROJECT_ID")
-	if !ok {
-		t.Skip("TEST_FIRESTORE_PROJECT_ID is not set")
-	}
-	collection, ok := os.LookupEnv("TEST_FIRESTORE_COLLECTION")
-	if !ok {
-		t.Skip("TEST_FIRESTORE_COLLECTION is not set")
+	var (
+		projectID string
+		colPrefix string
+	)
+
+	if err := utils.LoadEnv(
+		utils.Env("TEST_FIRESTORE_PROJECT_ID", &projectID),
+		utils.Env("TEST_FIRESTORE_COLLECTION_PREFIX", &colPrefix),
+	); err != nil {
+		t.Skipf("Skip test due to missing env: %v", err)
 	}
 
 	ctx := model.NewContext()
 	now := time.Now()
-	client := gt.R1(firestore.New(ctx, projectID, collection)).NoError(t)
+	client := gt.R1(firestore.New(ctx, projectID, colPrefix)).NoError(t)
 
+	workflow0 := model.WorkflowRecord{
+		ID:        types.NewWorkflowID().String(),
+		CreatedAt: now.Add(-time.Second),
+	}
 	workflow1 := model.WorkflowRecord{
 		ID:        types.NewWorkflowID().String(),
 		CreatedAt: now,
@@ -48,10 +55,12 @@ func TestWorkflow(t *testing.T) {
 		},
 	}
 	workflow2 := model.WorkflowRecord{
-		ID: types.NewWorkflowID().String(),
+		ID:        types.NewWorkflowID().String(),
+		CreatedAt: now.Add(time.Second),
 	}
 
 	// Test PutWorkflow method
+	gt.NoError(t, client.PutWorkflow(ctx, workflow0))
 	gt.NoError(t, client.PutWorkflow(ctx, workflow1))
 	gt.NoError(t, client.PutWorkflow(ctx, workflow2))
 

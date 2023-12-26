@@ -7,7 +7,6 @@ require (
 	firebase.google.com/go v3.13.0+incompatible
 	github.com/99designs/gqlgen v0.17.41
 	github.com/andygrunwald/go-jira v1.16.0
-	github.com/aws/aws-lambda-go v1.41.0
 	github.com/bradleyfalzon/ghinstallation/v2 v2.8.0
 	github.com/fatih/color v1.16.0
 	github.com/getsentry/sentry-go v0.25.0
