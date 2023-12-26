@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/google/uuid"
 	"github.com/m-mizutani/alertchain/pkg/domain/interfaces"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
@@ -70,7 +69,7 @@ func (x *WorkflowService) Create(ctx *model.Context, alert model.Alert) (*Workfl
 	}
 
 	workflow := model.WorkflowRecord{
-		ID:        uuid.NewString(),
+		ID:        types.NewWorkflowID().String(),
 		CreatedAt: ctx.Now(),
 		Alert: &model.AlertRecord{
 			ID:          string(alert.ID),

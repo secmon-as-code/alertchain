@@ -6,8 +6,10 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/m-mizutani/alertchain/pkg/chain/core"
 	"github.com/m-mizutani/alertchain/pkg/controller/cli/config"
+	"github.com/m-mizutani/alertchain/pkg/controller/graphql"
 	"github.com/m-mizutani/alertchain/pkg/controller/server"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
+	"github.com/m-mizutani/alertchain/pkg/service"
 	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/urfave/cli/v2"
 )
@@ -17,6 +19,7 @@ func cmdServe() *cli.Command {
 		addr          string
 		disableAction bool
 		playground    bool
+		graphQL       bool
 
 		dbCfg     config.Database
 		policyCfg config.Policy
@@ -38,6 +41,13 @@ func cmdServe() *cli.Command {
 			EnvVars:     []string{"ALERTCHAIN_DISABLE_ACTION"},
 			Value:       false,
 			Destination: &disableAction,
+		},
+		&cli.BoolFlag{
+			Name:        "graphql",
+			Usage:       "Enable GraphQL",
+			EnvVars:     []string{"ALERTCHAIN_GRAPHQL"},
+			Value:       true,
+			Destination: &graphQL,
 		},
 		&cli.BoolFlag{
 			Name:        "playground",
@@ -99,6 +109,10 @@ func cmdServe() *cli.Command {
 			}
 			serverOpt = append(serverOpt, server.WithAuthzPolicy(authz))
 
+			if graphQL {
+				resolver := graphql.NewResolver(service.New(dbClient))
+				serverOpt = append(serverOpt, server.WithResolver(resolver))
+			}
 			if playground {
 				serverOpt = append(serverOpt, server.WithEnableGraphiQL())
 			}

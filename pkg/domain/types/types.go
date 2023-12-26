@@ -1,6 +1,8 @@
 package types
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 )
 
@@ -28,8 +30,11 @@ type (
 // EnvVars is a set of environment variables
 type EnvVars map[EnvVarName]EnvVarValue
 
-func NewAlertID() AlertID       { return AlertID(uuid.New().String()) }
-func NewActionID() ActionID     { return ActionID(uuid.New().String()) }
-func NewWorkflowID() WorkflowID { return WorkflowID(uuid.New().String()) }
+func NewAlertID() AlertID   { return AlertID(uuid.New().String()) }
+func NewActionID() ActionID { return ActionID(uuid.New().String()) }
+func NewWorkflowID() WorkflowID {
+	return WorkflowID(time.Now().UTC().Format("20060102150405.000000-") + uuid.NewString())
+}
 
-func (x AlertID) String() string { return string(x) }
+func (x AlertID) String() string    { return string(x) }
+func (x WorkflowID) String() string { return string(x) }

@@ -6,19 +6,30 @@ package graphql
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
+	"github.com/m-mizutani/alertchain/pkg/domain/types"
 )
 
 // Workflows is the resolver for the workflows field.
 func (r *queryResolver) Workflows(ctx context.Context, offset *int, limit *int) ([]*model.WorkflowRecord, error) {
-	panic(fmt.Errorf("not implemented: Workflows - workflow"))
+	newCtx := model.NewContext(model.WithBase(ctx))
+	results, err := r.svc.Workflow.Get(newCtx, offset, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	records := make([]*model.WorkflowRecord, len(results))
+	for i, rec := range results {
+		records[i] = &rec
+	}
+	return records, nil
 }
 
 // Workflow is the resolver for the workflow field.
 func (r *queryResolver) Workflow(ctx context.Context, id string) (*model.WorkflowRecord, error) {
-	panic(fmt.Errorf("not implemented: Workflow - workflow"))
+	newCtx := model.NewContext(model.WithBase(ctx))
+	return r.svc.Workflow.Lookup(newCtx, types.WorkflowID(id))
 }
 
 // Query returns QueryResolver implementation.
