@@ -156,6 +156,24 @@ func (x *Client) GetWorkflows(ctx *model.Context, offset, limit int) ([]model.Wo
 	}
 }
 
+func (x *Client) GetWorkflow(ctx *model.Context, id types.WorkflowID) (*model.WorkflowRecord, error) {
+	key := workflowKeyPrefix + id.String()
+	doc, err := x.client.Collection(x.workflowCollection).Doc(key).Get(ctx)
+	if err != nil {
+		if status.Code(err) == codes.NotFound {
+			return nil, nil
+		}
+		return nil, goerr.Wrap(err, "failed to get workflow")
+	}
+
+	var workflow model.WorkflowRecord
+	if err := doc.DataTo(&workflow); err != nil {
+		return nil, goerr.Wrap(err, "failed to unmarshal workflow")
+	}
+
+	return &workflow, nil
+}
+
 type attribute struct {
 	model.Attribute
 	ExpiresAt time.Time `firestore:"expires_at"`

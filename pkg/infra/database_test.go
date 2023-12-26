@@ -2,7 +2,6 @@ package infra_test
 
 import (
 	"math/rand"
-	"os"
 	"sync"
 	"testing"
 	"time"
@@ -13,6 +12,7 @@ import (
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/infra/firestore"
 	"github.com/m-mizutani/alertchain/pkg/infra/memory"
+	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/gt"
 )
 
@@ -21,14 +21,16 @@ func TestMemory(t *testing.T) {
 }
 
 func TestFirestore(t *testing.T) {
-	projectID, ok := os.LookupEnv("TEST_FIRESTORE_PROJECT_ID")
-	if !ok {
-		t.Skip("TEST_FIRESTORE_PROJECT_ID not set")
-	}
+	var (
+		projectID  string
+		collection string
+	)
 
-	collection, ok := os.LookupEnv("TEST_FIRESTORE_COLLECTION")
-	if !ok {
-		t.Skip("TEST_FIRESTORE_COLLECTION not set")
+	if err := utils.LoadEnv(
+		utils.Env("TEST_FIRESTORE_PROJECT_ID", &projectID),
+		utils.Env("TEST_FIRESTORE_COLLECTION_PREFIX", &collection),
+	); err != nil {
+		t.Skipf("Skip test due to missing env: %v", err)
 	}
 
 	ctx := model.NewContext()
@@ -207,6 +209,12 @@ func testWorkflow(t *testing.T, client interfaces.Database) {
 		{
 			ID:        types.NewWorkflowID().String(),
 			CreatedAt: now.Add(2 * time.Second),
+			Alert: &model.AlertRecord{
+				ID:        uuid.NewString(),
+				CreatedAt: now,
+				Source:    "test",
+				Title:     "testing",
+			},
 		},
 		{
 			ID:        types.NewWorkflowID().String(),
@@ -230,5 +238,10 @@ func testWorkflow(t *testing.T, client interfaces.Database) {
 		}).At(1, func(t testing.TB, v model.WorkflowRecord) {
 			gt.V(t, v.ID).Equal(workflows[2].ID)
 		})
+	})
+
+	t.Run("GetWorkflow by ID", func(t *testing.T) {
+		resp := gt.R1(client.GetWorkflow(ctx, types.WorkflowID(workflows[2].ID))).NoError(t)
+		gt.V(t, resp.Alert.ID).Equal(workflows[2].Alert.ID)
 	})
 }

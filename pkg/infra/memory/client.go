@@ -97,6 +97,16 @@ func (x *Client) GetWorkflows(ctx *model.Context, offset, limit int) ([]model.Wo
 	return x.workflows[offset:end], nil
 }
 
+func (x *Client) GetWorkflow(ctx *model.Context, id types.WorkflowID) (*model.WorkflowRecord, error) {
+	for _, wf := range x.workflows {
+		if wf.ID == id.String() {
+			return &wf, nil
+		}
+	}
+
+	return nil, nil
+}
+
 // Lock implements interfaces.Database.
 func (x *Client) Lock(ctx *model.Context, ns types.Namespace, timeout time.Time) error {
 	locked := make(chan struct{}, 1)
