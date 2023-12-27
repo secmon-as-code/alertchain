@@ -15,18 +15,22 @@ import (
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/goerr"
+	"google.golang.org/api/iterator"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 type Client struct {
-	client     *firestore.Client
-	collection string
+	client             *firestore.Client
+	projectID          string
+	attrCollection     string
+	workflowCollection string
 }
 
 const (
-	attrKeyPrefix = "attr:"
-	lockKeyPrefix = "lock:"
+	attrKeyPrefix     = "attr:"
+	lockKeyPrefix     = "lock:"
+	workflowKeyPrefix = "workflow:"
 )
 
 func hashNamespace(input types.Namespace) string {
@@ -39,7 +43,7 @@ func hashNamespace(input types.Namespace) string {
 // GetAttrs implements interfaces.Database.
 func (x *Client) GetAttrs(ctx *model.Context, ns types.Namespace) (model.Attributes, error) {
 	key := attrKeyPrefix + hashNamespace(ns)
-	docs, err := x.client.Collection(x.collection).Doc(key).Collection("attributes").Documents(ctx).GetAll()
+	docs, err := x.client.Collection(x.attrCollection).Doc(key).Collection("attributes").Documents(ctx).GetAll()
 	if err != nil {
 		return nil, goerr.Wrap(err, "failed to get attributes from firestore")
 	}
@@ -68,7 +72,7 @@ func (x *Client) GetAttrs(ctx *model.Context, ns types.Namespace) (model.Attribu
 func (x *Client) PutAttrs(ctx *model.Context, ns types.Namespace, attrs model.Attributes) error {
 	err := x.client.RunTransaction(ctx, func(ctx context.Context, tx *firestore.Transaction) error {
 		key := attrKeyPrefix + hashNamespace(ns)
-		collection := x.client.Collection(x.collection).Doc(key).Collection("attributes")
+		collection := x.client.Collection(x.attrCollection).Doc(key).Collection("attributes")
 
 		attrRefMap := map[types.AttrID]*firestore.DocumentRef{}
 		for _, attr := range attrs {
@@ -116,6 +120,58 @@ func (x *Client) PutAttrs(ctx *model.Context, ns types.Namespace, attrs model.At
 	}
 
 	return nil
+}
+
+func (x *Client) PutWorkflow(ctx *model.Context, workflow model.WorkflowRecord) error {
+	key := workflowKeyPrefix + workflow.ID
+
+	if _, err := x.client.Collection(x.workflowCollection).Doc(string(key)).Set(ctx, workflow); err != nil {
+		return goerr.Wrap(err, "failed to put workflow")
+	}
+	return nil
+}
+
+func (x *Client) GetWorkflows(ctx *model.Context, offset, limit int) ([]model.WorkflowRecord, error) {
+	var workflows []model.WorkflowRecord
+	iter := x.client.Collection(x.workflowCollection).
+		OrderBy("CreatedAt", firestore.Desc).
+		Offset(offset).
+		Limit(limit).
+		Documents(ctx)
+
+	for {
+		doc, err := iter.Next()
+		if err != nil {
+			if errors.Is(err, iterator.Done) {
+				return workflows, nil
+			}
+			return nil, goerr.Wrap(err, "failed to get workflow")
+		}
+
+		var workflow model.WorkflowRecord
+		if err := doc.DataTo(&workflow); err != nil {
+			return nil, goerr.Wrap(err, "failed to unmarshal workflow")
+		}
+		workflows = append(workflows, workflow)
+	}
+}
+
+func (x *Client) GetWorkflow(ctx *model.Context, id types.WorkflowID) (*model.WorkflowRecord, error) {
+	key := workflowKeyPrefix + id.String()
+	doc, err := x.client.Collection(x.workflowCollection).Doc(key).Get(ctx)
+	if err != nil {
+		if status.Code(err) == codes.NotFound {
+			return nil, nil
+		}
+		return nil, goerr.Wrap(err, "failed to get workflow")
+	}
+
+	var workflow model.WorkflowRecord
+	if err := doc.DataTo(&workflow); err != nil {
+		return nil, goerr.Wrap(err, "failed to unmarshal workflow")
+	}
+
+	return &workflow, nil
 }
 
 type attribute struct {
@@ -184,7 +240,7 @@ func (x *Client) tryLock(ctx *model.Context, ns types.Namespace, timeout time.Ti
 
 	err := x.client.RunTransaction(ctx, func(ctx context.Context, tx *firestore.Transaction) error {
 		var doc *firestore.DocumentSnapshot
-		resp, err := tx.Get(x.client.Collection(x.collection).Doc(key))
+		resp, err := tx.Get(x.client.Collection(x.attrCollection).Doc(key))
 		if err != nil {
 			if status.Code(err) != codes.NotFound {
 				return goerr.Wrap(err, "failed to get attributes from firestore")
@@ -199,7 +255,7 @@ func (x *Client) tryLock(ctx *model.Context, ns types.Namespace, timeout time.Ti
 		}
 
 		if doc == nil {
-			if err := tx.Create(x.client.Collection(x.collection).Doc(key), newLock); err != nil {
+			if err := tx.Create(x.client.Collection(x.attrCollection).Doc(key), newLock); err != nil {
 				if status.Code(err) == codes.AlreadyExists {
 					return goerr.Wrap(errLockFailed, "lock is already acquired")
 				}
@@ -234,13 +290,13 @@ func (x *Client) tryLock(ctx *model.Context, ns types.Namespace, timeout time.Ti
 func (x *Client) Unlock(ctx *model.Context, ns types.Namespace) error {
 	key := lockKeyPrefix + hashNamespace(ns)
 
-	if _, err := x.client.Collection(x.collection).Doc(key).Delete(ctx); err != nil {
+	if _, err := x.client.Collection(x.attrCollection).Doc(key).Delete(ctx); err != nil {
 		return goerr.Wrap(err, "failed to delete lock")
 	}
 	return nil
 }
 
-func New(ctx *model.Context, projectID string, collection string) (*Client, error) {
+func New(ctx *model.Context, projectID string, collectionPrefix string) (*Client, error) {
 	conf := &firebase.Config{ProjectID: projectID}
 	app, err := firebase.NewApp(ctx, conf)
 	if err != nil {
@@ -253,10 +309,58 @@ func New(ctx *model.Context, projectID string, collection string) (*Client, erro
 	}
 
 	return &Client{
-		client:     client,
-		collection: collection,
+		client:             client,
+		projectID:          projectID,
+		attrCollection:     collectionPrefix + ".attr",
+		workflowCollection: collectionPrefix + ".workflow",
 	}, nil
 }
+
+/*
+func (x *Client) Migrate(ctx *model.Context) error {
+	adminClient, err := apiv1.NewFirestoreAdminClient(ctx)
+	if err != nil {
+		log.Fatalf("Failed to create client: %v", err)
+	}
+	defer adminClient.Close()
+
+	op, err := adminClient.CreateIndex(ctx, &adminpb.CreateIndexRequest{
+		Parent: "projects/" + x.projectID + "/databases/(default)/collectionGroups/" + x.collection,
+		Index: &adminpb.Index{
+			Fields: []*adminpb.Index_IndexField{
+				{
+					FieldPath: "RecordType",
+					ValueMode: &adminpb.Index_IndexField_Order_{
+						Order: adminpb.Index_IndexField_ASCENDING,
+					},
+				},
+				{
+					FieldPath: "CreatedAt",
+					ValueMode: &adminpb.Index_IndexField_Order_{
+						Order: adminpb.Index_IndexField_DESCENDING,
+					},
+				},
+			},
+			QueryScope: adminpb.Index_COLLECTION,
+		},
+	})
+	if err != nil {
+		if status.Code(err) == codes.AlreadyExists {
+			ctx.Logger().Info("Index already created")
+			return nil
+		}
+		return goerr.Wrap(err, "failed to create index")
+	}
+
+	idx, err := op.Wait(ctx)
+	if err != nil {
+		return goerr.Wrap(err, "failed to wait index creation")
+	}
+	ctx.Logger().Info("Created index", slog.Any("index", idx))
+
+	return nil
+}
+*/
 
 func (x *Client) Close() error {
 	if err := x.client.Close(); err != nil {

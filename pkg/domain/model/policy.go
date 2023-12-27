@@ -13,7 +13,7 @@ type ActionInitRequest struct {
 }
 
 type ActionInitResponse struct {
-	Init []Chore `json:"init"`
+	Init []Next `json:"init"`
 }
 
 func (x *ActionInitResponse) Abort() bool {
@@ -56,7 +56,7 @@ type ActionResult struct {
 	Result any `json:"result,omitempty"`
 }
 
-type Chore struct {
+type Next struct {
 	Abort bool        `json:"abort"`
 	Attrs []Attribute `json:"attrs"`
 
@@ -74,7 +74,7 @@ type ActionExitRequest struct {
 }
 
 type ActionExitResponse struct {
-	Exit []Chore `json:"exit"`
+	Exit []Next `json:"exit"`
 }
 
 func (x *ActionExitResponse) Abort() bool {

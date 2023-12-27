@@ -71,7 +71,7 @@ type JSONActionLogger struct {
 }
 
 // LogInit implements interfaces.AlertLogger.
-func (x *JSONActionLogger) LogInit(logs []model.Chore) {
+func (x *JSONActionLogger) LogInit(logs []model.Next) {
 	x.log.Init = append(x.log.Init, logs...)
 }
 
@@ -81,6 +81,6 @@ func (x *JSONActionLogger) LogRun(logs []model.Action) {
 }
 
 // LogExit implements interfaces.AlertLogger.
-func (x *JSONActionLogger) LogExit(logs []model.Chore) {
+func (x *JSONActionLogger) LogExit(logs []model.Next) {
 	x.log.Exit = append(x.log.Exit, logs...)
 }

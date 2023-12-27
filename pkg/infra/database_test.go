@@ -2,7 +2,6 @@ package infra_test
 
 import (
 	"math/rand"
-	"os"
 	"sync"
 	"testing"
 	"time"
@@ -13,6 +12,7 @@ import (
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/infra/firestore"
 	"github.com/m-mizutani/alertchain/pkg/infra/memory"
+	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/gt"
 )
 
@@ -21,14 +21,16 @@ func TestMemory(t *testing.T) {
 }
 
 func TestFirestore(t *testing.T) {
-	projectID, ok := os.LookupEnv("TEST_FIRESTORE_PROJECT_ID")
-	if !ok {
-		t.Skip("TEST_FIRESTORE_PROJECT_ID not set")
-	}
+	var (
+		projectID  string
+		collection string
+	)
 
-	collection, ok := os.LookupEnv("TEST_FIRESTORE_COLLECTION")
-	if !ok {
-		t.Skip("TEST_FIRESTORE_COLLECTION not set")
+	if err := utils.LoadEnv(
+		utils.Env("TEST_FIRESTORE_PROJECT_ID", &projectID),
+		utils.Env("TEST_FIRESTORE_COLLECTION_PREFIX", &collection),
+	); err != nil {
+		t.Skipf("Skip test due to missing env: %v", err)
 	}
 
 	ctx := model.NewContext()
@@ -46,6 +48,9 @@ func testClient(t *testing.T, client interfaces.Database) {
 	})
 	t.Run("LockExpire", func(t *testing.T) {
 		testLockExpires(t, client)
+	})
+	t.Run("Workflow", func(t *testing.T) {
+		testWorkflow(t, client)
 	})
 }
 
@@ -188,4 +193,55 @@ func testLockExpires(t *testing.T, client interfaces.Database) {
 	gt.NoError(t, client.Lock(ctx, ns, time.Now().Add(2*time.Second)))
 	// Next lock can be done after 1 second without unlock
 	gt.NoError(t, client.Lock(ctx, ns, time.Now().Add(100*time.Millisecond)))
+}
+
+func testWorkflow(t *testing.T, client interfaces.Database) {
+	now := time.Now()
+	workflows := []model.WorkflowRecord{
+		{
+			ID:        types.NewWorkflowID(),
+			CreatedAt: now,
+		},
+		{
+			ID:        types.NewWorkflowID(),
+			CreatedAt: now.Add(1 * time.Second),
+		},
+		{
+			ID:        types.NewWorkflowID(),
+			CreatedAt: now.Add(2 * time.Second),
+			Alert: &model.AlertRecord{
+				ID:        types.NewAlertID(),
+				CreatedAt: now,
+				Source:    "test",
+				Title:     "testing",
+			},
+		},
+		{
+			ID:        types.NewWorkflowID(),
+			CreatedAt: now.Add(3 * time.Second),
+		},
+		{
+			ID:        types.NewWorkflowID(),
+			CreatedAt: now.Add(4 * time.Second),
+		},
+	}
+
+	ctx := model.NewContext()
+	for _, wf := range workflows {
+		gt.NoError(t, client.PutWorkflow(ctx, wf))
+	}
+
+	t.Run("GetWorkflows", func(t *testing.T) {
+		resp := gt.R1(client.GetWorkflows(ctx, 1, 2)).NoError(t)
+		gt.A(t, resp).Length(2).At(0, func(t testing.TB, v model.WorkflowRecord) {
+			gt.V(t, v.ID).Equal(workflows[3].ID)
+		}).At(1, func(t testing.TB, v model.WorkflowRecord) {
+			gt.V(t, v.ID).Equal(workflows[2].ID)
+		})
+	})
+
+	t.Run("GetWorkflow by ID", func(t *testing.T) {
+		resp := gt.R1(client.GetWorkflow(ctx, types.WorkflowID(workflows[2].ID))).NoError(t)
+		gt.V(t, resp.Alert.ID).Equal(workflows[2].Alert.ID)
+	})
 }

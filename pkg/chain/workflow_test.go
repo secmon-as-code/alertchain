@@ -10,7 +10,9 @@ import (
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/infra/logging"
+	"github.com/m-mizutani/alertchain/pkg/infra/memory"
 	"github.com/m-mizutani/alertchain/pkg/infra/policy"
+	"github.com/m-mizutani/alertchain/pkg/service"
 	"github.com/m-mizutani/gt"
 )
 
@@ -55,7 +57,8 @@ func TestWorkflow(t *testing.T) {
 		Title: "test-alert",
 	}, "test-alert", "test-data")
 
-	wf := gt.R1(chain.NewWorkflow(c, alert)).NoError(t)
+	w := gt.R1(service.New(memory.New()).Workflow.Create(ctx, alert)).NoError(t)
+	wf := gt.R1(chain.NewWorkflow(c, alert, w)).NoError(t)
 	gt.NoError(t, wf.Run(ctx))
 	recorder.Flush()
 
@@ -68,7 +71,7 @@ func TestWorkflow(t *testing.T) {
 		gt.V(t, v.Alert.Title).Equal("test-alert")
 		gt.A(t, v.Actions).Length(2).At(0, func(t testing.TB, v *model.ActionLog) {
 			gt.V(t, v.Seq).Equal(0)
-			gt.A(t, v.Init).Length(1).At(0, func(t testing.TB, v model.Chore) {
+			gt.A(t, v.Init).Length(1).At(0, func(t testing.TB, v model.Next) {
 				gt.V(t, v.Abort).Equal(false)
 				gt.A(t, v.Attrs).Length(1).At(0, func(t testing.TB, v model.Attribute) {
 					gt.V(t, v.Key).Equal("color")
@@ -80,7 +83,7 @@ func TestWorkflow(t *testing.T) {
 				gt.V(t, v.ID).Equal("1st")
 				gt.M(t, v.Args).EqualAt("tick", float64(1))
 			})
-			gt.A(t, v.Exit).Length(1).At(0, func(t testing.TB, v model.Chore) {
+			gt.A(t, v.Exit).Length(1).At(0, func(t testing.TB, v model.Next) {
 				gt.A(t, v.Attrs).Length(1).At(0, func(t testing.TB, v model.Attribute) {
 					gt.V(t, v.Key).Equal("index1")
 					gt.V(t, v.Value).Equal("first")
@@ -94,7 +97,7 @@ func TestWorkflow(t *testing.T) {
 				gt.V(t, v.ID).Equal("2nd")
 				gt.M(t, v.Args).EqualAt("tick", float64(2))
 			})
-			gt.A(t, v.Exit).Length(1).At(0, func(t testing.TB, v model.Chore) {
+			gt.A(t, v.Exit).Length(1).At(0, func(t testing.TB, v model.Next) {
 				gt.A(t, v.Attrs).Length(1).At(0, func(t testing.TB, v model.Attribute) {
 					gt.V(t, v.Key).Equal("index2")
 					gt.V(t, v.Value).Equal("second")

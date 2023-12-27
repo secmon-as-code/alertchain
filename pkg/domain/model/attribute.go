@@ -10,7 +10,7 @@ type Attribute struct {
 	Value  types.AttrValue `json:"value" firestore:"value"`
 	Type   types.AttrType  `json:"type" firestore:"type"`
 	Global bool            `json:"global" firestore:"global"`
-	TTL    int64           `json:"ttl" firestore:"ttl"`
+	TTL    int             `json:"ttl" firestore:"ttl"`
 }
 
 type Attributes []Attribute

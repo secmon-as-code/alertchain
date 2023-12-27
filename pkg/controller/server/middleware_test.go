@@ -21,9 +21,9 @@ func TestAuthorize(t *testing.T) {
 		policy.WithPolicyData("authz.rego", authzRego),
 		policy.WithPackage("authz"),
 	)).NoError(t)
-	srv := server.New(func(ctx *model.Context, schema types.Schema, data any) error {
-		return nil
-	}, authz)
+	srv := server.New(func(ctx *model.Context, schema types.Schema, data any) ([]*model.Alert, error) {
+		return nil, nil
+	}, server.WithAuthzPolicy(authz))
 
 	testCases := map[string]struct {
 		NewReq func() *http.Request

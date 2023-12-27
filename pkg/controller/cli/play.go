@@ -112,7 +112,7 @@ func playScenario(ctx *model.Context, scenario *model.Scenario, cfg *config.Poli
 
 	for i, ev := range scenario.Events {
 		mockWrapper.ev = &scenario.Events[i]
-		if err := chain.HandleAlert(ctx, ev.Schema, ev.Input); err != nil {
+		if _, err := chain.HandleAlert(ctx, ev.Schema, ev.Input); err != nil {
 			lg.LogError(err)
 			break
 		}

@@ -38,10 +38,10 @@ func (x *Database) Flags() []cli.Flag {
 			Destination: &x.firestoreProjectID,
 		},
 		&cli.StringFlag{
-			Name:        "firestore-collection",
-			Usage:       "Collection name of Firestore",
+			Name:        "firestore-collection-prefix",
+			Usage:       "Prefix of Firestore collection name. Actual collection names will be <prefix>.attr, <prefix>.workflow",
 			Category:    category,
-			EnvVars:     []string{"ALERTCHAIN_FIRESTORE_COLLECTION"},
+			EnvVars:     []string{"ALERTCHAIN_FIRESTORE_COLLECTION_PREFIX"},
 			Destination: &x.firestoreCollection,
 		},
 	}
@@ -59,7 +59,7 @@ func (x *Database) New(ctx *model.Context) (interfaces.Database, func(), error) 
 			return nil, nopCloser, goerr.Wrap(types.ErrInvalidOption, "firestore-project-id is required for firestore")
 		}
 		if x.firestoreCollection == "" {
-			return nil, nopCloser, goerr.Wrap(types.ErrInvalidOption, "firestore-collection is required for firestore")
+			return nil, nopCloser, goerr.Wrap(types.ErrInvalidOption, "firestore-collection-prefix is required for firestore")
 		}
 
 		client, err := firestore.New(ctx, x.firestoreProjectID, x.firestoreCollection)

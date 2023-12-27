@@ -7,6 +7,7 @@ import (
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/infra/policy"
+	"github.com/m-mizutani/alertchain/pkg/service"
 	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/goerr"
 )
@@ -15,13 +16,14 @@ type workflow struct {
 	core    *core.Core
 	alert   model.Alert
 	options []policy.QueryOption
+	service *service.Workflow
 }
 
-func newWorkflow(c *core.Core, alert model.Alert) (*workflow, error) {
-
+func newWorkflow(c *core.Core, alert model.Alert, svc *service.Workflow) (*workflow, error) {
 	hdlr := &workflow{
-		core:  c,
-		alert: alert,
+		core:    c,
+		alert:   alert,
+		service: svc,
 	}
 
 	return hdlr, nil
@@ -100,6 +102,10 @@ func (x *workflow) Run(ctx *model.Context) error {
 		ctx.Logger().Info("saved global attributes", slog.Any("attrs", global))
 	}
 
+	if err := x.service.UpdateLastAttrs(ctx, x.alert.Attrs); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -129,9 +135,9 @@ type proc struct {
 	envVars types.EnvVars
 
 	// logs
-	init []model.Chore
+	init []model.Next
 	run  []model.Action
-	exit []model.Chore
+	exit []model.Next
 
 	history   *actionHistory
 	finalized model.Attributes

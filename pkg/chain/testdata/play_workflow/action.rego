@@ -4,7 +4,7 @@ init[res] {
 	input.seq == 0
 	res := {"attrs": [{
 		"key": "color",
-		"value": "blue"
+		"value": "blue",
 	}]}
 }
 
@@ -13,9 +13,7 @@ run[job] {
 	job := {
 		"id": "1st",
 		"uses": "mock",
-		"args": {
-			"tick": 1,
-		}
+		"args": {"tick": 1},
 	}
 }
 
@@ -34,9 +32,7 @@ run[job] {
 	job := {
 		"id": "2nd",
 		"uses": "mock",
-		"args": {
-			"tick": 2,
-		}
+		"args": {"tick": 2},
 	}
 }
 

@@ -6,8 +6,10 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/m-mizutani/alertchain/pkg/chain/core"
 	"github.com/m-mizutani/alertchain/pkg/controller/cli/config"
+	"github.com/m-mizutani/alertchain/pkg/controller/graphql"
 	"github.com/m-mizutani/alertchain/pkg/controller/server"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
+	"github.com/m-mizutani/alertchain/pkg/service"
 	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/urfave/cli/v2"
 )
@@ -16,6 +18,8 @@ func cmdServe() *cli.Command {
 	var (
 		addr          string
 		disableAction bool
+		playground    bool
+		graphQL       bool
 
 		dbCfg     config.Database
 		policyCfg config.Policy
@@ -38,6 +42,20 @@ func cmdServe() *cli.Command {
 			Value:       false,
 			Destination: &disableAction,
 		},
+		&cli.BoolFlag{
+			Name:        "graphql",
+			Usage:       "Enable GraphQL",
+			EnvVars:     []string{"ALERTCHAIN_GRAPHQL"},
+			Value:       true,
+			Destination: &graphQL,
+		},
+		&cli.BoolFlag{
+			Name:        "playground",
+			Usage:       "Enable GraphQL playground",
+			EnvVars:     []string{"ALERTCHAIN_PLAYGROUND"},
+			Value:       false,
+			Destination: &playground,
+		},
 	}
 	flags = append(flags, dbCfg.Flags()...)
 	flags = append(flags, policyCfg.Flags()...)
@@ -56,19 +74,20 @@ func cmdServe() *cli.Command {
 				slog.Any("sentry", sentryCfg),
 			)
 
-			var options []core.Option
-			if disableAction {
-				options = append(options, core.WithDisableAction())
-			}
-
 			ctx := model.NewContext(model.WithBase(c.Context))
+
+			// Build chain
+			var chainOpt []core.Option
+			if disableAction {
+				chainOpt = append(chainOpt, core.WithDisableAction())
+			}
 
 			dbClient, dbCloser, err := dbCfg.New(ctx)
 			if err != nil {
 				return err
 			}
 			defer dbCloser()
-			options = append(options, core.WithDatabase(dbClient))
+			chainOpt = append(chainOpt, core.WithDatabase(dbClient))
 
 			sentryCloser, err := sentryCfg.Configure()
 			if err != nil {
@@ -76,18 +95,33 @@ func cmdServe() *cli.Command {
 			}
 			defer sentryCloser()
 
-			chain, err := buildChain(&policyCfg, options...)
+			chain, err := buildChain(&policyCfg, chainOpt...)
 			if err != nil {
 				return err
 			}
+
+			// Build server
+			var serverOpt []server.Option
 
 			authz, err := policyCfg.Load("authz")
 			if err != nil {
 				return err
 			}
+			serverOpt = append(serverOpt, server.WithAuthzPolicy(authz))
 
+			if graphQL {
+				resolver := graphql.NewResolver(service.New(dbClient))
+				serverOpt = append(serverOpt, server.WithResolver(resolver))
+			}
+			if playground {
+				serverOpt = append(serverOpt, server.WithEnableGraphiQL())
+			}
+
+			srv := server.New(chain.HandleAlert, serverOpt...)
+
+			// Starting server
 			utils.Logger().Info("starting alertchain with serve mode", slog.String("addr", addr))
-			if err := server.New(chain.HandleAlert, authz).Run(addr); err != nil {
+			if err := srv.Run(addr); err != nil {
 				sentry.CaptureException(err)
 				return err
 			}

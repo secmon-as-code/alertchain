@@ -27,8 +27,8 @@ var _ interfaces.AlertLogger = &dummyAlertLogger{}
 
 type dummyActionLogger struct{}
 
-func (*dummyActionLogger) LogExit(log []model.Chore) {}
-func (*dummyActionLogger) LogInit(log []model.Chore) {}
+func (*dummyActionLogger) LogExit(log []model.Next)  {}
+func (*dummyActionLogger) LogInit(log []model.Next)  {}
 func (*dummyActionLogger) LogRun(log []model.Action) {}
 
 var _ interfaces.ActionLogger = &dummyActionLogger{}

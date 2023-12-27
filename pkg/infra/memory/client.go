@@ -1,6 +1,7 @@
 package memory
 
 import (
+	"sort"
 	"sync"
 	"time"
 
@@ -15,17 +16,20 @@ type lock struct {
 }
 
 type Client struct {
-	attrs map[types.Namespace]map[types.AttrID]*model.Attribute
-	locks map[types.Namespace]*lock
+	attrs     map[types.Namespace]map[types.AttrID]*model.Attribute
+	locks     map[types.Namespace]*lock
+	workflows map[types.WorkflowID]model.WorkflowRecord
 
-	attrMutex sync.RWMutex
-	lockMutex sync.Mutex
+	attrMutex     sync.RWMutex
+	lockMutex     sync.Mutex
+	workflowMutex sync.RWMutex
 }
 
 func New() *Client {
 	return &Client{
-		attrs: map[types.Namespace]map[types.AttrID]*model.Attribute{},
-		locks: map[types.Namespace]*lock{},
+		attrs:     map[types.Namespace]map[types.AttrID]*model.Attribute{},
+		locks:     map[types.Namespace]*lock{},
+		workflows: map[types.WorkflowID]model.WorkflowRecord{},
 	}
 }
 
@@ -69,6 +73,49 @@ func (x *Client) PutAttrs(ctx *model.Context, ns types.Namespace, attrs model.At
 	}
 
 	return nil
+}
+
+func (x *Client) PutWorkflow(ctx *model.Context, workflow model.WorkflowRecord) error {
+	x.workflowMutex.Lock()
+	defer x.workflowMutex.Unlock()
+
+	x.workflows[workflow.ID] = workflow
+	return nil
+}
+
+func (x *Client) GetWorkflows(ctx *model.Context, offset, limit int) ([]model.WorkflowRecord, error) {
+	x.workflowMutex.RLock()
+	defer x.workflowMutex.RUnlock()
+
+	workflows := make([]model.WorkflowRecord, 0, len(x.workflows))
+	for _, wf := range x.workflows {
+		workflows = append(workflows, wf)
+	}
+	// sort
+	sort.Slice(workflows, func(i, j int) bool {
+		return workflows[i].CreatedAt.After(workflows[j].CreatedAt)
+	})
+
+	if offset >= len(workflows) {
+		return nil, nil
+	}
+
+	end := offset + limit
+	if end > len(workflows) {
+		end = len(workflows)
+	}
+
+	return workflows[offset:end], nil
+}
+
+func (x *Client) GetWorkflow(ctx *model.Context, id types.WorkflowID) (*model.WorkflowRecord, error) {
+	for _, wf := range x.workflows {
+		if wf.ID == id {
+			return &wf, nil
+		}
+	}
+
+	return nil, nil
 }
 
 // Lock implements interfaces.Database.

@@ -76,7 +76,7 @@ func cmdRun() *cli.Command {
 			ctx := model.NewContext(model.WithBase(c.Context))
 			ctx.Logger().Info("starting alertchain with run mode", slog.Any("data", data))
 
-			if err := chain.HandleAlert(ctx, schema, data); err != nil {
+			if _, err := chain.HandleAlert(ctx, schema, data); err != nil {
 				return goerr.Wrap(err, "failed to handle alert")
 			}
 
