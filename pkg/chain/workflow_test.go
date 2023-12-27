@@ -10,7 +10,9 @@ import (
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/infra/logging"
+	"github.com/m-mizutani/alertchain/pkg/infra/memory"
 	"github.com/m-mizutani/alertchain/pkg/infra/policy"
+	"github.com/m-mizutani/alertchain/pkg/service"
 	"github.com/m-mizutani/gt"
 )
 
@@ -55,7 +57,8 @@ func TestWorkflow(t *testing.T) {
 		Title: "test-alert",
 	}, "test-alert", "test-data")
 
-	wf := gt.R1(chain.NewWorkflow(c, alert)).NoError(t)
+	w := gt.R1(service.New(memory.New()).Workflow.Create(ctx, alert)).NoError(t)
+	wf := gt.R1(chain.NewWorkflow(c, alert, w)).NoError(t)
 	gt.NoError(t, wf.Run(ctx))
 	recorder.Flush()
 

@@ -6,12 +6,19 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 
 	"testing"
 
+	"github.com/m-mizutani/alertchain/pkg/chain"
+	"github.com/m-mizutani/alertchain/pkg/chain/core"
+	"github.com/m-mizutani/alertchain/pkg/controller/graphql"
 	"github.com/m-mizutani/alertchain/pkg/controller/server"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
+	"github.com/m-mizutani/alertchain/pkg/infra/memory"
+	"github.com/m-mizutani/alertchain/pkg/infra/policy"
+	"github.com/m-mizutani/alertchain/pkg/service"
 	"github.com/m-mizutani/gt"
 )
 
@@ -60,4 +67,72 @@ func TestPubSub(t *testing.T) {
 	srv.ServeHTTP(w, httpReq)
 	gt.N(t, w.Result().StatusCode).Equal(http.StatusOK)
 	gt.N(t, called).Equal(1)
+}
+
+//go:embed testdata/alert.rego
+var alertRego string
+
+//go:embed testdata/action.rego
+var actionRego string
+
+func TestGraphQL(t *testing.T) {
+	dbClient := memory.New()
+	chain := gt.R1(chain.New(
+		core.WithPolicyAlert(gt.R1(policy.New(
+			policy.WithPackage("alert"),
+			policy.WithPolicyData("alert.rego", alertRego),
+		)).NoError(t)),
+		core.WithPolicyAction(gt.R1(policy.New(
+			policy.WithPackage("action"),
+			policy.WithPolicyData("action.rego", actionRego),
+		)).NoError(t)),
+		core.WithDatabase(dbClient),
+	)).NoError(t)
+
+	resolver := graphql.NewResolver(service.New(dbClient))
+	srv := server.New(chain.HandleAlert, server.WithResolver(resolver))
+
+	var alertID string
+	t.Run("receive alert", func(t *testing.T) {
+		var output struct {
+			Alerts []*model.Alert `json:"alerts"`
+		}
+		w := httptest.NewRecorder()
+		srv.ServeHTTP(w, httptest.NewRequest("POST", "/alert/raw/test_service", strings.NewReader(`{"foo":"bar"}`)))
+		gt.N(t, w.Result().StatusCode).Equal(http.StatusOK)
+		gt.NoError(t, json.Unmarshal(w.Body.Bytes(), &output))
+		gt.N(t, len(output.Alerts)).Equal(1)
+		alertID = string(output.Alerts[0].ID)
+	})
+	print(alertID)
+
+	t.Run("query workflow via GraphQL", func(t *testing.T) {
+		q := `query my_query {
+			workflows(limit: 1) {
+			  id
+			  alert {
+				id
+			  }
+			}
+		  }
+		`
+		body := gt.R1(json.Marshal(map[string]string{
+			"query": q,
+		})).NoError(t)
+		req := httptest.NewRequest("POST", "/graphql", bytes.NewReader(body))
+		req.Header.Set("Content-Type", "application/json")
+
+		w := httptest.NewRecorder()
+		srv.ServeHTTP(w, req)
+		gt.N(t, w.Result().StatusCode).Equal(http.StatusOK)
+
+		var output struct {
+			Data struct {
+				Workflows []*model.WorkflowRecord `json:"workflows"`
+			} `json:"data"`
+		}
+		gt.NoError(t, json.Unmarshal(w.Body.Bytes(), &output))
+		gt.N(t, len(output.Data.Workflows)).Equal(1)
+		gt.S(t, string(output.Data.Workflows[0].Alert.ID)).Equal(alertID)
+	})
 }

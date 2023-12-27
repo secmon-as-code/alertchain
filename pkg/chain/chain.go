@@ -6,6 +6,7 @@ import (
 	"github.com/m-mizutani/alertchain/pkg/chain/core"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
+	"github.com/m-mizutani/alertchain/pkg/service"
 	"github.com/m-mizutani/goerr"
 )
 
@@ -30,11 +31,19 @@ func (x *Chain) HandleAlert(ctx *model.Context, schema types.Schema, data any) (
 	}
 	ctx.Logger().Info("[output] detect alert", slog.Any("alerts", alerts))
 
+	svc := service.New(x.core.DBClient())
+
 	for _, alert := range alerts {
-		w, err := newWorkflow(x.core, alert)
+		record, err := svc.Workflow.Create(ctx, alert)
 		if err != nil {
 			return nil, err
 		}
+
+		w, err := newWorkflow(x.core, alert, record)
+		if err != nil {
+			return nil, err
+		}
+
 		if err := w.Run(ctx); err != nil {
 			return nil, err
 		}
