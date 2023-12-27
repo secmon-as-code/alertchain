@@ -109,13 +109,13 @@ func TestGraphQL(t *testing.T) {
 	t.Run("query workflow via GraphQL", func(t *testing.T) {
 		q := `query my_query {
 			workflows(limit: 1) {
-			  id
-			  alert {
 				id
-			  }
+				alert {
+					id
+				}
 			}
-		  }
-		`
+		}`
+
 		body := gt.R1(json.Marshal(map[string]string{
 			"query": q,
 		})).NoError(t)
