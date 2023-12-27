@@ -47,3 +47,7 @@ models:
   Timestamp:
     model:
       - github.com/99designs/gqlgen/graphql.Time
+  WorkflowRecord:
+    fields:
+      actions:
+        resolver: true

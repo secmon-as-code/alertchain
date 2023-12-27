@@ -41,6 +41,7 @@ type Config struct {
 
 type ResolverRoot interface {
 	Query() QueryResolver
+	WorkflowRecord() WorkflowRecordResolver
 }
 
 type DirectiveRoot struct {
@@ -113,6 +114,9 @@ type ComplexityRoot struct {
 type QueryResolver interface {
 	Workflows(ctx context.Context, offset *int, limit *int) ([]*model.WorkflowRecord, error)
 	Workflow(ctx context.Context, id string) (*model.WorkflowRecord, error)
+}
+type WorkflowRecordResolver interface {
+	Actions(ctx context.Context, obj *model.WorkflowRecord) ([]*model.ActionRecord, error)
 }
 
 type executableSchema struct {
@@ -2547,7 +2551,7 @@ func (ec *executionContext) _WorkflowRecord_actions(ctx context.Context, field g
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Actions, nil
+		return ec.resolvers.WorkflowRecord().Actions(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -2568,8 +2572,8 @@ func (ec *executionContext) fieldContext_WorkflowRecord_actions(ctx context.Cont
 	fc = &graphql.FieldContext{
 		Object:     "WorkflowRecord",
 		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
+		IsMethod:   true,
+		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
 			case "id":
@@ -4832,23 +4836,54 @@ func (ec *executionContext) _WorkflowRecord(ctx context.Context, sel ast.Selecti
 		case "id":
 			out.Values[i] = ec._WorkflowRecord_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "createdAt":
 			out.Values[i] = ec._WorkflowRecord_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "alert":
 			out.Values[i] = ec._WorkflowRecord_alert(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "actions":
-			out.Values[i] = ec._WorkflowRecord_actions(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._WorkflowRecord_actions(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
 			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}

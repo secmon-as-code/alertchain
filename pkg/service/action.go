@@ -14,6 +14,6 @@ func NewActionService(db interfaces.Database) *ActionService {
 	return &ActionService{db: db}
 }
 
-func (x *ActionService) Get(ctx *model.Context, wfID types.WorkflowID) ([]model.ActionRecord, error) {
+func (x *ActionService) Fetch(ctx *model.Context, wfID types.WorkflowID) ([]model.ActionRecord, error) {
 	return nil, nil
 }

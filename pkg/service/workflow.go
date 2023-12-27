@@ -40,20 +40,15 @@ func (x *WorkflowService) Lookup(ctx *model.Context, id types.WorkflowID) (*mode
 	return nil, nil
 }
 
-func (x *WorkflowService) Create(ctx *model.Context, alert model.Alert) (*Workflow, error) {
-	rawData, err := json.Marshal(alert.Data)
-	if err != nil {
-		return nil, goerr.Wrap(err, "Fail to marshal alert data")
-	}
-
-	initAttrs := make([]*model.AttributeRecord, len(alert.Attrs))
-	for i, attr := range alert.Attrs {
+func attrsToRecord(attrs model.Attributes) []*model.AttributeRecord {
+	records := make([]*model.AttributeRecord, len(attrs))
+	for i, attr := range attrs {
 		var typ *string
 		if attr.Type != "" {
 			typ = (*string)(&attr.Type)
 		}
 
-		initAttrs[i] = &model.AttributeRecord{
+		records[i] = &model.AttributeRecord{
 			ID:     string(attr.ID),
 			Key:    string(attr.Key),
 			Value:  fmt.Sprintf("%+v", attr.Value),
@@ -61,6 +56,15 @@ func (x *WorkflowService) Create(ctx *model.Context, alert model.Alert) (*Workfl
 			Global: attr.Global,
 			TTL:    int(attr.TTL),
 		}
+	}
+
+	return records
+}
+
+func (x *WorkflowService) Create(ctx *model.Context, alert model.Alert) (*Workflow, error) {
+	rawData, err := json.Marshal(alert.Data)
+	if err != nil {
+		return nil, goerr.Wrap(err, "Fail to marshal alert data")
 	}
 
 	var namespace *string
@@ -78,7 +82,7 @@ func (x *WorkflowService) Create(ctx *model.Context, alert model.Alert) (*Workfl
 			CreatedAt:   alert.CreatedAt,
 			Title:       alert.Title,
 			Source:      alert.Source,
-			InitAttrs:   initAttrs,
+			InitAttrs:   attrsToRecord(alert.Attrs),
 			Description: alert.Description,
 			Namespace:   namespace,
 		},
@@ -91,7 +95,14 @@ func (x *WorkflowService) Create(ctx *model.Context, alert model.Alert) (*Workfl
 	return &Workflow{db: x.db, wf: &workflow}, nil
 }
 
-func (x *Workflow) AddAction(ctx *model.Context, action *model.ActionRecord) error {
+func (x *Workflow) UpdateLastAttrs(ctx *model.Context, attrs model.Attributes) error {
+	x.wf.Alert.LastAttrs = attrsToRecord(attrs)
+	if err := x.db.PutWorkflow(ctx, *x.wf); err != nil {
+		return err
+	}
+	return nil
+}
 
+func (x *Workflow) AddAction(ctx *model.Context, action *model.Action) error {
 	return nil
 }

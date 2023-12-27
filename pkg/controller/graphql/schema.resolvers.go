@@ -6,6 +6,7 @@ package graphql
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
@@ -32,7 +33,16 @@ func (r *queryResolver) Workflow(ctx context.Context, id string) (*model.Workflo
 	return r.svc.Workflow.Lookup(newCtx, types.WorkflowID(id))
 }
 
+// Actions is the resolver for the actions field.
+func (r *workflowRecordResolver) Actions(ctx context.Context, obj *model.WorkflowRecord) ([]*model.ActionRecord, error) {
+	panic(fmt.Errorf("not implemented: Actions - actions"))
+}
+
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
+// WorkflowRecord returns WorkflowRecordResolver implementation.
+func (r *Resolver) WorkflowRecord() WorkflowRecordResolver { return &workflowRecordResolver{r} }
+
 type queryResolver struct{ *Resolver }
+type workflowRecordResolver struct{ *Resolver }

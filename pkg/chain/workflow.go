@@ -102,6 +102,10 @@ func (x *workflow) Run(ctx *model.Context) error {
 		ctx.Logger().Info("saved global attributes", slog.Any("attrs", global))
 	}
 
+	if err := x.service.UpdateLastAttrs(ctx, x.alert.Attrs); err != nil {
+		return err
+	}
+
 	return nil
 }
 

@@ -75,6 +75,21 @@ var alertRego string
 //go:embed testdata/action.rego
 var actionRego string
 
+func sendGraphQLRequest(t *testing.T, srv *server.Server, query string, out any) {
+	body := gt.R1(json.Marshal(map[string]string{
+		"query": query,
+	})).NoError(t)
+	req := httptest.NewRequest("POST", "/graphql", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+	srv.ServeHTTP(w, req)
+
+	gt.N(t, w.Result().StatusCode).Equal(http.StatusOK)
+	t.Log("body", w.Body.String())
+	gt.NoError(t, json.Unmarshal(w.Body.Bytes(), out))
+}
+
 func TestGraphQL(t *testing.T) {
 	dbClient := memory.New()
 	chain := gt.R1(chain.New(
@@ -116,23 +131,55 @@ func TestGraphQL(t *testing.T) {
 			}
 		}`
 
-		body := gt.R1(json.Marshal(map[string]string{
-			"query": q,
-		})).NoError(t)
-		req := httptest.NewRequest("POST", "/graphql", bytes.NewReader(body))
-		req.Header.Set("Content-Type", "application/json")
+		var output struct {
+			Data struct {
+				Workflows []*model.WorkflowRecord `json:"workflows"`
+			} `json:"data"`
+		}
+		sendGraphQLRequest(t, srv, q, &output)
+		gt.N(t, len(output.Data.Workflows)).Equal(1)
+		gt.S(t, string(output.Data.Workflows[0].Alert.ID)).Equal(alertID)
+	})
 
-		w := httptest.NewRecorder()
-		srv.ServeHTTP(w, req)
-		gt.N(t, w.Result().StatusCode).Equal(http.StatusOK)
+	t.Run("query workflow via GraphQL for attrs", func(t *testing.T) {
+		q := `query my_query {
+			workflows(limit: 1) {
+				id
+				alert {
+					id
+					initAttrs {
+						key
+						value
+					}
+					lastAttrs {
+						key
+						value
+					}
+				}
+			}
+		}`
 
 		var output struct {
 			Data struct {
 				Workflows []*model.WorkflowRecord `json:"workflows"`
 			} `json:"data"`
 		}
-		gt.NoError(t, json.Unmarshal(w.Body.Bytes(), &output))
+		sendGraphQLRequest(t, srv, q, &output)
 		gt.N(t, len(output.Data.Workflows)).Equal(1)
 		gt.S(t, string(output.Data.Workflows[0].Alert.ID)).Equal(alertID)
+
+		gt.A(t, output.Data.Workflows[0].Alert.InitAttrs).Length(1).At(0, func(t testing.TB, v *model.AttributeRecord) {
+			gt.V(t, v.Key).Equal("test_attr")
+			gt.V(t, v.Value).Equal("test_value")
+		})
+		gt.A(t, output.Data.Workflows[0].Alert.LastAttrs).Length(2).
+			At(0, func(t testing.TB, v *model.AttributeRecord) {
+				gt.V(t, v.Key).Equal("test_attr")
+				gt.V(t, v.Value).Equal("test_value")
+			}).
+			At(1, func(t testing.TB, v *model.AttributeRecord) {
+				gt.V(t, v.Key).Equal("added_attr")
+				gt.V(t, v.Value).Equal("swirls")
+			})
 	})
 }

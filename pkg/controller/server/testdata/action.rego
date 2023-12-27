@@ -10,3 +10,14 @@ run[job] {
 		},
 	}
 }
+
+exit[next] {
+	next := {
+        "attrs": [
+            {
+                "key": "added_attr",
+                "value": "swirls",
+            },
+        ],
+	}
+}
