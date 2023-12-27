@@ -45,7 +45,7 @@ func attrsToRecord(attrs model.Attributes) []*model.AttributeRecord {
 	for i, attr := range attrs {
 		var typ *string
 		if attr.Type != "" {
-			typ = (*string)(&attr.Type)
+			typ = (*string)(&attrs[i].Type)
 		}
 
 		records[i] = &model.AttributeRecord{
