@@ -10,6 +10,7 @@ import (
 
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
+	"github.com/m-mizutani/alertchain/pkg/utils"
 )
 
 // Workflows is the resolver for the workflows field.
@@ -20,11 +21,7 @@ func (r *queryResolver) Workflows(ctx context.Context, offset *int, limit *int) 
 		return nil, err
 	}
 
-	records := make([]*model.WorkflowRecord, len(results))
-	for i, rec := range results {
-		records[i] = &rec
-	}
-	return records, nil
+	return utils.ToPtrSlice(results), nil
 }
 
 // Workflow is the resolver for the workflow field.
