@@ -1,9 +1,8 @@
 # GraphQL schema
 
-scalar Timestamp
-scalar WorkflowID
-scalar AlertID
-
+scalar Timestamp # Represents time.Time
+scalar WorkflowID # Represents uuid.UUID
+scalar AlertID # Represents uuid.UUID
 type WorkflowRecord {
   id: WorkflowID!
   createdAt: Timestamp!

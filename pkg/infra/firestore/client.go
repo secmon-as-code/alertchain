@@ -125,7 +125,7 @@ func (x *Client) PutAttrs(ctx *model.Context, ns types.Namespace, attrs model.At
 func (x *Client) PutWorkflow(ctx *model.Context, workflow model.WorkflowRecord) error {
 	key := workflowKeyPrefix + workflow.ID
 
-	if _, err := x.client.Collection(x.workflowCollection).Doc(key).Set(ctx, workflow); err != nil {
+	if _, err := x.client.Collection(x.workflowCollection).Doc(string(key)).Set(ctx, workflow); err != nil {
 		return goerr.Wrap(err, "failed to put workflow")
 	}
 	return nil

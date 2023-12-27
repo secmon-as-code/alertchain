@@ -15,6 +15,7 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
+	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -500,10 +501,9 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 var sources = []*ast.Source{
 	{Name: "../../../graphql/schema.graphqls", Input: `# GraphQL schema
 
-scalar Timestamp
-scalar WorkflowID
-scalar AlertID
-
+scalar Timestamp # Represents time.Time
+scalar WorkflowID # Represents uuid.UUID
+scalar AlertID # Represents uuid.UUID
 type WorkflowRecord {
   id: WorkflowID!
   createdAt: Timestamp!
@@ -1096,9 +1096,9 @@ func (ec *executionContext) _AlertRecord_id(ctx context.Context, field graphql.C
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(types.AlertID)
 	fc.Result = res
-	return ec.marshalNAlertID2string(ctx, field.Selections, res)
+	return ec.marshalNAlertID2githubᚗcomᚋmᚑmizutaniᚋalertchainᚋpkgᚋdomainᚋtypesᚐAlertID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_AlertRecord_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -2403,9 +2403,9 @@ func (ec *executionContext) _WorkflowRecord_id(ctx context.Context, field graphq
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(types.WorkflowID)
 	fc.Result = res
-	return ec.marshalNWorkflowID2string(ctx, field.Selections, res)
+	return ec.marshalNWorkflowID2githubᚗcomᚋmᚑmizutaniᚋalertchainᚋpkgᚋdomainᚋtypesᚐWorkflowID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_WorkflowRecord_id(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -5252,13 +5252,14 @@ func (ec *executionContext) marshalNActionRecord2ᚖgithubᚗcomᚋmᚑmizutani�
 	return ec._ActionRecord(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNAlertID2string(ctx context.Context, v interface{}) (string, error) {
-	res, err := graphql.UnmarshalString(v)
+func (ec *executionContext) unmarshalNAlertID2githubᚗcomᚋmᚑmizutaniᚋalertchainᚋpkgᚋdomainᚋtypesᚐAlertID(ctx context.Context, v interface{}) (types.AlertID, error) {
+	tmp, err := graphql.UnmarshalString(v)
+	res := types.AlertID(tmp)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNAlertID2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
-	res := graphql.MarshalString(v)
+func (ec *executionContext) marshalNAlertID2githubᚗcomᚋmᚑmizutaniᚋalertchainᚋpkgᚋdomainᚋtypesᚐAlertID(ctx context.Context, sel ast.SelectionSet, v types.AlertID) graphql.Marshaler {
+	res := graphql.MarshalString(string(v))
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
@@ -5553,13 +5554,14 @@ func (ec *executionContext) marshalNTimestamp2timeᚐTime(ctx context.Context, s
 	return res
 }
 
-func (ec *executionContext) unmarshalNWorkflowID2string(ctx context.Context, v interface{}) (string, error) {
-	res, err := graphql.UnmarshalString(v)
+func (ec *executionContext) unmarshalNWorkflowID2githubᚗcomᚋmᚑmizutaniᚋalertchainᚋpkgᚋdomainᚋtypesᚐWorkflowID(ctx context.Context, v interface{}) (types.WorkflowID, error) {
+	tmp, err := graphql.UnmarshalString(v)
+	res := types.WorkflowID(tmp)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) marshalNWorkflowID2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
-	res := graphql.MarshalString(v)
+func (ec *executionContext) marshalNWorkflowID2githubᚗcomᚋmᚑmizutaniᚋalertchainᚋpkgᚋdomainᚋtypesᚐWorkflowID(ctx context.Context, sel ast.SelectionSet, v types.WorkflowID) graphql.Marshaler {
+	res := graphql.MarshalString(string(v))
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "the requested element is null which the schema does not allow")

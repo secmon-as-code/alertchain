@@ -199,29 +199,29 @@ func testWorkflow(t *testing.T, client interfaces.Database) {
 	now := time.Now()
 	workflows := []model.WorkflowRecord{
 		{
-			ID:        types.NewWorkflowID().String(),
+			ID:        types.NewWorkflowID(),
 			CreatedAt: now,
 		},
 		{
-			ID:        types.NewWorkflowID().String(),
+			ID:        types.NewWorkflowID(),
 			CreatedAt: now.Add(1 * time.Second),
 		},
 		{
-			ID:        types.NewWorkflowID().String(),
+			ID:        types.NewWorkflowID(),
 			CreatedAt: now.Add(2 * time.Second),
 			Alert: &model.AlertRecord{
-				ID:        uuid.NewString(),
+				ID:        types.NewAlertID(),
 				CreatedAt: now,
 				Source:    "test",
 				Title:     "testing",
 			},
 		},
 		{
-			ID:        types.NewWorkflowID().String(),
+			ID:        types.NewWorkflowID(),
 			CreatedAt: now.Add(3 * time.Second),
 		},
 		{
-			ID:        types.NewWorkflowID().String(),
+			ID:        types.NewWorkflowID(),
 			CreatedAt: now.Add(4 * time.Second),
 		},
 	}

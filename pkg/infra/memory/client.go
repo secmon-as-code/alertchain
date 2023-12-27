@@ -99,7 +99,7 @@ func (x *Client) GetWorkflows(ctx *model.Context, offset, limit int) ([]model.Wo
 
 func (x *Client) GetWorkflow(ctx *model.Context, id types.WorkflowID) (*model.WorkflowRecord, error) {
 	for _, wf := range x.workflows {
-		if wf.ID == id.String() {
+		if wf.ID == id {
 			return &wf, nil
 		}
 	}

@@ -4,6 +4,8 @@ package model
 
 import (
 	"time"
+
+	"github.com/m-mizutani/alertchain/pkg/domain/types"
 )
 
 type ActionRecord struct {
@@ -19,7 +21,7 @@ type ActionRecord struct {
 }
 
 type AlertRecord struct {
-	ID          string             `json:"id"`
+	ID          types.AlertID      `json:"id"`
 	Schema      string             `json:"schema"`
 	Data        string             `json:"data"`
 	CreatedAt   time.Time          `json:"createdAt"`
@@ -57,8 +59,8 @@ type ReferenceRecord struct {
 }
 
 type WorkflowRecord struct {
-	ID        string          `json:"id"`
-	CreatedAt time.Time       `json:"createdAt"`
-	Alert     *AlertRecord    `json:"alert"`
-	Actions   []*ActionRecord `json:"actions"`
+	ID        types.WorkflowID `json:"id"`
+	CreatedAt time.Time        `json:"createdAt"`
+	Alert     *AlertRecord     `json:"alert"`
+	Actions   []*ActionRecord  `json:"actions"`
 }

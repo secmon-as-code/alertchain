@@ -69,10 +69,10 @@ func (x *WorkflowService) Create(ctx *model.Context, alert model.Alert) (*Workfl
 	}
 
 	workflow := model.WorkflowRecord{
-		ID:        types.NewWorkflowID().String(),
+		ID:        types.NewWorkflowID(),
 		CreatedAt: ctx.Now(),
 		Alert: &model.AlertRecord{
-			ID:          string(alert.ID),
+			ID:          alert.ID,
 			Schema:      string(alert.Schema),
 			Data:        string(rawData),
 			CreatedAt:   alert.CreatedAt,

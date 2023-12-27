@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/infra/firestore"
@@ -31,14 +30,14 @@ func TestWorkflow(t *testing.T) {
 	client := gt.R1(firestore.New(ctx, projectID, colPrefix)).NoError(t)
 
 	workflow0 := model.WorkflowRecord{
-		ID:        types.NewWorkflowID().String(),
+		ID:        types.NewWorkflowID(),
 		CreatedAt: now.Add(-time.Second),
 	}
 	workflow1 := model.WorkflowRecord{
-		ID:        types.NewWorkflowID().String(),
+		ID:        types.NewWorkflowID(),
 		CreatedAt: now,
 		Alert: &model.AlertRecord{
-			ID:        uuid.NewString(),
+			ID:        types.NewAlertID(),
 			CreatedAt: now,
 			Source:    "test",
 			Title:     "testing",
@@ -55,7 +54,7 @@ func TestWorkflow(t *testing.T) {
 		},
 	}
 	workflow2 := model.WorkflowRecord{
-		ID:        types.NewWorkflowID().String(),
+		ID:        types.NewWorkflowID(),
 		CreatedAt: now.Add(time.Second),
 	}
 
