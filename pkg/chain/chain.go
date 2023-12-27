@@ -7,6 +7,7 @@ import (
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/service"
+	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/goerr"
 )
 
@@ -49,11 +50,7 @@ func (x *Chain) HandleAlert(ctx *model.Context, schema types.Schema, data any) (
 		}
 	}
 
-	resp := make([]*model.Alert, len(alerts))
-	for i, alert := range alerts {
-		resp[i] = &alert
-	}
-	return resp, nil
+	return utils.ToPtrSlice(alerts), nil
 }
 
 func (x *Chain) detectAlert(ctx *model.Context, schema types.Schema, data any) ([]model.Alert, error) {
