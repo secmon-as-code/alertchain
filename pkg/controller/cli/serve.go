@@ -3,7 +3,6 @@ package cli
 import (
 	"log/slog"
 
-	"github.com/getsentry/sentry-go"
 	"github.com/m-mizutani/alertchain/pkg/chain/core"
 	"github.com/m-mizutani/alertchain/pkg/controller/cli/config"
 	"github.com/m-mizutani/alertchain/pkg/controller/graphql"
@@ -122,7 +121,7 @@ func cmdServe() *cli.Command {
 			// Starting server
 			utils.Logger().Info("starting alertchain with serve mode", slog.String("addr", addr))
 			if err := srv.Run(addr); err != nil {
-				sentry.CaptureException(err)
+				utils.HandleError(err)
 				return err
 			}
 

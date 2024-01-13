@@ -10,7 +10,6 @@ import (
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
-	"github.com/getsentry/sentry-go"
 	"github.com/go-chi/chi/v5"
 	"github.com/m-mizutani/alertchain/pkg/controller/graphql"
 	"github.com/m-mizutani/alertchain/pkg/domain/interfaces"
@@ -55,9 +54,7 @@ func respondError(w http.ResponseWriter, err error) {
 		Error: err.Error(),
 	}
 
-	sentry.CaptureException(err)
-
-	utils.Logger().Error("respond error", utils.ErrLog(err))
+	utils.HandleError(err)
 
 	w.WriteHeader(http.StatusBadRequest)
 	if err := json.NewEncoder(w).Encode(body); err != nil {
@@ -103,7 +100,7 @@ func New(hdlr interfaces.AlertHandler, options ...Option) *Server {
 
 			w.WriteHeader(resp.Code)
 			if err := json.NewEncoder(w).Encode(body); err != nil {
-				respondError(w, err)
+				respondError(w, goerr.Wrap(err, "failed to encode response body"))
 				return
 			}
 		}
