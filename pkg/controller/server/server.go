@@ -211,8 +211,6 @@ func (x *Server) Run(addr string) error {
 		Handler:           x.mux,
 	}
 
-	defer sentry.Flush(2 * time.Second)
-
 	if err := server.ListenAndServe(); err != nil {
 		return goerr.Wrap(err, "failed to listen")
 	}
