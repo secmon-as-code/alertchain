@@ -19,14 +19,14 @@ type workflow struct {
 	service *service.Workflow
 }
 
-func newWorkflow(c *core.Core, alert model.Alert, svc *service.Workflow) (*workflow, error) {
+func newWorkflow(c *core.Core, alert model.Alert, svc *service.Workflow) *workflow {
 	hdlr := &workflow{
 		core:    c,
 		alert:   alert,
 		service: svc,
 	}
 
-	return hdlr, nil
+	return hdlr
 }
 
 func (x *workflow) Run(ctx *model.Context) error {
@@ -244,7 +244,7 @@ func (x *proc) executeAction(ctx *model.Context, p model.Action, alert model.Ale
 	} else if !x.core.DisableAction() {
 		resp, err := run(ctx, alert, p.Args)
 		if err != nil {
-			return nil, err
+			return nil, types.AsActionErr(goerr.Wrap(err))
 		}
 		result = resp
 	}

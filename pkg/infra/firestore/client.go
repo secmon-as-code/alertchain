@@ -45,7 +45,7 @@ func (x *Client) GetAttrs(ctx *model.Context, ns types.Namespace) (model.Attribu
 	key := attrKeyPrefix + hashNamespace(ns)
 	docs, err := x.client.Collection(x.attrCollection).Doc(key).Collection("attributes").Documents(ctx).GetAll()
 	if err != nil {
-		return nil, goerr.Wrap(err, "failed to get attributes from firestore")
+		return nil, types.AsRuntimeErr(goerr.Wrap(err, "failed to get attributes from firestore"))
 	}
 
 	now := time.Now().UTC()
@@ -57,7 +57,7 @@ func (x *Client) GetAttrs(ctx *model.Context, ns types.Namespace) (model.Attribu
 
 		var attr attribute
 		if err := doc.DataTo(&attr); err != nil {
-			return nil, goerr.Wrap(err, "failed to unmarshal attribute from firestore")
+			return nil, types.AsRuntimeErr(goerr.Wrap(err, "failed to unmarshal attribute from firestore"))
 		}
 		if attr.ExpiresAt.Before(now) {
 			continue
@@ -79,7 +79,7 @@ func (x *Client) PutAttrs(ctx *model.Context, ns types.Namespace, attrs model.At
 			doc, err := collection.Doc(string(attr.ID)).Get(ctx)
 			if err != nil {
 				if status.Code(err) != codes.NotFound {
-					return goerr.Wrap(err, "failed to get attributes from firestore")
+					return types.AsRuntimeErr(goerr.Wrap(err, "failed to get attributes from firestore"))
 				}
 				continue
 			}
@@ -103,12 +103,12 @@ func (x *Client) PutAttrs(ctx *model.Context, ns types.Namespace, attrs model.At
 					"value":      attr.Value,
 					"expires_at": attr.ExpiresAt,
 				}, firestore.MergeAll); err != nil {
-					return goerr.Wrap(err, "failed to unmarshal attribute from firebase")
+					return types.AsRuntimeErr(goerr.Wrap(err, "failed to unmarshal attribute from firebase"))
 				}
 			} else {
 				ref := collection.Doc(string(attr.ID))
 				if err := tx.Create(ref, attr); err != nil {
-					return goerr.Wrap(err, "failed to create attribute")
+					return types.AsRuntimeErr(goerr.Wrap(err, "failed to create attribute"))
 				}
 			}
 		}
@@ -116,7 +116,7 @@ func (x *Client) PutAttrs(ctx *model.Context, ns types.Namespace, attrs model.At
 		return nil
 	})
 	if err != nil {
-		return goerr.Wrap(err, "failed firestore transaction")
+		return types.AsRuntimeErr(goerr.Wrap(err, "failed firestore transaction"))
 	}
 
 	return nil
@@ -126,7 +126,7 @@ func (x *Client) PutWorkflow(ctx *model.Context, workflow model.WorkflowRecord) 
 	key := workflowKeyPrefix + workflow.ID
 
 	if _, err := x.client.Collection(x.workflowCollection).Doc(string(key)).Set(ctx, workflow); err != nil {
-		return goerr.Wrap(err, "failed to put workflow")
+		return types.AsRuntimeErr(goerr.Wrap(err, "failed to put workflow"))
 	}
 	return nil
 }
@@ -145,12 +145,12 @@ func (x *Client) GetWorkflows(ctx *model.Context, offset, limit int) ([]model.Wo
 			if errors.Is(err, iterator.Done) {
 				return workflows, nil
 			}
-			return nil, goerr.Wrap(err, "failed to get workflow")
+			return nil, types.AsRuntimeErr(goerr.Wrap(err, "failed to get workflow"))
 		}
 
 		var workflow model.WorkflowRecord
 		if err := doc.DataTo(&workflow); err != nil {
-			return nil, goerr.Wrap(err, "failed to unmarshal workflow")
+			return nil, types.AsRuntimeErr(goerr.Wrap(err, "failed to unmarshal workflow"))
 		}
 		workflows = append(workflows, workflow)
 	}
@@ -163,12 +163,12 @@ func (x *Client) GetWorkflow(ctx *model.Context, id types.WorkflowID) (*model.Wo
 		if status.Code(err) == codes.NotFound {
 			return nil, nil
 		}
-		return nil, goerr.Wrap(err, "failed to get workflow")
+		return nil, types.AsRuntimeErr(goerr.Wrap(err, "failed to get workflow"))
 	}
 
 	var workflow model.WorkflowRecord
 	if err := doc.DataTo(&workflow); err != nil {
-		return nil, goerr.Wrap(err, "failed to unmarshal workflow")
+		return nil, types.AsRuntimeErr(goerr.Wrap(err, "failed to unmarshal workflow"))
 	}
 
 	return &workflow, nil
@@ -207,11 +207,11 @@ func (x *Client) Lock(ctx *model.Context, ns types.Namespace, timeout time.Time)
 	for i := 0; ; i++ {
 		select {
 		case <-ctx.Done():
-			return goerr.Wrap(ctx.Err(), "context is done")
+			return types.AsRuntimeErr(goerr.Wrap(ctx.Err(), "context is done"))
 		default:
 			if err := x.tryLock(ctx, ns, timeout); err != nil {
 				if !errors.Is(err, errLockFailed) {
-					return goerr.Wrap(err, "failed to lock")
+					return types.AsRuntimeErr(goerr.Wrap(err, "failed to lock"))
 				}
 			} else {
 				return nil
@@ -222,7 +222,7 @@ func (x *Client) Lock(ctx *model.Context, ns types.Namespace, timeout time.Time)
 
 		select {
 		case <-ctx.Done():
-			return goerr.Wrap(ctx.Err(), "context is done")
+			return types.AsRuntimeErr(goerr.Wrap(ctx.Err(), "context is done"))
 		case <-time.After(wait):
 			// wait
 		}
@@ -243,7 +243,7 @@ func (x *Client) tryLock(ctx *model.Context, ns types.Namespace, timeout time.Ti
 		resp, err := tx.Get(x.client.Collection(x.attrCollection).Doc(key))
 		if err != nil {
 			if status.Code(err) != codes.NotFound {
-				return goerr.Wrap(err, "failed to get attributes from firestore")
+				return types.AsRuntimeErr(goerr.Wrap(err, "failed to get attributes from firestore"))
 			}
 		} else {
 			doc = resp
@@ -257,22 +257,22 @@ func (x *Client) tryLock(ctx *model.Context, ns types.Namespace, timeout time.Ti
 		if doc == nil {
 			if err := tx.Create(x.client.Collection(x.attrCollection).Doc(key), newLock); err != nil {
 				if status.Code(err) == codes.AlreadyExists {
-					return goerr.Wrap(errLockFailed, "lock is already acquired")
+					return types.AsRuntimeErr(goerr.Wrap(errLockFailed, "lock is already acquired"))
 				}
-				return goerr.Wrap(err, "failed to create lock")
+				return types.AsRuntimeErr(goerr.Wrap(err, "failed to create lock"))
 			}
 		} else {
 			var current lock
 			if err := resp.DataTo(&current); err != nil {
-				return goerr.Wrap(err, "failed to unmarshal lock")
+				return types.AsRuntimeErr(goerr.Wrap(err, "failed to unmarshal lock"))
 			}
 
 			if current.ExpiresAt.After(now) {
-				return goerr.Wrap(errLockFailed, "lock is already acquired")
+				return types.AsRuntimeErr(goerr.Wrap(errLockFailed, "lock is already acquired"))
 			}
 
 			if err := tx.Set(doc.Ref, newLock); err != nil {
-				return goerr.Wrap(err, "failed to update lock")
+				return types.AsRuntimeErr(goerr.Wrap(err, "failed to update lock"))
 			}
 		}
 
@@ -280,7 +280,7 @@ func (x *Client) tryLock(ctx *model.Context, ns types.Namespace, timeout time.Ti
 	})
 
 	if err != nil {
-		return goerr.Wrap(err, "failed firestore transaction")
+		return types.AsRuntimeErr(goerr.Wrap(err, "failed firestore transaction"))
 	}
 
 	return nil
@@ -291,7 +291,7 @@ func (x *Client) Unlock(ctx *model.Context, ns types.Namespace) error {
 	key := lockKeyPrefix + hashNamespace(ns)
 
 	if _, err := x.client.Collection(x.attrCollection).Doc(key).Delete(ctx); err != nil {
-		return goerr.Wrap(err, "failed to delete lock")
+		return types.AsRuntimeErr(goerr.Wrap(err, "failed to delete lock"))
 	}
 	return nil
 }
@@ -300,12 +300,12 @@ func New(ctx *model.Context, projectID string, collectionPrefix string) (*Client
 	conf := &firebase.Config{ProjectID: projectID}
 	app, err := firebase.NewApp(ctx, conf)
 	if err != nil {
-		return nil, goerr.Wrap(err, "Failed to initialize firebase app")
+		return nil, types.AsRuntimeErr(goerr.Wrap(err, "Failed to initialize firebase app"))
 	}
 
 	client, err := app.Firestore(ctx)
 	if err != nil {
-		return nil, goerr.Wrap(err, "Failed to initialize firestore client")
+		return nil, types.AsRuntimeErr(goerr.Wrap(err, "Failed to initialize firestore client"))
 	}
 
 	return &Client{
@@ -349,12 +349,12 @@ func (x *Client) Migrate(ctx *model.Context) error {
 			ctx.Logger().Info("Index already created")
 			return nil
 		}
-		return goerr.Wrap(err, "failed to create index")
+		return types.AsRuntimeErr(goerr.Wrap(err, "failed to create index"))
 	}
 
 	idx, err := op.Wait(ctx)
 	if err != nil {
-		return goerr.Wrap(err, "failed to wait index creation")
+		return types.AsRuntimeErr(goerr.Wrap(err, "failed to wait index creation"))
 	}
 	ctx.Logger().Info("Created index", slog.Any("index", idx))
 
@@ -364,7 +364,7 @@ func (x *Client) Migrate(ctx *model.Context) error {
 
 func (x *Client) Close() error {
 	if err := x.client.Close(); err != nil {
-		return goerr.Wrap(err, "failed to close firestore client")
+		return types.AsRuntimeErr(goerr.Wrap(err, "failed to close firestore client"))
 	}
 	return nil
 }

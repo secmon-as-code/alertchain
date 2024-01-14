@@ -28,7 +28,7 @@ func (x *Chain) HandleAlert(ctx *model.Context, schema types.Schema, data any) (
 	ctx.Logger().Info("[input] detect alert", slog.Any("data", data), slog.Any("schema", schema))
 	alerts, err := x.detectAlert(ctx, schema, data)
 	if err != nil {
-		return nil, goerr.Wrap(err)
+		return nil, types.AsPolicyErr(goerr.Wrap(err))
 	}
 	ctx.Logger().Info("[output] detect alert", slog.Any("alerts", alerts))
 
@@ -40,10 +40,7 @@ func (x *Chain) HandleAlert(ctx *model.Context, schema types.Schema, data any) (
 			return nil, err
 		}
 
-		w, err := newWorkflow(x.core, alert, record)
-		if err != nil {
-			return nil, err
-		}
+		w := newWorkflow(x.core, alert, record)
 
 		if err := w.Run(ctx); err != nil {
 			return nil, err
