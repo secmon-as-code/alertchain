@@ -3,12 +3,9 @@ package cli
 import (
 	"context"
 
-	"log/slog"
-
 	"github.com/m-mizutani/alertchain/pkg/controller/cli/config"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/utils"
-	"github.com/m-mizutani/goerr"
 	"github.com/urfave/cli/v2"
 )
 
@@ -64,17 +61,7 @@ func New() *CLI {
 
 func (x *CLI) Run(ctx context.Context, argv []string) error {
 	if err := x.app.RunContext(ctx, argv); err != nil {
-		attrs := []any{
-			slog.String("error", err.Error()),
-		}
-
-		if goErr := goerr.Unwrap(err); goErr != nil {
-			for k, v := range goErr.Values() {
-				attrs = append(attrs, slog.Any(k, v))
-			}
-		}
-
-		utils.Logger().Error("cli failed", attrs...)
+		utils.Logger().Error("cli failed", utils.ErrLog(err))
 		return err
 	}
 

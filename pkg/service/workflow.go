@@ -64,7 +64,7 @@ func attrsToRecord(attrs model.Attributes) []*model.AttributeRecord {
 func (x *WorkflowService) Create(ctx *model.Context, alert model.Alert) (*Workflow, error) {
 	rawData, err := json.Marshal(alert.Data)
 	if err != nil {
-		return nil, goerr.Wrap(err, "Fail to marshal alert data")
+		return nil, types.AsBadRequestErr(goerr.Wrap(err, "Fail to marshal alert data"))
 	}
 
 	var namespace *string

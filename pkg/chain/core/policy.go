@@ -24,7 +24,7 @@ func (x *Core) QueryAlertPolicy(ctx *model.Context, schema types.Schema, in, out
 	}
 
 	if err := x.alertPolicy.Query(ctx, in, out, options...); err != nil && !errors.Is(err, types.ErrNoPolicyResult) {
-		return goerr.Wrap(err, "failed to evaluate alert policy").With("request", in)
+		return types.AsPolicyErr(goerr.Wrap(err, "failed to evaluate alert policy").With("request", in))
 	}
 	ctx.Logger().Info("queried action policy", slog.Any("in", in), slog.Any("out", out))
 
@@ -42,7 +42,7 @@ func (x *Core) QueryActionPolicy(ctx *model.Context, in, out any) error {
 	}
 
 	if err := x.actionPolicy.Query(ctx, in, out, options...); err != nil && !errors.Is(err, types.ErrNoPolicyResult) {
-		return goerr.Wrap(err, "failed to evaluate action policy").With("request", in)
+		return types.AsPolicyErr(goerr.Wrap(err, "failed to evaluate action policy").With("request", in))
 	}
 	ctx.Logger().Info("queried action policy", slog.Any("in", in), slog.Any("out", out))
 

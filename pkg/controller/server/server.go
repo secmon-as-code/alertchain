@@ -56,7 +56,21 @@ func respondError(w http.ResponseWriter, err error) {
 
 	utils.HandleError(err)
 
-	w.WriteHeader(http.StatusBadRequest)
+	var code int
+	switch types.GetErrorType(err) {
+	case
+		types.ErrTypeAction,
+		types.ErrTypePolicy,
+		types.ErrTypeRuntime,
+		types.ErrTypeConfig,
+		types.ErrTypeUnknown:
+		code = http.StatusInternalServerError
+
+	case types.ErrTypeBadRequest:
+		code = http.StatusBadRequest
+	}
+
+	w.WriteHeader(code)
 	if err := json.NewEncoder(w).Encode(body); err != nil {
 		utils.Logger().Error("failed to convert error message", err)
 		return

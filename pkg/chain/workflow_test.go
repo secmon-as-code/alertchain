@@ -58,7 +58,7 @@ func TestWorkflow(t *testing.T) {
 	}, "test-alert", "test-data")
 
 	w := gt.R1(service.New(memory.New()).Workflow.Create(ctx, alert)).NoError(t)
-	wf := gt.R1(chain.NewWorkflow(c, alert, w)).NoError(t)
+	wf := chain.NewWorkflow(c, alert, w)
 	gt.NoError(t, wf.Run(ctx))
 	recorder.Flush()
 
