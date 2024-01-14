@@ -14,7 +14,7 @@ import (
 type Database struct {
 	dbType              string
 	firestoreProjectID  string
-	firestoreCollection string
+	firestoreDatabaseID string
 }
 
 func (x *Database) Flags() []cli.Flag {
@@ -38,11 +38,11 @@ func (x *Database) Flags() []cli.Flag {
 			Destination: &x.firestoreProjectID,
 		},
 		&cli.StringFlag{
-			Name:        "firestore-collection-prefix",
-			Usage:       "Prefix of Firestore collection name. Actual collection names will be <prefix>.attr, <prefix>.workflow",
+			Name:        "firestore-database-id",
+			Usage:       "Prefix of Firestore database ID",
 			Category:    category,
-			EnvVars:     []string{"ALERTCHAIN_FIRESTORE_COLLECTION_PREFIX"},
-			Destination: &x.firestoreCollection,
+			EnvVars:     []string{"ALERTCHAIN_FIRESTORE_DATABASE_ID"},
+			Destination: &x.firestoreDatabaseID,
 		},
 	}
 }
@@ -58,11 +58,11 @@ func (x *Database) New(ctx *model.Context) (interfaces.Database, func(), error) 
 		if x.firestoreProjectID == "" {
 			return nil, nopCloser, goerr.Wrap(types.ErrInvalidOption, "firestore-project-id is required for firestore")
 		}
-		if x.firestoreCollection == "" {
+		if x.firestoreDatabaseID == "" {
 			return nil, nopCloser, goerr.Wrap(types.ErrInvalidOption, "firestore-collection-prefix is required for firestore")
 		}
 
-		client, err := firestore.New(ctx, x.firestoreProjectID, x.firestoreCollection)
+		client, err := firestore.New(ctx, x.firestoreProjectID, x.firestoreDatabaseID)
 		if err != nil {
 			return nil, nopCloser, goerr.Wrap(err, "failed to initialize firestore client")
 		}

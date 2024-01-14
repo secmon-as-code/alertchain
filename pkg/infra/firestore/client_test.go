@@ -14,20 +14,20 @@ import (
 
 func TestWorkflow(t *testing.T) {
 	var (
-		projectID string
-		colPrefix string
+		projectID  string
+		databaseID string
 	)
 
 	if err := utils.LoadEnv(
 		utils.Env("TEST_FIRESTORE_PROJECT_ID", &projectID),
-		utils.Env("TEST_FIRESTORE_COLLECTION_PREFIX", &colPrefix),
+		utils.Env("TEST_FIRESTORE_DATABASE_ID", &databaseID),
 	); err != nil {
 		t.Skipf("Skip test due to missing env: %v", err)
 	}
 
 	ctx := model.NewContext()
 	now := time.Now()
-	client := gt.R1(firestore.New(ctx, projectID, colPrefix)).NoError(t)
+	client := gt.R1(firestore.New(ctx, projectID, databaseID)).NoError(t)
 
 	workflow0 := model.WorkflowRecord{
 		ID:        types.NewWorkflowID(),
