@@ -312,52 +312,6 @@ func New(ctx *model.Context, projectID string, databaseID string) (*Client, erro
 	}, nil
 }
 
-/*
-func (x *Client) Migrate(ctx *model.Context) error {
-	adminClient, err := apiv1.NewFirestoreAdminClient(ctx)
-	if err != nil {
-		log.Fatalf("Failed to create client: %v", err)
-	}
-	defer adminClient.Close()
-
-	op, err := adminClient.CreateIndex(ctx, &adminpb.CreateIndexRequest{
-		Parent: "projects/" + x.projectID + "/databases/(default)/collectionGroups/" + x.collection,
-		Index: &adminpb.Index{
-			Fields: []*adminpb.Index_IndexField{
-				{
-					FieldPath: "RecordType",
-					ValueMode: &adminpb.Index_IndexField_Order_{
-						Order: adminpb.Index_IndexField_ASCENDING,
-					},
-				},
-				{
-					FieldPath: "CreatedAt",
-					ValueMode: &adminpb.Index_IndexField_Order_{
-						Order: adminpb.Index_IndexField_DESCENDING,
-					},
-				},
-			},
-			QueryScope: adminpb.Index_COLLECTION,
-		},
-	})
-	if err != nil {
-		if status.Code(err) == codes.AlreadyExists {
-			ctx.Logger().Info("Index already created")
-			return nil
-		}
-		return types.AsRuntimeErr(goerr.Wrap(err, "failed to create index"))
-	}
-
-	idx, err := op.Wait(ctx)
-	if err != nil {
-		return types.AsRuntimeErr(goerr.Wrap(err, "failed to wait index creation"))
-	}
-	ctx.Logger().Info("Created index", slog.Any("index", idx))
-
-	return nil
-}
-*/
-
 func (x *Client) Close() error {
 	if err := x.client.Close(); err != nil {
 		return types.AsRuntimeErr(goerr.Wrap(err, "failed to close firestore client"))
