@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"cloud.google.com/go/firestore"
-	firebase "firebase.google.com/go"
+
 	"github.com/m-mizutani/alertchain/pkg/domain/interfaces"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
@@ -23,6 +23,7 @@ import (
 type Client struct {
 	client             *firestore.Client
 	projectID          string
+	databaseID         string
 	attrCollection     string
 	workflowCollection string
 }
@@ -296,23 +297,18 @@ func (x *Client) Unlock(ctx *model.Context, ns types.Namespace) error {
 	return nil
 }
 
-func New(ctx *model.Context, projectID string, collectionPrefix string) (*Client, error) {
-	conf := &firebase.Config{ProjectID: projectID}
-	app, err := firebase.NewApp(ctx, conf)
+func New(ctx *model.Context, projectID string, databaseID string) (*Client, error) {
+	client, err := firestore.NewClientWithDatabase(ctx, projectID, databaseID)
 	if err != nil {
 		return nil, types.AsRuntimeErr(goerr.Wrap(err, "Failed to initialize firebase app"))
-	}
-
-	client, err := app.Firestore(ctx)
-	if err != nil {
-		return nil, types.AsRuntimeErr(goerr.Wrap(err, "Failed to initialize firestore client"))
 	}
 
 	return &Client{
 		client:             client,
 		projectID:          projectID,
-		attrCollection:     collectionPrefix + ".attr",
-		workflowCollection: collectionPrefix + ".workflow",
+		databaseID:         databaseID,
+		attrCollection:     "attrs",
+		workflowCollection: "workflows",
 	}, nil
 }
 
