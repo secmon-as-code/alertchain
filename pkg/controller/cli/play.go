@@ -20,6 +20,7 @@ func cmdPlay() *cli.Command {
 	var (
 		playbookPath string
 		outDir       string
+		scenarioIDs  cli.StringSlice
 
 		policyCfg config.Policy
 	)
@@ -41,6 +42,13 @@ func cmdPlay() *cli.Command {
 			Destination: &outDir,
 			Value:       "./output",
 		},
+		&cli.StringSliceFlag{
+			Name:        "scenario",
+			Aliases:     []string{"s"},
+			Usage:       "scenario ID to play. If not specified, all scenarios are played",
+			EnvVars:     []string{"ALERTCHAIN_SCENARIO"},
+			Destination: &scenarioIDs,
+		},
 	}
 	flags = append(flags, policyCfg.Flags()...)
 
@@ -57,10 +65,21 @@ func cmdPlay() *cli.Command {
 				return goerr.Wrap(err, "failed to parse playbook")
 			}
 
-			ctx := model.NewContext(model.WithBase(c.Context))
+			ctx := model.NewContext(
+				model.WithBase(c.Context),
+			)
 			ctx.Logger().Info("starting alertchain with play mode", slog.Any("playbook", playbookPath))
 
+			targets := make(map[types.ScenarioID]struct{})
+			for _, id := range scenarioIDs.Value() {
+				targets[types.ScenarioID(id)] = struct{}{}
+			}
+
 			for _, s := range playbook.Scenarios {
+				if _, ok := targets[s.ID]; len(targets) > 0 && !ok {
+					continue
+				}
+
 				if err := playScenario(ctx, s, &policyCfg, outDir, playbook.Env); err != nil {
 					return err
 				}
