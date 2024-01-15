@@ -2,6 +2,7 @@ package core
 
 import (
 	"errors"
+	"fmt"
 
 	"log/slog"
 
@@ -51,11 +52,15 @@ func (x *Core) QueryActionPolicy(ctx *model.Context, in, out any) error {
 
 func makeRegoPrint(ctx *model.Context) policy.RegoPrint {
 	return func(file string, row int, msg string) error {
-		ctx.Logger().Info("rego print",
-			slog.String("file", file),
-			slog.Int("row", row),
-			slog.String("msg", msg),
-		)
+		if ctx.OnCLI() {
+			fmt.Printf("	%s:%d: %s\n", file, row, msg)
+		} else {
+			ctx.Logger().Info("rego print",
+				slog.String("file", file),
+				slog.Int("row", row),
+				slog.String("msg", msg),
+			)
+		}
 		return nil
 	}
 }

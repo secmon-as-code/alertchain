@@ -67,6 +67,7 @@ func cmdPlay() *cli.Command {
 
 			ctx := model.NewContext(
 				model.WithBase(c.Context),
+				model.WithCLI(),
 			)
 			ctx.Logger().Info("starting alertchain with play mode", slog.Any("playbook", playbookPath))
 
