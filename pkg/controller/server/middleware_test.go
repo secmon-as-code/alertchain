@@ -1,22 +1,35 @@
 package server_test
 
 import (
+	"bytes"
 	_ "embed"
 	"net/http"
 	"net/http/httptest"
+	"os/exec"
+	"strings"
 	"testing"
 
 	"github.com/m-mizutani/alertchain/pkg/controller/server"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/infra/policy"
+	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/gt"
 )
 
 //go:embed testdata/authz.rego
 var authzRego string
 
-func TestAuthorize(t *testing.T) {
+func init() {
+	var v string
+	if err := utils.LoadEnv(
+		utils.EnvDef("TEST_GOOGLE_CLOUD_ACCOUNT_EMAIL", &v),
+	); err == nil {
+		authzRego = strings.ReplaceAll(authzRego, "__GOOGLE_CLOUD_ACCOUNT_EMAIL__", v)
+	}
+}
+
+func newServer(t *testing.T) *server.Server {
 	authz := gt.R1(policy.New(
 		policy.WithPolicyData("authz.rego", authzRego),
 		policy.WithPackage("authz"),
@@ -25,6 +38,11 @@ func TestAuthorize(t *testing.T) {
 		return nil, nil
 	}, server.WithAuthzPolicy(authz))
 
+	return srv
+}
+
+func TestAuthorize(t *testing.T) {
+	srv := newServer(t)
 	testCases := map[string]struct {
 		NewReq func() *http.Request
 		Expect int
@@ -39,7 +57,7 @@ func TestAuthorize(t *testing.T) {
 			NewReq: func() *http.Request {
 				return httptest.NewRequest("GET", "/not-found", nil)
 			},
-			Expect: http.StatusNotFound,
+			Expect: http.StatusForbidden,
 		},
 		"unauthorized by path": {
 			NewReq: func() *http.Request {
@@ -55,6 +73,64 @@ func TestAuthorize(t *testing.T) {
 			w := httptest.NewRecorder()
 			srv.ServeHTTP(w, req)
 			gt.N(t, w.Result().StatusCode).Equal(tc.Expect)
+		})
+	}
+}
+
+func TestVerifyGoogleIDToken(t *testing.T) {
+	var v string
+	if err := utils.LoadEnv(
+		utils.EnvDef("TEST_GOOGLE_ID_TOKEN", &v),
+	); err != nil {
+		t.Skipf("Skip test due to missing env: %v", err)
+	}
+
+	srv := newServer(t)
+
+	cmd := exec.Command("gcloud", "auth", "print-identity-token")
+	validToken := strings.TrimSpace(string(gt.R1(cmd.Output()).NoError(t)))
+
+	testCases := map[string]struct {
+		path   string
+		build  func(r *http.Request)
+		expect int
+	}{
+		"valid": {
+			path: "/alert/raw/test",
+			build: func(r *http.Request) {
+				r.Header.Set("Authorization", "Bearer "+validToken)
+			},
+			expect: http.StatusOK,
+		},
+		"invalid token": {
+			path: "/alert/raw/test",
+			build: func(r *http.Request) {
+				r.Header.Set("Authorization", "Bearer invalid-token")
+			},
+			expect: http.StatusForbidden,
+		},
+		"no token": {
+			path:   "/alert/raw/test",
+			build:  func(r *http.Request) {},
+			expect: http.StatusForbidden,
+		},
+		"invalid path": {
+			path: "/admin",
+			build: func(r *http.Request) {
+				r.Header.Set("Authorization", "Bearer "+validToken)
+			},
+			expect: http.StatusForbidden,
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			req := httptest.NewRequest("POST", tc.path, bytes.NewReader([]byte("{}")))
+			tc.build(req)
+			w := httptest.NewRecorder()
+			srv.ServeHTTP(w, req)
+			gt.N(t, w.Result().StatusCode).Equal(tc.expect)
+			t.Log(name, w.Result().StatusCode)
 		})
 	}
 }

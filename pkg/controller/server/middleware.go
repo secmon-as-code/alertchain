@@ -64,13 +64,17 @@ func Authorize(authz *policy.Client, getEnv interfaces.Env) func(next http.Handl
 					Env:    getEnv(),
 				}
 
-				cb := func(file string, row int, msg string) error {
-					utils.Logger().Info("rego print", slog.String("file", file), slog.Int("row", row), slog.String("msg", msg))
-					return nil
-				}
 				options := []policy.QueryOption{
 					policy.WithPackageSuffix("http"),
-					policy.WithRegoPrint(cb),
+					policy.WithRegoPrint(func(file string, row int, msg string) error {
+						utils.Logger().Info("rego print",
+							slog.String("file", file),
+							slog.Int("row", row),
+							slog.String("msg", msg),
+							slog.String("package", "authz.http"),
+						)
+						return nil
+					}),
 				}
 
 				var output HTTPAuthzOutput
