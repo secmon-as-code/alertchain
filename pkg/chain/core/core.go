@@ -1,8 +1,6 @@
 package core
 
 import (
-	"os"
-	"strings"
 	"time"
 
 	"github.com/m-mizutani/alertchain/pkg/action"
@@ -10,6 +8,7 @@ import (
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/infra/memory"
 	"github.com/m-mizutani/alertchain/pkg/infra/policy"
+	"github.com/m-mizutani/alertchain/pkg/utils"
 )
 
 type Core struct {
@@ -38,7 +37,7 @@ func New(options ...Option) *Core {
 		scenarioLogger: &dummyScenarioLogger{},
 		maxSequences:   types.DefaultMaxSequences,
 		now:            time.Now,
-		env:            Env,
+		env:            utils.Env,
 	}
 
 	for _, opt := range options {
@@ -115,13 +114,4 @@ func WithDatabase(db interfaces.Database) Option {
 	return func(c *Core) {
 		c.dbClient = db
 	}
-}
-
-func Env() types.EnvVars {
-	vars := types.EnvVars{}
-	for _, env := range os.Environ() {
-		pair := strings.SplitN(env, "=", 2)
-		vars[types.EnvVarName(pair[0])] = types.EnvVarValue(pair[1])
-	}
-	return vars
 }

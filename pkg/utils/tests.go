@@ -8,7 +8,7 @@ import (
 
 type EnvLoader func() error
 
-func Env(key string, dst *string) EnvLoader {
+func EnvDef(key string, dst *string) EnvLoader {
 	return func() error {
 		v, ok := os.LookupEnv(key)
 		if !ok {

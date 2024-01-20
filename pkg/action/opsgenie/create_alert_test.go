@@ -18,9 +18,9 @@ func TestOpsgenie(t *testing.T) {
 	)
 
 	if err := utils.LoadEnv(
-		utils.Env("TEST_OPSGENIE_API_KEY", &apiKey),
-		utils.Env("TEST_OPSGENIE_RESPONDER_ID", &responderID),
-		utils.Env("TEST_OPSGENIE_RESPONDER_TYPE", &responderType),
+		utils.EnvDef("TEST_OPSGENIE_API_KEY", &apiKey),
+		utils.EnvDef("TEST_OPSGENIE_RESPONDER_ID", &responderID),
+		utils.EnvDef("TEST_OPSGENIE_RESPONDER_TYPE", &responderType),
 	); err != nil {
 		t.Skipf("Skip test due to missing env: %v", err)
 	}

@@ -2,11 +2,13 @@ package server
 
 import (
 	"errors"
+	"io"
 	"net/http"
 	"net/url"
 
 	"log/slog"
 
+	"github.com/m-mizutani/alertchain/pkg/domain/interfaces"
 	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/alertchain/pkg/infra/policy"
 	"github.com/m-mizutani/alertchain/pkg/utils"
@@ -28,22 +30,36 @@ type HTTPAuthzInput struct {
 	Query  url.Values          `json:"query"`
 	Header map[string][]string `json:"header"`
 	Remote string              `json:"remote"`
+	Body   string              `json:"body"`
+	Env    types.EnvVars       `json:"env"`
 }
 
 type HTTPAuthzOutput struct {
 	Deny bool `json:"deny"`
 }
 
-func Authorize(authz *policy.Client) func(next http.Handler) http.Handler {
+func Authorize(authz *policy.Client, getEnv interfaces.Env) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if authz != nil {
+				reader := r.Body
+				body, err := io.ReadAll(reader)
+				if err != nil {
+					utils.HandleError(err)
+					w.WriteHeader(http.StatusBadRequest)
+					w.Write([]byte(err.Error()))
+					return
+				}
+				defer utils.SafeClose(reader)
+
 				input := &HTTPAuthzInput{
 					Method: r.Method,
 					Path:   r.URL.Path,
 					Query:  r.URL.Query(),
 					Header: r.Header,
 					Remote: r.RemoteAddr,
+					Body:   string(body),
+					Env:    getEnv(),
 				}
 
 				cb := func(file string, row int, msg string) error {
