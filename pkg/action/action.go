@@ -1,6 +1,7 @@
 package action
 
 import (
+	"github.com/m-mizutani/alertchain/pkg/action/bigquery"
 	"github.com/m-mizutani/alertchain/pkg/action/chatgpt"
 	"github.com/m-mizutani/alertchain/pkg/action/github"
 	"github.com/m-mizutani/alertchain/pkg/action/http"
@@ -23,6 +24,8 @@ var actionMap = map[types.ActionName]interfaces.RunAction{
 	"slack.post":            slack.Post,
 	"http.fetch":            http.Fetch,
 	"otx.indicator":         otx.Indicator,
+	"bigquery.insert_alert": bigquery.InsertAlert,
+	"bigquery.insert_data":  bigquery.InsertData,
 }
 
 func Map() map[types.ActionName]interfaces.RunAction {
