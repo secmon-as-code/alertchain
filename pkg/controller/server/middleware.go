@@ -48,7 +48,7 @@ func Authorize(authz *policy.Client, getEnv interfaces.Env) func(next http.Handl
 				if err != nil {
 					utils.HandleError(err)
 					w.WriteHeader(http.StatusBadRequest)
-					w.Write([]byte(err.Error()))
+					utils.SafeWrite(w, []byte(err.Error()))
 					return
 				}
 				defer utils.SafeClose(reader)
