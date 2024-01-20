@@ -2,12 +2,17 @@ package server_test
 
 import (
 	"bytes"
+	"crypto/hmac"
+	"crypto/sha256"
 	_ "embed"
+	"encoding/base64"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os/exec"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/m-mizutani/alertchain/pkg/controller/server"
 	"github.com/m-mizutani/alertchain/pkg/domain/model"
@@ -20,14 +25,18 @@ import (
 //go:embed testdata/authz.rego
 var authzRego string
 
-func newServer(t *testing.T, policyData string) *server.Server {
+func newServer(t *testing.T, policyData string, options ...server.Option) *server.Server {
+
 	authz := gt.R1(policy.New(
 		policy.WithPolicyData("authz.rego", policyData),
 		policy.WithPackage("authz"),
 	)).NoError(t)
+
+	options = append(options, server.WithAuthzPolicy(authz))
+
 	srv := server.New(func(ctx *model.Context, schema types.Schema, data any) ([]*model.Alert, error) {
 		return nil, nil
-	}, server.WithAuthzPolicy(authz))
+	}, options...)
 
 	return srv
 }
@@ -117,6 +126,97 @@ func TestVerifyGoogleIDToken(t *testing.T) {
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
 			req := httptest.NewRequest("POST", tc.path, bytes.NewReader([]byte("{}")))
+			tc.build(req)
+			w := httptest.NewRecorder()
+			srv.ServeHTTP(w, req)
+			gt.N(t, w.Result().StatusCode).Equal(tc.expect)
+			t.Log(name, w.Result().StatusCode)
+		})
+	}
+}
+
+func hmacSign(secretKey, timestamp string, data []byte) string {
+	msg := fmt.Sprintf("%s%s", data, timestamp)
+	fmt.Println("msg=", msg)
+
+	computed := hmac.New(sha256.New, []byte(secretKey))
+	computed.Write([]byte(msg))
+	computedBytes := computed.Sum(nil)
+
+	return base64.StdEncoding.EncodeToString(computedBytes)
+}
+
+func TestVerifySignedBody(t *testing.T) {
+	data := []byte(`{"foo":"bar"}`)
+	ts := time.Now().Format("2006-01-02T15:04:05Z")
+
+	const hmacSecret = "Caprice_of_the_Leaves"
+	sign := hmacSign(hmacSecret, ts, data)
+
+	srv := newServer(t, authzRego,
+		server.WithEnv(func() types.EnvVars {
+			return types.EnvVars{
+				"CLOUDSTRIKE_HAWK_KEY": hmacSecret,
+			}
+		}),
+	)
+
+	testCases := map[string]struct {
+		path   string
+		build  func(r *http.Request)
+		data   []byte
+		expect int
+	}{
+		"valid": {
+			path: "/alert/raw/cloudstrike_hawk",
+			build: func(r *http.Request) {
+				r.Header.Set("X-Cs-Delivery-Timestamp", ts)
+				r.Header.Set("X-Cs-Primary-Signature", sign)
+			},
+			data:   data,
+			expect: http.StatusOK,
+		},
+		"invalid timestamp": {
+			path: "/alert/raw/cloudstrike_hawk",
+			build: func(r *http.Request) {
+				r.Header.Set("X-Cs-Delivery-Timestamp", "invalid")
+				r.Header.Set("X-Cs-Primary-Signature", sign)
+			},
+			data:   data,
+			expect: http.StatusForbidden,
+		},
+		"invalid signature": {
+			path: "/alert/raw/cloudstrike_hawk",
+			build: func(r *http.Request) {
+				r.Header.Set("X-Cs-Delivery-Timestamp", ts)
+				r.Header.Set("X-Cs-Primary-Signature", "invalid")
+			},
+			data:   data,
+			expect: http.StatusForbidden,
+		},
+		"invalid path": {
+			path: "/admin",
+			build: func(r *http.Request) {
+				r.Header.Set("X-Cs-Delivery-Timestamp", ts)
+				r.Header.Set("X-Cs-Primary-Signature", sign)
+			},
+			data:   data,
+			expect: http.StatusForbidden,
+		},
+		"invalid data": {
+			path: "/alert/raw/cloudstrike_hawk",
+			build: func(r *http.Request) {
+				r.Header.Set("X-Cs-Delivery-Timestamp", ts)
+				r.Header.Set("X-Cs-Primary-Signature", sign)
+			},
+			data:   []byte("invalid"),
+			expect: http.StatusForbidden,
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			req := httptest.NewRequest("POST", tc.path, bytes.NewReader(tc.data))
 			tc.build(req)
 			w := httptest.NewRecorder()
 			srv.ServeHTTP(w, req)

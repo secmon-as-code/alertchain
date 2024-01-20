@@ -38,3 +38,19 @@ allow {
     claims[1]["email"] == "__GOOGLE_CLOUD_ACCOUNT_EMAIL__"
     time.now_ns() / 1000000000 < claims[1]["exp"]
 }
+
+allow {
+    input.path == "/alert/raw/cloudstrike_hawk"
+
+    sigHdr := input.header["X-Cs-Primary-Signature"]
+    count(sigHdr) == 1
+    sig := hex.encode(base64.decode(sigHdr[0]))
+
+    tsHdr := input.header["X-Cs-Delivery-Timestamp"]
+    count(tsHdr) == 1
+    ts := tsHdr[0]
+
+    data := concat("", [input.body, ts])
+    sign := crypto.hmac.sha256(data, input.env.CLOUDSTRIKE_HAWK_KEY)
+    crypto.hmac.equal(sign, sig)
+}
