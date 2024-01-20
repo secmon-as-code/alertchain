@@ -36,5 +36,5 @@ allow {
     claims := io.jwt.decode(token)
     claims[1]["iss"] == "https://accounts.google.com"
     claims[1]["email"] == "__GOOGLE_CLOUD_ACCOUNT_EMAIL__"
-    claims[1]["exp"] < floor(time.now_ns() / 1000000000)
+    time.now_ns() / 1000000000 < claims[1]["exp"]
 }

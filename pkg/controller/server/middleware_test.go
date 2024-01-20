@@ -20,18 +20,9 @@ import (
 //go:embed testdata/authz.rego
 var authzRego string
 
-func init() {
-	var v string
-	if err := utils.LoadEnv(
-		utils.EnvDef("TEST_GOOGLE_CLOUD_ACCOUNT_EMAIL", &v),
-	); err == nil {
-		authzRego = strings.ReplaceAll(authzRego, "__GOOGLE_CLOUD_ACCOUNT_EMAIL__", v)
-	}
-}
-
-func newServer(t *testing.T) *server.Server {
+func newServer(t *testing.T, policyData string) *server.Server {
 	authz := gt.R1(policy.New(
-		policy.WithPolicyData("authz.rego", authzRego),
+		policy.WithPolicyData("authz.rego", policyData),
 		policy.WithPackage("authz"),
 	)).NoError(t)
 	srv := server.New(func(ctx *model.Context, schema types.Schema, data any) ([]*model.Alert, error) {
@@ -42,7 +33,7 @@ func newServer(t *testing.T) *server.Server {
 }
 
 func TestAuthorize(t *testing.T) {
-	srv := newServer(t)
+	srv := newServer(t, authzRego)
 	testCases := map[string]struct {
 		NewReq func() *http.Request
 		Expect int
@@ -78,14 +69,14 @@ func TestAuthorize(t *testing.T) {
 }
 
 func TestVerifyGoogleIDToken(t *testing.T) {
-	var v string
+	var email string
 	if err := utils.LoadEnv(
-		utils.EnvDef("TEST_GOOGLE_ID_TOKEN", &v),
+		utils.EnvDef("TEST_GOOGLE_CLOUD_ACCOUNT_EMAIL", &email),
 	); err != nil {
-		t.Skipf("Skip test due to missing env: %v", err)
+		t.Skip("Skip TestVerifyGoogleIDToken because TEST_GOOGLE_CLOUD_ACCOUNT_EMAIL is not set")
 	}
 
-	srv := newServer(t)
+	srv := newServer(t, strings.ReplaceAll(authzRego, "__GOOGLE_CLOUD_ACCOUNT_EMAIL__", email))
 
 	cmd := exec.Command("gcloud", "auth", "print-identity-token")
 	validToken := strings.TrimSpace(string(gt.R1(cmd.Output()).NoError(t)))
