@@ -32,6 +32,7 @@ func Logger() *slog.Logger {
 func ReconfigureLogger(w io.Writer, level slog.Level, format LogFormat) {
 	filter := masq.New(
 		masq.WithTag("secret"),
+		masq.WithTag("quiet"),
 		masq.WithFieldPrefix("secret_"),
 		masq.WithAllowedType(reflect.TypeOf(time.Time{})),
 	)

@@ -206,6 +206,8 @@ After evaluating the action policy, if the next action is required, set the `act
 - `attrs` (array, optional): Array of [Attribute](#Attribute)
 - `refs` (array, optional): Array of [Reference](#Reference)
 - `namespace` (string, optional): Namespace of Attributes (attrs). Global attributes are shared among alerts and actions that have the same namespace. If not set, global attribute feature is not enabled.
+- `data` (any): Original data of the alert
+- `raw` (string): Pretty-printed JSON string of the alert data
 
 ### Attribute
 

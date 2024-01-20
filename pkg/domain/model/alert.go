@@ -37,7 +37,8 @@ type Alert struct {
 	Data      any           `json:"data"`
 	CreatedAt time.Time     `json:"created_at"`
 
-	Raw string `json:"-"`
+	// Raw is a JSON string of Data. The field will be redacted by masq because of verbosity.
+	Raw string `json:"raw" masq:"quiet"`
 }
 
 func (x Alert) Copy() Alert {
