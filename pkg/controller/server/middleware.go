@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bytes"
 	"errors"
 	"io"
 	"net/http"
@@ -51,6 +52,7 @@ func Authorize(authz *policy.Client, getEnv interfaces.Env) func(next http.Handl
 					return
 				}
 				defer utils.SafeClose(reader)
+				r.Body = io.NopCloser(bytes.NewReader(body))
 
 				input := &HTTPAuthzInput{
 					Method: r.Method,
