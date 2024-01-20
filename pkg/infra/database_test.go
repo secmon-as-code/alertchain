@@ -27,8 +27,8 @@ func TestFirestore(t *testing.T) {
 	)
 
 	if err := utils.LoadEnv(
-		utils.Env("TEST_FIRESTORE_PROJECT_ID", &projectID),
-		utils.Env("TEST_FIRESTORE_COLLECTION_PREFIX", &collection),
+		utils.EnvDef("TEST_FIRESTORE_PROJECT_ID", &projectID),
+		utils.EnvDef("TEST_FIRESTORE_COLLECTION_PREFIX", &collection),
 	); err != nil {
 		t.Skipf("Skip test due to missing env: %v", err)
 	}

@@ -20,11 +20,11 @@ func TestCreateIssue(t *testing.T) {
 	)
 
 	if err := utils.LoadEnv(
-		utils.Env("TEST_JIRA_ACCOUNT_ID", &accountID),
-		utils.Env("TEST_JIRA_USER", &userName),
-		utils.Env("TEST_JIRA_TOKEN", &token),
-		utils.Env("TEST_JIRA_BASE_URL", &baseURL),
-		utils.Env("TEST_JIRA_PROJECT", &project),
+		utils.EnvDef("TEST_JIRA_ACCOUNT_ID", &accountID),
+		utils.EnvDef("TEST_JIRA_USER", &userName),
+		utils.EnvDef("TEST_JIRA_TOKEN", &token),
+		utils.EnvDef("TEST_JIRA_BASE_URL", &baseURL),
+		utils.EnvDef("TEST_JIRA_PROJECT", &project),
 	); err != nil {
 		t.Skipf("Skip test due to missing env: %v", err)
 	}

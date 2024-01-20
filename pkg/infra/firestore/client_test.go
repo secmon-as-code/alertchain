@@ -19,8 +19,8 @@ func TestWorkflow(t *testing.T) {
 	)
 
 	if err := utils.LoadEnv(
-		utils.Env("TEST_FIRESTORE_PROJECT_ID", &projectID),
-		utils.Env("TEST_FIRESTORE_DATABASE_ID", &databaseID),
+		utils.EnvDef("TEST_FIRESTORE_PROJECT_ID", &projectID),
+		utils.EnvDef("TEST_FIRESTORE_DATABASE_ID", &databaseID),
 	); err != nil {
 		t.Skipf("Skip test due to missing env: %v", err)
 	}

@@ -23,6 +23,7 @@ import (
 type Server struct {
 	mux            *chi.Mux
 	authz          *policy.Client
+	env            interfaces.Env
 	resolver       *graphql.Resolver
 	enableGrappiQL bool
 }
@@ -44,6 +45,12 @@ func WithEnableGraphiQL() Option {
 func WithAuthzPolicy(authz *policy.Client) Option {
 	return func(cfg *Server) {
 		cfg.authz = authz
+	}
+}
+
+func WithEnv(env interfaces.Env) Option {
+	return func(cfg *Server) {
+		cfg.env = env
 	}
 }
 
@@ -87,7 +94,9 @@ func getSchema(r *http.Request) (types.Schema, error) {
 }
 
 func New(hdlr interfaces.AlertHandler, options ...Option) *Server {
-	s := &Server{}
+	s := &Server{
+		env: utils.Env,
+	}
 	for _, opt := range options {
 		opt(s)
 	}
@@ -122,7 +131,7 @@ func New(hdlr interfaces.AlertHandler, options ...Option) *Server {
 
 	r := chi.NewRouter()
 	r.Use(Logging)
-	r.Use(Authorize(s.authz))
+	r.Use(Authorize(s.authz, s.env))
 	r.Route("/health", func(r chi.Router) {
 		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
