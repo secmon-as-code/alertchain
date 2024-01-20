@@ -11,3 +11,4 @@ An Action is an element of a workflow that is executed within an AlertChain. By 
 - [slack](./slack/)
 - [http](./http)
 - [otx](./otx)
+- [bigquery](./bigquery)
