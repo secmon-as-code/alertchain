@@ -4,7 +4,7 @@ run[res] {
 	input.alert.source == "aws"
 	res := {
 		"id": "ask-gpt",
-		"uses": "chatgpt.comment_alert",
+		"uses": "chatgpt.query",
 		"args": {"secret_api_key": input.env.CHATGPT_API_KEY},
 	}
 }

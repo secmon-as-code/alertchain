@@ -9,7 +9,7 @@
             class: 'threat',
           },
           schema: 'my_test',
-          results: {
+          actions: {
             mock: [
               {
                 index: 'first',

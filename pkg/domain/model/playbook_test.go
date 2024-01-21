@@ -12,29 +12,9 @@ import (
 //go:embed testdata/playbook/*.json
 var playbooks embed.FS
 
-func TestParsePlaybook(t *testing.T) {
-	var playbook model.Playbook
-	gt.NoError(t, model.ParsePlaybook("testdata/playbook/base.jsonnet", playbooks.ReadFile, &playbook))
-	gt.Array(t, playbook.Scenarios).Length(1).At(0, func(t testing.TB, v *model.Scenario) {
-		gt.V(t, v.ID).Equal("test1")
-		gt.V(t, v.Title).Equal("test1_title")
-
-		gt.Array(t, v.Events).Length(1).At(0, func(t testing.TB, v model.Event) {
-			alert := gt.Cast[map[string]any](t, v.Input)
-			gt.M(t, alert).EqualAt("color", "blue")
-
-			gt.V(t, v.Schema).Equal("scc")
-			gt.M(t, v.Results).At("ticket", func(t testing.TB, v []any) {
-				gt.Array(t, v).Length(1).At(0, func(t testing.TB, v any) {
-					r := gt.Cast[map[string]any](t, v)
-					gt.Map(t, r).EqualAt("name", "test1")
-				})
-			})
-		})
-	})
-}
-
-func TestPlaybookDuplicatedID(t *testing.T) {
-	var playbook model.Playbook
-	gt.Error(t, model.ParsePlaybook("testdata/playbook/duplicated_id.jsonnet", playbooks.ReadFile, &playbook))
+func TestParseScenario(t *testing.T) {
+	s, err := model.ParseScenario("testdata/playbook/base.jsonnet", playbooks.ReadFile)
+	gt.NoError(t, err)
+	gt.Equal(t, s.ID, "test1")
+	gt.V(t, s.Events[0].Actions["chatgpt.query"][0]).NotNil()
 }
