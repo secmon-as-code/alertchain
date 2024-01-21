@@ -91,31 +91,27 @@ test_ignore_type {
 ```
 ## Testing Action Policy
 
-Action Policy is a policy that controls the behavior of actions. As such, testing its behavior requires interactions with external services. However, using responses from external services directly in tests can be inconvenient due to constraints such as inconsistent responses or difficulty in preparing expected answers. To address this, AlertChain has implemented a "play" mode. In play mode, you can pre-define a playbook, which describes scenarios specifying how actions should respond.
+Action Policy is a policy that controls the behavior of actions. As such, testing its behavior requires interactions with external services. However, using responses from external services directly in tests can be inconvenient due to constraints such as inconsistent responses or difficulty in preparing expected answers. To address this, AlertChain has implemented a "play" mode. In play mode, you can pre-define a **Scenario**, which describes workflow specifying how actions should respond.
 
 The play mode itself is not for verifying the behavior of the policy; it only logs the execution results. However, by testing these logs using OPA/Rego, you can verify how the Action Policy behaved based on the responses obtained from each action. This achieves the "Automatic test for orchestration and automated response," which is one of the challenges in SOAR implementation.
 
 ### Playbook
 
-Here is an example of a Playbook jsonnet file:
+Here is an example of a Scenario jsonnet file:
 
 ```jsonnet
 {
-  scenarios: [
+  id: 'scenario1',
+  title: 'Test 1',
+  events: [
     {
-      id: 'scenario1',
-      title: 'Test 1',
-      events: [
-        {
-          input: import 'event/guardduty.json',
-          schema: 'aws_guardduty',
-          actions: {
-            'chatgpt.comment_alert': [
-              import 'results/chatgpt.json',
-            ],
-          },
-        },
-      ],
+      input: import 'event/guardduty.json',
+      schema: 'aws_guardduty',
+      actions: {
+        'chatgpt.comment_alert': [
+          import 'results/chatgpt.json',
+        ],
+      },
     },
   ],
   env: {
@@ -127,9 +123,11 @@ Here is an example of a Playbook jsonnet file:
 
 A scenario is composed of the following fields:
 
-- `scenarios`
-  - `id`: Specify any string, ensuring it is unique within the playbook. This serves as a key to identify the scenario when writing tests using Rego.
-  - `event`: This field is used to import the alert data required for the scenario.
+
+- `id`: Specify any string, ensuring it is unique within the playbook. This serves as a key to identify the scenario when writing tests using Rego.
+- `title`: Specify any string. This is used to describe the scenario for human readability.
+- `events`: This describes scenarios for each event.
+  - `input`: This field specifies the event data to be used for the scenario.
   - `schema`: This field specifies the schema to be used for the scenario.
   - `actions`: This field contains the expected results for each action involved in the scenario. The results are defined as key-value pairs, where the key represents the action Name and the value is an array of expected responses for that action.
 - `env`: Environment variables that will be used in play mode.

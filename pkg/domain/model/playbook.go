@@ -10,8 +10,7 @@ import (
 )
 
 type Playbook struct {
-	Scenarios []*Scenario   `json:"scenarios"`
-	Env       types.EnvVars `json:"env"`
+	Scenarios []*Scenario `json:"scenarios"`
 }
 
 func (x *Playbook) Validate() error {
@@ -40,7 +39,7 @@ func (x *Playbook) Validate() error {
 type Event struct {
 	Input   any                        `json:"input"`
 	Schema  types.Schema               `json:"schema"`
-	Results map[types.ActionName][]any `json:"results"`
+	Actions map[types.ActionName][]any `json:"actions"`
 
 	actionIndex map[types.ActionName]int
 }
@@ -49,6 +48,7 @@ type Scenario struct {
 	ID     types.ScenarioID    `json:"id"`
 	Title  types.ScenarioTitle `json:"title"`
 	Events []Event             `json:"events"`
+	Env    types.EnvVars       `json:"env"`
 }
 
 func (x *Scenario) Validate() error {
@@ -89,12 +89,12 @@ func (x *Event) GetResult(actionName types.ActionName) any {
 	if !ok {
 		idx = 0
 	}
-	if len(x.Results[actionName]) <= idx {
+	if len(x.Actions[actionName]) <= idx {
 		return nil
 	}
 	x.actionIndex[actionName] = idx + 1
 
-	return x.Results[actionName][idx]
+	return x.Actions[actionName][idx]
 }
 
 type embedImporter struct {
@@ -128,4 +128,25 @@ func ParsePlaybook(entryFile string, readFile ReadFile, book *Playbook) error {
 	}
 
 	return book.Validate()
+}
+
+func ParseScenario(entryFile string, readFile ReadFile) (*Scenario, error) {
+	vm := jsonnet.MakeVM()
+	vm.Importer(&embedImporter{readFile: readFile})
+
+	raw, err := vm.EvaluateFile(entryFile)
+	if err != nil {
+		return nil, goerr.Wrap(err, "evaluating scenario jsonnet")
+	}
+
+	var scenario Scenario
+	if err := json.Unmarshal([]byte(raw), &scenario); err != nil {
+		return nil, goerr.Wrap(err, "unmarshal scenario by jsonnet")
+	}
+
+	if err := scenario.Validate(); err != nil {
+		return nil, err
+	}
+
+	return &scenario, nil
 }

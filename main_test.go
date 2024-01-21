@@ -3,15 +3,18 @@ package main_test
 import (
 	"bytes"
 	"context"
+	"encoding/json"
+	"io"
 	"net/http"
 	"testing"
 	"time"
 
 	"github.com/m-mizutani/alertchain/pkg/controller/cli"
+	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/gt"
 )
 
-func TestE2E(t *testing.T) {
+func TestServe(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -62,4 +65,44 @@ func TestE2E(t *testing.T) {
 	gt.N(t, called).Equal(1)
 	send(t) // 4
 	gt.N(t, called).Equal(2)
+}
+
+func TestPlay(t *testing.T) {
+	ctx := context.Background()
+	args := []string{
+		"alertchain",
+		"-l", "debug",
+		"play",
+		"-d", "examples/test/policy",
+		"-s", "examples/test/scenarios",
+		"-o", "examples/test/output",
+	}
+	gt.NoError(t, cli.New().Run(ctx, args))
+
+	gt.F(t, "examples/test/output/scenario1/data.json").Reader(func(t testing.TB, r io.Reader) {
+		var data model.ScenarioLog
+		gt.NoError(t, json.NewDecoder(r).Decode(&data))
+		gt.Equal(t, data.ID, "scenario1")
+		gt.Equal(t, data.Title, "Test 1")
+		gt.A(t, data.Results).Length(1).
+			At(0, func(t testing.TB, v *model.PlayLog) {
+				gt.Equal(t, v.Alert.Title, "Trojan:EC2/DropPoint!DNS")
+
+				gt.A(t, v.Actions).Length(2).
+					At(0, func(t testing.TB, v *model.ActionLog) {
+						gt.Equal(t, v.Seq, 0)
+						gt.A(t, v.Run).Length(1).
+							At(0, func(t testing.TB, v model.Action) {
+								gt.Equal(t, v.Uses, "chatgpt.query")
+							})
+					}).
+					At(1, func(t testing.TB, v *model.ActionLog) {
+						gt.Equal(t, v.Seq, 1)
+						gt.A(t, v.Run).Length(1).
+							At(0, func(t testing.TB, v model.Action) {
+								gt.Equal(t, v.Uses, "slack.post")
+							})
+					})
+			})
+	})
 }

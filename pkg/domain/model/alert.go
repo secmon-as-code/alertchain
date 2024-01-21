@@ -34,11 +34,11 @@ type Alert struct {
 	AlertMetaData
 	ID        types.AlertID `json:"id"`
 	Schema    types.Schema  `json:"schema"`
-	Data      any           `json:"data"`
+	Data      any           `json:"data,omitempty"`
 	CreatedAt time.Time     `json:"created_at"`
 
 	// Raw is a JSON string of Data. The field will be redacted by masq because of verbosity.
-	Raw string `json:"raw" masq:"quiet"`
+	Raw string `json:"raw,omitempty" masq:"quiet"`
 }
 
 func (x Alert) Copy() Alert {

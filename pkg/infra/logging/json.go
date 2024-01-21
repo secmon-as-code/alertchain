@@ -24,8 +24,14 @@ func NewJSONLogger(w io.WriteCloser, s *model.Scenario) *JSONLogger {
 }
 
 func (x *JSONLogger) NewAlertLogger(alert *model.Alert) interfaces.AlertLogger {
+	copied := alert.Copy()
+
+	// Remove redundant data from alert
+	copied.Data = nil
+	copied.Raw = ""
+
 	log := &model.PlayLog{
-		Alert: *alert,
+		Alert: copied,
 	}
 	x.log.Results = append(x.log.Results, log)
 

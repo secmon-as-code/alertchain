@@ -18,7 +18,7 @@ import (
 
 func cmdPlay() *cli.Command {
 	var (
-		playbookPath string
+		scenarioPath string
 		outDir       string
 		scenarioIDs  cli.StringSlice
 
@@ -27,12 +27,12 @@ func cmdPlay() *cli.Command {
 
 	flags := []cli.Flag{
 		&cli.StringFlag{
-			Name:        "playbook",
-			Aliases:     []string{"b"},
-			Usage:       "playbook file",
-			EnvVars:     []string{"ALERTCHAIN_PLAYBOOK"},
+			Name:        "scenario",
+			Aliases:     []string{"s"},
+			Usage:       "scenario directory",
+			EnvVars:     []string{"ALERTCHAIN_SCENARIO"},
 			Required:    true,
-			Destination: &playbookPath,
+			Destination: &scenarioPath,
 		},
 		&cli.StringFlag{
 			Name:        "output",
@@ -43,10 +43,10 @@ func cmdPlay() *cli.Command {
 			Value:       "./output",
 		},
 		&cli.StringSliceFlag{
-			Name:        "scenario",
-			Aliases:     []string{"s"},
-			Usage:       "scenario ID to play. If not specified, all scenarios are played",
-			EnvVars:     []string{"ALERTCHAIN_SCENARIO"},
+			Name:        "target",
+			Aliases:     []string{"t"},
+			Usage:       "Target scenario ID to play. If not specified, all scenarios are played",
+			EnvVars:     []string{"ALERTCHAIN_TARGET"},
 			Destination: &scenarioIDs,
 		},
 	}
@@ -60,16 +60,41 @@ func cmdPlay() *cli.Command {
 
 		Action: func(c *cli.Context) error {
 			// Load playbook
-			var playbook model.Playbook
-			if err := model.ParsePlaybook(playbookPath, os.ReadFile, &playbook); err != nil {
-				return goerr.Wrap(err, "failed to parse playbook")
+			scenarioFiles := make([]string, 0)
+			err := filepath.Walk(scenarioPath, func(path string, info os.FileInfo, err error) error {
+				if err != nil {
+					return err
+				}
+				if !info.IsDir() && filepath.Ext(path) == ".jsonnet" {
+					scenarioFiles = append(scenarioFiles, path)
+				}
+				return nil
+			})
+			if err != nil {
+				return goerr.Wrap(err, "failed to walk through playbook directory")
 			}
 
 			ctx := model.NewContext(
 				model.WithBase(c.Context),
 				model.WithCLI(),
 			)
-			ctx.Logger().Info("starting alertchain with play mode", slog.Any("playbook", playbookPath))
+
+			var playbook model.Playbook
+			for _, scenarioFile := range scenarioFiles {
+				ctx.Logger().Debug("Load scenario", slog.String("file", scenarioFile))
+				s, err := model.ParseScenario(scenarioFile, os.ReadFile)
+				if err != nil {
+					return goerr.Wrap(err, "failed to parse playbook")
+				}
+
+				playbook.Scenarios = append(playbook.Scenarios, s)
+			}
+
+			if err := playbook.Validate(); err != nil {
+				return err
+			}
+
+			ctx.Logger().Info("starting alertchain with play mode", slog.Any("scenario dir", scenarioPath))
 
 			targets := make(map[types.ScenarioID]struct{})
 			for _, id := range scenarioIDs.Value() {
@@ -81,7 +106,7 @@ func cmdPlay() *cli.Command {
 					continue
 				}
 
-				if err := playScenario(ctx, s, &policyCfg, outDir, playbook.Env); err != nil {
+				if err := playScenario(ctx, s, &policyCfg, outDir); err != nil {
 					return err
 				}
 			}
@@ -99,7 +124,7 @@ func (x *actionMockWrapper) GetResult(name types.ActionName) any {
 	return x.ev.GetResult(name)
 }
 
-func playScenario(ctx *model.Context, scenario *model.Scenario, cfg *config.Policy, outDir string, envVars types.EnvVars) error {
+func playScenario(ctx *model.Context, scenario *model.Scenario, cfg *config.Policy, outDir string) error {
 	ctx.Logger().Debug("Start scenario", slog.Any("scenario", scenario))
 
 	w, err := openLogFile(outDir, string(scenario.ID))
@@ -119,9 +144,9 @@ func playScenario(ctx *model.Context, scenario *model.Scenario, cfg *config.Poli
 		core.WithActionMock(mockWrapper),
 	}
 
-	if envVars != nil {
+	if scenario.Env != nil {
 		options = append(options, core.WithEnv(func() types.EnvVars {
-			return envVars
+			return scenario.Env
 		}))
 	}
 
