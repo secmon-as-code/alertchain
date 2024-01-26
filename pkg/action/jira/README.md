@@ -28,6 +28,7 @@ run[job] {
       "base_url": "https://your-domain.atlassian.net",
       "project": "SEC",
       "issue_type": "Task",
+      "labels": ["alert"],
     },
   },
 }
@@ -39,6 +40,7 @@ run[job] {
 - `base_url` (string, required): Specifies the base URL of the Jira instance. e.g. `https://your-domain.atlassian.net`
 - `project` (string, required): Specifies the project key of the Jira project where the ticket will be created.
 - `issue_type` (string, required): Specifies the issue type of the Jira project where the ticket will be created. e.g. `Bug`
+- `labels` (array of string, optional): Specifies the labels of the ticket.
 
 ### Response
 
