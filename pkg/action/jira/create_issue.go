@@ -42,6 +42,7 @@ func CreateIssue(ctx *model.Context, alert model.Alert, args model.ActionArgs) (
 		baseURL   string
 		project   string
 		issueType string
+		labels    []string
 	)
 
 	if err := args.Parse(
@@ -51,6 +52,7 @@ func CreateIssue(ctx *model.Context, alert model.Alert, args model.ActionArgs) (
 		model.ArgDef("base_url", &baseURL),
 		model.ArgDef("project", &project),
 		model.ArgDef("issue_type", &issueType),
+		model.ArgDef("labels", &labels, model.ArgOptional()),
 	); err != nil {
 		return nil, err
 	}
@@ -85,6 +87,10 @@ func CreateIssue(ctx *model.Context, alert model.Alert, args model.ActionArgs) (
 			Description: buf,
 		},
 	}
+	if len(labels) > 0 {
+		i.Fields.Labels = labels
+	}
+
 	issue, resp, err := jiraClient.Issue.CreateWithContext(ctx, &i)
 	if err != nil {
 		data, _ := io.ReadAll(resp.Body)

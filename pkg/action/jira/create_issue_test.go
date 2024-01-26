@@ -36,6 +36,7 @@ func TestCreateIssue(t *testing.T) {
 		"base_url":     baseURL,
 		"project":      project,
 		"issue_type":   "Task",
+		"labels":       []string{"test"},
 	}
 
 	ctx := model.NewContext()
