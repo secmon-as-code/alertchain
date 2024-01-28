@@ -44,9 +44,16 @@ type TxProc func(ctx *model.Context, input model.Attributes) (model.Attributes, 
 type Database interface {
 	GetAttrs(ctx *model.Context, ns types.Namespace) (model.Attributes, error)
 	PutAttrs(ctx *model.Context, ns types.Namespace, attrs model.Attributes) error
+
 	PutWorkflow(ctx *model.Context, workflow model.WorkflowRecord) error
 	GetWorkflows(ctx *model.Context, offset, limit int) ([]model.WorkflowRecord, error)
 	GetWorkflow(ctx *model.Context, id types.WorkflowID) (*model.WorkflowRecord, error)
+
+	PutAction(ctx *model.Context, action model.ActionRecord) error
+	GetAction(ctx *model.Context, id types.ActionID) (*model.ActionRecord, error)
+	GetActions(ctx *model.Context, ids []types.ActionID) ([]model.ActionRecord, error)
+	GetActionByWorkflowID(ctx *model.Context, workflowID types.WorkflowID) ([]model.ActionRecord, error)
+
 	Lock(ctx *model.Context, ns types.Namespace, timeout time.Time) error
 	Unlock(ctx *model.Context, ns types.Namespace) error
 	Close() error
