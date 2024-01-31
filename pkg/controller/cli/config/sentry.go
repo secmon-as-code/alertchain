@@ -24,14 +24,14 @@ func (x *Sentry) Flags() []cli.Flag {
 			Usage:       "Sentry DSN",
 			Category:    category,
 			Destination: &x.dsn,
-			EnvVars:     []string{"GO_BACKEND_TEMPLATE_SENTRY_DSN"},
+			EnvVars:     []string{"ALERTCHAIN_SENTRY_DSN"},
 		},
 		&cli.StringFlag{
 			Name:        "sentry-env",
 			Usage:       "Sentry environment",
 			Category:    category,
 			Destination: &x.env,
-			EnvVars:     []string{"GO_BACKEND_TEMPLATE_SENTRY_ENV"},
+			EnvVars:     []string{"ALERTCHAIN_SENTRY_ENV"},
 		},
 	}
 }
