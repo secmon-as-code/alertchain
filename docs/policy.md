@@ -233,6 +233,7 @@ Referring to an external document or service resource via URL.
 - `uses` (string, required): Specify the name of the action to be launched.
 - `args`: Specify the arguments for each action in a key-value format.
 - `result`: When called in the `exit` rule, the result of the action is stored.
+- `force`: (boolean, optional): If set to true, the workflow will be continued even if the action get error. Default is false.
 
 NOTE: Arguments with the `secret_` prefix in `args` have a special meaning. This indicates that the value is confidential (e.g., API keys) and will not be output in logs or similar records.
 
