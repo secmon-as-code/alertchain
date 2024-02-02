@@ -12,6 +12,7 @@ import (
 	"github.com/m-mizutani/alertchain/pkg/infra/logging"
 	"github.com/m-mizutani/alertchain/pkg/infra/memory"
 	"github.com/m-mizutani/alertchain/pkg/infra/policy"
+	"github.com/m-mizutani/goerr"
 	"github.com/m-mizutani/gt"
 )
 
@@ -331,4 +332,40 @@ func TestGlobalAttrRaceCondition(t *testing.T) {
 		gt.V(t, v.Key).Equal("counter")
 		gt.V(t, v.Value).Equal(float64(threadNum))
 	})
+}
+
+func TestForceAction(t *testing.T) {
+	var alertData any
+
+	alertPolicy := gt.R1(policy.New(
+		policy.WithPackage("alert"),
+		policy.WithFile("testdata/force_action/alert.rego"),
+		policy.WithReadFile(read),
+	)).NoError(t)
+
+	actionPolicy := gt.R1(policy.New(
+		policy.WithPackage("action"),
+		policy.WithFile("testdata/force_action/action.rego"),
+		policy.WithReadFile(read),
+	)).NoError(t)
+
+	calledStep := map[float64]bool{}
+	mock := func(ctx *model.Context, alert model.Alert, args model.ActionArgs) (any, error) {
+		step := gt.Cast[float64](t, args["step"])
+		calledStep[step] = true
+		return nil, goerr.New("force action should not be called")
+	}
+
+	c := gt.R1(chain.New(
+		core.WithPolicyAlert(alertPolicy),
+		core.WithPolicyAction(actionPolicy),
+		core.WithExtraAction("mock", mock),
+	)).NoError(t)
+
+	ctx := model.NewContext()
+
+	_ = gt.R1(c.HandleAlert(ctx, "my_alert", alertData)).Error(t)
+	gt.True(t, calledStep[1])
+	gt.True(t, calledStep[2])
+	gt.False(t, calledStep[3])
 }
