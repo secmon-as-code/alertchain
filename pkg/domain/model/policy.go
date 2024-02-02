@@ -45,10 +45,11 @@ type ActionRunResponse struct {
 }
 
 type Action struct {
-	ID   types.ActionID   `json:"id"`
-	Name string           `json:"name"`
-	Uses types.ActionName `json:"uses"`
-	Args ActionArgs       `json:"args"`
+	ID    types.ActionID   `json:"id"`
+	Name  string           `json:"name"`
+	Uses  types.ActionName `json:"uses"`
+	Args  ActionArgs       `json:"args"`
+	Force bool             `json:"force"`
 }
 
 type ActionResult struct {

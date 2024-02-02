@@ -201,7 +201,14 @@ func (x *proc) evaluate(ctx *model.Context) error {
 		x.run = append(x.run, p)
 		result, err := x.executeAction(ctx, p, x.alert)
 		if err != nil {
-			return err
+			if !p.Force {
+				return err
+			}
+
+			utils.Logger().Warn("got error, but force run action",
+				slog.Any("action", p),
+				utils.ErrLog(err),
+			)
 		}
 
 		actionResult := model.ActionResult{
