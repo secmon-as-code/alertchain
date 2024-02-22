@@ -37,6 +37,7 @@ func TestCreateIssue(t *testing.T) {
 		"project":      project,
 		"issue_type":   "Task",
 		"labels":       []string{"test"},
+		"assignee":     accountID,
 	}
 
 	ctx := model.NewContext()

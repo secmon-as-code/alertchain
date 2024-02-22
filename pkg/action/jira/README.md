@@ -29,6 +29,7 @@ run[job] {
       "project": "SEC",
       "issue_type": "Task",
       "labels": ["alert"],
+      "assignee": "5f6c3a1c1a2b3c4d5e6f7a8b",
     },
   },
 }
@@ -41,6 +42,7 @@ run[job] {
 - `project` (string, required): Specifies the project key of the Jira project where the ticket will be created.
 - `issue_type` (string, required): Specifies the issue type of the Jira project where the ticket will be created. e.g. `Bug`
 - `labels` (array of string, optional): Specifies the labels of the ticket.
+- `assignee` (string, optional): Specifies the assignee's Account ID of the ticket.
 
 ### Response
 

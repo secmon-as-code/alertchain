@@ -43,6 +43,7 @@ func CreateIssue(ctx *model.Context, alert model.Alert, args model.ActionArgs) (
 		project   string
 		issueType string
 		labels    []string
+		assignee  string
 	)
 
 	if err := args.Parse(
@@ -53,6 +54,7 @@ func CreateIssue(ctx *model.Context, alert model.Alert, args model.ActionArgs) (
 		model.ArgDef("project", &project),
 		model.ArgDef("issue_type", &issueType),
 		model.ArgDef("labels", &labels, model.ArgOptional()),
+		model.ArgDef("assignee", &assignee, model.ArgOptional()),
 	); err != nil {
 		return nil, err
 	}
@@ -89,6 +91,11 @@ func CreateIssue(ctx *model.Context, alert model.Alert, args model.ActionArgs) (
 	}
 	if len(labels) > 0 {
 		i.Fields.Labels = labels
+	}
+	if assignee != "" {
+		i.Fields.Assignee = &jira.User{
+			AccountID: assignee,
+		}
 	}
 
 	issue, resp, err := jiraClient.Issue.CreateWithContext(ctx, &i)
