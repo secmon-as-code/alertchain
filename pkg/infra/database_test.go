@@ -23,18 +23,18 @@ func TestMemory(t *testing.T) {
 func TestFirestore(t *testing.T) {
 	var (
 		projectID  string
-		collection string
+		databaseID string
 	)
 
 	if err := utils.LoadEnv(
 		utils.EnvDef("TEST_FIRESTORE_PROJECT_ID", &projectID),
-		utils.EnvDef("TEST_FIRESTORE_COLLECTION_PREFIX", &collection),
+		utils.EnvDef("TEST_FIRESTORE_DATABASE_ID", &databaseID),
 	); err != nil {
 		t.Skipf("Skip test due to missing env: %v", err)
 	}
 
 	ctx := model.NewContext()
-	client := gt.R1(firestore.New(ctx, projectID, collection)).NoError(t)
+	client := gt.R1(firestore.New(ctx, projectID, databaseID)).NoError(t)
 
 	testClient(t, client)
 }
@@ -51,6 +51,9 @@ func testClient(t *testing.T, client interfaces.Database) {
 	})
 	t.Run("Workflow", func(t *testing.T) {
 		testWorkflow(t, client)
+	})
+	t.Run("Action", func(t *testing.T) {
+		testAction(t, client)
 	})
 }
 
@@ -243,5 +246,113 @@ func testWorkflow(t *testing.T, client interfaces.Database) {
 	t.Run("GetWorkflow by ID", func(t *testing.T) {
 		resp := gt.R1(client.GetWorkflow(ctx, types.WorkflowID(workflows[2].ID))).NoError(t)
 		gt.V(t, resp.Alert.ID).Equal(workflows[2].Alert.ID)
+	})
+}
+
+func testAction(t *testing.T, db interfaces.Database) {
+	ctx := model.NewContext()
+	workflow1 := model.WorkflowRecord{
+		ID:        types.NewWorkflowID(),
+		CreatedAt: time.Now(),
+	}
+	workflow2 := model.WorkflowRecord{
+		ID:        types.NewWorkflowID(),
+		CreatedAt: time.Now(),
+	}
+
+	gt.NoError(t, db.PutWorkflow(ctx, workflow1))
+
+	actions := []model.ActionRecord{
+		{
+			ID:         types.NewActionID(),
+			WorkflowID: workflow1.ID,
+			Seq:        0,
+			Uses:       "test1",
+			Args: []*model.ArgumentRecord{
+				{
+					Key:   "key1",
+					Value: "value1",
+				},
+			},
+		},
+		{
+			ID:         types.NewActionID(),
+			WorkflowID: workflow1.ID,
+			Seq:        1,
+			Uses:       "test2",
+			Args: []*model.ArgumentRecord{
+				{
+					Key:   "key2",
+					Value: "value2",
+				},
+			},
+		},
+		{
+			ID:         types.NewActionID(),
+			WorkflowID: workflow1.ID,
+			Seq:        2,
+			Uses:       "test3",
+			Args:       []*model.ArgumentRecord{},
+			Next:       []*model.NextRecord{},
+			StartedAt:  time.Now(),
+			FinishedAt: time.Now(),
+		},
+		{
+			ID:         types.NewActionID(),
+			WorkflowID: workflow2.ID,
+			Seq:        0,
+			Uses:       "test4",
+			Args:       []*model.ArgumentRecord{},
+			Next:       []*model.NextRecord{},
+			StartedAt:  time.Now(),
+			FinishedAt: time.Now(),
+		},
+	}
+
+	for _, action := range actions {
+		gt.NoError(t, db.PutAction(ctx, action))
+	}
+
+	t.Run("GetAction", func(t *testing.T) {
+		resp := gt.R1(db.GetAction(ctx, actions[1].ID)).NoError(t)
+		gt.V(t, resp).Must().NotNil()
+		gt.V(t, resp.Uses).Equal("test2")
+	})
+
+	t.Run("GetActionByWorkflowID", func(t *testing.T) {
+		resp := gt.R1(db.GetActionByWorkflowID(ctx, types.WorkflowID(workflow1.ID))).NoError(t)
+		gt.A(t, resp).Length(3).
+			MatchThen(func(v model.ActionRecord) bool {
+				return v.ID == actions[0].ID
+			}, func(t testing.TB, v model.ActionRecord) {
+				gt.V(t, v.Uses).Equal("test1")
+			}).
+			MatchThen(func(v model.ActionRecord) bool {
+				return v.ID == actions[1].ID
+			}, func(t testing.TB, v model.ActionRecord) {
+				gt.V(t, v.Uses).Equal("test2")
+			}).
+			MatchThen(func(v model.ActionRecord) bool {
+				return v.ID == actions[2].ID
+			}, func(t testing.TB, v model.ActionRecord) {
+				gt.V(t, v.Uses).Equal("test3")
+			})
+	})
+
+	t.Run("GetActions", func(t *testing.T) {
+		resp := gt.R1(db.GetActions(ctx, []types.ActionID{actions[0].ID, actions[3].ID})).NoError(t)
+		gt.A(t, resp).Length(2).
+			MatchThen(func(v model.ActionRecord) bool {
+				return v.ID == actions[0].ID
+			}, func(t testing.TB, v model.ActionRecord) {
+				gt.V(t, v.Uses).Equal("test1")
+				gt.V(t, v.WorkflowID).Equal(workflow1.ID)
+			}).
+			MatchThen(func(v model.ActionRecord) bool {
+				return v.ID == actions[3].ID
+			}, func(t testing.TB, v model.ActionRecord) {
+				gt.V(t, v.Uses).Equal("test4")
+				gt.V(t, v.WorkflowID).Equal(workflow2.ID)
+			})
 	})
 }

@@ -36,3 +36,4 @@ func NewWorkflowID() WorkflowID {
 
 func (x AlertID) String() string    { return string(x) }
 func (x WorkflowID) String() string { return string(x) }
+func (x ActionID) String() string   { return string(x) }

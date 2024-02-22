@@ -19,10 +19,50 @@ type Client struct {
 	attrs     map[types.Namespace]map[types.AttrID]*model.Attribute
 	locks     map[types.Namespace]*lock
 	workflows map[types.WorkflowID]model.WorkflowRecord
+	actions   map[types.ActionID]model.ActionRecord
 
 	attrMutex     sync.RWMutex
 	lockMutex     sync.Mutex
 	workflowMutex sync.RWMutex
+}
+
+// GetAction implements interfaces.Database.
+func (x *Client) GetAction(ctx *model.Context, id types.ActionID) (*model.ActionRecord, error) {
+	action, ok := x.actions[id]
+	if !ok {
+		return nil, nil
+	}
+	return &action, nil
+}
+
+// GetActions implements interfaces.Database.
+func (x *Client) GetActions(ctx *model.Context, ids []types.ActionID) ([]model.ActionRecord, error) {
+	var ret []model.ActionRecord
+
+	for _, id := range ids {
+		if action, ok := x.actions[id]; ok {
+			ret = append(ret, action)
+		}
+	}
+
+	return ret, nil
+}
+
+// GetActionByWorkflowID implements interfaces.Database.
+func (x *Client) GetActionByWorkflowID(ctx *model.Context, workflowID types.WorkflowID) ([]model.ActionRecord, error) {
+	var ret []model.ActionRecord
+	for i, action := range x.actions {
+		if action.WorkflowID == workflowID {
+			ret = append(ret, x.actions[i])
+		}
+	}
+	return ret, nil
+}
+
+// PutAction implements interfaces.Database.
+func (x *Client) PutAction(ctx *model.Context, action model.ActionRecord) error {
+	x.actions[action.ID] = action
+	return nil
 }
 
 func New() *Client {
@@ -30,6 +70,7 @@ func New() *Client {
 		attrs:     map[types.Namespace]map[types.AttrID]*model.Attribute{},
 		locks:     map[types.Namespace]*lock{},
 		workflows: map[types.WorkflowID]model.WorkflowRecord{},
+		actions:   map[types.ActionID]model.ActionRecord{},
 	}
 }
 

@@ -3,6 +3,7 @@
 scalar Timestamp # Represents time.Time
 scalar WorkflowID # Represents uuid.UUID
 scalar AlertID # Represents uuid.UUID
+scalar ActionID # Represents uuid.UUID
 type WorkflowRecord {
   id: WorkflowID!
   createdAt: Timestamp!
@@ -41,7 +42,8 @@ type ReferenceRecord {
 }
 
 type ActionRecord {
-  id: String!
+  id: ActionID!
+  workflow_id: WorkflowID!
   seq: Int!
   uses: String!
   args: [ArgumentRecord!]!

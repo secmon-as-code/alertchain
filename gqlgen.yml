@@ -44,6 +44,9 @@ models:
   AlertID:
     model:
       - github.com/m-mizutani/alertchain/pkg/domain/types.AlertID
+  ActionID:
+    model:
+      - github.com/m-mizutani/alertchain/pkg/domain/types.ActionID
   Timestamp:
     model:
       - github.com/99designs/gqlgen/graphql.Time

@@ -26,6 +26,79 @@ type Client struct {
 	databaseID         string
 	attrCollection     string
 	workflowCollection string
+	actionCollection   string
+}
+
+// GetAction implements interfaces.Database.
+func (x *Client) GetAction(ctx *model.Context, id types.ActionID) (*model.ActionRecord, error) {
+	doc, err := x.client.Collection(x.actionCollection).Doc(id.String()).Get(ctx)
+	if err != nil {
+		if status.Code(err) == codes.NotFound {
+			return nil, nil
+		}
+		return nil, types.AsRuntimeErr(goerr.Wrap(err, "failed to get attributes from firestore"))
+	}
+
+	var action model.ActionRecord
+	if err := doc.DataTo(&action); err != nil {
+		return nil, types.AsRuntimeErr(goerr.Wrap(err, "failed to unmarshal attribute from firestore"))
+	}
+
+	return &action, nil
+}
+
+// GetActions implements interfaces.Database.
+func (x *Client) GetActions(ctx *model.Context, ids []types.ActionID) ([]model.ActionRecord, error) {
+	var ret []model.ActionRecord
+
+	iter := x.client.Collection(x.actionCollection).Where("ID", "in", ids).Documents(ctx)
+	for {
+		doc, err := iter.Next()
+		if err != nil {
+			if errors.Is(err, iterator.Done) {
+				return ret, nil
+			}
+			return nil, types.AsRuntimeErr(goerr.Wrap(err, "failed to get attributes from firestore"))
+		}
+
+		var action model.ActionRecord
+		if err := doc.DataTo(&action); err != nil {
+			return nil, types.AsRuntimeErr(goerr.Wrap(err, "failed to unmarshal attribute from firestore"))
+		}
+		ret = append(ret, action)
+	}
+}
+
+// GetActionByWorkflowID implements interfaces.Database.
+func (x *Client) GetActionByWorkflowID(ctx *model.Context, workflowID types.WorkflowID) ([]model.ActionRecord, error) {
+	var actions []model.ActionRecord
+	iter := x.client.Collection(x.actionCollection).
+		Where("WorkflowID", "==", workflowID).
+		Documents(ctx)
+
+	for {
+		doc, err := iter.Next()
+		if err != nil {
+			if errors.Is(err, iterator.Done) {
+				return actions, nil
+			}
+			return nil, types.AsRuntimeErr(goerr.Wrap(err, "failed to get workflow"))
+		}
+
+		var action model.ActionRecord
+		if err := doc.DataTo(&action); err != nil {
+			return nil, types.AsRuntimeErr(goerr.Wrap(err, "failed to unmarshal workflow"))
+		}
+		actions = append(actions, action)
+	}
+}
+
+// PutAction implements interfaces.Database.
+func (x *Client) PutAction(ctx *model.Context, action model.ActionRecord) error {
+	if _, err := x.client.Collection(x.actionCollection).Doc(action.ID.String()).Set(ctx, action); err != nil {
+		return types.AsRuntimeErr(goerr.Wrap(err, "failed to put action"))
+	}
+	return nil
 }
 
 const (
@@ -309,6 +382,7 @@ func New(ctx *model.Context, projectID string, databaseID string) (*Client, erro
 		databaseID:         databaseID,
 		attrCollection:     "attrs",
 		workflowCollection: "workflows",
+		actionCollection:   "actions",
 	}, nil
 }
 
