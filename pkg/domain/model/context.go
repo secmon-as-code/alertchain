@@ -18,6 +18,8 @@ type Context struct {
 	dryRun bool
 	clock  Clock
 	onCLI  bool
+
+	test bool
 }
 
 type CtxOption func(ctx *Context)
@@ -71,6 +73,12 @@ func WithCLI() CtxOption {
 	}
 }
 
+func WithTest() CtxOption {
+	return func(ctx *Context) {
+		ctx.test = true
+	}
+}
+
 func (x *Context) New(options ...CtxOption) *Context {
 	ctx := x
 
@@ -86,6 +94,7 @@ func (x *Context) Alert() Alert   { return *x.alert }
 func (x *Context) DryRun() bool   { return x.dryRun }
 func (x *Context) Now() time.Time { return x.clock() }
 func (x *Context) OnCLI() bool    { return x.onCLI }
+func (x *Context) Test() bool     { return x.test }
 
 func (x *Context) Logger() *slog.Logger {
 	logger := utils.Logger()
