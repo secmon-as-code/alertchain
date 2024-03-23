@@ -27,24 +27,6 @@ const (
 	baseURL = "https://api.incident.io"
 )
 
-type sinkHTTPClient struct {
-	Requests []*http.Request
-}
-
-func (x *sinkHTTPClient) Reset() {
-	x.Requests = nil
-}
-
-func (x *sinkHTTPClient) Do(req *http.Request) (*http.Response, error) {
-	x.Requests = append(x.Requests, req)
-	resp := httptest.NewRecorder()
-	resp.WriteHeader(http.StatusAccepted)
-	resp.Write([]byte(`{"deduplication_key":"test_key","message":"test_message","status":"test_status"}`))
-	return resp.Result(), nil
-}
-
-var sink = &sinkHTTPClient{}
-
 type httpClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }
@@ -129,3 +111,22 @@ func CreateAlert(ctx *model.Context, alert model.Alert, args model.ActionArgs) (
 
 	return &respBody, nil
 }
+
+// For testing
+type sinkHTTPClient struct {
+	Requests []*http.Request
+}
+
+func (x *sinkHTTPClient) Reset() {
+	x.Requests = nil
+}
+
+func (x *sinkHTTPClient) Do(req *http.Request) (*http.Response, error) {
+	x.Requests = append(x.Requests, req)
+	resp := httptest.NewRecorder()
+	resp.WriteHeader(http.StatusAccepted)
+	_, _ = resp.Write([]byte(`{"deduplication_key":"test_key","message":"test_message","status":"test_status"}`))
+	return resp.Result(), nil
+}
+
+var sink = &sinkHTTPClient{}
