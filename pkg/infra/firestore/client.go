@@ -26,12 +26,14 @@ type Client struct {
 	databaseID         string
 	attrCollection     string
 	workflowCollection string
+	alertCollection    string
 }
 
 const (
 	attrKeyPrefix     = "attr:"
 	lockKeyPrefix     = "lock:"
 	workflowKeyPrefix = "workflow:"
+	alertKeyPrefix    = "alert:"
 )
 
 func hashNamespace(input types.Namespace) string {
@@ -175,6 +177,34 @@ func (x *Client) GetWorkflow(ctx *model.Context, id types.WorkflowID) (*model.Wo
 	return &workflow, nil
 }
 
+func (x *Client) PutAlert(ctx *model.Context, alert model.Alert) error {
+	key := alertKeyPrefix + alert.ID.String()
+
+	if _, err := x.client.Collection(x.alertCollection).Doc(key).Set(ctx, alert); err != nil {
+		return types.AsRuntimeErr(goerr.Wrap(err, "failed to put alert"))
+	}
+
+	return nil
+}
+
+func (x *Client) GetAlert(ctx *model.Context, id types.AlertID) (*model.Alert, error) {
+	key := alertKeyPrefix + id.String()
+	doc, err := x.client.Collection(x.alertCollection).Doc(key).Get(ctx)
+	if err != nil {
+		if status.Code(err) == codes.NotFound {
+			return nil, nil
+		}
+		return nil, types.AsRuntimeErr(goerr.Wrap(err, "failed to get alert"))
+	}
+
+	var alert model.Alert
+	if err := doc.DataTo(&alert); err != nil {
+		return nil, types.AsRuntimeErr(goerr.Wrap(err, "failed to unmarshal alert"))
+	}
+
+	return &alert, nil
+}
+
 type attribute struct {
 	model.Attribute
 	ExpiresAt time.Time `firestore:"expires_at"`
@@ -309,6 +339,7 @@ func New(ctx *model.Context, projectID string, databaseID string) (*Client, erro
 		databaseID:         databaseID,
 		attrCollection:     "attrs",
 		workflowCollection: "workflows",
+		alertCollection:    "alerts",
 	}, nil
 }
 
