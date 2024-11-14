@@ -72,6 +72,10 @@ func (x *WorkflowService) Create(ctx *model.Context, alert model.Alert) (*Workfl
 		namespace = (*string)(&alert.Namespace)
 	}
 
+	if err := x.db.PutAlert(ctx, alert); err != nil {
+		return nil, err
+	}
+
 	workflow := model.WorkflowRecord{
 		ID:        types.NewWorkflowID(),
 		CreatedAt: ctx.Now(),
