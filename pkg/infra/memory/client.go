@@ -19,10 +19,12 @@ type Client struct {
 	attrs     map[types.Namespace]map[types.AttrID]*model.Attribute
 	locks     map[types.Namespace]*lock
 	workflows map[types.WorkflowID]model.WorkflowRecord
+	alerts    map[types.AlertID]*model.Alert
 
 	attrMutex     sync.RWMutex
 	lockMutex     sync.Mutex
 	workflowMutex sync.RWMutex
+	alertMutex    sync.RWMutex
 }
 
 func New() *Client {
@@ -30,6 +32,7 @@ func New() *Client {
 		attrs:     map[types.Namespace]map[types.AttrID]*model.Attribute{},
 		locks:     map[types.Namespace]*lock{},
 		workflows: map[types.WorkflowID]model.WorkflowRecord{},
+		alerts:    map[types.AlertID]*model.Alert{},
 	}
 }
 
@@ -113,6 +116,25 @@ func (x *Client) GetWorkflow(ctx *model.Context, id types.WorkflowID) (*model.Wo
 		if wf.ID == id {
 			return &wf, nil
 		}
+	}
+
+	return nil, nil
+}
+
+func (x *Client) PutAlert(ctx *model.Context, alert model.Alert) error {
+	x.alertMutex.Lock()
+	defer x.alertMutex.Unlock()
+
+	x.alerts[alert.ID] = &alert
+	return nil
+}
+
+func (x *Client) GetAlert(ctx *model.Context, id types.AlertID) (*model.Alert, error) {
+	x.alertMutex.RLock()
+	defer x.alertMutex.RUnlock()
+
+	if alert, ok := x.alerts[id]; ok {
+		return alert, nil
 	}
 
 	return nil, nil

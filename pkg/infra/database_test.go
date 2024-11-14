@@ -28,7 +28,7 @@ func TestFirestore(t *testing.T) {
 
 	if err := utils.LoadEnv(
 		utils.EnvDef("TEST_FIRESTORE_PROJECT_ID", &projectID),
-		utils.EnvDef("TEST_FIRESTORE_COLLECTION_PREFIX", &collection),
+		utils.EnvDef("TEST_FIRESTORE_DATABASE_ID", &collection),
 	); err != nil {
 		t.Skipf("Skip test due to missing env: %v", err)
 	}
@@ -51,6 +51,9 @@ func testClient(t *testing.T, client interfaces.Database) {
 	})
 	t.Run("Workflow", func(t *testing.T) {
 		testWorkflow(t, client)
+	})
+	t.Run("Alert", func(t *testing.T) {
+		testAlert(t, client)
 	})
 }
 
@@ -243,5 +246,45 @@ func testWorkflow(t *testing.T, client interfaces.Database) {
 	t.Run("GetWorkflow by ID", func(t *testing.T) {
 		resp := gt.R1(client.GetWorkflow(ctx, types.WorkflowID(workflows[2].ID))).NoError(t)
 		gt.V(t, resp.Alert.ID).Equal(workflows[2].Alert.ID)
+	})
+}
+
+func testAlert(t *testing.T, client interfaces.Database) {
+	now := time.Now()
+	alerts := []model.Alert{
+		{
+			ID:        types.NewAlertID(),
+			CreatedAt: now,
+			Data:      "test",
+			AlertMetaData: model.AlertMetaData{
+				Title: "testing",
+			},
+		},
+		{
+			ID:        types.NewAlertID(),
+			CreatedAt: now.Add(1 * time.Second),
+			Data:      "test",
+			AlertMetaData: model.AlertMetaData{
+				Title: "testing",
+			},
+		},
+		{
+			ID:        types.NewAlertID(),
+			CreatedAt: now.Add(2 * time.Second),
+			Data:      "test",
+			AlertMetaData: model.AlertMetaData{
+				Title: "testing",
+			},
+		},
+	}
+
+	ctx := model.NewContext()
+	for _, alert := range alerts {
+		gt.NoError(t, client.PutAlert(ctx, alert))
+	}
+
+	t.Run("GetAlert by ID", func(t *testing.T) {
+		resp := gt.R1(client.GetAlert(ctx, types.AlertID(alerts[1].ID))).NoError(t)
+		gt.V(t, resp.ID).Equal(alerts[1].ID)
 	})
 }

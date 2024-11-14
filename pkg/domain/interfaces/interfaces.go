@@ -47,6 +47,8 @@ type Database interface {
 	PutWorkflow(ctx *model.Context, workflow model.WorkflowRecord) error
 	GetWorkflows(ctx *model.Context, offset, limit int) ([]model.WorkflowRecord, error)
 	GetWorkflow(ctx *model.Context, id types.WorkflowID) (*model.WorkflowRecord, error)
+	PutAlert(ctx *model.Context, alert model.Alert) error
+	GetAlert(ctx *model.Context, id types.AlertID) (*model.Alert, error)
 	Lock(ctx *model.Context, ns types.Namespace, timeout time.Time) error
 	Unlock(ctx *model.Context, ns types.Namespace) error
 	Close() error
