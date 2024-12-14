@@ -62,7 +62,10 @@ func (x *Commit) ToAttr(data any) (*Attribute, error) {
 	dst, err := builder.Evaluate(x.Path, data)
 	if err != nil {
 		if unwrapped := errors.Unwrap(err); unwrapped != nil && unwrapped.Error() == "unknown key invalid" {
-			return nil, nil
+			if attr.Value == nil {
+				return nil, nil
+			}
+			return &attr, nil
 		}
 
 		return nil, goerr.Wrap(err, "failed to evaluate JSON path").With("path", x.Path).With("data", data)
