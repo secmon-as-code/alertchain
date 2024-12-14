@@ -50,8 +50,8 @@ func TestJSONLogger(t *testing.T) {
 		},
 	})
 
-	// second process
-	actionLogger = alertLogger.NewActionLogger()
+	// second process, but not action recorded
+	_ = alertLogger.NewActionLogger()
 
 	err := jsonLogger.Flush()
 	gt.NoError(t, err)
