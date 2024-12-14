@@ -1,6 +1,6 @@
 package action
 
-init[res] {
+run[res] {
 	input.alert.attrs[x].key == "status"
 	input.alert.attrs[x].value == "done"
 	res := {"abort": true}
@@ -10,9 +10,12 @@ run[job] {
 	job := {
 		"id": "my_job",
 		"uses": "mock",
+		"commit": [
+			{
+				"key": "status",
+				"value": "done",
+				"global": true,
+			},
+		],
 	}
-}
-
-exit[res] {
-	res := {"attrs": [{"key": "status", "value": "done", "global": true}]}
 }

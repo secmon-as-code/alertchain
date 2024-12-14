@@ -73,11 +73,9 @@ func (x *workflow) Run(ctx *model.Context) error {
 			return err
 		}
 
-		if len(p.init) > 0 || len(p.run) > 0 || len(p.exit) > 0 {
+		if len(p.run) > 0 {
 			actionLogger := logger.NewActionLogger()
-			actionLogger.LogInit(p.init)
 			actionLogger.LogRun(p.run)
-			actionLogger.LogExit(p.exit)
 		}
 
 		x.alert.Attrs = p.finalized
@@ -135,49 +133,23 @@ type proc struct {
 	envVars types.EnvVars
 
 	// logs
-	init []model.Next
-	run  []model.Action
-	exit []model.Next
+	run []model.Action
 
 	history   *actionHistory
 	finalized model.Attributes
 }
 
 func (x *proc) aborted() bool {
-	for _, i := range x.init {
-		if i.Abort {
+	for _, r := range x.run {
+		if r.Abort {
 			return true
 		}
 	}
 
-	for _, e := range x.exit {
-		if e.Abort {
-			return true
-		}
-	}
 	return false
 }
 
 func (x *proc) evaluate(ctx *model.Context) error {
-	// Evaluate `init` rules
-	initReq := model.ActionInitRequest{
-		Seq:     x.seq,
-		Alert:   x.alert,
-		EnvVars: x.envVars,
-	}
-	var initResp model.ActionInitResponse
-	if err := x.core.QueryActionPolicy(ctx, initReq, &initResp); err != nil {
-		return err
-	}
-
-	x.init = initResp.Init
-	x.alert.Attrs = append(x.alert.Attrs, initResp.Attrs()...).Tidy()
-	x.finalized = x.alert.Attrs[:]
-
-	if initResp.Abort() {
-		return nil
-	}
-
 	// Evaluate `run` rules
 	runReq := &model.ActionRunRequest{
 		Alert:   x.alert,
@@ -191,6 +163,8 @@ func (x *proc) evaluate(ctx *model.Context) error {
 		return err
 	}
 
+	x.finalized = x.alert.Attrs.Copy()
+
 	for _, p := range runResp.Runs {
 		if p.ID == "" {
 			p.ID = types.NewActionID()
@@ -198,17 +172,39 @@ func (x *proc) evaluate(ctx *model.Context) error {
 			continue
 		}
 
+		if p.Abort {
+			utils.Logger().Info("abort action", slog.Any("action", p))
+			break
+		}
+
 		x.run = append(x.run, p)
-		result, err := x.executeAction(ctx, p, x.alert)
-		if err != nil {
-			if !p.Force {
+
+		var result any
+		if p.Uses != "" {
+			r, err := x.executeAction(ctx, p, x.alert)
+			if err != nil {
+				if !p.Force {
+					return err
+				}
+
+				utils.Logger().Warn("got error, but force run action",
+					slog.Any("action", p),
+					utils.ErrLog(err),
+				)
+			}
+			result = r
+		}
+
+		var newAttrs model.Attributes
+		for _, c := range p.Commit {
+			attr, err := c.ToAttr(result)
+			if err != nil {
 				return err
 			}
-
-			utils.Logger().Warn("got error, but force run action",
-				slog.Any("action", p),
-				utils.ErrLog(err),
-			)
+			if attr == nil {
+				continue
+			}
+			newAttrs = append(newAttrs, *attr)
 		}
 
 		actionResult := model.ActionResult{
@@ -217,20 +213,7 @@ func (x *proc) evaluate(ctx *model.Context) error {
 		}
 		x.history.add(actionResult)
 
-		exitReq := model.ActionExitRequest{
-			Seq:     x.seq,
-			Alert:   x.alert,
-			Action:  actionResult,
-			EnvVars: x.envVars,
-			Called:  x.history.called,
-		}
-		var exitResp model.ActionExitResponse
-		if err := x.core.QueryActionPolicy(ctx, exitReq, &exitResp); err != nil {
-			return err
-		}
-
-		x.exit = append(x.exit, exitResp.Exit...)
-		x.finalized = append(x.finalized, exitResp.Attrs()...).Tidy()
+		x.finalized = append(x.finalized, newAttrs...).Tidy()
 	}
 
 	return nil

@@ -58,16 +58,6 @@ type MemoryActionLogger struct {
 	log *model.ActionLog
 }
 
-// LogInit implements interfaces.AlertLogger.
-func (x *MemoryActionLogger) LogInit(logs []model.Next) {
-	x.log.Init = append(x.log.Init, logs...)
-}
-
-// LogExit implements interfaces.AlertLogger.
-func (x *MemoryActionLogger) LogExit(logs []model.Next) {
-	x.log.Exit = append(x.log.Exit, logs...)
-}
-
 // LogRun implements interfaces.AlertLogger.
 func (x *MemoryActionLogger) LogRun(logs []model.Action) {
 	x.log.Run = append(x.log.Run, logs...)

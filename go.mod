@@ -1,13 +1,13 @@
 module github.com/m-mizutani/alertchain
 
-go 1.22.7
-
-toolchain go1.23.3
+go 1.23.3
 
 require (
 	cloud.google.com/go/bigquery v1.59.1
 	cloud.google.com/go/firestore v1.15.0
 	github.com/99designs/gqlgen v0.17.43
+	github.com/PaesslerAG/gval v1.2.4
+	github.com/PaesslerAG/jsonpath v0.1.1
 	github.com/andygrunwald/go-jira v1.16.0
 	github.com/bradleyfalzon/ghinstallation/v2 v2.9.0
 	github.com/fatih/color v1.16.0
@@ -19,7 +19,7 @@ require (
 	github.com/m-mizutani/clog v0.0.4
 	github.com/m-mizutani/goerr v0.1.12-0.20240113043120-3feee990f78c
 	github.com/m-mizutani/gots v0.0.0-20230529013424-0639119b2cdd
-	github.com/m-mizutani/gt v0.0.9-0.20240121024259-2c2e7bf7b4f8
+	github.com/m-mizutani/gt v0.0.13-0.20241214054244-b80c68b94455
 	github.com/m-mizutani/masq v0.1.5
 	github.com/open-policy-agent/opa v0.70.0
 	github.com/opsgenie/opsgenie-go-sdk-v2 v1.2.22
@@ -82,6 +82,7 @@ require (
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
+	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/sosodev/duration v1.2.0 // indirect
 	github.com/tchap/go-patricia/v2 v2.3.1 // indirect

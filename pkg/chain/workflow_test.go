@@ -71,37 +71,17 @@ func TestWorkflow(t *testing.T) {
 		gt.V(t, v.Alert.Title).Equal("test-alert")
 		gt.A(t, v.Actions).Length(2).At(0, func(t testing.TB, v *model.ActionLog) {
 			gt.V(t, v.Seq).Equal(0)
-			gt.A(t, v.Init).Length(1).At(0, func(t testing.TB, v model.Next) {
-				gt.V(t, v.Abort).Equal(false)
-				gt.A(t, v.Attrs).Length(1).At(0, func(t testing.TB, v model.Attribute) {
-					gt.V(t, v.Key).Equal("color")
-					gt.V(t, v.Value).Equal("blue")
-				})
-			})
 			gt.A(t, v.Run).Length(1).At(0, func(t testing.TB, v model.Action) {
 				gt.V(t, v.Uses).Equal("mock")
 				gt.V(t, v.ID).Equal("1st")
 				gt.M(t, v.Args).EqualAt("tick", float64(1))
 			})
-			gt.A(t, v.Exit).Length(1).At(0, func(t testing.TB, v model.Next) {
-				gt.A(t, v.Attrs).Length(1).At(0, func(t testing.TB, v model.Attribute) {
-					gt.V(t, v.Key).Equal("index1")
-					gt.V(t, v.Value).Equal("first")
-				})
-			})
 		}).At(1, func(t testing.TB, v *model.ActionLog) {
 			gt.V(t, v.Seq).Equal(1)
-			gt.A(t, v.Init).Length(0)
 			gt.A(t, v.Run).Length(1).At(0, func(t testing.TB, v model.Action) {
 				gt.V(t, v.Uses).Equal("mock")
 				gt.V(t, v.ID).Equal("2nd")
 				gt.M(t, v.Args).EqualAt("tick", float64(2))
-			})
-			gt.A(t, v.Exit).Length(1).At(0, func(t testing.TB, v model.Next) {
-				gt.A(t, v.Attrs).Length(1).At(0, func(t testing.TB, v model.Attribute) {
-					gt.V(t, v.Key).Equal("index2")
-					gt.V(t, v.Value).Equal("second")
-				})
 			})
 		})
 	})

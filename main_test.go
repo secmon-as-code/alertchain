@@ -56,15 +56,13 @@ func TestServe(t *testing.T) {
 	time.Sleep(time.Second)
 
 	send(t) // 1
-	gt.N(t, called).Equal(0)
+	gt.N(t, called).Equal(1)
 	send(t) // 2
-	gt.N(t, called).Equal(0)
-	send(t) // 3
-	gt.N(t, called).Equal(1)
-	sendIgnoredAlert(t) // ignored
-	gt.N(t, called).Equal(1)
-	send(t) // 4
 	gt.N(t, called).Equal(2)
+	sendIgnoredAlert(t) // ignored
+	gt.N(t, called).Equal(2)
+	send(t) // 3
+	gt.N(t, called).Equal(3)
 }
 
 func TestPlay(t *testing.T) {
