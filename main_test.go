@@ -56,15 +56,13 @@ func TestServe(t *testing.T) {
 	time.Sleep(time.Second)
 
 	send(t) // 1
-	gt.N(t, called).Equal(0)
+	gt.N(t, called).Equal(1)
 	send(t) // 2
-	gt.N(t, called).Equal(0)
-	send(t) // 3
-	gt.N(t, called).Equal(1)
-	sendIgnoredAlert(t) // ignored
-	gt.N(t, called).Equal(1)
-	send(t) // 4
 	gt.N(t, called).Equal(2)
+	sendIgnoredAlert(t) // ignored
+	gt.N(t, called).Equal(2)
+	send(t) // 3
+	gt.N(t, called).Equal(3)
 }
 
 func TestPlay(t *testing.T) {
@@ -91,17 +89,11 @@ func TestPlay(t *testing.T) {
 				gt.A(t, v.Actions).Length(2).
 					At(0, func(t testing.TB, v *model.ActionLog) {
 						gt.Equal(t, v.Seq, 0)
-						gt.A(t, v.Run).Length(1).
-							At(0, func(t testing.TB, v model.Action) {
-								gt.Equal(t, v.Uses, "chatgpt.query")
-							})
+						gt.Equal(t, v.Uses, "chatgpt.query")
 					}).
 					At(1, func(t testing.TB, v *model.ActionLog) {
 						gt.Equal(t, v.Seq, 1)
-						gt.A(t, v.Run).Length(1).
-							At(0, func(t testing.TB, v model.Action) {
-								gt.Equal(t, v.Uses, "slack.post")
-							})
+						gt.Equal(t, v.Uses, "slack.post")
 					})
 			})
 	})

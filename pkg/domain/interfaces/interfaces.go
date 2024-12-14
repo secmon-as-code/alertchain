@@ -29,9 +29,7 @@ type AlertLogger interface {
 
 // ActionLogger records the "play" result of each action, which is used for debugging and testing purposes. An ActionLogger should be created by the AlertLogger for each action. The AlertLogger is registered as an option within the chain.Chain.
 type ActionLogger interface {
-	LogInit(logs []model.Next)
 	LogRun(logs []model.Action)
-	LogExit(logs []model.Next)
 }
 
 // AlertHandler is a function to handle the alert from data source. The handler is registered as an option within the chain.Chain.

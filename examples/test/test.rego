@@ -12,10 +12,13 @@ test_play_result {
 	count(result.actions) == 2
 
 	# test first action
-	result.actions[0].action.id == "ask-gpt"
-	result.actions[0].action.args.secret_api_key == "test_api_key_xxxxxxxxxx"
+	result.actions[0].id == "ask-gpt"
+	result.actions[0].args.secret_api_key == "test_api_key_xxxxxxxxxx"
+	count(result.actions[0].commit) == 1
+	result.actions[0].commit[0].key == "asked_gpt"
+	result.actions[0].commit[0].value == "This is a test message."
 
 	# test second action
-	result.actions[1].action.id == "notify-slack"
-	result.actions[1].action.args.secret_url == "https://hooks.slack.com/services/xxxxxxxxx"
+	result.actions[1].id == "notify-slack"
+	result.actions[1].args.secret_url == "https://hooks.slack.com/services/xxxxxxxxx"
 }

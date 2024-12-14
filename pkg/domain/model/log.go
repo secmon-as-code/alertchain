@@ -17,8 +17,6 @@ type PlayLog struct {
 }
 
 type ActionLog struct {
-	Seq  int      `json:"seq"`
-	Init []Next   `json:"init,omitempty"`
-	Run  []Action `json:"run,omitempty"`
-	Exit []Next   `json:"exit,omitempty"`
+	Seq int `json:"seq"`
+	Action
 }

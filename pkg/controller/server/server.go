@@ -79,7 +79,7 @@ func respondError(w http.ResponseWriter, err error) {
 
 	w.WriteHeader(code)
 	if err := json.NewEncoder(w).Encode(body); err != nil {
-		utils.Logger().Error("failed to convert error message", err)
+		utils.Logger().Error("failed to convert error message", "err", err)
 		return
 	}
 }

@@ -45,7 +45,10 @@ func (x *JSONLogger) LogError(err error) {
 }
 
 func (x *JSONLogger) Flush() error {
-	if err := json.NewEncoder(x.w).Encode(x.log); err != nil {
+	encoder := json.NewEncoder(x.w)
+	encoder.SetIndent("", "  ")
+
+	if err := encoder.Encode(x.log); err != nil {
 		return goerr.Wrap(err, "Failed to encode JSON scenario log")
 	}
 
@@ -61,32 +64,26 @@ type JSONAlertLogger struct {
 
 // NewJSONActionLogger implements interfaces.AlertLogger.
 func (x *JSONAlertLogger) NewActionLogger() interfaces.ActionLogger {
-	log := &model.ActionLog{
-		Seq: x.seq,
+	logger := &JSONActionLogger{
+		seq: x.seq,
+		log: x.log,
 	}
-	x.seq++
 
-	x.log.Actions = append(x.log.Actions, log)
-	return &JSONActionLogger{
-		log: log,
-	}
+	x.seq++
+	return logger
 }
 
 type JSONActionLogger struct {
-	log *model.ActionLog
-}
-
-// LogInit implements interfaces.AlertLogger.
-func (x *JSONActionLogger) LogInit(logs []model.Next) {
-	x.log.Init = append(x.log.Init, logs...)
+	seq int
+	log *model.PlayLog
 }
 
 // LogRun implements interfaces.AlertLogger.
 func (x *JSONActionLogger) LogRun(logs []model.Action) {
-	x.log.Run = append(x.log.Run, logs...)
-}
-
-// LogExit implements interfaces.AlertLogger.
-func (x *JSONActionLogger) LogExit(logs []model.Next) {
-	x.log.Exit = append(x.log.Exit, logs...)
+	for _, log := range logs {
+		x.log.Actions = append(x.log.Actions, &model.ActionLog{
+			Seq:    x.seq,
+			Action: log,
+		})
+	}
 }

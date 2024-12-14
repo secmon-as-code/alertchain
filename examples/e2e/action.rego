@@ -7,24 +7,20 @@ count_attr := input.alert.attrs[x] {
     "value": 0,
 }
 
-init[res] {
-    input.seq == 0
-
+run[res] {
     res := {
-        "abort": count_attr.value < 2,
-        "attrs": [{
+        "commit": [{
             "id": count_attr.id,
             "key": "count",
             "value": count_attr.value + 1,
             "global": true,
-        }]
+        }],
     }
-    print(res)
 }
 
 run[job] {
     job := {
-        "id": "testing",
+        "id": "test",
         "uses": "http.fetch",
         "args": {
             "method": "GET",
