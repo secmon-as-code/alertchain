@@ -1,6 +1,7 @@
 package chain
 
 import (
+	"errors"
 	"log/slog"
 
 	"github.com/m-mizutani/alertchain/pkg/chain/core"
@@ -166,55 +167,76 @@ func (x *proc) evaluate(ctx *model.Context) error {
 	x.finalized = x.alert.Attrs.Copy()
 
 	for _, p := range runResp.Runs {
-		if p.ID == "" {
-			p.ID = types.NewActionID()
-		} else if x.history.alreadyCalled(p.ID) {
-			continue
-		}
-
-		if p.Abort {
-			utils.Logger().Info("abort action", slog.Any("action", p))
-			break
-		}
-
-		x.run = append(x.run, p)
-
-		var result any
-		if p.Uses != "" {
-			r, err := x.executeAction(ctx, p, x.alert)
-			if err != nil {
-				if !p.Force {
-					return err
-				}
-
-				utils.Logger().Warn("got error, but force run action",
-					slog.Any("action", p),
-					utils.ErrLog(err),
-				)
+		if err := x.runAction(ctx, p); err != nil {
+			if errors.Is(err, errActionAbort) {
+				break
 			}
-			result = r
+			return err
 		}
+	}
 
-		var newAttrs model.Attributes
-		for _, c := range p.Commit {
-			attr, err := c.ToAttr(result)
-			if err != nil {
+	return nil
+}
+
+var errActionAbort = goerr.New("action aborted")
+
+func (x *proc) runAction(ctx *model.Context, p model.Action) error {
+	if p.ID == "" {
+		p.ID = types.NewActionID()
+	} else if x.history.alreadyCalled(p.ID) {
+		return nil
+	}
+
+	var newAttrs model.Attributes
+
+	defer func() {
+		copied := p.Copy()
+		copied.Commit = make([]model.Commit, len(newAttrs))
+		for i := range newAttrs {
+			copied.Commit[i].Attribute = newAttrs[i]
+		}
+		x.run = append(x.run, copied)
+	}()
+
+	if p.Abort {
+		utils.Logger().Info("abort action", slog.Any("action", p))
+		return errActionAbort
+	}
+
+	var result any
+	if p.Uses != "" {
+		r, err := x.executeAction(ctx, p, x.alert)
+		if err != nil {
+			if !p.Force {
 				return err
 			}
-			if attr == nil {
-				continue
-			}
-			newAttrs = append(newAttrs, *attr)
-		}
 
-		actionResult := model.ActionResult{
-			Action: p,
-			Result: result,
+			utils.Logger().Warn("got error, but force run action",
+				slog.Any("action", p),
+				utils.ErrLog(err),
+			)
 		}
-		x.history.add(actionResult)
-
-		x.finalized = append(x.finalized, newAttrs...).Tidy()
+		result = r
 	}
+
+	for _, c := range p.Commit {
+		attr, err := c.ToAttr(result)
+		if err != nil {
+			return err
+		}
+		if attr == nil {
+			continue
+		}
+		newAttrs = append(newAttrs, *attr)
+	}
+
+	actionResult := model.ActionResult{
+		Action: p,
+		Result: result,
+	}
+	x.history.add(actionResult)
+
+	x.finalized = append(x.finalized, newAttrs...).Tidy()
 
 	return nil
 }

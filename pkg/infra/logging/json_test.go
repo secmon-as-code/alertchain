@@ -65,14 +65,9 @@ func TestJSONLogger(t *testing.T) {
 
 	r := resultLog.Results[0]
 	gt.V(t, r.Alert.ID).Equal("test-alert")
-	gt.A(t, r.Actions).Length(2)
+	gt.A(t, r.Actions).Length(1)
 
 	gt.N(t, r.Actions[0].Seq).Equal(0)
-	gt.A(t, r.Actions[0].Run).Length(1).At(0, func(t testing.TB, v model.Action) {
-		gt.V(t, v.ID).Equal("test-action")
-		gt.V(t, v.Name).Equal("test-action-name")
-	})
-
-	gt.N(t, r.Actions[1].Seq).Equal(1)
-	gt.A(t, r.Actions[1].Run).Length(0)
+	gt.V(t, r.Actions[0].ID).Equal("test-action")
+	gt.V(t, r.Actions[0].Name).Equal("test-action-name")
 }

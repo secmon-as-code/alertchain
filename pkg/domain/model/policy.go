@@ -31,8 +31,12 @@ type Action struct {
 	Args   ActionArgs       `json:"args"`
 	Force  bool             `json:"force"`
 	Abort  bool             `json:"abort"`
-	React  bool             `json:"react"`
 	Commit []Commit         `json:"commit"`
+}
+
+func (x Action) Copy() Action {
+	copied := x
+	return copied
 }
 
 type Commit struct {

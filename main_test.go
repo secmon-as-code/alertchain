@@ -89,17 +89,11 @@ func TestPlay(t *testing.T) {
 				gt.A(t, v.Actions).Length(2).
 					At(0, func(t testing.TB, v *model.ActionLog) {
 						gt.Equal(t, v.Seq, 0)
-						gt.A(t, v.Run).Length(1).
-							At(0, func(t testing.TB, v model.Action) {
-								gt.Equal(t, v.Uses, "chatgpt.query")
-							})
+						gt.Equal(t, v.Uses, "chatgpt.query")
 					}).
 					At(1, func(t testing.TB, v *model.ActionLog) {
 						gt.Equal(t, v.Seq, 1)
-						gt.A(t, v.Run).Length(1).
-							At(0, func(t testing.TB, v model.Action) {
-								gt.Equal(t, v.Uses, "slack.post")
-							})
+						gt.Equal(t, v.Uses, "slack.post")
 					})
 			})
 	})

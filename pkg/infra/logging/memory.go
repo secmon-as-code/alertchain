@@ -43,24 +43,28 @@ type MemoryAlertLogger struct {
 }
 
 func (x *MemoryAlertLogger) NewActionLogger() interfaces.ActionLogger {
-	log := &model.ActionLog{
-		Seq: x.seq,
+	logger := &MemoryActionLogger{
+		seq: x.seq,
+		log: x.log,
 	}
 	x.seq++
 
-	x.log.Actions = append(x.log.Actions, log)
-	return &MemoryActionLogger{
-		log: log,
-	}
+	return logger
 }
 
 type MemoryActionLogger struct {
-	log *model.ActionLog
+	seq int
+	log *model.PlayLog
 }
 
 // LogRun implements interfaces.AlertLogger.
 func (x *MemoryActionLogger) LogRun(logs []model.Action) {
-	x.log.Run = append(x.log.Run, logs...)
+	for _, log := range logs {
+		x.log.Actions = append(x.log.Actions, &model.ActionLog{
+			Seq:    x.seq,
+			Action: log,
+		})
+	}
 }
 
 var _ interfaces.AlertLogger = &MemoryAlertLogger{}

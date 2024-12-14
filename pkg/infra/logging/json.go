@@ -61,22 +61,26 @@ type JSONAlertLogger struct {
 
 // NewJSONActionLogger implements interfaces.AlertLogger.
 func (x *JSONAlertLogger) NewActionLogger() interfaces.ActionLogger {
-	log := &model.ActionLog{
-		Seq: x.seq,
+	logger := &JSONActionLogger{
+		seq: x.seq,
+		log: x.log,
 	}
-	x.seq++
 
-	x.log.Actions = append(x.log.Actions, log)
-	return &JSONActionLogger{
-		log: log,
-	}
+	x.seq++
+	return logger
 }
 
 type JSONActionLogger struct {
-	log *model.ActionLog
+	seq int
+	log *model.PlayLog
 }
 
 // LogRun implements interfaces.AlertLogger.
 func (x *JSONActionLogger) LogRun(logs []model.Action) {
-	x.log.Run = append(x.log.Run, logs...)
+	for _, log := range logs {
+		x.log.Actions = append(x.log.Actions, &model.ActionLog{
+			Seq:    x.seq,
+			Action: log,
+		})
+	}
 }
