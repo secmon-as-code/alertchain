@@ -45,7 +45,10 @@ func (x *JSONLogger) LogError(err error) {
 }
 
 func (x *JSONLogger) Flush() error {
-	if err := json.NewEncoder(x.w).Encode(x.log); err != nil {
+	encoder := json.NewEncoder(x.w)
+	encoder.SetIndent("", "  ")
+
+	if err := encoder.Encode(x.log); err != nil {
 		return goerr.Wrap(err, "Failed to encode JSON scenario log")
 	}
 
