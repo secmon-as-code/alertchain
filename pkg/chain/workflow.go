@@ -4,13 +4,13 @@ import (
 	"errors"
 	"log/slog"
 
-	"github.com/m-mizutani/alertchain/pkg/chain/core"
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
-	"github.com/m-mizutani/alertchain/pkg/domain/types"
-	"github.com/m-mizutani/alertchain/pkg/infra/policy"
-	"github.com/m-mizutani/alertchain/pkg/service"
-	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/goerr"
+	"github.com/secmon-lab/alertchain/pkg/chain/core"
+	"github.com/secmon-lab/alertchain/pkg/domain/model"
+	"github.com/secmon-lab/alertchain/pkg/domain/types"
+	"github.com/secmon-lab/alertchain/pkg/infra/policy"
+	"github.com/secmon-lab/alertchain/pkg/service"
+	"github.com/secmon-lab/alertchain/pkg/utils"
 )
 
 type workflow struct {

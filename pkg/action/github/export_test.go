@@ -3,7 +3,7 @@ package github
 import (
 	"io"
 
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
+	"github.com/secmon-lab/alertchain/pkg/domain/model"
 )
 
 func ExecuteTemplate(w io.Writer, alert model.Alert) error {

@@ -3,11 +3,11 @@ package opsgenie_test
 import (
 	"testing"
 
-	"github.com/m-mizutani/alertchain/pkg/action/opsgenie"
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
-	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/gt"
 	"github.com/opsgenie/opsgenie-go-sdk-v2/alert"
+	"github.com/secmon-lab/alertchain/pkg/action/opsgenie"
+	"github.com/secmon-lab/alertchain/pkg/domain/model"
+	"github.com/secmon-lab/alertchain/pkg/utils"
 )
 
 func TestOpsgenie(t *testing.T) {

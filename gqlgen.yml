@@ -40,10 +40,10 @@ models:
       - github.com/99designs/gqlgen/graphql.UUID
   WorkflowID:
     model:
-      - github.com/m-mizutani/alertchain/pkg/domain/types.WorkflowID
+      - github.com/secmon-lab/alertchain/pkg/domain/types.WorkflowID
   AlertID:
     model:
-      - github.com/m-mizutani/alertchain/pkg/domain/types.AlertID
+      - github.com/secmon-lab/alertchain/pkg/domain/types.AlertID
   Timestamp:
     model:
       - github.com/99designs/gqlgen/graphql.Time

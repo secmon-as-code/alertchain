@@ -1,16 +1,16 @@
 package action
 
 import (
-	"github.com/m-mizutani/alertchain/pkg/action/bigquery"
-	"github.com/m-mizutani/alertchain/pkg/action/chatgpt"
-	"github.com/m-mizutani/alertchain/pkg/action/github"
-	"github.com/m-mizutani/alertchain/pkg/action/http"
-	"github.com/m-mizutani/alertchain/pkg/action/jira"
-	"github.com/m-mizutani/alertchain/pkg/action/opsgenie"
-	"github.com/m-mizutani/alertchain/pkg/action/otx"
-	"github.com/m-mizutani/alertchain/pkg/action/slack"
-	"github.com/m-mizutani/alertchain/pkg/domain/interfaces"
-	"github.com/m-mizutani/alertchain/pkg/domain/types"
+	"github.com/secmon-lab/alertchain/pkg/action/bigquery"
+	"github.com/secmon-lab/alertchain/pkg/action/chatgpt"
+	"github.com/secmon-lab/alertchain/pkg/action/github"
+	"github.com/secmon-lab/alertchain/pkg/action/http"
+	"github.com/secmon-lab/alertchain/pkg/action/jira"
+	"github.com/secmon-lab/alertchain/pkg/action/opsgenie"
+	"github.com/secmon-lab/alertchain/pkg/action/otx"
+	"github.com/secmon-lab/alertchain/pkg/action/slack"
+	"github.com/secmon-lab/alertchain/pkg/domain/interfaces"
+	"github.com/secmon-lab/alertchain/pkg/domain/types"
 )
 
 var actionMap = map[types.ActionName]interfaces.RunAction{

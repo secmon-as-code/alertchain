@@ -3,12 +3,12 @@ package chain
 import (
 	"log/slog"
 
-	"github.com/m-mizutani/alertchain/pkg/chain/core"
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
-	"github.com/m-mizutani/alertchain/pkg/domain/types"
-	"github.com/m-mizutani/alertchain/pkg/service"
-	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/goerr"
+	"github.com/secmon-lab/alertchain/pkg/chain/core"
+	"github.com/secmon-lab/alertchain/pkg/domain/model"
+	"github.com/secmon-lab/alertchain/pkg/domain/types"
+	"github.com/secmon-lab/alertchain/pkg/service"
+	"github.com/secmon-lab/alertchain/pkg/utils"
 )
 
 type Chain struct {

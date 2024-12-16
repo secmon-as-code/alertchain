@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
-	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/goerr"
+	"github.com/secmon-lab/alertchain/pkg/domain/model"
+	"github.com/secmon-lab/alertchain/pkg/domain/types"
 )
 
 func Fetch(ctx *model.Context, _ model.Alert, args model.ActionArgs) (any, error) {

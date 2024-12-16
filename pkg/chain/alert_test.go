@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/m-mizutani/alertchain/pkg/chain"
-	"github.com/m-mizutani/alertchain/pkg/chain/core"
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
-	"github.com/m-mizutani/alertchain/pkg/infra/policy"
 	"github.com/m-mizutani/gt"
+	"github.com/secmon-lab/alertchain/pkg/chain"
+	"github.com/secmon-lab/alertchain/pkg/chain/core"
+	"github.com/secmon-lab/alertchain/pkg/domain/model"
+	"github.com/secmon-lab/alertchain/pkg/infra/policy"
 )
 
 func TestAlertRaw(t *testing.T) {

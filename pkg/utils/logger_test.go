@@ -6,8 +6,8 @@ import (
 
 	"log/slog"
 
-	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/gt"
+	"github.com/secmon-lab/alertchain/pkg/utils"
 )
 
 func TestLogger(t *testing.T) {

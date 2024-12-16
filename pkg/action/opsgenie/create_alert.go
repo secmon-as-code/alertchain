@@ -3,10 +3,10 @@ package opsgenie
 import (
 	"fmt"
 
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/goerr"
 	og_alert "github.com/opsgenie/opsgenie-go-sdk-v2/alert"
 	"github.com/opsgenie/opsgenie-go-sdk-v2/client"
+	"github.com/secmon-lab/alertchain/pkg/domain/model"
 )
 
 type Responder struct {

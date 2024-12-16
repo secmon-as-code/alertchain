@@ -3,12 +3,12 @@ package core
 import (
 	"time"
 
-	"github.com/m-mizutani/alertchain/pkg/action"
-	"github.com/m-mizutani/alertchain/pkg/domain/interfaces"
-	"github.com/m-mizutani/alertchain/pkg/domain/types"
-	"github.com/m-mizutani/alertchain/pkg/infra/memory"
-	"github.com/m-mizutani/alertchain/pkg/infra/policy"
-	"github.com/m-mizutani/alertchain/pkg/utils"
+	"github.com/secmon-lab/alertchain/pkg/action"
+	"github.com/secmon-lab/alertchain/pkg/domain/interfaces"
+	"github.com/secmon-lab/alertchain/pkg/domain/types"
+	"github.com/secmon-lab/alertchain/pkg/infra/memory"
+	"github.com/secmon-lab/alertchain/pkg/infra/policy"
+	"github.com/secmon-lab/alertchain/pkg/utils"
 )
 
 type Core struct {

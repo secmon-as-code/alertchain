@@ -7,12 +7,12 @@ import (
 
 	"log/slog"
 
-	"github.com/m-mizutani/alertchain/pkg/chain/core"
-	"github.com/m-mizutani/alertchain/pkg/controller/cli/config"
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
-	"github.com/m-mizutani/alertchain/pkg/domain/types"
-	"github.com/m-mizutani/alertchain/pkg/infra/logging"
 	"github.com/m-mizutani/goerr"
+	"github.com/secmon-lab/alertchain/pkg/chain/core"
+	"github.com/secmon-lab/alertchain/pkg/controller/cli/config"
+	"github.com/secmon-lab/alertchain/pkg/domain/model"
+	"github.com/secmon-lab/alertchain/pkg/domain/types"
+	"github.com/secmon-lab/alertchain/pkg/infra/logging"
 	"github.com/urfave/cli/v2"
 )
 

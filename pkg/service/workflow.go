@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/m-mizutani/alertchain/pkg/domain/interfaces"
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
-	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/goerr"
+	"github.com/secmon-lab/alertchain/pkg/domain/interfaces"
+	"github.com/secmon-lab/alertchain/pkg/domain/model"
+	"github.com/secmon-lab/alertchain/pkg/domain/types"
 )
 
 type WorkflowService struct {

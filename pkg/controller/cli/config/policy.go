@@ -3,8 +3,8 @@ package config
 import (
 	"log/slog"
 
-	"github.com/m-mizutani/alertchain/pkg/infra/policy"
-	"github.com/m-mizutani/alertchain/pkg/utils"
+	"github.com/secmon-lab/alertchain/pkg/infra/policy"
+	"github.com/secmon-lab/alertchain/pkg/utils"
 	"github.com/urfave/cli/v2"
 )
 

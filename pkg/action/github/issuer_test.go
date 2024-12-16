@@ -8,10 +8,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/m-mizutani/alertchain/pkg/action/github"
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
-	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/gt"
+	"github.com/secmon-lab/alertchain/pkg/action/github"
+	"github.com/secmon-lab/alertchain/pkg/domain/model"
+	"github.com/secmon-lab/alertchain/pkg/domain/types"
 
 	gh "github.com/google/go-github/github"
 )

@@ -5,8 +5,8 @@ import (
 
 	"github.com/PaesslerAG/gval"
 	"github.com/PaesslerAG/jsonpath"
-	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/goerr"
+	"github.com/secmon-lab/alertchain/pkg/domain/types"
 )
 
 type AlertPolicyResult struct {

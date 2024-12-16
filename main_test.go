@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/m-mizutani/alertchain/pkg/controller/cli"
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/gt"
+	"github.com/secmon-lab/alertchain/pkg/controller/cli"
+	"github.com/secmon-lab/alertchain/pkg/domain/model"
 )
 
 func TestServe(t *testing.T) {

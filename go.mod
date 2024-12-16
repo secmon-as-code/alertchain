@@ -1,4 +1,4 @@
-module github.com/m-mizutani/alertchain
+module github.com/secmon-lab/alertchain
 
 go 1.23.3
 

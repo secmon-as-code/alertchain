@@ -1,13 +1,13 @@
 package config
 
 import (
-	"github.com/m-mizutani/alertchain/pkg/domain/interfaces"
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
-	"github.com/m-mizutani/alertchain/pkg/domain/types"
-	"github.com/m-mizutani/alertchain/pkg/infra/firestore"
-	"github.com/m-mizutani/alertchain/pkg/infra/memory"
-	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/goerr"
+	"github.com/secmon-lab/alertchain/pkg/domain/interfaces"
+	"github.com/secmon-lab/alertchain/pkg/domain/model"
+	"github.com/secmon-lab/alertchain/pkg/domain/types"
+	"github.com/secmon-lab/alertchain/pkg/infra/firestore"
+	"github.com/secmon-lab/alertchain/pkg/infra/memory"
+	"github.com/secmon-lab/alertchain/pkg/utils"
 	"github.com/urfave/cli/v2"
 )
 

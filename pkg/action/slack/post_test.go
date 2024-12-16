@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/m-mizutani/alertchain/pkg/action/slack"
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/gt"
+	"github.com/secmon-lab/alertchain/pkg/action/slack"
+	"github.com/secmon-lab/alertchain/pkg/domain/model"
 )
 
 func TestPost(t *testing.T) {

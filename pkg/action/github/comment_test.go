@@ -5,9 +5,9 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/m-mizutani/alertchain/pkg/action/github"
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/gt"
+	"github.com/secmon-lab/alertchain/pkg/action/github"
+	"github.com/secmon-lab/alertchain/pkg/domain/model"
 )
 
 func TestComment(t *testing.T) {

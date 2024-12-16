@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/m-mizutani/alertchain/pkg/domain/types"
+	"github.com/secmon-lab/alertchain/pkg/domain/types"
 )
 
 type AlertMetaData struct {

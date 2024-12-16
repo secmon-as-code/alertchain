@@ -11,10 +11,10 @@ import (
 
 	"cloud.google.com/go/firestore"
 
-	"github.com/m-mizutani/alertchain/pkg/domain/interfaces"
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
-	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/goerr"
+	"github.com/secmon-lab/alertchain/pkg/domain/interfaces"
+	"github.com/secmon-lab/alertchain/pkg/domain/model"
+	"github.com/secmon-lab/alertchain/pkg/domain/types"
 	"google.golang.org/api/iterator"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

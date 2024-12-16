@@ -6,9 +6,9 @@ import (
 
 	openai "github.com/sashabaranov/go-openai"
 
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
-	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/goerr"
+	"github.com/secmon-lab/alertchain/pkg/domain/model"
+	"github.com/secmon-lab/alertchain/pkg/domain/types"
 )
 
 func Query(ctx *model.Context, alert model.Alert, args model.ActionArgs) (any, error) {

@@ -1,10 +1,10 @@
 package cli
 
 import (
-	"github.com/m-mizutani/alertchain/pkg/chain"
-	"github.com/m-mizutani/alertchain/pkg/chain/core"
-	"github.com/m-mizutani/alertchain/pkg/controller/cli/config"
-	"github.com/m-mizutani/alertchain/pkg/utils"
+	"github.com/secmon-lab/alertchain/pkg/chain"
+	"github.com/secmon-lab/alertchain/pkg/chain/core"
+	"github.com/secmon-lab/alertchain/pkg/controller/cli/config"
+	"github.com/secmon-lab/alertchain/pkg/utils"
 )
 
 func buildChain(policy *config.Policy, options ...core.Option) (*chain.Chain, error) {

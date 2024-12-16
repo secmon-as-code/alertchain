@@ -5,7 +5,7 @@
 There are several ways to create a container image, but in this section, we will introduce a method to create a container image based on the AlertChain image and add alert policies and action policies. First, create a Dockerfile like the following.
 
 ```dockerfile
-FROM ghcr.io/m-mizutani/alertchain:v0.0.2
+FROM ghcr.io/secmon-lab/alertchain:v0.0.2
 
 COPY policy /policy
 
@@ -33,7 +33,7 @@ import (
         "embed"
 
         "github.com/aws/aws-lambda-go/lambda"
-        ac "github.com/m-mizutani/alertchain/pkg/controller/lambda"
+        ac "github.com/secmon-lab/alertchain/pkg/controller/lambda"
 )
 
 //go:embed policy/*

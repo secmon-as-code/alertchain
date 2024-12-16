@@ -3,13 +3,13 @@ package cli
 import (
 	"log/slog"
 
-	"github.com/m-mizutani/alertchain/pkg/chain/core"
-	"github.com/m-mizutani/alertchain/pkg/controller/cli/config"
-	"github.com/m-mizutani/alertchain/pkg/controller/graphql"
-	"github.com/m-mizutani/alertchain/pkg/controller/server"
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
-	"github.com/m-mizutani/alertchain/pkg/service"
-	"github.com/m-mizutani/alertchain/pkg/utils"
+	"github.com/secmon-lab/alertchain/pkg/chain/core"
+	"github.com/secmon-lab/alertchain/pkg/controller/cli/config"
+	"github.com/secmon-lab/alertchain/pkg/controller/graphql"
+	"github.com/secmon-lab/alertchain/pkg/controller/server"
+	"github.com/secmon-lab/alertchain/pkg/domain/model"
+	"github.com/secmon-lab/alertchain/pkg/service"
+	"github.com/secmon-lab/alertchain/pkg/utils"
 	"github.com/urfave/cli/v2"
 )
 
