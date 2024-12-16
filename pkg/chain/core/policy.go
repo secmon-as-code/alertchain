@@ -6,10 +6,10 @@ import (
 
 	"log/slog"
 
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
-	"github.com/m-mizutani/alertchain/pkg/domain/types"
-	"github.com/m-mizutani/alertchain/pkg/infra/policy"
 	"github.com/m-mizutani/goerr"
+	"github.com/secmon-lab/alertchain/pkg/domain/model"
+	"github.com/secmon-lab/alertchain/pkg/domain/types"
+	"github.com/secmon-lab/alertchain/pkg/infra/policy"
 )
 
 func (x *Core) QueryAlertPolicy(ctx *model.Context, schema types.Schema, in, out any) error {

@@ -1,8 +1,8 @@
 package core
 
 import (
-	"github.com/m-mizutani/alertchain/pkg/domain/interfaces"
-	"github.com/m-mizutani/alertchain/pkg/domain/types"
+	"github.com/secmon-lab/alertchain/pkg/domain/interfaces"
+	"github.com/secmon-lab/alertchain/pkg/domain/types"
 )
 
 func (x *Core) GetAction(name types.ActionName) (interfaces.RunAction, bool) {

@@ -5,7 +5,7 @@ package model
 import (
 	"time"
 
-	"github.com/m-mizutani/alertchain/pkg/domain/types"
+	"github.com/secmon-lab/alertchain/pkg/domain/types"
 )
 
 type ActionRecord struct {

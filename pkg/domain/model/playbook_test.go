@@ -4,8 +4,8 @@ import (
 	"embed"
 	"testing"
 
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/gt"
+	"github.com/secmon-lab/alertchain/pkg/domain/model"
 )
 
 //go:embed testdata/playbook/*.jsonnet

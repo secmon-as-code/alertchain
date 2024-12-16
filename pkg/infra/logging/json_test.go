@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
-	"github.com/m-mizutani/alertchain/pkg/infra/logging"
 	"github.com/m-mizutani/gt"
+	"github.com/secmon-lab/alertchain/pkg/domain/model"
+	"github.com/secmon-lab/alertchain/pkg/infra/logging"
 )
 
 // bufferWriteCloser is a wrapper around bytes.Buffer that implements io.WriteCloser.

@@ -1,7 +1,7 @@
 package model
 
 import (
-	"github.com/m-mizutani/alertchain/pkg/domain/types"
+	"github.com/secmon-lab/alertchain/pkg/domain/types"
 )
 
 type Attribute struct {

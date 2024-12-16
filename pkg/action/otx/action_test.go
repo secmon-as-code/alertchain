@@ -7,10 +7,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/m-mizutani/alertchain/pkg/action/otx"
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
-	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/gt"
+	"github.com/secmon-lab/alertchain/pkg/action/otx"
+	"github.com/secmon-lab/alertchain/pkg/domain/model"
+	"github.com/secmon-lab/alertchain/pkg/domain/types"
 )
 
 func TestIndicator(t *testing.T) {

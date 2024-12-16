@@ -6,9 +6,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	httpaction "github.com/m-mizutani/alertchain/pkg/action/http"
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/gt"
+	httpaction "github.com/secmon-lab/alertchain/pkg/action/http"
+	"github.com/secmon-lab/alertchain/pkg/domain/model"
 )
 
 func TestFetch(t *testing.T) {

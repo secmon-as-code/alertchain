@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/m-mizutani/alertchain/pkg/infra/policy"
 	"github.com/m-mizutani/gt"
+	"github.com/secmon-lab/alertchain/pkg/infra/policy"
 )
 
 const examplePolicy = `

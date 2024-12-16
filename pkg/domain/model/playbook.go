@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 
 	"github.com/google/go-jsonnet"
-	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/goerr"
+	"github.com/secmon-lab/alertchain/pkg/domain/types"
 )
 
 type Playbook struct {

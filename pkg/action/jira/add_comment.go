@@ -4,8 +4,8 @@ import (
 	_ "embed"
 
 	"github.com/andygrunwald/go-jira"
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/goerr"
+	"github.com/secmon-lab/alertchain/pkg/domain/model"
 )
 
 func AddComment(ctx *model.Context, alert model.Alert, args model.ActionArgs) (any, error) {

@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/getsentry/sentry-go"
-	"github.com/m-mizutani/alertchain/pkg/domain/types"
-	"github.com/m-mizutani/alertchain/pkg/utils"
+	"github.com/secmon-lab/alertchain/pkg/domain/types"
+	"github.com/secmon-lab/alertchain/pkg/utils"
 	"github.com/urfave/cli/v2"
 )
 

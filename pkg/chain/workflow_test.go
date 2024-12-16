@@ -5,15 +5,15 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/m-mizutani/alertchain/pkg/chain"
-	"github.com/m-mizutani/alertchain/pkg/chain/core"
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
-	"github.com/m-mizutani/alertchain/pkg/domain/types"
-	"github.com/m-mizutani/alertchain/pkg/infra/logging"
-	"github.com/m-mizutani/alertchain/pkg/infra/memory"
-	"github.com/m-mizutani/alertchain/pkg/infra/policy"
-	"github.com/m-mizutani/alertchain/pkg/service"
 	"github.com/m-mizutani/gt"
+	"github.com/secmon-lab/alertchain/pkg/chain"
+	"github.com/secmon-lab/alertchain/pkg/chain/core"
+	"github.com/secmon-lab/alertchain/pkg/domain/model"
+	"github.com/secmon-lab/alertchain/pkg/domain/types"
+	"github.com/secmon-lab/alertchain/pkg/infra/logging"
+	"github.com/secmon-lab/alertchain/pkg/infra/memory"
+	"github.com/secmon-lab/alertchain/pkg/infra/policy"
+	"github.com/secmon-lab/alertchain/pkg/service"
 )
 
 type buffer struct {

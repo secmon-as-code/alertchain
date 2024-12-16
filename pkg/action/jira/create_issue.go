@@ -9,8 +9,8 @@ import (
 	"text/template"
 
 	"github.com/andygrunwald/go-jira"
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/goerr"
+	"github.com/secmon-lab/alertchain/pkg/domain/model"
 )
 
 //go:embed issue_template.txt

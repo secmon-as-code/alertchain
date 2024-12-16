@@ -3,8 +3,8 @@ package interfaces
 import (
 	"time"
 
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
-	"github.com/m-mizutani/alertchain/pkg/domain/types"
+	"github.com/secmon-lab/alertchain/pkg/domain/model"
+	"github.com/secmon-lab/alertchain/pkg/domain/types"
 )
 
 // RunAction is a function to run an action. The function is registered as an option within the chain.Chain.

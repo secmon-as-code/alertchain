@@ -7,10 +7,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/m-mizutani/alertchain/pkg/action/chatgpt"
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
 	"github.com/m-mizutani/gt"
 	"github.com/sashabaranov/go-openai"
+	"github.com/secmon-lab/alertchain/pkg/action/chatgpt"
+	"github.com/secmon-lab/alertchain/pkg/domain/model"
 )
 
 //go:embed testdata/aws_guardduty_example.json

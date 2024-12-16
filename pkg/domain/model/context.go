@@ -6,7 +6,7 @@ import (
 
 	"log/slog"
 
-	"github.com/m-mizutani/alertchain/pkg/utils"
+	"github.com/secmon-lab/alertchain/pkg/utils"
 )
 
 type Clock func() time.Time

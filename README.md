@@ -38,7 +38,7 @@ AlertChain is an advanced tool that not only allows you to detect alerts through
 To install AlertChain, run the following command:
 
 ```bash
-$ go install github.com/m-mizutani/alertchain@latest
+$ go install github.com/secmon-lab/alertchain@latest
 ```
 
 ### Documents

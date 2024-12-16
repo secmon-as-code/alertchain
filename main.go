@@ -4,7 +4,7 @@ import (
 	"context"
 	"os"
 
-	"github.com/m-mizutani/alertchain/pkg/controller/cli"
+	"github.com/secmon-lab/alertchain/pkg/controller/cli"
 )
 
 func main() {

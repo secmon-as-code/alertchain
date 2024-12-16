@@ -6,10 +6,10 @@ import (
 	go_jira "github.com/andygrunwald/go-jira"
 
 	"github.com/google/uuid"
-	"github.com/m-mizutani/alertchain/pkg/action/jira"
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
-	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/gt"
+	"github.com/secmon-lab/alertchain/pkg/action/jira"
+	"github.com/secmon-lab/alertchain/pkg/domain/model"
+	"github.com/secmon-lab/alertchain/pkg/utils"
 )
 
 func TestAddAttachment(t *testing.T) {
