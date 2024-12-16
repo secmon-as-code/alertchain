@@ -23,7 +23,7 @@ require (
 	github.com/m-mizutani/masq v0.1.5
 	github.com/open-policy-agent/opa v0.70.0
 	github.com/opsgenie/opsgenie-go-sdk-v2 v1.2.22
-	github.com/sashabaranov/go-openai v1.18.3
+	github.com/sashabaranov/go-openai v1.36.0
 	github.com/slack-go/slack v0.12.3
 	github.com/urfave/cli/v2 v2.27.1
 	github.com/vektah/gqlparser/v2 v2.5.20
