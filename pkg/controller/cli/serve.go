@@ -1,16 +1,17 @@
 package cli
 
 import (
+	"context"
 	"log/slog"
 
 	"github.com/secmon-lab/alertchain/pkg/chain/core"
 	"github.com/secmon-lab/alertchain/pkg/controller/cli/config"
 	"github.com/secmon-lab/alertchain/pkg/controller/graphql"
 	"github.com/secmon-lab/alertchain/pkg/controller/server"
-	"github.com/secmon-lab/alertchain/pkg/domain/model"
+	"github.com/secmon-lab/alertchain/pkg/ctxutil"
 	"github.com/secmon-lab/alertchain/pkg/service"
 	"github.com/secmon-lab/alertchain/pkg/utils"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 func cmdServe() *cli.Command {
@@ -30,28 +31,28 @@ func cmdServe() *cli.Command {
 			Name:        "addr",
 			Usage:       "Bind address",
 			Aliases:     []string{"a"},
-			EnvVars:     []string{"ALERTCHAIN_ADDR"},
+			Sources:     cli.EnvVars("ALERTCHAIN_ADDR"),
 			Value:       "127.0.0.1:8080",
 			Destination: &addr,
 		},
 		&cli.BoolFlag{
 			Name:        "disable-action",
 			Usage:       "Disable action execution (for debug or dry-run)",
-			EnvVars:     []string{"ALERTCHAIN_DISABLE_ACTION"},
+			Sources:     cli.EnvVars("ALERTCHAIN_DISABLE_ACTION"),
 			Value:       false,
 			Destination: &disableAction,
 		},
 		&cli.BoolFlag{
 			Name:        "graphql",
 			Usage:       "Enable GraphQL",
-			EnvVars:     []string{"ALERTCHAIN_GRAPHQL"},
+			Sources:     cli.EnvVars("ALERTCHAIN_GRAPHQL"),
 			Value:       true,
 			Destination: &graphQL,
 		},
 		&cli.BoolFlag{
 			Name:        "playground",
 			Usage:       "Enable GraphQL playground",
-			EnvVars:     []string{"ALERTCHAIN_PLAYGROUND"},
+			Sources:     cli.EnvVars("ALERTCHAIN_PLAYGROUND"),
 			Value:       false,
 			Destination: &playground,
 		},
@@ -65,15 +66,13 @@ func cmdServe() *cli.Command {
 		Aliases: []string{"s"},
 		Flags:   flags,
 
-		Action: func(c *cli.Context) error {
-			utils.Logger().Info("starting alertchain with serve mode",
+		Action: func(ctx context.Context, cmd *cli.Command) error {
+			ctxutil.Logger(ctx).Info("starting alertchain with serve mode",
 				slog.String("addr", addr),
 				slog.Bool("disable-action", disableAction),
 				slog.Any("database", dbCfg),
 				slog.Any("sentry", sentryCfg),
 			)
-
-			ctx := model.NewContext(model.WithBase(c.Context))
 
 			// Build chain
 			var chainOpt []core.Option
@@ -119,9 +118,9 @@ func cmdServe() *cli.Command {
 			srv := server.New(chain.HandleAlert, serverOpt...)
 
 			// Starting server
-			utils.Logger().Info("starting alertchain with serve mode", slog.String("addr", addr))
+			ctxutil.Logger(ctx).Info("starting alertchain with serve mode", slog.String("addr", addr))
 			if err := srv.Run(addr); err != nil {
-				utils.HandleError(err)
+				utils.HandleError(ctx, err)
 				return err
 			}
 

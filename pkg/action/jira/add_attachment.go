@@ -1,6 +1,7 @@
 package jira
 
 import (
+	"context"
 	"strings"
 
 	"github.com/andygrunwald/go-jira"
@@ -8,7 +9,7 @@ import (
 	"github.com/secmon-lab/alertchain/pkg/domain/model"
 )
 
-func AddAttachment(ctx *model.Context, alert model.Alert, args model.ActionArgs) (any, error) {
+func AddAttachment(ctx context.Context, alert model.Alert, args model.ActionArgs) (any, error) {
 	var (
 		accountID string
 		userName  string

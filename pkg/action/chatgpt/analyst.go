@@ -1,17 +1,19 @@
 package chatgpt
 
 import (
+	"context"
 	_ "embed"
 	"encoding/json"
 
 	openai "github.com/sashabaranov/go-openai"
 
 	"github.com/m-mizutani/goerr"
+	"github.com/secmon-lab/alertchain/pkg/ctxutil"
 	"github.com/secmon-lab/alertchain/pkg/domain/model"
 	"github.com/secmon-lab/alertchain/pkg/domain/types"
 )
 
-func Query(ctx *model.Context, alert model.Alert, args model.ActionArgs) (any, error) {
+func Query(ctx context.Context, alert model.Alert, args model.ActionArgs) (any, error) {
 	apiKey, ok := args["secret_api_key"].(string)
 	if !ok {
 		return nil, goerr.Wrap(types.ErrActionInvalidArgument, "secret_api_key is required")
@@ -30,7 +32,7 @@ func Query(ctx *model.Context, alert model.Alert, args model.ActionArgs) (any, e
 		prompt = v
 	}
 
-	if ctx.DryRun() {
+	if ctxutil.IsDryRun(ctx) {
 		return nil, nil
 	}
 

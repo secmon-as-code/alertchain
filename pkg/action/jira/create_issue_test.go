@@ -1,6 +1,7 @@
 package jira_test
 
 import (
+	"context"
 	_ "embed"
 	"testing"
 
@@ -40,7 +41,7 @@ func TestCreateIssue(t *testing.T) {
 		"assignee":     accountID,
 	}
 
-	ctx := model.NewContext()
+	ctx := context.Background()
 	alert := model.NewAlert(model.AlertMetaData{
 		Title:       "Alert testing",
 		Description: "This is test alert",

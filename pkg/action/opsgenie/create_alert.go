@@ -1,6 +1,7 @@
 package opsgenie
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/m-mizutani/goerr"
@@ -16,7 +17,7 @@ type Responder struct {
 	Type     string `json:"type"`
 }
 
-func CreateAlert(ctx *model.Context, alert model.Alert, args model.ActionArgs) (any, error) {
+func CreateAlert(ctx context.Context, alert model.Alert, args model.ActionArgs) (any, error) {
 	var (
 		apiKey     string
 		responders []Responder

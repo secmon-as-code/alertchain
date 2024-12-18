@@ -2,6 +2,7 @@ package jira
 
 import (
 	"bytes"
+	"context"
 	_ "embed"
 	"fmt"
 	"io"
@@ -34,7 +35,7 @@ func execTemplate(data interface{}) (string, error) {
 	return buf.String(), nil
 }
 
-func CreateIssue(ctx *model.Context, alert model.Alert, args model.ActionArgs) (any, error) {
+func CreateIssue(ctx context.Context, alert model.Alert, args model.ActionArgs) (any, error) {
 	var (
 		accountID string
 		userName  string

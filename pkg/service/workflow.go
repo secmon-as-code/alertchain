@@ -1,10 +1,12 @@
 package service
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
 	"github.com/m-mizutani/goerr"
+	"github.com/secmon-lab/alertchain/pkg/ctxutil"
 	"github.com/secmon-lab/alertchain/pkg/domain/interfaces"
 	"github.com/secmon-lab/alertchain/pkg/domain/model"
 	"github.com/secmon-lab/alertchain/pkg/domain/types"
@@ -23,7 +25,7 @@ func NewWorkflowService(db interfaces.Database) *WorkflowService {
 	return &WorkflowService{db: db}
 }
 
-func (x *WorkflowService) Get(ctx *model.Context, offset, limit *int) ([]model.WorkflowRecord, error) {
+func (x *WorkflowService) Get(ctx context.Context, offset, limit *int) ([]model.WorkflowRecord, error) {
 	if offset == nil {
 		offset = new(int)
 		*offset = 0
@@ -36,7 +38,7 @@ func (x *WorkflowService) Get(ctx *model.Context, offset, limit *int) ([]model.W
 	return x.db.GetWorkflows(ctx, *offset, *limit)
 }
 
-func (x *WorkflowService) Lookup(ctx *model.Context, id types.WorkflowID) (*model.WorkflowRecord, error) {
+func (x *WorkflowService) Lookup(ctx context.Context, id types.WorkflowID) (*model.WorkflowRecord, error) {
 	return nil, nil
 }
 
@@ -61,7 +63,7 @@ func attrsToRecord(attrs model.Attributes) []*model.AttributeRecord {
 	return records
 }
 
-func (x *WorkflowService) Create(ctx *model.Context, alert model.Alert) (*Workflow, error) {
+func (x *WorkflowService) Create(ctx context.Context, alert model.Alert) (*Workflow, error) {
 	rawData, err := json.Marshal(alert.Data)
 	if err != nil {
 		return nil, types.AsBadRequestErr(goerr.Wrap(err, "Fail to marshal alert data"))
@@ -78,7 +80,7 @@ func (x *WorkflowService) Create(ctx *model.Context, alert model.Alert) (*Workfl
 
 	workflow := model.WorkflowRecord{
 		ID:        types.NewWorkflowID(),
-		CreatedAt: ctx.Now(),
+		CreatedAt: ctxutil.Now(ctx),
 		Alert: &model.AlertRecord{
 			ID:          alert.ID,
 			Schema:      string(alert.Schema),
@@ -99,7 +101,7 @@ func (x *WorkflowService) Create(ctx *model.Context, alert model.Alert) (*Workfl
 	return &Workflow{db: x.db, wf: &workflow}, nil
 }
 
-func (x *Workflow) UpdateLastAttrs(ctx *model.Context, attrs model.Attributes) error {
+func (x *Workflow) UpdateLastAttrs(ctx context.Context, attrs model.Attributes) error {
 	x.wf.Alert.LastAttrs = attrsToRecord(attrs)
 	if err := x.db.PutWorkflow(ctx, *x.wf); err != nil {
 		return err
@@ -107,6 +109,6 @@ func (x *Workflow) UpdateLastAttrs(ctx *model.Context, attrs model.Attributes) e
 	return nil
 }
 
-func (x *Workflow) AddAction(ctx *model.Context, action *model.Action) error {
+func (x *Workflow) AddAction(ctx context.Context, action *model.Action) error {
 	return nil
 }

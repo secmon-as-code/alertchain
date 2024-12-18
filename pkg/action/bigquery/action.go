@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/secmon-lab/alertchain/pkg/ctxutil"
 	"github.com/secmon-lab/alertchain/pkg/domain/model"
 	"github.com/secmon-lab/alertchain/pkg/domain/types"
-	"github.com/secmon-lab/alertchain/pkg/utils"
 
 	"cloud.google.com/go/bigquery"
 	"github.com/m-mizutani/goerr"
@@ -25,7 +25,7 @@ type DataRecord struct {
 	Data      string    `bigquery:"data"`
 }
 
-func InsertData(ctx *model.Context, alert model.Alert, args model.ActionArgs) (any, error) {
+func InsertData(ctx context.Context, alert model.Alert, args model.ActionArgs) (any, error) {
 	table, err := setupTable(ctx, args)
 	if err != nil {
 		return nil, err
@@ -52,7 +52,7 @@ func InsertData(ctx *model.Context, alert model.Alert, args model.ActionArgs) (a
 	row := DataRecord{
 		ID:        uuid.NewString(),
 		AlertID:   alert.ID.String(),
-		CreatedAt: ctx.Now(),
+		CreatedAt: ctxutil.Now(ctx),
 		Tags:      tags,
 		Data:      string(raw),
 	}
@@ -95,7 +95,7 @@ type AttrRecord struct {
 	Global bool   `bigquery:"global"`
 }
 
-func InsertAlert(ctx *model.Context, alert model.Alert, args model.ActionArgs) (any, error) {
+func InsertAlert(ctx context.Context, alert model.Alert, args model.ActionArgs) (any, error) {
 	table, err := setupTable(ctx, args)
 	if err != nil {
 		return nil, err
@@ -142,7 +142,7 @@ func InsertAlert(ctx *model.Context, alert model.Alert, args model.ActionArgs) (
 	return nil, insert(ctx, table, schema, row)
 }
 
-func setupTable(ctx *model.Context, args model.ActionArgs) (*bigquery.Table, error) {
+func setupTable(ctx context.Context, args model.ActionArgs) (*bigquery.Table, error) {
 	projectID, ok := args["project_id"].(string)
 	if !ok {
 		return nil, goerr.Wrap(types.ErrActionInvalidArgument, "project_id is required")
@@ -219,7 +219,7 @@ func insertWithRetry(ctx context.Context, table *bigquery.Table, data any) error
 			return err
 		}
 
-		utils.Logger().Warn("Table not found, retrying",
+		ctxutil.Logger(ctx).Warn("Table not found, retrying",
 			"table", table.FullyQualifiedName(),
 			"err", err,
 		)

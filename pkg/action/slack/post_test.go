@@ -1,6 +1,7 @@
 package slack_test
 
 import (
+	"context"
 	"os"
 	"testing"
 	"time"
@@ -46,7 +47,7 @@ func TestPost(t *testing.T) {
 		"channel":    channel,
 	}
 
-	ctx := model.NewContext()
+	ctx := context.Background()
 	any, err := slack.Post(ctx, alert, args)
 	gt.NoError(t, err)
 	gt.V(t, any).Nil()

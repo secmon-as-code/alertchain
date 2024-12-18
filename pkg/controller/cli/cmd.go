@@ -4,13 +4,14 @@ import (
 	"context"
 
 	"github.com/secmon-lab/alertchain/pkg/controller/cli/config"
+	"github.com/secmon-lab/alertchain/pkg/ctxutil"
 	"github.com/secmon-lab/alertchain/pkg/domain/types"
-	"github.com/secmon-lab/alertchain/pkg/utils"
-	"github.com/urfave/cli/v2"
+	"github.com/secmon-lab/alertchain/pkg/logging"
+	"github.com/urfave/cli/v3"
 )
 
 type CLI struct {
-	app *cli.App
+	app *cli.Command
 }
 
 func New() *CLI {
@@ -22,19 +23,19 @@ func New() *CLI {
 
 	defers := []func(){}
 
-	app := &cli.App{
+	app := &cli.Command{
 		Name:  "alertchain",
 		Flags: flags,
-		Before: func(ctx *cli.Context) error {
+		Before: func(ctx context.Context, _ *cli.Command) (context.Context, error) {
 			closer, err := loggerConfig.Configure()
 			if err != nil {
-				return err
+				return nil, err
 			}
 			defers = append(defers, closer)
 
-			return nil
+			return ctx, nil
 		},
-		After: func(ctx *cli.Context) error {
+		After: func(ctx context.Context, _ *cli.Command) error {
 			for _, f := range defers {
 				f()
 			}
@@ -49,7 +50,7 @@ func New() *CLI {
 				Name:    "version",
 				Aliases: []string{"v"},
 				Usage:   "Show version",
-				Action: func(c *cli.Context) error {
+				Action: func(context.Context, *cli.Command) error {
 					println("alertchain", types.AppVersion)
 					return nil
 				},
@@ -60,8 +61,8 @@ func New() *CLI {
 }
 
 func (x *CLI) Run(ctx context.Context, argv []string) error {
-	if err := x.app.RunContext(ctx, argv); err != nil {
-		utils.Logger().Error("cli failed", utils.ErrLog(err))
+	if err := x.app.Run(ctx, argv); err != nil {
+		ctxutil.Logger(ctx).Error("cli failed", logging.ErrAttr(err))
 		return err
 	}
 

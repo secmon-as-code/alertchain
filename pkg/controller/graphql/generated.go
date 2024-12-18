@@ -353,7 +353,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_Workflow_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_Workflow_args(context.Background(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
@@ -365,7 +365,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		args, err := ec.field_Query_workflows_args(context.TODO(), rawArgs)
+		args, err := ec.field_Query_workflows_args(context.Background(), rawArgs)
 		if err != nil {
 			return 0, false
 		}

@@ -15,8 +15,7 @@ import (
 
 // Workflows is the resolver for the workflows field.
 func (r *queryResolver) Workflows(ctx context.Context, offset *int, limit *int) ([]*model.WorkflowRecord, error) {
-	newCtx := model.NewContext(model.WithBase(ctx))
-	results, err := r.svc.Workflow.Get(newCtx, offset, limit)
+	results, err := r.svc.Workflow.Get(ctx, offset, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -26,8 +25,7 @@ func (r *queryResolver) Workflows(ctx context.Context, offset *int, limit *int) 
 
 // Workflow is the resolver for the workflow field.
 func (r *queryResolver) Workflow(ctx context.Context, id string) (*model.WorkflowRecord, error) {
-	newCtx := model.NewContext(model.WithBase(ctx))
-	return r.svc.Workflow.Lookup(newCtx, types.WorkflowID(id))
+	return r.svc.Workflow.Lookup(ctx, types.WorkflowID(id))
 }
 
 // Actions is the resolver for the actions field.

@@ -1,6 +1,7 @@
 package infra_test
 
 import (
+	"context"
 	"math/rand"
 	"sync"
 	"testing"
@@ -8,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/m-mizutani/gt"
+	"github.com/secmon-lab/alertchain/pkg/ctxutil"
 	"github.com/secmon-lab/alertchain/pkg/domain/interfaces"
 	"github.com/secmon-lab/alertchain/pkg/domain/model"
 	"github.com/secmon-lab/alertchain/pkg/domain/types"
@@ -33,7 +35,7 @@ func TestFirestore(t *testing.T) {
 		t.Skipf("Skip test due to missing env: %v", err)
 	}
 
-	ctx := model.NewContext()
+	ctx := context.Background()
 	client := gt.R1(firestore.New(ctx, projectID, collection)).NoError(t)
 
 	testClient(t, client)
@@ -58,7 +60,7 @@ func testClient(t *testing.T, client interfaces.Database) {
 }
 
 func testPutGet(t *testing.T, client interfaces.Database) {
-	ctx := model.NewContext()
+	ctx := context.Background()
 
 	attrs1 := model.Attributes{
 		{
@@ -136,14 +138,12 @@ func testLock(t *testing.T, client interfaces.Database) {
 	records := make(chan *record, taskNum*2)
 	wg := sync.WaitGroup{}
 
-	ctx := model.NewContext(
-		model.WithAlert(
-			model.NewAlert(model.AlertMetaData{
-				Title: "test",
-			}, types.Schema("test"), "test",
-			),
-		),
-	)
+	alert := model.NewAlert(
+		model.AlertMetaData{
+			Title: "test",
+		}, types.Schema("test"), "test")
+	ctx := ctxutil.InjectAlert(context.Background(), &alert)
+
 	now := time.Now()
 	for i := 0; i < taskNum; i++ {
 		wg.Add(1)
@@ -183,14 +183,11 @@ func testLock(t *testing.T, client interfaces.Database) {
 func testLockExpires(t *testing.T, client interfaces.Database) {
 	ns := types.Namespace(uuid.New().String())
 
-	ctx := model.NewContext(
-		model.WithAlert(
-			model.NewAlert(model.AlertMetaData{
-				Title: "test",
-			}, types.Schema("test"), "test",
-			),
-		),
-	)
+	alert := model.NewAlert(
+		model.AlertMetaData{
+			Title: "test",
+		}, types.Schema("test"), "test")
+	ctx := ctxutil.InjectAlert(context.Background(), &alert)
 
 	// Lock with 1 second
 	gt.NoError(t, client.Lock(ctx, ns, time.Now().Add(2*time.Second)))
@@ -229,7 +226,7 @@ func testWorkflow(t *testing.T, client interfaces.Database) {
 		},
 	}
 
-	ctx := model.NewContext()
+	ctx := context.Background()
 	for _, wf := range workflows {
 		gt.NoError(t, client.PutWorkflow(ctx, wf))
 	}
@@ -278,7 +275,7 @@ func testAlert(t *testing.T, client interfaces.Database) {
 		},
 	}
 
-	ctx := model.NewContext()
+	ctx := context.Background()
 	for _, alert := range alerts {
 		gt.NoError(t, client.PutAlert(ctx, alert))
 	}

@@ -1,17 +1,19 @@
 package http
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
 	"strings"
 
 	"github.com/m-mizutani/goerr"
+	"github.com/secmon-lab/alertchain/pkg/ctxutil"
 	"github.com/secmon-lab/alertchain/pkg/domain/model"
 	"github.com/secmon-lab/alertchain/pkg/domain/types"
 )
 
-func Fetch(ctx *model.Context, _ model.Alert, args model.ActionArgs) (any, error) {
+func Fetch(ctx context.Context, _ model.Alert, args model.ActionArgs) (any, error) {
 	method, ok := args["method"].(string)
 	if !ok {
 		return nil, goerr.Wrap(types.ErrActionInvalidArgument, "method is required")
@@ -44,7 +46,7 @@ func Fetch(ctx *model.Context, _ model.Alert, args model.ActionArgs) (any, error
 	}
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
-			ctx.Logger().Warn("Fail to close HTTP response body", "err", err)
+			ctxutil.Logger(ctx).Warn("Fail to close HTTP response body", "err", err)
 		}
 	}()
 

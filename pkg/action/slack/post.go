@@ -1,10 +1,12 @@
 package slack
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
 	"github.com/m-mizutani/goerr"
+	"github.com/secmon-lab/alertchain/pkg/ctxutil"
 	"github.com/secmon-lab/alertchain/pkg/domain/model"
 	"github.com/secmon-lab/alertchain/pkg/domain/types"
 	"github.com/slack-go/slack"
@@ -25,7 +27,7 @@ type notifyField struct {
 }
 
 // Post is a function to post message to Slack via incoming webhook
-func Post(ctx *model.Context, alert model.Alert, args model.ActionArgs) (any, error) {
+func Post(ctx context.Context, alert model.Alert, args model.ActionArgs) (any, error) {
 	notify := &notifyContents{
 		Text: "Notification from AlertChain",
 		Body: fmt.Sprintf("*%s*\n%s", alert.Title, alert.Description),
@@ -75,7 +77,7 @@ func Post(ctx *model.Context, alert model.Alert, args model.ActionArgs) (any, er
 	msg := buildSlackMessage(notify, alert)
 	msg.Channel = channel
 
-	if ctx.DryRun() {
+	if ctxutil.IsDryRun(ctx) {
 		return nil, nil
 	}
 
@@ -87,7 +89,7 @@ func Post(ctx *model.Context, alert model.Alert, args model.ActionArgs) (any, er
 	return nil, nil
 }
 
-func buildSlackMessage(notify *notifyContents, event interface{}) *slack.WebhookMessage {
+func buildSlackMessage(notify *notifyContents, _ interface{}) *slack.WebhookMessage {
 	color := "#2EB67D"
 	if notify.Color != "" {
 		color = notify.Color

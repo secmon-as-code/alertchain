@@ -1,6 +1,7 @@
 package bigquery_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -26,7 +27,7 @@ func TestInsertDataIntegration(t *testing.T) {
 		t.Skipf("Skip test due to missing env: %v", err)
 	}
 
-	ctx := model.NewContext()
+	ctx := context.Background()
 	args := model.ActionArgs{
 		"project_id": projectID,
 		"dataset_id": datasetID,
@@ -62,7 +63,7 @@ func TestInsertAlertIntegration(t *testing.T) {
 		t.Skipf("Skip test due to missing env: %v", err)
 	}
 
-	ctx := model.NewContext()
+	ctx := context.Background()
 	args := model.ActionArgs{
 		"project_id": projectID,
 		"dataset_id": datasetID,

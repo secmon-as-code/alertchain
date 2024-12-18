@@ -2,6 +2,7 @@ package github_test
 
 import (
 	"bytes"
+	"context"
 	"os"
 	"strconv"
 	"strings"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/m-mizutani/gt"
 	"github.com/secmon-lab/alertchain/pkg/action/github"
+	"github.com/secmon-lab/alertchain/pkg/ctxutil"
 	"github.com/secmon-lab/alertchain/pkg/domain/model"
 	"github.com/secmon-lab/alertchain/pkg/domain/types"
 
@@ -117,7 +119,7 @@ func TestIssuer(t *testing.T) {
 		gt.V(t, cfg[key]).NotEqual("")
 	}
 
-	ctx := model.NewContext()
+	ctx := context.Background()
 	alert := model.Alert{
 		AlertMetaData: model.AlertMetaData{
 			Title:       "blue",
@@ -171,7 +173,7 @@ jM1rsSGIP5FFS056O92OpA3f3r7MPd2LFTBrQoxNIIqn9Lq+F+dX
 -----END RSA PRIVATE KEY-----`
 
 func TestIssuerDryRun(t *testing.T) {
-	ctx := model.NewContext(model.WithDryRunMode())
+	ctx := ctxutil.SetDryRun(context.Background(), true)
 	_, err := github.CreateIssue(ctx, model.Alert{}, model.ActionArgs{
 		"app_id":             float64(123),
 		"install_id":         float64(123),
@@ -275,7 +277,7 @@ func TestIssuerValidationFail(t *testing.T) {
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			ctx := model.NewContext(model.WithDryRunMode())
+			ctx := ctxutil.SetDryRun(context.Background(), true)
 			_, err := github.CreateIssue(ctx, model.Alert{}, tc.cfg)
 			gt.Error(t, err)
 		})

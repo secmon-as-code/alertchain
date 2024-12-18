@@ -1,6 +1,7 @@
 package github
 
 import (
+	"context"
 	_ "embed"
 
 	"net/http"
@@ -11,12 +12,12 @@ import (
 	"github.com/google/go-github/github"
 	"github.com/m-mizutani/goerr"
 	"github.com/m-mizutani/gots/ptr"
+	"github.com/secmon-lab/alertchain/pkg/ctxutil"
 	"github.com/secmon-lab/alertchain/pkg/domain/model"
 	"github.com/secmon-lab/alertchain/pkg/domain/types"
-	"github.com/secmon-lab/alertchain/pkg/utils"
 )
 
-func CreateComment(ctx *model.Context, alert model.Alert, args model.ActionArgs) (any, error) {
+func CreateComment(ctx context.Context, alert model.Alert, args model.ActionArgs) (any, error) {
 	// Required arguments
 	appID, ok := args["app_id"].(float64)
 	if !ok {
@@ -55,7 +56,7 @@ func CreateComment(ctx *model.Context, alert model.Alert, args model.ActionArgs)
 		return nil, goerr.Wrap(types.ErrActionInvalidArgument, "body is required")
 	}
 
-	if ctx.DryRun() {
+	if ctxutil.IsDryRun(ctx) {
 		return nil, nil
 	}
 
@@ -80,7 +81,7 @@ func CreateComment(ctx *model.Context, alert model.Alert, args model.ActionArgs)
 		return nil, goerr.Wrap(err).With("resp", resp)
 	}
 
-	utils.Logger().Info("Created GitHub comment",
+	ctxutil.Logger(ctx).Info("Created GitHub comment",
 		slog.Any("comment_id", ptr.From(comment.ID)),
 	)
 

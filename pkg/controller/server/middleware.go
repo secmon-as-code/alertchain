@@ -9,9 +9,11 @@ import (
 
 	"log/slog"
 
+	"github.com/secmon-lab/alertchain/pkg/ctxutil"
 	"github.com/secmon-lab/alertchain/pkg/domain/interfaces"
 	"github.com/secmon-lab/alertchain/pkg/domain/types"
 	"github.com/secmon-lab/alertchain/pkg/infra/policy"
+	"github.com/secmon-lab/alertchain/pkg/logging"
 	"github.com/secmon-lab/alertchain/pkg/utils"
 )
 
@@ -42,11 +44,12 @@ type HTTPAuthzOutput struct {
 func Authorize(authz *policy.Client, getEnv interfaces.Env) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
 			if authz != nil {
 				reader := r.Body
 				body, err := io.ReadAll(reader)
 				if err != nil {
-					utils.HandleError(err)
+					utils.HandleError(ctx, err)
 					w.WriteHeader(http.StatusBadRequest)
 					utils.SafeWrite(w, []byte(err.Error()))
 					return
@@ -67,7 +70,7 @@ func Authorize(authz *policy.Client, getEnv interfaces.Env) func(next http.Handl
 				options := []policy.QueryOption{
 					policy.WithPackageSuffix("http"),
 					policy.WithRegoPrint(func(file string, row int, msg string) error {
-						utils.Logger().Info("rego print",
+						ctxutil.Logger(ctx).Info("rego print",
 							slog.String("file", file),
 							slog.Int("row", row),
 							slog.String("msg", msg),
@@ -80,7 +83,7 @@ func Authorize(authz *policy.Client, getEnv interfaces.Env) func(next http.Handl
 				var output HTTPAuthzOutput
 				if err := authz.Query(r.Context(), input, &output, options...); err != nil {
 					if !errors.Is(err, types.ErrNoPolicyResult) {
-						utils.Logger().Error("Fail to evaluate authz policy", utils.ErrLog(err))
+						ctxutil.Logger(ctx).Error("Fail to evaluate authz policy", logging.ErrAttr(err))
 						w.WriteHeader(http.StatusInternalServerError)
 						return
 					}
@@ -102,7 +105,7 @@ func Logging(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		sw := &StatusCodeWriter{ResponseWriter: w}
 		next.ServeHTTP(sw, r)
-		utils.Logger().Info("request",
+		ctxutil.Logger(r.Context()).Info("request",
 			slog.Any("method", r.Method),
 			slog.Any("path", r.URL.Path),
 			slog.Int("status", sw.code),

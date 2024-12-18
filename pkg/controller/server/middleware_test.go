@@ -2,6 +2,7 @@ package server_test
 
 import (
 	"bytes"
+	"context"
 	"crypto/hmac"
 	"crypto/sha256"
 	_ "embed"
@@ -34,7 +35,7 @@ func newServer(t *testing.T, policyData string, options ...server.Option) *serve
 
 	options = append(options, server.WithAuthzPolicy(authz))
 
-	srv := server.New(func(ctx *model.Context, schema types.Schema, data any) ([]*model.Alert, error) {
+	srv := server.New(func(ctx context.Context, schema types.Schema, data any) ([]*model.Alert, error) {
 		return nil, nil
 	}, options...)
 
