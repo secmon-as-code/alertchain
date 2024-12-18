@@ -1,6 +1,7 @@
 package firestore_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -25,7 +26,7 @@ func TestWorkflow(t *testing.T) {
 		t.Skipf("Skip test due to missing env: %v", err)
 	}
 
-	ctx := model.NewContext()
+	ctx := context.Background()
 	now := time.Now()
 	client := gt.R1(firestore.New(ctx, projectID, databaseID)).NoError(t)
 

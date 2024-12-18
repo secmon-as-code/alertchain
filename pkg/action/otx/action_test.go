@@ -2,6 +2,7 @@ package otx_test
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"net/http"
 	"os"
@@ -99,7 +100,7 @@ func TestIndicator(t *testing.T) {
 				})
 			}
 
-			ctx := model.NewContext()
+			ctx := context.Background()
 			result, err := otx.Indicator(ctx, model.Alert{}, tt.args)
 
 			if tt.hasErr {
@@ -133,7 +134,7 @@ func TestIndicatorRun(t *testing.T) {
 		t.Skip("TEST_OTX_API_KEY is not set")
 	}
 
-	ctx := model.NewContext()
+	ctx := context.Background()
 	args := model.ActionArgs{
 		"secret_api_key": apiKey,
 		"type":           "IPv4",

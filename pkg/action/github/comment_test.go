@@ -1,6 +1,7 @@
 package github_test
 
 import (
+	"context"
 	"os"
 	"strconv"
 	"testing"
@@ -26,7 +27,7 @@ func TestComment(t *testing.T) {
 	}
 	alert := model.NewAlert(model.AlertMetaData{}, "test_schema", "test_raw")
 
-	ctx := model.NewContext()
+	ctx := context.Background()
 	resp := gt.R1(github.CreateComment(ctx, alert, args)).NoError(t)
 	gt.V(t, resp).NotNil()
 }

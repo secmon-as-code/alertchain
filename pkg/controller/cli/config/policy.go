@@ -4,8 +4,8 @@ import (
 	"log/slog"
 
 	"github.com/secmon-lab/alertchain/pkg/infra/policy"
-	"github.com/secmon-lab/alertchain/pkg/utils"
-	"github.com/urfave/cli/v2"
+	"github.com/secmon-lab/alertchain/pkg/logging"
+	"github.com/urfave/cli/v3"
 )
 
 type Policy struct {
@@ -25,7 +25,7 @@ func (x *Policy) Flags() []cli.Flag {
 			Usage:       "Enable print feature in Rego. The cli option is priority than config file.",
 			Category:    category,
 			Aliases:     []string{"p"},
-			EnvVars:     []string{"ALERTCHAIN_ENABLE_PRINT"},
+			Sources:     cli.EnvVars("ALERTCHAIN_ENABLE_PRINT"),
 			Value:       false,
 			Destination: &x.print,
 		},
@@ -34,7 +34,7 @@ func (x *Policy) Flags() []cli.Flag {
 			Usage:       "directory path of policy files",
 			Category:    category,
 			Aliases:     []string{"d"},
-			EnvVars:     []string{"ALERTCHAIN_POLICY_DIR"},
+			Sources:     cli.EnvVars("ALERTCHAIN_POLICY_DIR"),
 			Required:    true,
 			Destination: &x.path,
 		},
@@ -42,7 +42,7 @@ func (x *Policy) Flags() []cli.Flag {
 }
 
 func (x *Policy) Load(pkgName string) (*policy.Client, error) {
-	utils.Logger().Info("loading policy",
+	logging.Default().Info("loading policy",
 		slog.String("package", pkgName),
 		slog.String("path", x.path),
 	)

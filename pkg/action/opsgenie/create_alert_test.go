@@ -1,6 +1,7 @@
 package opsgenie_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/m-mizutani/gt"
@@ -37,7 +38,7 @@ func TestOpsgenie(t *testing.T) {
 				},
 			},
 		}, "test_alert", struct{}{})
-		ctx := model.NewContext()
+		ctx := context.Background()
 		args := model.ActionArgs{
 			"secret_api_key": apiKey,
 			"responders": []opsgenie.Responder{

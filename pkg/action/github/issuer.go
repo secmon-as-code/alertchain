@@ -2,6 +2,7 @@ package github
 
 import (
 	"bytes"
+	"context"
 	"crypto/x509"
 	_ "embed"
 	"encoding/pem"
@@ -15,9 +16,9 @@ import (
 	"github.com/google/go-github/github"
 	"github.com/m-mizutani/goerr"
 	"github.com/m-mizutani/gots/ptr"
+	"github.com/secmon-lab/alertchain/pkg/ctxutil"
 	"github.com/secmon-lab/alertchain/pkg/domain/model"
 	"github.com/secmon-lab/alertchain/pkg/domain/types"
-	"github.com/secmon-lab/alertchain/pkg/utils"
 )
 
 //go:embed issuer_template.md
@@ -33,7 +34,7 @@ func init() {
 	issueTemplate = template.Must(template.New("issue").Funcs(funcMap).Parse(issueTemplateData))
 }
 
-func CreateIssue(ctx *model.Context, alert model.Alert, args model.ActionArgs) (any, error) {
+func CreateIssue(ctx context.Context, alert model.Alert, args model.ActionArgs) (any, error) {
 	// Create a new issue body from template
 	var buf bytes.Buffer
 	if err := issueTemplate.Execute(&buf, alert); err != nil {
@@ -80,7 +81,7 @@ func CreateIssue(ctx *model.Context, alert model.Alert, args model.ActionArgs) (
 		req.Labels = &v
 	}
 
-	if ctx.DryRun() {
+	if ctxutil.IsDryRun(ctx) {
 		return nil, nil
 	}
 
@@ -101,7 +102,7 @@ func CreateIssue(ctx *model.Context, alert model.Alert, args model.ActionArgs) (
 		return nil, goerr.Wrap(err).With("resp", resp)
 	}
 
-	utils.Logger().Info("Created GitHub issue",
+	ctxutil.Logger(ctx).Info("Created GitHub issue",
 		slog.Any("issue_number", ptr.From(issue.Number)),
 		slog.Any("title", ptr.From(issue.Title)),
 	)

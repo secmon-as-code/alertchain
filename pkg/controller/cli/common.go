@@ -4,12 +4,12 @@ import (
 	"github.com/secmon-lab/alertchain/pkg/chain"
 	"github.com/secmon-lab/alertchain/pkg/chain/core"
 	"github.com/secmon-lab/alertchain/pkg/controller/cli/config"
-	"github.com/secmon-lab/alertchain/pkg/utils"
+	"github.com/secmon-lab/alertchain/pkg/logging"
 )
 
 func buildChain(policy *config.Policy, options ...core.Option) (*chain.Chain, error) {
 	if policy.Print() {
-		utils.Logger().Info("enable print mode")
+		logging.Default().Info("enable print mode")
 		options = append(options, core.WithEnablePrint())
 	}
 

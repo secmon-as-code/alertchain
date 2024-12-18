@@ -1,6 +1,7 @@
 package chatgpt_test
 
 import (
+	"context"
 	_ "embed"
 	"encoding/json"
 	"os"
@@ -24,7 +25,7 @@ func TestAnalystInquiry(t *testing.T) {
 	var body any
 	gt.NoError(t, json.Unmarshal(alertData, &body))
 
-	ctx := model.NewContext()
+	ctx := context.Background()
 	alert := model.Alert{
 		AlertMetaData: model.AlertMetaData{
 			Title:       "test",

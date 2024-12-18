@@ -1,4 +1,4 @@
-package utils
+package logging
 
 import (
 	"fmt"
@@ -13,11 +13,11 @@ import (
 	"github.com/m-mizutani/masq"
 )
 
-type LogFormat int
+type Format int
 
 const (
-	LogFormatConsole LogFormat = iota + 1
-	LogFormatJSON
+	FormatConsole Format = iota + 1
+	FormatJSON
 )
 
 var (
@@ -25,11 +25,11 @@ var (
 	loggerMutex sync.Mutex
 )
 
-func Logger() *slog.Logger {
+func Default() *slog.Logger {
 	return logger
 }
 
-func ReconfigureLogger(w io.Writer, level slog.Level, format LogFormat) {
+func ReconfigureLogger(w io.Writer, level slog.Level, format Format) {
 	filter := masq.New(
 		masq.WithTag("secret"),
 		masq.WithTag("quiet"),
@@ -39,7 +39,7 @@ func ReconfigureLogger(w io.Writer, level slog.Level, format LogFormat) {
 
 	var handler slog.Handler
 	switch format {
-	case LogFormatConsole:
+	case FormatConsole:
 		handler = clog.New(
 			clog.WithWriter(w),
 			clog.WithLevel(level),
@@ -61,7 +61,7 @@ func ReconfigureLogger(w io.Writer, level slog.Level, format LogFormat) {
 			}),
 		)
 
-	case LogFormatJSON:
+	case FormatJSON:
 		handler = slog.NewJSONHandler(w, &slog.HandlerOptions{
 			AddSource:   true,
 			Level:       level,
@@ -77,4 +77,4 @@ func ReconfigureLogger(w io.Writer, level slog.Level, format LogFormat) {
 	loggerMutex.Unlock()
 }
 
-func ErrLog(err error) slog.Attr { return slog.Any("error", err) }
+func ErrAttr(err error) slog.Attr { return slog.Any("error", err) }

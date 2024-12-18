@@ -21,9 +21,7 @@ func TestFetch(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		ctx := &model.Context{
-			Context: context.Background(),
-		}
+		ctx := context.Background()
 
 		args := model.ActionArgs{
 			"method": "GET",
@@ -38,9 +36,7 @@ func TestFetch(t *testing.T) {
 	})
 
 	t.Run("Invalid argument", func(t *testing.T) {
-		ctx := &model.Context{
-			Context: context.Background(),
-		}
+		ctx := context.Background()
 
 		args := model.ActionArgs{}
 
@@ -54,9 +50,7 @@ func TestFetch(t *testing.T) {
 		}))
 		defer ts.Close()
 
-		ctx := &model.Context{
-			Context: context.Background(),
-		}
+		ctx := context.Background()
 
 		args := model.ActionArgs{
 			"method": "GET",
@@ -67,9 +61,7 @@ func TestFetch(t *testing.T) {
 	})
 
 	t.Run("HTTP request error", func(t *testing.T) {
-		ctx := &model.Context{
-			Context: context.Background(),
-		}
+		ctx := context.Background()
 
 		args := model.ActionArgs{
 			"method": "GET",

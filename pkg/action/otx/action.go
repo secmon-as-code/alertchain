@@ -1,11 +1,13 @@
 package otx
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
 
 	"github.com/m-mizutani/goerr"
+	"github.com/secmon-lab/alertchain/pkg/ctxutil"
 	"github.com/secmon-lab/alertchain/pkg/domain/model"
 	"github.com/secmon-lab/alertchain/pkg/domain/types"
 )
@@ -16,7 +18,7 @@ func ReplaceHTTPClient(client *http.Client) {
 
 var httpClient = http.DefaultClient
 
-func Indicator(ctx *model.Context, _ model.Alert, args model.ActionArgs) (any, error) {
+func Indicator(ctx context.Context, _ model.Alert, args model.ActionArgs) (any, error) {
 	api_key, ok := args["secret_api_key"].(string)
 	if !ok {
 		return nil, goerr.Wrap(types.ErrActionInvalidArgument, "secret_api_key is required")
@@ -57,7 +59,7 @@ func Indicator(ctx *model.Context, _ model.Alert, args model.ActionArgs) (any, e
 	}
 	defer func() {
 		if err := resp.Body.Close(); err != nil {
-			ctx.Logger().Warn("Fail to close HTTP response body", "err", err)
+			ctxutil.Logger(ctx).Warn("Fail to close HTTP response body", "err", err)
 		}
 	}()
 	if resp.StatusCode != http.StatusOK {

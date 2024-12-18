@@ -8,8 +8,9 @@ import (
 
 	"github.com/m-mizutani/goerr"
 	"github.com/secmon-lab/alertchain/pkg/domain/types"
+	"github.com/secmon-lab/alertchain/pkg/logging"
 	"github.com/secmon-lab/alertchain/pkg/utils"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 type Logger struct {
@@ -24,7 +25,7 @@ func (x *Logger) Flags() []cli.Flag {
 			Name:        "log-level",
 			Category:    "logging",
 			Aliases:     []string{"l"},
-			EnvVars:     []string{"ALERTCHAIN_LOG_LEVEL"},
+			Sources:     cli.EnvVars("ALERTCHAIN_LOG_LEVEL"),
 			Usage:       "Set log level [debug|info|warn|error]",
 			Value:       "info",
 			Destination: &x.level,
@@ -33,7 +34,7 @@ func (x *Logger) Flags() []cli.Flag {
 			Name:        "log-format",
 			Category:    "logging",
 			Aliases:     []string{"f"},
-			EnvVars:     []string{"ALERTCHAIN_LOG_FORMAT"},
+			Sources:     cli.EnvVars("ALERTCHAIN_LOG_FORMAT"),
 			Usage:       "Set log format [console|json]",
 			Value:       "json",
 			Destination: &x.format,
@@ -42,7 +43,7 @@ func (x *Logger) Flags() []cli.Flag {
 			Name:        "log-output",
 			Category:    "logging",
 			Aliases:     []string{"o"},
-			EnvVars:     []string{"ALERTCHAIN_LOG_OUTPUT"},
+			Sources:     cli.EnvVars("ALERTCHAIN_LOG_OUTPUT"),
 			Usage:       "Set log output (create file other than '-', 'stdout', 'stderr')",
 			Value:       "-",
 			Destination: &x.output,
@@ -53,9 +54,9 @@ func (x *Logger) Flags() []cli.Flag {
 // Configure sets up logger and returns closer function and error. You can call closer even if error is not nil.
 func (x *Logger) Configure() (func(), error) {
 	closer := func() {}
-	formatMap := map[string]utils.LogFormat{
-		"console": utils.LogFormatConsole,
-		"json":    utils.LogFormatJSON,
+	formatMap := map[string]logging.Format{
+		"console": logging.FormatConsole,
+		"json":    logging.FormatJSON,
 	}
 	format, ok := formatMap[x.format]
 	if !ok {
@@ -90,7 +91,7 @@ func (x *Logger) Configure() (func(), error) {
 		}
 	}
 
-	utils.ReconfigureLogger(output, level, format)
+	logging.ReconfigureLogger(output, level, format)
 
 	return closer, nil
 }

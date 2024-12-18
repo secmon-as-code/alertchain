@@ -1,6 +1,7 @@
 package jira_test
 
 import (
+	"context"
 	"testing"
 
 	go_jira "github.com/andygrunwald/go-jira"
@@ -41,7 +42,7 @@ func TestAddAttachment(t *testing.T) {
 		"data":         "test comment",
 	}
 
-	ctx := model.NewContext()
+	ctx := context.Background()
 	alert := model.NewAlert(model.AlertMetaData{
 		Title:       "test_alert",
 		Description: "test_description",

@@ -1,16 +1,18 @@
 package chain
 
 import (
+	"context"
 	"errors"
 	"log/slog"
 
 	"github.com/m-mizutani/goerr"
 	"github.com/secmon-lab/alertchain/pkg/chain/core"
+	"github.com/secmon-lab/alertchain/pkg/ctxutil"
 	"github.com/secmon-lab/alertchain/pkg/domain/model"
 	"github.com/secmon-lab/alertchain/pkg/domain/types"
 	"github.com/secmon-lab/alertchain/pkg/infra/policy"
+	"github.com/secmon-lab/alertchain/pkg/logging"
 	"github.com/secmon-lab/alertchain/pkg/service"
-	"github.com/secmon-lab/alertchain/pkg/utils"
 )
 
 type workflow struct {
@@ -30,12 +32,13 @@ func newWorkflow(c *core.Core, alert model.Alert, svc *service.Workflow) *workfl
 	return hdlr
 }
 
-func (x *workflow) Run(ctx *model.Context) error {
+func (x *workflow) Run(ctx context.Context) error {
 	copied := x.alert.Copy()
-	logger := x.core.ScenarioLogger().NewAlertLogger(&copied)
+	alertLogger := x.core.ScenarioLogger().NewAlertLogger(&copied)
+	logger := ctxutil.Logger(ctx)
 	envVars := x.core.Env()
 
-	ctx = ctx.New(model.WithAlert(x.alert))
+	ctx = ctxutil.InjectAlert(ctx, &x.alert)
 
 	if x.alert.Namespace != "" {
 		timeoutAt := x.core.Now().Add(x.core.Timeout())
@@ -44,7 +47,7 @@ func (x *workflow) Run(ctx *model.Context) error {
 		}
 		defer func() {
 			if err := x.core.DBClient().Unlock(ctx, x.alert.Namespace); err != nil {
-				ctx.Logger().Error("failed to unlock", slog.Any("alert", x.alert))
+				logger.Error("failed to unlock", slog.Any("alert", x.alert))
 			}
 		}()
 
@@ -53,7 +56,7 @@ func (x *workflow) Run(ctx *model.Context) error {
 			return goerr.Wrap(err, "failed to get global attrs")
 		}
 
-		ctx.Logger().Info("loaded global attributes", slog.Any("attrs", global))
+		logger.Info("loaded global attributes", slog.Any("attrs", global))
 
 		x.alert.Attrs = append(x.alert.Attrs, global...).Tidy()
 	}
@@ -75,7 +78,7 @@ func (x *workflow) Run(ctx *model.Context) error {
 		}
 
 		if len(p.run) > 0 {
-			actionLogger := logger.NewActionLogger()
+			actionLogger := alertLogger.NewActionLogger()
 			actionLogger.LogRun(p.run)
 		}
 
@@ -98,7 +101,7 @@ func (x *workflow) Run(ctx *model.Context) error {
 			return goerr.Wrap(err, "failed to put global attrs")
 		}
 
-		ctx.Logger().Info("saved global attributes", slog.Any("attrs", global))
+		logger.Info("saved global attributes", slog.Any("attrs", global))
 	}
 
 	if err := x.service.UpdateLastAttrs(ctx, x.alert.Attrs); err != nil {
@@ -150,7 +153,7 @@ func (x *proc) aborted() bool {
 	return false
 }
 
-func (x *proc) evaluate(ctx *model.Context) error {
+func (x *proc) evaluate(ctx context.Context) error {
 	// Evaluate `run` rules
 	runReq := &model.ActionRunRequest{
 		Alert:   x.alert,
@@ -180,7 +183,7 @@ func (x *proc) evaluate(ctx *model.Context) error {
 
 var errActionAbort = goerr.New("action aborted")
 
-func (x *proc) runAction(ctx *model.Context, p model.Action) error {
+func (x *proc) runAction(ctx context.Context, p model.Action) error {
 	if p.ID == "" {
 		p.ID = types.NewActionID()
 	} else if x.history.alreadyCalled(p.ID) {
@@ -198,8 +201,9 @@ func (x *proc) runAction(ctx *model.Context, p model.Action) error {
 		x.run = append(x.run, copied)
 	}()
 
+	logger := ctxutil.Logger(ctx)
 	if p.Abort {
-		utils.Logger().Info("abort action", slog.Any("action", p))
+		logger.Info("abort action", slog.Any("action", p))
 		return errActionAbort
 	}
 
@@ -211,9 +215,9 @@ func (x *proc) runAction(ctx *model.Context, p model.Action) error {
 				return err
 			}
 
-			utils.Logger().Warn("got error, but force run action",
+			logger.Warn("got error, but force run action",
 				slog.Any("action", p),
-				utils.ErrLog(err),
+				logging.ErrAttr(err),
 			)
 		}
 		result = r
@@ -241,13 +245,14 @@ func (x *proc) runAction(ctx *model.Context, p model.Action) error {
 	return nil
 }
 
-func (x *proc) executeAction(ctx *model.Context, p model.Action, alert model.Alert) (any, error) {
+func (x *proc) executeAction(ctx context.Context, p model.Action, alert model.Alert) (any, error) {
 	run, ok := x.core.GetAction(p.Uses)
 	if !ok {
 		return nil, goerr.Wrap(types.ErrActionNotFound).With("uses", p.Uses)
 	}
 
-	utils.Logger().Info("run action", slog.Any("proc", p))
+	logger := ctxutil.Logger(ctx)
+	logger.Info("run action", slog.Any("proc", p))
 
 	// Run action. If actionMock is set, use it instead of action.Run()
 	var result any

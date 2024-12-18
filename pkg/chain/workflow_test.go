@@ -2,6 +2,7 @@ package chain_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"testing"
 
@@ -36,7 +37,7 @@ func TestWorkflow(t *testing.T) {
 	gt.A(t, playbook.Scenarios).Length(1)
 
 	var calledMock int
-	mock := func(ctx *model.Context, alert model.Alert, _ model.ActionArgs) (any, error) {
+	mock := func(ctx context.Context, alert model.Alert, _ model.ActionArgs) (any, error) {
 		calledMock++
 		return nil, nil
 	}
@@ -52,7 +53,7 @@ func TestWorkflow(t *testing.T) {
 		core.WithEnablePrint(),
 	)
 
-	ctx := model.NewContext()
+	ctx := context.Background()
 	alert := model.NewAlert(model.AlertMetaData{
 		Title: "test-alert",
 	}, "test-alert", "test-data")

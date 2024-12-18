@@ -1,4 +1,4 @@
-package utils_test
+package logging_test
 
 import (
 	"bytes"
@@ -7,14 +7,14 @@ import (
 	"log/slog"
 
 	"github.com/m-mizutani/gt"
-	"github.com/secmon-lab/alertchain/pkg/utils"
+	"github.com/secmon-lab/alertchain/pkg/logging"
 )
 
 func TestLogger(t *testing.T) {
 	t.Run("default logger", func(t *testing.T) {
 		var buf bytes.Buffer
-		utils.ReconfigureLogger(&buf, slog.LevelInfo, utils.LogFormatJSON)
-		utils.Logger().Info("hello",
+		logging.ReconfigureLogger(&buf, slog.LevelInfo, logging.FormatJSON)
+		logging.Default().Info("hello",
 			slog.String("secret_key", "xxx"),
 			slog.String("normal_key", "aaa"),
 		)

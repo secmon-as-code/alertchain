@@ -6,8 +6,8 @@ import (
 
 	"github.com/getsentry/sentry-go"
 	"github.com/secmon-lab/alertchain/pkg/domain/types"
-	"github.com/secmon-lab/alertchain/pkg/utils"
-	"github.com/urfave/cli/v2"
+	"github.com/secmon-lab/alertchain/pkg/logging"
+	"github.com/urfave/cli/v3"
 )
 
 type Sentry struct {
@@ -24,21 +24,21 @@ func (x *Sentry) Flags() []cli.Flag {
 			Usage:       "Sentry DSN",
 			Category:    category,
 			Destination: &x.dsn,
-			EnvVars:     []string{"ALERTCHAIN_SENTRY_DSN"},
+			Sources:     cli.EnvVars("ALERTCHAIN_SENTRY_DSN"),
 		},
 		&cli.StringFlag{
 			Name:        "sentry-env",
 			Usage:       "Sentry environment",
 			Category:    category,
 			Destination: &x.env,
-			EnvVars:     []string{"ALERTCHAIN_SENTRY_ENV"},
+			Sources:     cli.EnvVars("ALERTCHAIN_SENTRY_ENV"),
 		},
 	}
 }
 
 func (x *Sentry) Configure() (func(), error) {
 	if x.dsn == "" {
-		utils.Logger().Warn("Sentry is not configured")
+		logging.Default().Warn("Sentry is not configured")
 		return func() {}, nil
 	}
 
@@ -49,7 +49,7 @@ func (x *Sentry) Configure() (func(), error) {
 		Debug:       false,
 	})
 	if err != nil {
-		utils.Logger().Warn("failed to initialize Sentry", utils.ErrLog(err))
+		logging.Default().Warn("failed to initialize Sentry", logging.ErrAttr(err))
 		return nil, err
 	}
 

@@ -1,10 +1,12 @@
 package chain
 
 import (
+	"context"
 	"log/slog"
 
 	"github.com/m-mizutani/goerr"
 	"github.com/secmon-lab/alertchain/pkg/chain/core"
+	"github.com/secmon-lab/alertchain/pkg/ctxutil"
 	"github.com/secmon-lab/alertchain/pkg/domain/model"
 	"github.com/secmon-lab/alertchain/pkg/domain/types"
 	"github.com/secmon-lab/alertchain/pkg/service"
@@ -24,13 +26,14 @@ func New(options ...core.Option) (*Chain, error) {
 }
 
 // HandleAlert is main function of alert chain. It receives alert data and execute actions according to the Rego policies.
-func (x *Chain) HandleAlert(ctx *model.Context, schema types.Schema, data any) ([]*model.Alert, error) {
-	ctx.Logger().Info("[input] detect alert", slog.Any("data", data), slog.Any("schema", schema))
+func (x *Chain) HandleAlert(ctx context.Context, schema types.Schema, data any) ([]*model.Alert, error) {
+	logger := ctxutil.Logger(ctx)
+	logger.Info("[input] detect alert", slog.Any("data", data), slog.Any("schema", schema))
 	alerts, err := x.detectAlert(ctx, schema, data)
 	if err != nil {
 		return nil, types.AsPolicyErr(goerr.Wrap(err))
 	}
-	ctx.Logger().Info("[output] detect alert", slog.Any("alerts", alerts))
+	logger.Info("[output] detect alert", slog.Any("alerts", alerts))
 
 	svc := service.New(x.core.DBClient())
 
@@ -50,7 +53,7 @@ func (x *Chain) HandleAlert(ctx *model.Context, schema types.Schema, data any) (
 	return utils.ToPtrSlice(alerts), nil
 }
 
-func (x *Chain) detectAlert(ctx *model.Context, schema types.Schema, data any) ([]model.Alert, error) {
+func (x *Chain) detectAlert(ctx context.Context, schema types.Schema, data any) ([]model.Alert, error) {
 	var alertResult model.AlertPolicyResult
 	if err := x.core.QueryAlertPolicy(ctx, schema, data, &alertResult); err != nil {
 		return nil, goerr.Wrap(err)
