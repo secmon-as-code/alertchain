@@ -87,12 +87,12 @@ type AlertRecord struct {
 }
 
 type AttrRecord struct {
-	ID     string `bigquery:"id"`
-	Key    string `bigquery:"key"`
-	Value  string `bigquery:"value"`
-	Type   string `bigquery:"type"`
-	TTL    int    `bigquery:"ttl"`
-	Global bool   `bigquery:"global"`
+	ID      string `bigquery:"id"`
+	Key     string `bigquery:"key"`
+	Value   string `bigquery:"value"`
+	Type    string `bigquery:"type"`
+	TTL     int    `bigquery:"ttl"`
+	Persist bool   `bigquery:"persist"`
 }
 
 func InsertAlert(ctx context.Context, alert model.Alert, args model.ActionArgs) (any, error) {
@@ -120,12 +120,12 @@ func InsertAlert(ctx context.Context, alert model.Alert, args model.ActionArgs) 
 
 	for _, attr := range alert.Attrs {
 		row.Attrs = append(row.Attrs, AttrRecord{
-			ID:     attr.ID.String(),
-			Key:    string(attr.Key),
-			Value:  fmt.Sprintf("%v", attr.Value),
-			Type:   string(attr.Type),
-			TTL:    attr.TTL,
-			Global: attr.Global,
+			ID:      attr.ID.String(),
+			Key:     string(attr.Key),
+			Value:   fmt.Sprintf("%v", attr.Value),
+			Type:    string(attr.Type),
+			TTL:     attr.TTL,
+			Persist: attr.Persist,
 		})
 	}
 

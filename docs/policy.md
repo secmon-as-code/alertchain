@@ -179,7 +179,7 @@ The `commit` field is used to extract the result of the action and store it in t
 - `source` (string, optional): Data source
 - `attrs` (array, optional): Array of [Attribute](#attribute)
 - `refs` (array, optional): Array of [Reference](#reference)
-- `namespace` (string, optional): Namespace of Attributes (attrs). Global attributes are shared among alerts and actions that have the same namespace. If not set, the global attribute feature is not enabled.
+- `namespace` (string, optional): Namespace of Attributes (attrs). Persistent attributes are shared among alerts and actions that have the same namespace. If not set, the Persistent attribute feature is not enabled.
 - `data` (any): Original data of the alert
 - `raw` (string): Pretty-printed JSON string of the alert data
 
@@ -189,8 +189,8 @@ The `commit` field is used to extract the result of the action and store it in t
 - `value` (any, required): Value of the Attribute
 - `id` (string, optional): ID of the Attribute. If not set, it will be assigned automatically.
 - `type` (string, optional): Type of the Attribute
-- `global`: (boolean, optional): If set to true, the Attribute will be available to all alerts and actions that have the same namespace. If set to false, the Attribute will only be available to the action that created it. Default is false.
-- `ttl` (number, optional): Retention period of the Attribute in seconds. It's available only when `global` is true. Default is 86400.
+- `persist`: (boolean, optional): If set to true, the Attribute will be available to all alerts and actions that have the same namespace. If set to false, the Attribute will only be available to the action that created it. Default is false.
+- `ttl` (number, optional): Retention period of the Attribute in seconds. It's available only when `persist` is true. Default is 86400.
 
 Within a single alert, the `key` of an Attribute can be duplicated, but the `id` must be unique. If duplicate `id`s are provided, the Attribute specified later will overwrite the earlier one. Please note that the execution order of actions within the same sequence is not guaranteed, so caution is advised when specifying IDs to avoid duplication. If you need to modify an Attribute, you can intentionally overwrite it by specifying its ID.
 
@@ -213,29 +213,29 @@ Referring to an external document or service resource via URL.
 
 NOTE: Arguments with the `secret_` prefix in `args` have a special meaning. This indicates that the value is confidential (e.g., API keys) and will not be output in logs or similar records.
 
-## Global Attribute
+## Persistent Attribute
 
-The Global Attribute is a mechanism designed to share states between different alerts. It requires an external database to function. The databases currently supported are as follows:
+The Persistent Attribute is a mechanism designed to share states between different alerts. It requires an external database to function. The databases currently supported are as follows:
 
 - [Google Cloud Firestore](https://cloud.google.com/firestore)
 
 ### Use Cases
 
-The Global Attribute is designed for use in the following scenarios:
+The Persistent Attribute is designed for use in the following scenarios:
 
 - To execute specific actions only when an alert occurs a specified number of times within a certain period. For example, if there are more than 10 accesses from the same IP address, it may be considered suspicious behavior and reported as an alert. If the number of occurrences increases further, actions such as blocking may be carried out.
 - To execute different actions based on the actions taken for past alerts. For example, if similar alerts occur multiple times in a short period, notifications can be suppressed or consolidated to the same destination. This can be used to aggregate multiple alerts into a single ticket in a ticket management service or to write messages within a thread rather than splitting them in a chat service, etc.
 
 ### Working Principle
 
-Global Attributes are stored in an external database. Every time an alert is processed (Action Policy execution), AlertChain fetches the Global Attributes associated with the alert from the external database and saves any added or updated Global Attributes back to the database after processing.
+Persistent Attributes are stored in an external database. Every time an alert is processed (Action Policy execution), AlertChain fetches the Persistent Attributes associated with the alert from the external database and saves any added or updated Persistent Attributes back to the database after processing.
 
-Global Attributes are stored under a **namespace**. Alerts and actions within the same namespace can reference the same Global Attribute. The namespace is specified in the alert's `namespace` field. If no namespace is specified, Global Attributes cannot be used, and all related rules are ignored.
+Persistent Attributes are stored under a **namespace**. Alerts and actions within the same namespace can reference the same Persistent Attribute. The namespace is specified in the alert's `namespace` field. If no namespace is specified, Persistent Attributes cannot be used, and all related rules are ignored.
 
-- Global Attributes are uniquely identified by a combination of a namespace and an Attribute.ID. If you try to create a Global Attribute with the same ID in the same namespace, the value will be overwritten.
-- Global Attributes can have a specified TTL (Time To Live). If no TTL is specified, the default is 24 hours. Global Attributes that exceed their TTL are deleted.
+- Persistent Attributes are uniquely identified by a combination of a namespace and an Attribute.ID. If you try to create a Persistent Attribute with the same ID in the same namespace, the value will be overwritten.
+- Persistent Attributes can have a specified TTL (Time To Live). If no TTL is specified, the default is 24 hours. Persistent Attributes that exceed their TTL are deleted.
 - When values are overwritten, the TTL is updated.
-- Alerts with the same namespace are always processed in series. That is, multiple alerts with the same namespace are never processed simultaneously. This ensures that Global Attributes are updated without conflict. However, the execution order of processes whose timing clashes is not guaranteed. The process that can acquire the lock the fastest will be executed first.
+- Alerts with the same namespace are always processed in series. That is, multiple alerts with the same namespace are never processed simultaneously. This ensures that Persistent Attributes are updated without conflict. However, the execution order of processes whose timing clashes is not guaranteed. The process that can acquire the lock the fastest will be executed first.
 
 ### Examples
 
@@ -259,7 +259,7 @@ The namespace can be a fixed value, or it can be dynamically determined accordin
         "namespace": input.user,
 ```
 
-Next, you will write about the Global Attribute in the Action Policy. Global Attributes are loaded just before the `init` rule is evaluated and added to the Alert's Attributes.
+Next, you will write about the Persistent Attribute in the Action Policy. Persistent Attributes are loaded just before the `init` rule is evaluated and added to the Alert's Attributes.
 
 ```rego
 package action
@@ -292,7 +292,7 @@ run contains job if {
             {
                 "key": "called",
                 "value": true,
-                "global": true,
+                "persist": true,
                 "ttl": 3600,
             }
         ]
@@ -300,8 +300,8 @@ run contains job if {
 }
 ```
 
-For `run`, you can write as usual, and of course, you can use the already loaded Global Attributes as needed. They can be used in decision conditions or as arguments for action execution.
+For `run`, you can write as usual, and of course, you can use the already loaded Persistent Attributes as needed. They can be used in decision conditions or as arguments for action execution.
 
-In `commit`, you are writing the addition of Global Attributes. Here you are setting an Attribute with the key `called`, which is incorporated into the condition of the previous `init` rule. By specifying `true` in the `global` field, it is treated as a Global Attribute. The evaluation of `run` and `exit` is repeated, and at the end of all processing, only the Attributes with `global` set to `true` are saved to the database.
+In `commit`, you are writing the addition of Persistent Attributes. Here you are setting an Attribute with the key `called`, which is incorporated into the condition of the previous `init` rule. By specifying `true` in the `persist` field, it is treated as a Persistent Attribute. The evaluation of `run` and `exit` is repeated, and at the end of all processing, only the Attributes with `persist` set to `true` are saved to the database.
 
 During this series of processes, the Action of the alert with the same namespace is not executed. Therefore, there will be no conflict within AlertChain.

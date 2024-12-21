@@ -31,7 +31,7 @@ type AttributeRecord {
   key: String!
   value: String!
   type: String
-  global: Boolean!
+  persist: Boolean!
   ttl: Int!
 }
 

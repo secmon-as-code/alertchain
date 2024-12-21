@@ -51,14 +51,14 @@ func (x *workflow) Run(ctx context.Context) error {
 			}
 		}()
 
-		global, err := x.core.DBClient().GetAttrs(ctx, x.alert.Namespace)
+		persistent, err := x.core.DBClient().GetAttrs(ctx, x.alert.Namespace)
 		if err != nil {
-			return goerr.Wrap(err, "failed to get global attrs")
+			return goerr.Wrap(err, "failed to get persistent attrs")
 		}
 
-		logger.Info("loaded global attributes", slog.Any("attrs", global))
+		logger.Info("loaded persistent attributes", slog.Any("attrs", persistent))
 
-		x.alert.Attrs = append(x.alert.Attrs, global...).Tidy()
+		x.alert.Attrs = append(x.alert.Attrs, persistent...).Tidy()
 	}
 
 	var history actionHistory
@@ -90,18 +90,18 @@ func (x *workflow) Run(ctx context.Context) error {
 	}
 
 	if x.alert.Namespace != "" {
-		var global model.Attributes
+		var persistent model.Attributes
 		for i := range x.alert.Attrs {
-			if x.alert.Attrs[i].Global {
-				global = append(global, x.alert.Attrs[i])
+			if x.alert.Attrs[i].Persist {
+				persistent = append(persistent, x.alert.Attrs[i])
 			}
 		}
 
-		if err := x.core.DBClient().PutAttrs(ctx, x.alert.Namespace, global); err != nil {
-			return goerr.Wrap(err, "failed to put global attrs")
+		if err := x.core.DBClient().PutAttrs(ctx, x.alert.Namespace, persistent); err != nil {
+			return goerr.Wrap(err, "failed to put persistent attrs")
 		}
 
-		logger.Info("saved global attributes", slog.Any("attrs", global))
+		logger.Info("saved persistent attributes", slog.Any("attrs", persistent))
 	}
 
 	if err := x.service.UpdateLastAttrs(ctx, x.alert.Attrs); err != nil {

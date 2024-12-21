@@ -50,7 +50,7 @@ run contains res if {
 | └─ value   | STRING    | REQUIRED |
 | └─ type    | STRING    | REQUIRED |
 | └─ ttl     | INTEGER   | REQUIRED |
-| └─ global  | BOOLEAN   | REQUIRED |
+| └─ persist  | BOOLEAN   | REQUIRED |
 | refs       | RECORD    | REPEATED |
 | └─ Title   | STRING    | REQUIRED |
 | └─ URL     | STRING    | REQUIRED |
