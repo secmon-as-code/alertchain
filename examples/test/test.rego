@@ -1,6 +1,6 @@
 package test
 
-test_play_result {
+test_play_result if {
 	# Only one alert should be detected
 	count(data.output.scenario1.results) == 1
 	result := data.output.scenario1.results[0]

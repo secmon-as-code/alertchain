@@ -1,6 +1,6 @@
 package alert.aws_guardduty
 
-alert[res] {
+alert contains res if {
 	startswith(input.Findings[x].Type, "Trojan:")
 	input.Findings[_].Severity > 7
 	res := {

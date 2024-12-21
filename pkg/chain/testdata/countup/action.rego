@@ -1,6 +1,6 @@
 package action
 
-run[job] {
+run contains job if {
 	job := {
 		"id": "my_job",
 		"uses": "mock",
@@ -15,9 +15,9 @@ run[job] {
 	}
 }
 
-attr := input.alert.attrs[x] {
+attr := input.alert.attrs[x] if {
 	input.alert.attrs[x].key == "counter"
-} else := init {
+} else := init if {
 	init := {
 		"id": null,
 		"key": "counter",

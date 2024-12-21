@@ -17,7 +17,7 @@ This action creates a ticket in the specified Jira project to serve as an alert 
 Example policy:
 
 ```rego
-run[job] {
+run contains job if {
   job := {
     id: "your-action",
     uses: "jira.create_issue",
@@ -57,7 +57,7 @@ This action creates a comment in the specified Jira ticket.
 Example policy:
 
 ```rego
-run[job] {
+run contains job if {
   job := {
     id: "your-action",
     uses: "jira.add_comment",
@@ -93,7 +93,7 @@ This action adds an attachment to the specified Jira ticket.
 Example policy:
 
 ```rego
-run[job] {
+run contains job if {
   job := {
     id: "your-action",
     uses: "jira.add_attachment",

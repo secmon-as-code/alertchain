@@ -23,7 +23,7 @@ func TestServe(t *testing.T) {
 			"alertchain",
 			"serve",
 			"-p",
-			"--addr", "127.0.0.1:8080",
+			"--addr", "127.0.0.1:6666",
 			"-d", "examples/e2e",
 		}
 		gt.NoError(t, cli.New().Run(ctx, args))
@@ -42,13 +42,13 @@ func TestServe(t *testing.T) {
 
 	send := func(t *testing.T) {
 		body := bytes.NewReader([]byte(`{"color":"blue"}`))
-		req := gt.R1(http.NewRequest("POST", "http://127.0.0.1:8080/alert/raw/my_alert", body)).NoError(t)
+		req := gt.R1(http.NewRequest("POST", "http://127.0.0.1:6666/alert/raw/my_alert", body)).NoError(t)
 		resp := gt.R1(http.DefaultClient.Do(req)).NoError(t)
 		gt.N(t, resp.StatusCode).Equal(200)
 	}
 	sendIgnoredAlert := func(t *testing.T) {
 		body := bytes.NewReader([]byte(`{"color":"red"}`))
-		req := gt.R1(http.NewRequest("POST", "http://127.0.0.1:8080/alert/raw/my_alert", body)).NoError(t)
+		req := gt.R1(http.NewRequest("POST", "http://127.0.0.1:6666/alert/raw/my_alert", body)).NoError(t)
 		resp := gt.R1(http.DefaultClient.Do(req)).NoError(t)
 		gt.N(t, resp.StatusCode).Equal(200)
 	}

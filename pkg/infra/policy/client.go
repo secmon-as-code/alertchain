@@ -119,6 +119,7 @@ func New(options ...Option) (*Client, error) {
 
 	compiler, err := ast.CompileModulesWithOpt(client.policies, ast.CompileOpts{
 		EnablePrintStatements: true,
+		ParserOptions:         ast.ParserOptions{RegoVersion: ast.RegoV1},
 	})
 	if err != nil {
 		return nil, goerr.Wrap(err)

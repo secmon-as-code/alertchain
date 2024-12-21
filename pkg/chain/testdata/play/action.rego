@@ -1,6 +1,6 @@
 package action
 
-run[res] {
+run contains res if {
 	p := input.alert.attrs[_]
 	p.key == "c"
 	p.value < 3
@@ -8,13 +8,13 @@ run[res] {
 	res := {"uses": "mock"}
 }
 
-exit[res] {
-	p := input.alert.attrs[_]
-	p.key == "c"
+# exit[res] {
+# 	p := input.alert.attrs[_]
+# 	p.key == "c"
 
-	res := {"attrs": [{
-		"id": p.id,
-		"key": "c",
-		"value": p.value + 1,
-	}]}
-}
+# 	res := {"attrs": [{
+# 		"id": p.id,
+# 		"key": "c",
+# 		"value": p.value + 1,
+# 	}]}
+# }

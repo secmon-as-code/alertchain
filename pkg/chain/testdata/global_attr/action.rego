@@ -1,12 +1,12 @@
 package action
 
-run[res] {
+run contains res if {
 	input.alert.attrs[x].key == "status"
 	input.alert.attrs[x].value == "done"
 	res := {"abort": true}
 }
 
-run[job] {
+run contains job if {
 	job := {
 		"id": "my_job",
 		"uses": "mock",

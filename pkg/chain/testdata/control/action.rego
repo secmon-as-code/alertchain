@@ -1,6 +1,6 @@
 package action
 
-run[res] {
+run contains res if {
 	input.alert.attrs[k2].key == "k2"
 	res := {
 		"id": "run_mock",
@@ -19,7 +19,7 @@ run[res] {
 	}
 }
 
-run[res] {
+run contains res if {
 	input.called[_].id == "run_mock"
 	res := {
 		"id": "run2",

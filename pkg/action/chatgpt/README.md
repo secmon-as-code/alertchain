@@ -14,7 +14,7 @@ This action provides a summary and suggested response to a security alert using 
 Example policy:
 
 ```rego
-run[res] {
+run contains res if {
   res := {
     "id": "your-action",
     "uses": "chatgpt.query",

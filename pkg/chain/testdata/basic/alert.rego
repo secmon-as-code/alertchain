@@ -1,6 +1,6 @@
 package alert.scc
 
-alert[msg] {
+alert contains msg if {
 	msg := {
 		"title": input.finding.category,
 		"attrs": [

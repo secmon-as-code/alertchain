@@ -14,7 +14,7 @@ package test
 
 default allow = false
 
-allow {
+allow if {
 	input.role == "admin"
 }
 `

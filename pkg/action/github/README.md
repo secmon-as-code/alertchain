@@ -17,7 +17,7 @@ The GitHub App requires `Read and Write` permissions for `Issues`, and you need 
 Example policy:
 
 ```rego
-run[res] {
+run contains res if {
   res := {
     id: "your-action",
     uses: "github.create_issue",
@@ -61,7 +61,7 @@ The GitHub App requires `Read and Write` permissions for `Issues`, and you need 
 Example policy:
 
 ```rego
-run[res] {
+run contains res if {
   res := {
     id: "your-action",
     uses: "github.create_issue",

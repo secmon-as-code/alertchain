@@ -16,7 +16,7 @@ This action inserts an alert into BigQuery.
 Example policy:
 
 ```rego
-run[res] {
+run contains res if {
   res := {
     id: "your-action",
     uses: "bigquery.insert_alert",
@@ -66,7 +66,7 @@ This action inserts any data into BigQuery.
 Example policy:
 
 ```rego
-run[res] {
+run contains res if {
   res := {
     id: "your-action",
     uses: "bigquery.insert_data",

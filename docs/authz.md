@@ -17,7 +17,7 @@ package authz.http
 
 default deny = false
 
-deny {
+deny if {
     not net.cidr_contains("10.0.0.0/8", input.remote)
 }
 ```
@@ -65,7 +65,7 @@ jwks_request(url) := http.send({
     "force_cache_duration_seconds": 3600 # Cache response for an hour
 }).raw_body
 
-allow {
+allow if {
     startswith(input.path, "/alert/")
 
     ahthHdr := input.header["Authorization"]

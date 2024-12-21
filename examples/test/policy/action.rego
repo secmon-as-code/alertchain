@@ -1,6 +1,6 @@
 package action
 
-run[res] {
+run contains res if {
 	input.alert.source == "aws"
 	res := {
 		"id": "ask-gpt",
@@ -15,7 +15,7 @@ run[res] {
 	}
 }
 
-run[res] {
+run contains res if {
 	gtp := input.called[_]
 	gtp.id == "ask-gpt"
 

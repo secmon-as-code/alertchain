@@ -1,6 +1,6 @@
 package action
 
-run[job] {
+run contains job if {
     input.seq == 0
 
     job := {
