@@ -14,7 +14,7 @@ run contains job if {
 			{
 				"key": "status",
 				"value": "done",
-				"global": true,
+				"persist": true,
 			},
 		],
 	}

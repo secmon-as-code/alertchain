@@ -51,12 +51,12 @@ func attrsToRecord(attrs model.Attributes) []*model.AttributeRecord {
 		}
 
 		records[i] = &model.AttributeRecord{
-			ID:     string(attr.ID),
-			Key:    string(attr.Key),
-			Value:  fmt.Sprintf("%+v", attr.Value),
-			Type:   typ,
-			Global: attr.Global,
-			TTL:    int(attr.TTL),
+			ID:      string(attr.ID),
+			Key:     string(attr.Key),
+			Value:   fmt.Sprintf("%+v", attr.Value),
+			Type:    typ,
+			Persist: attr.Persist,
+			TTL:     int(attr.TTL),
 		}
 	}
 

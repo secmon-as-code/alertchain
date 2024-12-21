@@ -9,7 +9,7 @@ run contains job if {
 				"id": attr.id,
 				"key": "counter",
 				"value": attr.value + 1,
-				"global": true,
+				"persist": true,
 			},
 		],
 	}

@@ -209,7 +209,7 @@ This will generate a file named `output/scenario1/data.json`. A sample file woul
                 {
                   "key": "counter",
                   "value": 1,
-                  "global": true
+                  "persist": true
                 }
               ]
             }

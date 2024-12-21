@@ -13,7 +13,7 @@ run contains res if {
             "id": count_attr.id,
             "key": "count",
             "value": count_attr.value + 1,
-            "global": true,
+            "persist": true,
         }],
     }
 }
