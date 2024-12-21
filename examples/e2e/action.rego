@@ -1,13 +1,13 @@
 package action
 
-count_attr := input.alert.attrs[x] {
+count_attr := input.alert.attrs[x] if {
     input.alert.attrs[x].key == "count"
 } else := {
     "id": null,
     "value": 0,
 }
 
-run[res] {
+run contains res if {
     res := {
         "commit": [{
             "id": count_attr.id,
@@ -18,7 +18,7 @@ run[res] {
     }
 }
 
-run[job] {
+run contains job if {
     job := {
         "id": "test",
         "uses": "http.fetch",

@@ -21,14 +21,14 @@ require (
 	github.com/m-mizutani/gots v0.0.0-20230529013424-0639119b2cdd
 	github.com/m-mizutani/gt v0.0.13-0.20241214054244-b80c68b94455
 	github.com/m-mizutani/masq v0.1.5
-	github.com/open-policy-agent/opa v0.70.0
+	github.com/open-policy-agent/opa v1.0.0
 	github.com/opsgenie/opsgenie-go-sdk-v2 v1.2.22
 	github.com/sashabaranov/go-openai v1.36.0
 	github.com/slack-go/slack v0.12.3
 	github.com/urfave/cli/v3 v3.0.0-beta1
 	github.com/vektah/gqlparser/v2 v2.5.20
 	google.golang.org/api v0.171.0
-	google.golang.org/grpc v1.69.0
+	google.golang.org/grpc v1.69.2
 )
 
 require (
@@ -94,15 +94,13 @@ require (
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.49.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.58.0 // indirect
 	go.opentelemetry.io/otel v1.33.0 // indirect
-	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.33.0 // indirect
-	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.33.0 // indirect
 	go.opentelemetry.io/otel/metric v1.33.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.33.0 // indirect
 	go.opentelemetry.io/otel/trace v1.33.0 // indirect
 	golang.org/x/crypto v0.31.0 // indirect
 	golang.org/x/exp v0.0.0-20241210194714-1829a127f884 // indirect
 	golang.org/x/mod v0.22.0 // indirect
-	golang.org/x/net v0.32.0 // indirect
+	golang.org/x/net v0.33.0 // indirect
 	golang.org/x/oauth2 v0.24.0 // indirect
 	golang.org/x/sync v0.10.0 // indirect
 	golang.org/x/sys v0.28.0 // indirect

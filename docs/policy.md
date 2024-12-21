@@ -52,7 +52,7 @@ The `attrs` field (Attribute) serves not only to extract event data fields but a
 ```rego
 package alert.my_alert
 
-alert[msg] {
+alert contains msg if {
     input.name == "suspicious_action"
     msg := {
         "title": "detected suspicious action",
@@ -108,7 +108,7 @@ Attributes added by `commit` are included in `input.alert.attrs` for the next `r
 ```rego
 package action
 
-run[res] {
+run contains res if {
     input.called[_].id == "ask-chatgpt"
     res := {
         "id": "notify-slack",
@@ -244,7 +244,7 @@ First, you need to specify a namespace in the Alert Policy. The namespace is spe
 ```rego
 package alert.my_alert
 
-alert[msg] {
+alert contains msg if {
     input.name == "suspicious_action"
     msg := {
         "title": "detected suspicious action",
@@ -264,7 +264,7 @@ Next, you will write about the Global Attribute in the Action Policy. Global Att
 ```rego
 package action
 
-init[res] {
+init contains res if {
     input.alert.attrs[x].key == "called"
     input.alert.attrs[x].value == true
 
@@ -281,7 +281,7 @@ Here are examples of `run` and `exit`.
 ```rego
 package action
 
-run[job] {
+run contains job if {
     job := {
         "id": "notify-slack",
         "uses": "slack.post",

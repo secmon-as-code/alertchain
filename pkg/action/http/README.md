@@ -9,7 +9,7 @@ This action fetches data from the specified URL using the specified HTTP method 
 Example policy:
 
 ```rego
-run[res] {
+run contains res if {
   res := {
     id: "your-action",
     uses: "http.fetch",

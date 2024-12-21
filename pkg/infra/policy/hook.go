@@ -1,6 +1,6 @@
 package policy
 
-import "github.com/open-policy-agent/opa/topdown/print"
+import "github.com/open-policy-agent/opa/v1/topdown/print"
 
 type regoPrintHook struct {
 	callback RegoPrint

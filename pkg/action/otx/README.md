@@ -15,7 +15,7 @@ You need an AlienVault OTX API key. You can sign up for a free account and get a
 Example policy:
 
 ```rego
-run[res] {
+run contains res if {
   res := {
     id: "your-action",
     uses: "otx.indicator",

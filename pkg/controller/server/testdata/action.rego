@@ -1,6 +1,6 @@
 package action
 
-run[job] {
+run contains job if {
 	job := {
 		"id": "test",
 		"uses": "http.fetch",

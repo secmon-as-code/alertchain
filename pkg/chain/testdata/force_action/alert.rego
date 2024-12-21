@@ -1,6 +1,6 @@
 package alert.my_alert
 
-alert[msg] {
+alert contains msg if {
 	msg := {
 		"title": "global alert test",
 	}

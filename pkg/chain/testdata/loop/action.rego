@@ -1,6 +1,6 @@
 package action
 
-run[res] {
+run contains res if {
 	p := input.alert.attrs[_]
 	p.key == "c"
 	p.value < 10

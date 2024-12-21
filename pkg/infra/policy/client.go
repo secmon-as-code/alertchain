@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"github.com/m-mizutani/goerr"
-	"github.com/open-policy-agent/opa/ast"
-	"github.com/open-policy-agent/opa/rego"
+	"github.com/open-policy-agent/opa/v1/ast"
+	"github.com/open-policy-agent/opa/v1/rego"
 	"github.com/secmon-lab/alertchain/pkg/domain/types"
 )
 
@@ -119,6 +119,7 @@ func New(options ...Option) (*Client, error) {
 
 	compiler, err := ast.CompileModulesWithOpt(client.policies, ast.CompileOpts{
 		EnablePrintStatements: true,
+		ParserOptions:         ast.ParserOptions{RegoVersion: ast.RegoV1},
 	})
 	if err != nil {
 		return nil, goerr.Wrap(err)

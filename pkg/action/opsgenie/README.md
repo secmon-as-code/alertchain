@@ -16,7 +16,7 @@ This action creates an alert in Opsgenie.
 Example policy:
 
 ```rego
-run[job] {
+run contains job if {
   job := {
     id: "your-action",
     uses: "opsgenie.create_alert",

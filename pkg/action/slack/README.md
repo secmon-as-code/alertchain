@@ -13,7 +13,7 @@ To use this action, you need to create a Slack App and obtain an incoming webhoo
 Here's an example policy using the `slack.post` action:
 
 ```rego
-run[res] {
+run contains res if {
   res := {
     "id": "your-action",
     "uses": "slack.post",

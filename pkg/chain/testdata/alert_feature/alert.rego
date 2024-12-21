@@ -1,6 +1,6 @@
 package alert.amber
 
-alert[res] {
+alert contains res if {
     res := {
         "title": "Amber Alert",
     }
