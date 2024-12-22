@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/m-mizutani/gt"
-	"github.com/secmon-lab/alertchain/pkg/action/github"
+	"github.com/secmon-lab/alertchain/action/github"
 	"github.com/secmon-lab/alertchain/pkg/ctxutil"
 	"github.com/secmon-lab/alertchain/pkg/domain/model"
 	"github.com/secmon-lab/alertchain/pkg/domain/types"

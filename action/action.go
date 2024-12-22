@@ -1,14 +1,14 @@
 package action
 
 import (
-	"github.com/secmon-lab/alertchain/pkg/action/bigquery"
-	"github.com/secmon-lab/alertchain/pkg/action/chatgpt"
-	"github.com/secmon-lab/alertchain/pkg/action/github"
-	"github.com/secmon-lab/alertchain/pkg/action/http"
-	"github.com/secmon-lab/alertchain/pkg/action/jira"
-	"github.com/secmon-lab/alertchain/pkg/action/opsgenie"
-	"github.com/secmon-lab/alertchain/pkg/action/otx"
-	"github.com/secmon-lab/alertchain/pkg/action/slack"
+	"github.com/secmon-lab/alertchain/action/bigquery"
+	"github.com/secmon-lab/alertchain/action/chatgpt"
+	"github.com/secmon-lab/alertchain/action/github"
+	"github.com/secmon-lab/alertchain/action/http"
+	"github.com/secmon-lab/alertchain/action/jira"
+	"github.com/secmon-lab/alertchain/action/opsgenie"
+	"github.com/secmon-lab/alertchain/action/otx"
+	"github.com/secmon-lab/alertchain/action/slack"
 	"github.com/secmon-lab/alertchain/pkg/domain/interfaces"
 	"github.com/secmon-lab/alertchain/pkg/domain/types"
 )

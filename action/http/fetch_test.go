@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/m-mizutani/gt"
-	httpaction "github.com/secmon-lab/alertchain/pkg/action/http"
+	httpaction "github.com/secmon-lab/alertchain/action/http"
 	"github.com/secmon-lab/alertchain/pkg/domain/model"
 )
 

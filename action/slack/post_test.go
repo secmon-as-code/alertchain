@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/m-mizutani/gt"
-	"github.com/secmon-lab/alertchain/pkg/action/slack"
+	"github.com/secmon-lab/alertchain/action/slack"
 	"github.com/secmon-lab/alertchain/pkg/domain/model"
 )
 

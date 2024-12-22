@@ -3,7 +3,7 @@ package core
 import (
 	"time"
 
-	"github.com/secmon-lab/alertchain/pkg/action"
+	"github.com/secmon-lab/alertchain/action"
 	"github.com/secmon-lab/alertchain/pkg/domain/interfaces"
 	"github.com/secmon-lab/alertchain/pkg/domain/types"
 	"github.com/secmon-lab/alertchain/pkg/infra/memory"
