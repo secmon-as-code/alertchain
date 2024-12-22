@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/m-mizutani/gt"
-	"github.com/secmon-lab/alertchain/pkg/action/github"
+	"github.com/secmon-lab/alertchain/action/github"
 	"github.com/secmon-lab/alertchain/pkg/domain/model"
 )
 

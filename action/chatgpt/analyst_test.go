@@ -10,7 +10,7 @@ import (
 
 	"github.com/m-mizutani/gt"
 	"github.com/sashabaranov/go-openai"
-	"github.com/secmon-lab/alertchain/pkg/action/chatgpt"
+	"github.com/secmon-lab/alertchain/action/chatgpt"
 	"github.com/secmon-lab/alertchain/pkg/domain/model"
 )
 

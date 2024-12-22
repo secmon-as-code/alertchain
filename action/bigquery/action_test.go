@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/m-mizutani/gt"
-	"github.com/secmon-lab/alertchain/pkg/action/bigquery"
+	"github.com/secmon-lab/alertchain/action/bigquery"
 	"github.com/secmon-lab/alertchain/pkg/domain/model"
 	"github.com/secmon-lab/alertchain/pkg/domain/types"
 	"github.com/secmon-lab/alertchain/pkg/utils"
