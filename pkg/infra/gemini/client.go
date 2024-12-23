@@ -17,7 +17,7 @@ func New(ctx context.Context, projectID, location string) (*Client, error) {
 
 	client, err := genai.NewClient(ctx, projectID, location)
 	if err != nil {
-		return nil, goerr.Wrap(err, "failed to create genai client")
+		return nil, goerr.Wrap(err, "failed to create gemini client")
 	}
 	return &Client{client: client, model: modelName}, nil
 }

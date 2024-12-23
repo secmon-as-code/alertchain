@@ -3,16 +3,10 @@ package cli
 import (
 	"context"
 	_ "embed"
-	"encoding/json"
-	"os"
-	"path/filepath"
-	"strings"
 
-	"github.com/m-mizutani/goerr"
 	"github.com/secmon-lab/alertchain/pkg/controller/cli/config"
-	"github.com/secmon-lab/alertchain/pkg/ctxutil"
-	"github.com/secmon-lab/alertchain/pkg/domain/types"
 	"github.com/secmon-lab/alertchain/pkg/infra/gemini"
+	"github.com/secmon-lab/alertchain/pkg/usecase"
 	"github.com/urfave/cli/v3"
 )
 
@@ -27,21 +21,12 @@ func cmdNew() *cli.Command {
 	}
 }
 
-//go:embed prompt/new_ignore.md
-var newIgnorePrompt string
-
-//go:embed prompt/alert_slug.md
-var alertSlugPrompt string
-
 func cmdNewIgnore() *cli.Command {
 	var (
-		alertID          types.AlertID
-		basePolicyFile   string
-		testDataDir      string
-		testDataRegoPath string
-		geminiProjectID  string
-		geminiLocation   string
-		overWrite        bool
+		input usecase.NewIgnorePolicyInput
+
+		geminiProjectID string
+		geminiLocation  string
 
 		dbCfg config.Database
 	)
@@ -53,7 +38,7 @@ func cmdNewIgnore() *cli.Command {
 			Usage:       "Alert ID to ignore",
 			Sources:     cli.EnvVars("ALERTCHAIN_ALERT_ID"),
 			Required:    true,
-			Destination: (*string)(&alertID),
+			Destination: (*string)(&input.AlertID),
 		},
 		&cli.StringFlag{
 			Name:        "base-policy-file",
@@ -61,7 +46,7 @@ func cmdNewIgnore() *cli.Command {
 			Usage:       "Base policy file. It will be used as a template",
 			Sources:     cli.EnvVars("ALERTCHAIN_BASE_POLICY"),
 			Required:    true,
-			Destination: &basePolicyFile,
+			Destination: &input.BasePolicyFile,
 		},
 		&cli.StringFlag{
 			Name:        "test-data-dir",
@@ -69,7 +54,7 @@ func cmdNewIgnore() *cli.Command {
 			Usage:       "Directory path to store test data",
 			Sources:     cli.EnvVars("ALERTCHAIN_TEST_DATA_DIR"),
 			Required:    true,
-			Destination: &testDataDir,
+			Destination: &input.TestDataDir,
 		},
 		&cli.StringFlag{
 			Name:        "test-data-rego-path",
@@ -77,7 +62,7 @@ func cmdNewIgnore() *cli.Command {
 			Usage:       "Path to store test data in rego format",
 			Sources:     cli.EnvVars("ALERTCHAIN_TEST_DATA_REGO_PATH"),
 			Required:    true,
-			Destination: &testDataRegoPath,
+			Destination: &input.TestDataRegoPath,
 		},
 		&cli.StringFlag{
 			Name:        "gemini-project-id",
@@ -98,7 +83,7 @@ func cmdNewIgnore() *cli.Command {
 			Aliases:     []string{"w"},
 			Usage:       "Overwrite existing base policy file",
 			Sources:     cli.EnvVars("ALERTCHAIN_OVERWRITE"),
-			Destination: &overWrite,
+			Destination: &input.OverWrite,
 		},
 	}
 
@@ -106,12 +91,10 @@ func cmdNewIgnore() *cli.Command {
 
 	return &cli.Command{
 		Name:  "ignore",
-		Usage: "Create new ignore policy based on the alert",
+		Usage: "Create new ignore policy based on the alert with Gemini",
 		Flags: flags,
 
 		Action: func(ctx context.Context, cmd *cli.Command) error {
-			logger := ctxutil.Logger(ctx)
-
 			geminiClient, err := gemini.New(ctx, geminiProjectID, geminiLocation)
 			if err != nil {
 				return err
@@ -123,89 +106,11 @@ func cmdNewIgnore() *cli.Command {
 			}
 			defer dbClose()
 
-			alert, err := dbClient.GetAlert(ctx, alertID)
-			if err != nil {
+			if err := usecase.NewIgnorePolicy(ctx, dbClient, geminiClient, input); err != nil {
 				return err
 			}
-			alertData, err := json.Marshal(alert.Data)
-			if err != nil {
-				return goerr.Wrap(err, "failed to marshal alert data")
-			}
-			logger.Info("Got alert data", "alertID", alertID)
-
-			basePolicy, err := os.ReadFile(basePolicyFile)
-			if err != nil {
-				return goerr.Wrap(err, "failed to read base policy file")
-			}
-			logger.Info("Got base policy", "file", basePolicyFile)
-
-			testFiles, err := os.ReadDir(testDataDir)
-			if err != nil {
-				return goerr.Wrap(err, "failed to read test data directory")
-			}
-			if len(testFiles) > 0 {
-				var testFileList []string
-				for _, f := range testFiles {
-					testFileList = append(testFileList, f.Name())
-				}
-				alertSlugPrompt += "\nExclude these list: \n" + strings.Join(testFileList, "\n") + "\n"
-			}
-
-			slugResp, err := geminiClient.Generate(ctx, alertSlugPrompt, string(alertData))
-			if err != nil {
-				return err
-			}
-			alertSlug := strings.TrimSpace(slugResp[0])
-			logger.Info("Generated slug", "slug", alertSlug)
-
-			policyResp, err := geminiClient.Generate(ctx, newIgnorePrompt, string(alertData), string(basePolicy))
-			if err != nil {
-				return err
-			}
-
-			if overWrite {
-				if err := os.WriteFile(basePolicyFile, []byte(policyResp[0]), 0644); err != nil {
-					return goerr.Wrap(err, "failed to write base policy file")
-				}
-			} else {
-				println(policyResp[0])
-			}
-
-			testDataPath := filepath.Join(testDataDir, alertSlug, "data.json")
-			if err := os.MkdirAll(filepath.Dir(testDataPath), 0755); err != nil {
-				return goerr.Wrap(err, "failed to create test data directory")
-			}
-			if err := os.WriteFile(testDataPath, alertData, 0644); err != nil {
-				return goerr.Wrap(err, "failed to write test data file")
-			}
-			logger.Info("Wrote test data", "file", testDataPath)
-
-			testFilePath := genTestFilePath(basePolicyFile)
-			file, err := os.OpenFile(testFilePath, os.O_APPEND|os.O_WRONLY, 0644)
-			if err != nil {
-				return goerr.Wrap(err, "failed to open test file")
-			}
-			defer file.Close()
-
-			newTest := []string{
-				"test_" + alertSlug + " {",
-				`  resp := alert with input as ` + testDataRegoPath + "." + alertSlug,
-				`  count(resp) == 0`,
-				`}`,
-			}
-			if _, err := file.WriteString(strings.Join(newTest, "\n")); err != nil {
-				return goerr.Wrap(err, "failed to write test file")
-			}
-			logger.Info("Wrote test file", "file", testFilePath)
 
 			return nil
 		},
 	}
-}
-
-func genTestFilePath(filePath string) string {
-	ext := filepath.Ext(filePath)
-	base := strings.TrimSuffix(filePath, ext)
-	newPath := base + "_test" + ext
-	return newPath
 }

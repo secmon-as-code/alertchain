@@ -2,7 +2,6 @@ package interfaces
 
 import (
 	"context"
-	"time"
 
 	"github.com/secmon-lab/alertchain/pkg/domain/model"
 	"github.com/secmon-lab/alertchain/pkg/domain/types"
@@ -37,18 +36,3 @@ type ActionLogger interface {
 type AlertHandler func(ctx context.Context, schema types.Schema, data any) ([]*model.Alert, error)
 
 type Env func() types.EnvVars
-
-type TxProc func(ctx context.Context, input model.Attributes) (model.Attributes, error)
-
-type Database interface {
-	GetAttrs(ctx context.Context, ns types.Namespace) (model.Attributes, error)
-	PutAttrs(ctx context.Context, ns types.Namespace, attrs model.Attributes) error
-	PutWorkflow(ctx context.Context, workflow model.WorkflowRecord) error
-	GetWorkflows(ctx context.Context, offset, limit int) ([]model.WorkflowRecord, error)
-	GetWorkflow(ctx context.Context, id types.WorkflowID) (*model.WorkflowRecord, error)
-	PutAlert(ctx context.Context, alert model.Alert) error
-	GetAlert(ctx context.Context, id types.AlertID) (*model.Alert, error)
-	Lock(ctx context.Context, ns types.Namespace, timeout time.Time) error
-	Unlock(ctx context.Context, ns types.Namespace) error
-	Close() error
-}
