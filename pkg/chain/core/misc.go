@@ -1,8 +1,8 @@
 package core
 
 import (
-	"github.com/m-mizutani/alertchain/pkg/domain/interfaces"
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
+	"github.com/secmon-lab/alertchain/pkg/domain/interfaces"
+	"github.com/secmon-lab/alertchain/pkg/domain/model"
 )
 
 type dummyScenarioLogger struct{}
@@ -27,8 +27,6 @@ var _ interfaces.AlertLogger = &dummyAlertLogger{}
 
 type dummyActionLogger struct{}
 
-func (*dummyActionLogger) LogExit(log []model.Next)  {}
-func (*dummyActionLogger) LogInit(log []model.Next)  {}
 func (*dummyActionLogger) LogRun(log []model.Action) {}
 
 var _ interfaces.ActionLogger = &dummyActionLogger{}

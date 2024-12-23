@@ -1,15 +1,18 @@
 package chain
 
 import (
+	"context"
+	"errors"
 	"log/slog"
 
-	"github.com/m-mizutani/alertchain/pkg/chain/core"
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
-	"github.com/m-mizutani/alertchain/pkg/domain/types"
-	"github.com/m-mizutani/alertchain/pkg/infra/policy"
-	"github.com/m-mizutani/alertchain/pkg/service"
-	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/goerr"
+	"github.com/secmon-lab/alertchain/pkg/chain/core"
+	"github.com/secmon-lab/alertchain/pkg/ctxutil"
+	"github.com/secmon-lab/alertchain/pkg/domain/model"
+	"github.com/secmon-lab/alertchain/pkg/domain/types"
+	"github.com/secmon-lab/alertchain/pkg/infra/policy"
+	"github.com/secmon-lab/alertchain/pkg/logging"
+	"github.com/secmon-lab/alertchain/pkg/service"
 )
 
 type workflow struct {
@@ -29,12 +32,13 @@ func newWorkflow(c *core.Core, alert model.Alert, svc *service.Workflow) *workfl
 	return hdlr
 }
 
-func (x *workflow) Run(ctx *model.Context) error {
+func (x *workflow) Run(ctx context.Context) error {
 	copied := x.alert.Copy()
-	logger := x.core.ScenarioLogger().NewAlertLogger(&copied)
+	alertLogger := x.core.ScenarioLogger().NewAlertLogger(&copied)
+	logger := ctxutil.Logger(ctx)
 	envVars := x.core.Env()
 
-	ctx = ctx.New(model.WithAlert(x.alert))
+	ctx = ctxutil.InjectAlert(ctx, &x.alert)
 
 	if x.alert.Namespace != "" {
 		timeoutAt := x.core.Now().Add(x.core.Timeout())
@@ -43,18 +47,18 @@ func (x *workflow) Run(ctx *model.Context) error {
 		}
 		defer func() {
 			if err := x.core.DBClient().Unlock(ctx, x.alert.Namespace); err != nil {
-				ctx.Logger().Error("failed to unlock", slog.Any("alert", x.alert))
+				logger.Error("failed to unlock", slog.Any("alert", x.alert))
 			}
 		}()
 
-		global, err := x.core.DBClient().GetAttrs(ctx, x.alert.Namespace)
+		persistent, err := x.core.DBClient().GetAttrs(ctx, x.alert.Namespace)
 		if err != nil {
-			return goerr.Wrap(err, "failed to get global attrs")
+			return goerr.Wrap(err, "failed to get persistent attrs")
 		}
 
-		ctx.Logger().Info("loaded global attributes", slog.Any("attrs", global))
+		logger.Info("loaded persistent attributes", slog.Any("attrs", persistent))
 
-		x.alert.Attrs = append(x.alert.Attrs, global...).Tidy()
+		x.alert.Attrs = append(x.alert.Attrs, persistent...).Tidy()
 	}
 
 	var history actionHistory
@@ -73,11 +77,9 @@ func (x *workflow) Run(ctx *model.Context) error {
 			return err
 		}
 
-		if len(p.init) > 0 || len(p.run) > 0 || len(p.exit) > 0 {
-			actionLogger := logger.NewActionLogger()
-			actionLogger.LogInit(p.init)
+		if len(p.run) > 0 {
+			actionLogger := alertLogger.NewActionLogger()
 			actionLogger.LogRun(p.run)
-			actionLogger.LogExit(p.exit)
 		}
 
 		x.alert.Attrs = p.finalized
@@ -88,18 +90,18 @@ func (x *workflow) Run(ctx *model.Context) error {
 	}
 
 	if x.alert.Namespace != "" {
-		var global model.Attributes
+		var persistent model.Attributes
 		for i := range x.alert.Attrs {
-			if x.alert.Attrs[i].Global {
-				global = append(global, x.alert.Attrs[i])
+			if x.alert.Attrs[i].Persist {
+				persistent = append(persistent, x.alert.Attrs[i])
 			}
 		}
 
-		if err := x.core.DBClient().PutAttrs(ctx, x.alert.Namespace, global); err != nil {
-			return goerr.Wrap(err, "failed to put global attrs")
+		if err := x.core.DBClient().PutAttrs(ctx, x.alert.Namespace, persistent); err != nil {
+			return goerr.Wrap(err, "failed to put persistent attrs")
 		}
 
-		ctx.Logger().Info("saved global attributes", slog.Any("attrs", global))
+		logger.Info("saved persistent attributes", slog.Any("attrs", persistent))
 	}
 
 	if err := x.service.UpdateLastAttrs(ctx, x.alert.Attrs); err != nil {
@@ -135,49 +137,23 @@ type proc struct {
 	envVars types.EnvVars
 
 	// logs
-	init []model.Next
-	run  []model.Action
-	exit []model.Next
+	run []model.Action
 
 	history   *actionHistory
 	finalized model.Attributes
 }
 
 func (x *proc) aborted() bool {
-	for _, i := range x.init {
-		if i.Abort {
+	for _, r := range x.run {
+		if r.Abort {
 			return true
 		}
 	}
 
-	for _, e := range x.exit {
-		if e.Abort {
-			return true
-		}
-	}
 	return false
 }
 
-func (x *proc) evaluate(ctx *model.Context) error {
-	// Evaluate `init` rules
-	initReq := model.ActionInitRequest{
-		Seq:     x.seq,
-		Alert:   x.alert,
-		EnvVars: x.envVars,
-	}
-	var initResp model.ActionInitResponse
-	if err := x.core.QueryActionPolicy(ctx, initReq, &initResp); err != nil {
-		return err
-	}
-
-	x.init = initResp.Init
-	x.alert.Attrs = append(x.alert.Attrs, initResp.Attrs()...).Tidy()
-	x.finalized = x.alert.Attrs[:]
-
-	if initResp.Abort() {
-		return nil
-	}
-
+func (x *proc) evaluate(ctx context.Context) error {
 	// Evaluate `run` rules
 	runReq := &model.ActionRunRequest{
 		Alert:   x.alert,
@@ -191,58 +167,92 @@ func (x *proc) evaluate(ctx *model.Context) error {
 		return err
 	}
 
+	x.finalized = x.alert.Attrs.Copy()
+
 	for _, p := range runResp.Runs {
-		if p.ID == "" {
-			p.ID = types.NewActionID()
-		} else if x.history.alreadyCalled(p.ID) {
-			continue
-		}
-
-		x.run = append(x.run, p)
-		result, err := x.executeAction(ctx, p, x.alert)
-		if err != nil {
-			if !p.Force {
-				return err
+		if err := x.runAction(ctx, p); err != nil {
+			if errors.Is(err, errActionAbort) {
+				break
 			}
-
-			utils.Logger().Warn("got error, but force run action",
-				slog.Any("action", p),
-				utils.ErrLog(err),
-			)
-		}
-
-		actionResult := model.ActionResult{
-			Action: p,
-			Result: result,
-		}
-		x.history.add(actionResult)
-
-		exitReq := model.ActionExitRequest{
-			Seq:     x.seq,
-			Alert:   x.alert,
-			Action:  actionResult,
-			EnvVars: x.envVars,
-			Called:  x.history.called,
-		}
-		var exitResp model.ActionExitResponse
-		if err := x.core.QueryActionPolicy(ctx, exitReq, &exitResp); err != nil {
 			return err
 		}
-
-		x.exit = append(x.exit, exitResp.Exit...)
-		x.finalized = append(x.finalized, exitResp.Attrs()...).Tidy()
 	}
 
 	return nil
 }
 
-func (x *proc) executeAction(ctx *model.Context, p model.Action, alert model.Alert) (any, error) {
+var errActionAbort = goerr.New("action aborted")
+
+func (x *proc) runAction(ctx context.Context, p model.Action) error {
+	if p.ID == "" {
+		p.ID = types.NewActionID()
+	} else if x.history.alreadyCalled(p.ID) {
+		return nil
+	}
+
+	var newAttrs model.Attributes
+
+	defer func() {
+		copied := p.Copy()
+		copied.Commit = make([]model.Commit, len(newAttrs))
+		for i := range newAttrs {
+			copied.Commit[i].Attribute = newAttrs[i]
+		}
+		x.run = append(x.run, copied)
+	}()
+
+	logger := ctxutil.Logger(ctx)
+	if p.Abort {
+		logger.Info("abort action", slog.Any("action", p))
+		return errActionAbort
+	}
+
+	var result any
+	if p.Uses != "" {
+		r, err := x.executeAction(ctx, p, x.alert)
+		if err != nil {
+			if !p.Force {
+				return err
+			}
+
+			logger.Warn("got error, but force run action",
+				slog.Any("action", p),
+				logging.ErrAttr(err),
+			)
+		}
+		result = r
+	}
+
+	for _, c := range p.Commit {
+		attr, err := c.ToAttr(result)
+		if err != nil {
+			return err
+		}
+		if attr == nil {
+			continue
+		}
+		newAttrs = append(newAttrs, *attr)
+	}
+
+	actionResult := model.ActionResult{
+		Action: p,
+		Result: result,
+	}
+	x.history.add(actionResult)
+
+	x.finalized = append(x.finalized, newAttrs...).Tidy()
+
+	return nil
+}
+
+func (x *proc) executeAction(ctx context.Context, p model.Action, alert model.Alert) (any, error) {
 	run, ok := x.core.GetAction(p.Uses)
 	if !ok {
 		return nil, goerr.Wrap(types.ErrActionNotFound).With("uses", p.Uses)
 	}
 
-	utils.Logger().Info("run action", slog.Any("proc", p))
+	logger := ctxutil.Logger(ctx)
+	logger.Info("run action", slog.Any("proc", p))
 
 	// Run action. If actionMock is set, use it instead of action.Run()
 	var result any

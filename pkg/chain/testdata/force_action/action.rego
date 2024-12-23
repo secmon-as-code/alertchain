@@ -1,6 +1,6 @@
 package action
 
-run[job] {
+run contains job if {
 	input.seq == 0
 	job := {
 		"id": "force_continue",
@@ -10,7 +10,7 @@ run[job] {
 	}
 }
 
-run[job] {
+run contains job if {
 	input.seq == 1
 	job := {
 		"id": "stop_by_error",
@@ -20,7 +20,7 @@ run[job] {
 	}
 }
 
-run[job] {
+run contains job if {
 	input.seq == 1
 	job := {
 		"id": "not_run",

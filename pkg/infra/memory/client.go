@@ -1,13 +1,14 @@
 package memory
 
 import (
+	"context"
 	"sort"
 	"sync"
 	"time"
 
-	"github.com/m-mizutani/alertchain/pkg/domain/interfaces"
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
-	"github.com/m-mizutani/alertchain/pkg/domain/types"
+	"github.com/secmon-lab/alertchain/pkg/domain/interfaces"
+	"github.com/secmon-lab/alertchain/pkg/domain/model"
+	"github.com/secmon-lab/alertchain/pkg/domain/types"
 )
 
 type lock struct {
@@ -42,7 +43,7 @@ func (x *Client) Close() error {
 }
 
 // GetAttrs implements interfaces.Database.
-func (x *Client) GetAttrs(ctx *model.Context, ns types.Namespace) (model.Attributes, error) {
+func (x *Client) GetAttrs(ctx context.Context, ns types.Namespace) (model.Attributes, error) {
 	x.attrMutex.RLock()
 	defer x.attrMutex.RUnlock()
 
@@ -60,7 +61,7 @@ func (x *Client) GetAttrs(ctx *model.Context, ns types.Namespace) (model.Attribu
 }
 
 // PutAttrs implements interfaces.Database.
-func (x *Client) PutAttrs(ctx *model.Context, ns types.Namespace, attrs model.Attributes) error {
+func (x *Client) PutAttrs(ctx context.Context, ns types.Namespace, attrs model.Attributes) error {
 	x.attrMutex.Lock()
 	if _, ok := x.attrs[ns]; !ok {
 		x.attrs[ns] = map[types.AttrID]*model.Attribute{}
@@ -78,7 +79,7 @@ func (x *Client) PutAttrs(ctx *model.Context, ns types.Namespace, attrs model.At
 	return nil
 }
 
-func (x *Client) PutWorkflow(ctx *model.Context, workflow model.WorkflowRecord) error {
+func (x *Client) PutWorkflow(ctx context.Context, workflow model.WorkflowRecord) error {
 	x.workflowMutex.Lock()
 	defer x.workflowMutex.Unlock()
 
@@ -86,7 +87,7 @@ func (x *Client) PutWorkflow(ctx *model.Context, workflow model.WorkflowRecord) 
 	return nil
 }
 
-func (x *Client) GetWorkflows(ctx *model.Context, offset, limit int) ([]model.WorkflowRecord, error) {
+func (x *Client) GetWorkflows(ctx context.Context, offset, limit int) ([]model.WorkflowRecord, error) {
 	x.workflowMutex.RLock()
 	defer x.workflowMutex.RUnlock()
 
@@ -111,7 +112,7 @@ func (x *Client) GetWorkflows(ctx *model.Context, offset, limit int) ([]model.Wo
 	return workflows[offset:end], nil
 }
 
-func (x *Client) GetWorkflow(ctx *model.Context, id types.WorkflowID) (*model.WorkflowRecord, error) {
+func (x *Client) GetWorkflow(ctx context.Context, id types.WorkflowID) (*model.WorkflowRecord, error) {
 	for _, wf := range x.workflows {
 		if wf.ID == id {
 			return &wf, nil
@@ -121,7 +122,7 @@ func (x *Client) GetWorkflow(ctx *model.Context, id types.WorkflowID) (*model.Wo
 	return nil, nil
 }
 
-func (x *Client) PutAlert(ctx *model.Context, alert model.Alert) error {
+func (x *Client) PutAlert(ctx context.Context, alert model.Alert) error {
 	x.alertMutex.Lock()
 	defer x.alertMutex.Unlock()
 
@@ -129,7 +130,7 @@ func (x *Client) PutAlert(ctx *model.Context, alert model.Alert) error {
 	return nil
 }
 
-func (x *Client) GetAlert(ctx *model.Context, id types.AlertID) (*model.Alert, error) {
+func (x *Client) GetAlert(ctx context.Context, id types.AlertID) (*model.Alert, error) {
 	x.alertMutex.RLock()
 	defer x.alertMutex.RUnlock()
 
@@ -141,7 +142,7 @@ func (x *Client) GetAlert(ctx *model.Context, id types.AlertID) (*model.Alert, e
 }
 
 // Lock implements interfaces.Database.
-func (x *Client) Lock(ctx *model.Context, ns types.Namespace, timeout time.Time) error {
+func (x *Client) Lock(ctx context.Context, ns types.Namespace, timeout time.Time) error {
 	locked := make(chan struct{}, 1)
 	go func() {
 		for i := 0; ; i++ {
@@ -172,7 +173,7 @@ func (x *Client) Lock(ctx *model.Context, ns types.Namespace, timeout time.Time)
 }
 
 // Unlock implements interfaces.Database.
-func (x *Client) Unlock(ctx *model.Context, ns types.Namespace) error {
+func (x *Client) Unlock(ctx context.Context, ns types.Namespace) error {
 	if _, ok := x.locks[ns]; !ok {
 		return nil
 	}

@@ -1,6 +1,6 @@
 package service
 
-import "github.com/m-mizutani/alertchain/pkg/domain/interfaces"
+import "github.com/secmon-lab/alertchain/pkg/domain/interfaces"
 
 type Services struct {
 	Workflow *WorkflowService

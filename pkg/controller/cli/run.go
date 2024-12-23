@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"os"
@@ -8,12 +9,12 @@ import (
 
 	"log/slog"
 
-	"github.com/m-mizutani/alertchain/pkg/chain/core"
-	"github.com/m-mizutani/alertchain/pkg/controller/cli/config"
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
-	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/goerr"
-	"github.com/urfave/cli/v2"
+	"github.com/secmon-lab/alertchain/pkg/chain/core"
+	"github.com/secmon-lab/alertchain/pkg/controller/cli/config"
+	"github.com/secmon-lab/alertchain/pkg/ctxutil"
+	"github.com/secmon-lab/alertchain/pkg/domain/types"
+	"github.com/urfave/cli/v3"
 )
 
 func cmdRun() *cli.Command {
@@ -28,7 +29,7 @@ func cmdRun() *cli.Command {
 			Name:        "input",
 			Aliases:     []string{"i"},
 			Usage:       "input file or '-' for stdin",
-			EnvVars:     []string{"ALERTCHAIN_INPUT"},
+			Sources:     cli.EnvVars("ALERTCHAIN_INPUT"),
 			Required:    true,
 			Destination: &input,
 			Category:    "run",
@@ -37,7 +38,7 @@ func cmdRun() *cli.Command {
 			Name:        "schema",
 			Aliases:     []string{"s"},
 			Usage:       "schema type",
-			EnvVars:     []string{"ALERTCHAIN_SCHEMA"},
+			Sources:     cli.EnvVars("ALERTCHAIN_SCHEMA"),
 			Required:    true,
 			Destination: (*string)(&schema),
 		},
@@ -49,7 +50,7 @@ func cmdRun() *cli.Command {
 		Aliases: []string{"r"},
 		Usage:   "Run alertchain policy at once and exit in",
 		Flags:   flags,
-		Action: func(c *cli.Context) error {
+		Action: func(ctx context.Context, cmd *cli.Command) error {
 			var chainOptions []core.Option
 
 			chain, err := buildChain(&policyCfg, chainOptions...)
@@ -73,8 +74,7 @@ func cmdRun() *cli.Command {
 				return goerr.Wrap(err, "failed to decode input data")
 			}
 
-			ctx := model.NewContext(model.WithBase(c.Context))
-			ctx.Logger().Info("starting alertchain with run mode", slog.Any("data", data))
+			ctxutil.Logger(ctx).Info("starting alertchain with run mode", slog.Any("data", data))
 
 			if _, err := chain.HandleAlert(ctx, schema, data); err != nil {
 				return goerr.Wrap(err, "failed to handle alert")

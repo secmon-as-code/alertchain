@@ -11,10 +11,11 @@ import (
 
 	"cloud.google.com/go/firestore"
 
-	"github.com/m-mizutani/alertchain/pkg/domain/interfaces"
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
-	"github.com/m-mizutani/alertchain/pkg/domain/types"
 	"github.com/m-mizutani/goerr"
+	"github.com/secmon-lab/alertchain/pkg/ctxutil"
+	"github.com/secmon-lab/alertchain/pkg/domain/interfaces"
+	"github.com/secmon-lab/alertchain/pkg/domain/model"
+	"github.com/secmon-lab/alertchain/pkg/domain/types"
 	"google.golang.org/api/iterator"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -44,7 +45,7 @@ func hashNamespace(input types.Namespace) string {
 }
 
 // GetAttrs implements interfaces.Database.
-func (x *Client) GetAttrs(ctx *model.Context, ns types.Namespace) (model.Attributes, error) {
+func (x *Client) GetAttrs(ctx context.Context, ns types.Namespace) (model.Attributes, error) {
 	key := attrKeyPrefix + hashNamespace(ns)
 	docs, err := x.client.Collection(x.attrCollection).Doc(key).Collection("attributes").Documents(ctx).GetAll()
 	if err != nil {
@@ -72,7 +73,7 @@ func (x *Client) GetAttrs(ctx *model.Context, ns types.Namespace) (model.Attribu
 }
 
 // PutAttrs implements interfaces.Database.
-func (x *Client) PutAttrs(ctx *model.Context, ns types.Namespace, attrs model.Attributes) error {
+func (x *Client) PutAttrs(ctx context.Context, ns types.Namespace, attrs model.Attributes) error {
 	err := x.client.RunTransaction(ctx, func(ctx context.Context, tx *firestore.Transaction) error {
 		key := attrKeyPrefix + hashNamespace(ns)
 		collection := x.client.Collection(x.attrCollection).Doc(key).Collection("attributes")
@@ -125,7 +126,7 @@ func (x *Client) PutAttrs(ctx *model.Context, ns types.Namespace, attrs model.At
 	return nil
 }
 
-func (x *Client) PutWorkflow(ctx *model.Context, workflow model.WorkflowRecord) error {
+func (x *Client) PutWorkflow(ctx context.Context, workflow model.WorkflowRecord) error {
 	key := workflowKeyPrefix + workflow.ID
 
 	if _, err := x.client.Collection(x.workflowCollection).Doc(string(key)).Set(ctx, workflow); err != nil {
@@ -134,7 +135,7 @@ func (x *Client) PutWorkflow(ctx *model.Context, workflow model.WorkflowRecord) 
 	return nil
 }
 
-func (x *Client) GetWorkflows(ctx *model.Context, offset, limit int) ([]model.WorkflowRecord, error) {
+func (x *Client) GetWorkflows(ctx context.Context, offset, limit int) ([]model.WorkflowRecord, error) {
 	var workflows []model.WorkflowRecord
 	iter := x.client.Collection(x.workflowCollection).
 		OrderBy("CreatedAt", firestore.Desc).
@@ -159,7 +160,7 @@ func (x *Client) GetWorkflows(ctx *model.Context, offset, limit int) ([]model.Wo
 	}
 }
 
-func (x *Client) GetWorkflow(ctx *model.Context, id types.WorkflowID) (*model.WorkflowRecord, error) {
+func (x *Client) GetWorkflow(ctx context.Context, id types.WorkflowID) (*model.WorkflowRecord, error) {
 	key := workflowKeyPrefix + id.String()
 	doc, err := x.client.Collection(x.workflowCollection).Doc(key).Get(ctx)
 	if err != nil {
@@ -177,7 +178,7 @@ func (x *Client) GetWorkflow(ctx *model.Context, id types.WorkflowID) (*model.Wo
 	return &workflow, nil
 }
 
-func (x *Client) PutAlert(ctx *model.Context, alert model.Alert) error {
+func (x *Client) PutAlert(ctx context.Context, alert model.Alert) error {
 	key := alertKeyPrefix + alert.ID.String()
 
 	if _, err := x.client.Collection(x.alertCollection).Doc(key).Set(ctx, alert); err != nil {
@@ -187,7 +188,7 @@ func (x *Client) PutAlert(ctx *model.Context, alert model.Alert) error {
 	return nil
 }
 
-func (x *Client) GetAlert(ctx *model.Context, id types.AlertID) (*model.Alert, error) {
+func (x *Client) GetAlert(ctx context.Context, id types.AlertID) (*model.Alert, error) {
 	key := alertKeyPrefix + id.String()
 	doc, err := x.client.Collection(x.alertCollection).Doc(key).Get(ctx)
 	if err != nil {
@@ -234,7 +235,7 @@ func exponentialBackoff(attempt int) time.Duration {
 }
 
 // Lock implements interfaces.Database.
-func (x *Client) Lock(ctx *model.Context, ns types.Namespace, timeout time.Time) error {
+func (x *Client) Lock(ctx context.Context, ns types.Namespace, timeout time.Time) error {
 	for i := 0; ; i++ {
 		select {
 		case <-ctx.Done():
@@ -264,10 +265,10 @@ var (
 	errLockFailed = goerr.New("failed to lock")
 )
 
-func (x *Client) tryLock(ctx *model.Context, ns types.Namespace, timeout time.Time) error {
+func (x *Client) tryLock(ctx context.Context, ns types.Namespace, timeout time.Time) error {
 	key := lockKeyPrefix + hashNamespace(ns)
 	now := time.Now().UTC()
-	alert := ctx.Alert()
+	alert := ctxutil.GetAlert(ctx)
 
 	err := x.client.RunTransaction(ctx, func(ctx context.Context, tx *firestore.Transaction) error {
 		var doc *firestore.DocumentSnapshot
@@ -318,7 +319,7 @@ func (x *Client) tryLock(ctx *model.Context, ns types.Namespace, timeout time.Ti
 }
 
 // Unlock implements interfaces.Database.
-func (x *Client) Unlock(ctx *model.Context, ns types.Namespace) error {
+func (x *Client) Unlock(ctx context.Context, ns types.Namespace) error {
 	key := lockKeyPrefix + hashNamespace(ns)
 
 	if _, err := x.client.Collection(x.attrCollection).Doc(key).Delete(ctx); err != nil {
@@ -327,7 +328,7 @@ func (x *Client) Unlock(ctx *model.Context, ns types.Namespace) error {
 	return nil
 }
 
-func New(ctx *model.Context, projectID string, databaseID string) (*Client, error) {
+func New(ctx context.Context, projectID string, databaseID string) (*Client, error) {
 	client, err := firestore.NewClientWithDatabase(ctx, projectID, databaseID)
 	if err != nil {
 		return nil, types.AsRuntimeErr(goerr.Wrap(err, "Failed to initialize firebase app"))

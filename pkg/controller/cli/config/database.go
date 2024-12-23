@@ -1,14 +1,15 @@
 package config
 
 import (
-	"github.com/m-mizutani/alertchain/pkg/domain/interfaces"
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
-	"github.com/m-mizutani/alertchain/pkg/domain/types"
-	"github.com/m-mizutani/alertchain/pkg/infra/firestore"
-	"github.com/m-mizutani/alertchain/pkg/infra/memory"
-	"github.com/m-mizutani/alertchain/pkg/utils"
+	"context"
+
 	"github.com/m-mizutani/goerr"
-	"github.com/urfave/cli/v2"
+	"github.com/secmon-lab/alertchain/pkg/domain/interfaces"
+	"github.com/secmon-lab/alertchain/pkg/domain/types"
+	"github.com/secmon-lab/alertchain/pkg/infra/firestore"
+	"github.com/secmon-lab/alertchain/pkg/infra/memory"
+	"github.com/secmon-lab/alertchain/pkg/utils"
+	"github.com/urfave/cli/v3"
 )
 
 type Database struct {
@@ -26,7 +27,7 @@ func (x *Database) Flags() []cli.Flag {
 			Usage:       "Database type (memory, firestore)",
 			Category:    category,
 			Aliases:     []string{"t"},
-			EnvVars:     []string{"ALERTCHAIN_DB_TYPE"},
+			Sources:    cli.EnvVars("ALERTCHAIN_DB_TYPE"),
 			Value:       "memory",
 			Destination: &x.dbType,
 		},
@@ -34,20 +35,20 @@ func (x *Database) Flags() []cli.Flag {
 			Name:        "firestore-project-id",
 			Usage:       "Project ID of Firestore",
 			Category:    category,
-			EnvVars:     []string{"ALERTCHAIN_FIRESTORE_PROJECT_ID"},
+			Sources:    cli.EnvVars("ALERTCHAIN_FIRESTORE_PROJECT_ID"),
 			Destination: &x.firestoreProjectID,
 		},
 		&cli.StringFlag{
 			Name:        "firestore-database-id",
 			Usage:       "Prefix of Firestore database ID",
 			Category:    category,
-			EnvVars:     []string{"ALERTCHAIN_FIRESTORE_DATABASE_ID"},
+			Sources:    cli.EnvVars("ALERTCHAIN_FIRESTORE_DATABASE_ID"),
 			Destination: &x.firestoreDatabaseID,
 		},
 	}
 }
 
-func (x *Database) New(ctx *model.Context) (interfaces.Database, func(), error) {
+func (x *Database) New(ctx context.Context) (interfaces.Database, func(), error) {
 	nopCloser := func() {}
 
 	switch x.dbType {

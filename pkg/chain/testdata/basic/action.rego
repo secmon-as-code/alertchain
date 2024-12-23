@@ -1,6 +1,6 @@
 package action
 
-run[res] {
+run contains res if {
 	res := {
 		"id": "test",
 		"uses": "mock",

@@ -1,6 +1,6 @@
 package alert.test_service
 
-alert[msg] {
+alert contains msg if {
 	msg := {
 		"title": "test alert",
 		"description": "test description",

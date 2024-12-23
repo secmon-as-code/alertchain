@@ -1,9 +1,11 @@
 package service
 
 import (
-	"github.com/m-mizutani/alertchain/pkg/domain/interfaces"
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
-	"github.com/m-mizutani/alertchain/pkg/domain/types"
+	"context"
+
+	"github.com/secmon-lab/alertchain/pkg/domain/interfaces"
+	"github.com/secmon-lab/alertchain/pkg/domain/model"
+	"github.com/secmon-lab/alertchain/pkg/domain/types"
 )
 
 type ActionService struct {
@@ -14,6 +16,6 @@ func NewActionService(db interfaces.Database) *ActionService {
 	return &ActionService{db: db}
 }
 
-func (x *ActionService) Fetch(ctx *model.Context, wfID types.WorkflowID) ([]model.ActionRecord, error) {
+func (x *ActionService) Fetch(ctx context.Context, wfID types.WorkflowID) ([]model.ActionRecord, error) {
 	return nil, nil
 }

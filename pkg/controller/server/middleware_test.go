@@ -2,6 +2,7 @@ package server_test
 
 import (
 	"bytes"
+	"context"
 	"crypto/hmac"
 	"crypto/sha256"
 	_ "embed"
@@ -14,12 +15,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/m-mizutani/alertchain/pkg/controller/server"
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
-	"github.com/m-mizutani/alertchain/pkg/domain/types"
-	"github.com/m-mizutani/alertchain/pkg/infra/policy"
-	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/gt"
+	"github.com/secmon-lab/alertchain/pkg/controller/server"
+	"github.com/secmon-lab/alertchain/pkg/domain/model"
+	"github.com/secmon-lab/alertchain/pkg/domain/types"
+	"github.com/secmon-lab/alertchain/pkg/infra/policy"
+	"github.com/secmon-lab/alertchain/pkg/utils"
 )
 
 //go:embed testdata/authz.rego
@@ -34,7 +35,7 @@ func newServer(t *testing.T, policyData string, options ...server.Option) *serve
 
 	options = append(options, server.WithAuthzPolicy(authz))
 
-	srv := server.New(func(ctx *model.Context, schema types.Schema, data any) ([]*model.Alert, error) {
+	srv := server.New(func(ctx context.Context, schema types.Schema, data any) ([]*model.Alert, error) {
 		return nil, nil
 	}, options...)
 

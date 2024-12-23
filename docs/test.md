@@ -24,7 +24,7 @@ It is recommended to prepare the test by creating an `alert.rego` file containin
 ```rego
 package alert.aws_guardduty
 
-alert[res] {
+alert contains res if {
     startswith(input.Findings[x].Type, "Trojan:")
     input.Findings[_].Severity > 7
     res := {
@@ -56,7 +56,7 @@ For a detailed explanation of how to write tests, please refer to the [OPA offic
 package alert.aws_guardduty
 
 # detect alert correctly
-test_detect {
+test_detect if {
 	result := alert with input as data.test.aws_guardduty
 	count(result) == 1
 	result[_].title == "Trojan:EC2/DriveBySourceTraffic!DNS"
@@ -64,7 +64,7 @@ test_detect {
 }
 
 # ignore if severity is 7
-test_ignore_severity {
+test_ignore_severity if {
 	result := alert with input as json.patch(
 		data.test.aws_guardduty,
 		[{
@@ -77,7 +77,7 @@ test_ignore_severity {
 }
 
 # ignore if prefix of Type does not match with "Trojan:"
-test_ignore_type {
+test_ignore_type if {
 	result := alert with input as json.patch(
 		data.test.aws_guardduty,
 		[{
@@ -209,7 +209,7 @@ This will generate a file named `output/scenario1/data.json`. A sample file woul
                 {
                   "key": "counter",
                   "value": 1,
-                  "global": true
+                  "persist": true
                 }
               ]
             }
@@ -251,7 +251,7 @@ You can test if the actions were triggered as expected by examining these JSON f
 ```rego
 package test
 
-test_play_result {
+test_play_result if {
     # Only one alert should be detected
     count(data.output.scenario1.results) == 1
     result := data.output.scenario1.results[0]

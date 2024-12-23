@@ -5,7 +5,7 @@ package model
 import (
 	"time"
 
-	"github.com/m-mizutani/alertchain/pkg/domain/types"
+	"github.com/secmon-lab/alertchain/pkg/domain/types"
 )
 
 type ActionRecord struct {
@@ -40,17 +40,20 @@ type ArgumentRecord struct {
 }
 
 type AttributeRecord struct {
-	ID     string  `json:"id"`
-	Key    string  `json:"key"`
-	Value  string  `json:"value"`
-	Type   *string `json:"type,omitempty"`
-	Global bool    `json:"global"`
-	TTL    int     `json:"ttl"`
+	ID      string  `json:"id"`
+	Key     string  `json:"key"`
+	Value   string  `json:"value"`
+	Type    *string `json:"type,omitempty"`
+	Persist bool    `json:"persist"`
+	TTL     int     `json:"ttl"`
 }
 
 type NextRecord struct {
 	Abort bool               `json:"abort"`
 	Attrs []*AttributeRecord `json:"attrs"`
+}
+
+type Query struct {
 }
 
 type ReferenceRecord struct {

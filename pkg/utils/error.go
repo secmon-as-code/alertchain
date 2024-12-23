@@ -1,15 +1,18 @@
 package utils
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/getsentry/sentry-go"
 	"github.com/m-mizutani/goerr"
+	"github.com/secmon-lab/alertchain/pkg/ctxutil"
+	"github.com/secmon-lab/alertchain/pkg/logging"
 )
 
-func HandleError(err error) {
+func HandleError(ctx context.Context, err error) {
 	// Logging error
-	Logger().Error("runtime error", ErrLog(err))
+	ctxutil.Logger(ctx).Error("runtime error", logging.ErrAttr(err))
 
 	// Sending error to Sentry
 	hub := sentry.CurrentHub().Clone()

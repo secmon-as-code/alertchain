@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/m-mizutani/alertchain/pkg/controller/cli"
 	"github.com/m-mizutani/gt"
+	"github.com/secmon-lab/alertchain/pkg/controller/cli"
 )
 
 func TestCLI(t *testing.T) {

@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
-	"github.com/m-mizutani/alertchain/pkg/infra/logging"
 	"github.com/m-mizutani/gt"
+	"github.com/secmon-lab/alertchain/pkg/domain/model"
+	"github.com/secmon-lab/alertchain/pkg/infra/logging"
 )
 
 // bufferWriteCloser is a wrapper around bytes.Buffer that implements io.WriteCloser.
@@ -43,16 +43,6 @@ func TestJSONLogger(t *testing.T) {
 
 	// first process
 	actionLogger := alertLogger.NewActionLogger()
-	actionLogger.LogInit([]model.Next{
-		{
-			Attrs: model.Attributes{
-				{
-					Key:   "test-attr",
-					Value: "test-value",
-				},
-			},
-		},
-	})
 	actionLogger.LogRun([]model.Action{
 		{
 			ID:   "test-action",
@@ -60,13 +50,8 @@ func TestJSONLogger(t *testing.T) {
 		},
 	})
 
-	// second process
-	actionLogger = alertLogger.NewActionLogger()
-	actionLogger.LogExit([]model.Next{
-		{
-			Abort: true,
-		},
-	})
+	// second process, but not action recorded
+	_ = alertLogger.NewActionLogger()
 
 	err := jsonLogger.Flush()
 	gt.NoError(t, err)
@@ -80,24 +65,9 @@ func TestJSONLogger(t *testing.T) {
 
 	r := resultLog.Results[0]
 	gt.V(t, r.Alert.ID).Equal("test-alert")
-	gt.A(t, r.Actions).Length(2)
+	gt.A(t, r.Actions).Length(1)
 
 	gt.N(t, r.Actions[0].Seq).Equal(0)
-	gt.A(t, r.Actions[0].Init).Length(1).At(0, func(t testing.TB, v model.Next) {
-		gt.A(t, v.Attrs).Length(1).At(0, func(t testing.TB, v model.Attribute) {
-			gt.V(t, v.Key).Equal("test-attr")
-			gt.V(t, v.Value).Equal("test-value")
-		})
-	})
-	gt.A(t, r.Actions[0].Run).Length(1).At(0, func(t testing.TB, v model.Action) {
-		gt.V(t, v.ID).Equal("test-action")
-		gt.V(t, v.Name).Equal("test-action-name")
-	})
-
-	gt.N(t, r.Actions[1].Seq).Equal(1)
-	gt.A(t, r.Actions[1].Init).Length(0)
-	gt.A(t, r.Actions[1].Run).Length(0)
-	gt.A(t, r.Actions[1].Exit).Length(1).At(0, func(t testing.TB, v model.Next) {
-		gt.V(t, v.Abort).Equal(true)
-	})
+	gt.V(t, r.Actions[0].ID).Equal("test-action")
+	gt.V(t, r.Actions[0].Name).Equal("test-action-name")
 }

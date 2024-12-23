@@ -1,30 +1,26 @@
 package action
 
-count_attr := input.alert.attrs[x] {
+count_attr := input.alert.attrs[x] if {
     input.alert.attrs[x].key == "count"
 } else := {
     "id": null,
     "value": 0,
 }
 
-init[res] {
-    input.seq == 0
-
+run contains res if {
     res := {
-        "abort": count_attr.value < 2,
-        "attrs": [{
+        "commit": [{
             "id": count_attr.id,
             "key": "count",
             "value": count_attr.value + 1,
-            "global": true,
-        }]
+            "persist": true,
+        }],
     }
-    print(res)
 }
 
-run[job] {
+run contains job if {
     job := {
-        "id": "testing",
+        "id": "test",
         "uses": "http.fetch",
         "args": {
             "method": "GET",

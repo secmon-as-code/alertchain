@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -11,13 +12,15 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/go-chi/chi/v5"
-	"github.com/m-mizutani/alertchain/pkg/controller/graphql"
-	"github.com/m-mizutani/alertchain/pkg/domain/interfaces"
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
-	"github.com/m-mizutani/alertchain/pkg/domain/types"
-	"github.com/m-mizutani/alertchain/pkg/infra/policy"
-	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/goerr"
+	"github.com/secmon-lab/alertchain/pkg/controller/graphql"
+	"github.com/secmon-lab/alertchain/pkg/ctxutil"
+	"github.com/secmon-lab/alertchain/pkg/domain/interfaces"
+	"github.com/secmon-lab/alertchain/pkg/domain/model"
+	"github.com/secmon-lab/alertchain/pkg/domain/types"
+	"github.com/secmon-lab/alertchain/pkg/infra/policy"
+	"github.com/secmon-lab/alertchain/pkg/logging"
+	"github.com/secmon-lab/alertchain/pkg/utils"
 )
 
 type Server struct {
@@ -61,7 +64,7 @@ func respondError(w http.ResponseWriter, err error) {
 		Error: err.Error(),
 	}
 
-	utils.HandleError(err)
+	utils.HandleError(context.Background(), err)
 
 	var code int
 	switch types.GetErrorType(err) {
@@ -79,7 +82,7 @@ func respondError(w http.ResponseWriter, err error) {
 
 	w.WriteHeader(code)
 	if err := json.NewEncoder(w).Encode(body); err != nil {
-		utils.Logger().Error("failed to convert error message", err)
+		logging.Default().Error("failed to convert error message", "err", err)
 		return
 	}
 }
@@ -178,7 +181,7 @@ func handleRawAlert(r *http.Request, route interfaces.AlertHandler) (*apiAlertRe
 		return nil, err
 	}
 
-	ctx := model.NewContext(model.WithBase(r.Context()))
+	ctx := r.Context()
 	alerts, err := route(ctx, schema, data)
 	if err != nil {
 		return nil, err
@@ -200,7 +203,7 @@ func handlePubSubAlert(r *http.Request, route interfaces.AlertHandler) (*apiAler
 	if err != nil {
 		return nil, goerr.Wrap(err, "reading pub/sub message").With("body", string(body))
 	}
-	utils.Logger().Debug("recv pubsub message", slog.String("body", string(body)))
+	ctxutil.Logger(r.Context()).Debug("recv pubsub message", slog.String("body", string(body)))
 
 	var req model.PubSubRequest
 	if err := json.Unmarshal(body, &req); err != nil {
@@ -212,7 +215,7 @@ func handlePubSubAlert(r *http.Request, route interfaces.AlertHandler) (*apiAler
 		return nil, goerr.Wrap(err, "parsing pub/sub data field").With("data", string(req.Message.Data))
 	}
 
-	ctx := model.NewContext(model.WithBase(r.Context()))
+	ctx := r.Context()
 	alerts, err := route(ctx, schema, data)
 	if err != nil {
 		return nil, err

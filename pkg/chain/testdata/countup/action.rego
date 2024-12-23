@@ -1,27 +1,26 @@
 package action
 
-run[job] {
+run contains job if {
 	job := {
 		"id": "my_job",
 		"uses": "mock",
+		"commit": [
+			{
+				"id": attr.id,
+				"key": "counter",
+				"value": attr.value + 1,
+				"persist": true,
+			},
+		],
 	}
 }
 
-attr := input.alert.attrs[x] {
+attr := input.alert.attrs[x] if {
 	input.alert.attrs[x].key == "counter"
-} else := init {
+} else := init if {
 	init := {
 		"id": null,
 		"key": "counter",
 		"value": 0,
 	}
-}
-
-exit[res] {
-	res := {"attrs": [{
-		"id": attr.id,
-		"key": "counter",
-		"value": attr.value + 1,
-		"global": true,
-	}]}
 }

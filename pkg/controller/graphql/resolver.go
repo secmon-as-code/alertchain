@@ -1,6 +1,6 @@
 package graphql
 
-import "github.com/m-mizutani/alertchain/pkg/service"
+import "github.com/secmon-lab/alertchain/pkg/service"
 
 // This file will not be regenerated automatically.
 //

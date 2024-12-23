@@ -2,9 +2,9 @@ package authz.http
 
 default deny = true
 
-deny := false { allow }
+deny := false if { allow }
 
-allow {
+allow if {
 	input.path == "/health"
 }
 
@@ -16,7 +16,7 @@ jwks_request(url) := http.send({
 }).raw_body
 
 # Allow request to /api if the request contains a valid JWT token
-allow {
+allow if {
     # Check path
 	startswith(input.path, "/alert/")
 
@@ -39,7 +39,7 @@ allow {
     time.now_ns() / (1000 * 1000 * 1000) < claims[1]["exp"]
 }
 
-allow {
+allow if {
     input.path == "/alert/raw/cloudstrike_hawk"
 
     sigHdr := input.header["X-Cs-Primary-Signature"]
@@ -50,7 +50,7 @@ allow {
     count(tsHdr) == 1
     ts := tsHdr[0]
 
-    data := concat("", [input.body, ts])
-    sign := crypto.hmac.sha256(data, input.env.CLOUDSTRIKE_HAWK_KEY)
+    d := concat("", [input.body, ts])
+    sign := crypto.hmac.sha256(d, input.env.CLOUDSTRIKE_HAWK_KEY)
     crypto.hmac.equal(sign, sig)
 }

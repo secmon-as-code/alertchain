@@ -1,6 +1,6 @@
 package model
 
-import "github.com/m-mizutani/alertchain/pkg/domain/types"
+import "github.com/secmon-lab/alertchain/pkg/domain/types"
 
 type ScenarioLog struct {
 	ID    types.ScenarioID    `json:"id"`
@@ -17,8 +17,6 @@ type PlayLog struct {
 }
 
 type ActionLog struct {
-	Seq  int      `json:"seq"`
-	Init []Next   `json:"init,omitempty"`
-	Run  []Action `json:"run,omitempty"`
-	Exit []Next   `json:"exit,omitempty"`
+	Seq int `json:"seq"`
+	Action
 }

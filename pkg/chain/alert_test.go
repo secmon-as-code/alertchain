@@ -2,14 +2,15 @@ package chain_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"testing"
 
-	"github.com/m-mizutani/alertchain/pkg/chain"
-	"github.com/m-mizutani/alertchain/pkg/chain/core"
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
-	"github.com/m-mizutani/alertchain/pkg/infra/policy"
 	"github.com/m-mizutani/gt"
+	"github.com/secmon-lab/alertchain/pkg/chain"
+	"github.com/secmon-lab/alertchain/pkg/chain/core"
+	"github.com/secmon-lab/alertchain/pkg/domain/model"
+	"github.com/secmon-lab/alertchain/pkg/infra/policy"
 )
 
 func TestAlertRaw(t *testing.T) {
@@ -32,7 +33,7 @@ func TestAlertRaw(t *testing.T) {
 	)).NoError(t)
 
 	var calledMock int
-	mock := func(ctx *model.Context, alert model.Alert, args model.ActionArgs) (any, error) {
+	mock := func(ctx context.Context, alert model.Alert, args model.ActionArgs) (any, error) {
 		s := gt.Cast[string](t, args["raw"])
 		gt.V(t, s).Equal(alertDataPP.String())
 		calledMock++
@@ -45,7 +46,7 @@ func TestAlertRaw(t *testing.T) {
 		core.WithExtraAction("test.output_raw", mock),
 	)).NoError(t)
 
-	ctx := model.NewContext()
+	ctx := context.Background()
 	gt.R1(c.HandleAlert(ctx, "amber", alertData)).NoError(t)
 	gt.N(t, calledMock).Equal(1)
 }

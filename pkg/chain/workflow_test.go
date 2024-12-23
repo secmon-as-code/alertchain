@@ -2,18 +2,19 @@ package chain_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"testing"
 
-	"github.com/m-mizutani/alertchain/pkg/chain"
-	"github.com/m-mizutani/alertchain/pkg/chain/core"
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
-	"github.com/m-mizutani/alertchain/pkg/domain/types"
-	"github.com/m-mizutani/alertchain/pkg/infra/logging"
-	"github.com/m-mizutani/alertchain/pkg/infra/memory"
-	"github.com/m-mizutani/alertchain/pkg/infra/policy"
-	"github.com/m-mizutani/alertchain/pkg/service"
 	"github.com/m-mizutani/gt"
+	"github.com/secmon-lab/alertchain/pkg/chain"
+	"github.com/secmon-lab/alertchain/pkg/chain/core"
+	"github.com/secmon-lab/alertchain/pkg/domain/model"
+	"github.com/secmon-lab/alertchain/pkg/domain/types"
+	"github.com/secmon-lab/alertchain/pkg/infra/logging"
+	"github.com/secmon-lab/alertchain/pkg/infra/memory"
+	"github.com/secmon-lab/alertchain/pkg/infra/policy"
+	"github.com/secmon-lab/alertchain/pkg/service"
 )
 
 type buffer struct {
@@ -36,7 +37,7 @@ func TestWorkflow(t *testing.T) {
 	gt.A(t, playbook.Scenarios).Length(1)
 
 	var calledMock int
-	mock := func(ctx *model.Context, alert model.Alert, _ model.ActionArgs) (any, error) {
+	mock := func(ctx context.Context, alert model.Alert, _ model.ActionArgs) (any, error) {
 		calledMock++
 		return nil, nil
 	}
@@ -52,7 +53,7 @@ func TestWorkflow(t *testing.T) {
 		core.WithEnablePrint(),
 	)
 
-	ctx := model.NewContext()
+	ctx := context.Background()
 	alert := model.NewAlert(model.AlertMetaData{
 		Title: "test-alert",
 	}, "test-alert", "test-data")
@@ -71,38 +72,14 @@ func TestWorkflow(t *testing.T) {
 		gt.V(t, v.Alert.Title).Equal("test-alert")
 		gt.A(t, v.Actions).Length(2).At(0, func(t testing.TB, v *model.ActionLog) {
 			gt.V(t, v.Seq).Equal(0)
-			gt.A(t, v.Init).Length(1).At(0, func(t testing.TB, v model.Next) {
-				gt.V(t, v.Abort).Equal(false)
-				gt.A(t, v.Attrs).Length(1).At(0, func(t testing.TB, v model.Attribute) {
-					gt.V(t, v.Key).Equal("color")
-					gt.V(t, v.Value).Equal("blue")
-				})
-			})
-			gt.A(t, v.Run).Length(1).At(0, func(t testing.TB, v model.Action) {
-				gt.V(t, v.Uses).Equal("mock")
-				gt.V(t, v.ID).Equal("1st")
-				gt.M(t, v.Args).EqualAt("tick", float64(1))
-			})
-			gt.A(t, v.Exit).Length(1).At(0, func(t testing.TB, v model.Next) {
-				gt.A(t, v.Attrs).Length(1).At(0, func(t testing.TB, v model.Attribute) {
-					gt.V(t, v.Key).Equal("index1")
-					gt.V(t, v.Value).Equal("first")
-				})
-			})
+			gt.V(t, v.Uses).Equal("mock")
+			gt.V(t, v.ID).Equal("1st")
+			gt.M(t, v.Args).EqualAt("tick", float64(1))
 		}).At(1, func(t testing.TB, v *model.ActionLog) {
 			gt.V(t, v.Seq).Equal(1)
-			gt.A(t, v.Init).Length(0)
-			gt.A(t, v.Run).Length(1).At(0, func(t testing.TB, v model.Action) {
-				gt.V(t, v.Uses).Equal("mock")
-				gt.V(t, v.ID).Equal("2nd")
-				gt.M(t, v.Args).EqualAt("tick", float64(2))
-			})
-			gt.A(t, v.Exit).Length(1).At(0, func(t testing.TB, v model.Next) {
-				gt.A(t, v.Attrs).Length(1).At(0, func(t testing.TB, v model.Attribute) {
-					gt.V(t, v.Key).Equal("index2")
-					gt.V(t, v.Value).Equal("second")
-				})
-			})
+			gt.V(t, v.Uses).Equal("mock")
+			gt.V(t, v.ID).Equal("2nd")
+			gt.M(t, v.Args).EqualAt("tick", float64(2))
 		})
 	})
 }

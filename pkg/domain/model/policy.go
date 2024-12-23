@@ -1,36 +1,16 @@
 package model
 
-import "github.com/m-mizutani/alertchain/pkg/domain/types"
+import (
+	"errors"
+
+	"github.com/PaesslerAG/gval"
+	"github.com/PaesslerAG/jsonpath"
+	"github.com/m-mizutani/goerr"
+	"github.com/secmon-lab/alertchain/pkg/domain/types"
+)
 
 type AlertPolicyResult struct {
 	Alerts []AlertMetaData `json:"alert"`
-}
-
-type ActionInitRequest struct {
-	Seq     int           `json:"seq"`
-	Alert   Alert         `json:"alert"`
-	EnvVars types.EnvVars `json:"env" masq:"secret"`
-}
-
-type ActionInitResponse struct {
-	Init []Next `json:"init"`
-}
-
-func (x *ActionInitResponse) Abort() bool {
-	for _, e := range x.Init {
-		if e.Abort {
-			return true
-		}
-	}
-	return false
-}
-
-func (x *ActionInitResponse) Attrs() Attributes {
-	var attrs Attributes
-	for _, e := range x.Init {
-		attrs = append(attrs, e.Attrs...)
-	}
-	return attrs
 }
 
 type ActionRunRequest struct {
@@ -45,52 +25,58 @@ type ActionRunResponse struct {
 }
 
 type Action struct {
-	ID    types.ActionID   `json:"id"`
-	Name  string           `json:"name"`
-	Uses  types.ActionName `json:"uses"`
-	Args  ActionArgs       `json:"args"`
-	Force bool             `json:"force"`
+	ID     types.ActionID   `json:"id"`
+	Name   string           `json:"name"`
+	Uses   types.ActionName `json:"uses"`
+	Args   ActionArgs       `json:"args"`
+	Force  bool             `json:"force"`
+	Abort  bool             `json:"abort"`
+	Commit []Commit         `json:"commit"`
+}
+
+func (x Action) Copy() Action {
+	copied := x
+	return copied
+}
+
+type Commit struct {
+	Attribute
+	Path string `json:"path"`
+}
+
+func (x *Commit) ToAttr(data any) (*Attribute, error) {
+	attr := x.Attribute
+
+	if x.Path == "" {
+		if attr.Value == nil {
+			return nil, goerr.New("Path is empty and Value is nil").With("attr", attr)
+		}
+		return &attr, nil
+	}
+
+	if data == nil {
+		return nil, goerr.New("Data is nil").With("commit", x)
+	}
+
+	builder := gval.Full(jsonpath.PlaceholderExtension())
+	dst, err := builder.Evaluate(x.Path, data)
+	if err != nil {
+		if unwrapped := errors.Unwrap(err); unwrapped != nil && unwrapped.Error() == "unknown key invalid" {
+			if attr.Value == nil {
+				return nil, nil
+			}
+			return &attr, nil
+		}
+
+		return nil, goerr.Wrap(err, "failed to evaluate JSON path").With("path", x.Path).With("data", data)
+	}
+	attr.Value = dst
+
+	return &attr, nil
 }
 
 type ActionResult struct {
 	Action
 	Result any `json:"result,omitempty"`
-}
-
-type Next struct {
-	Abort bool        `json:"abort"`
-	Attrs []Attribute `json:"attrs"`
-
-	// Set by runAction
-	Proc Action `json:"-"`
-}
-
-type ActionExitRequest struct {
-	Action ActionResult   `json:"action"`
-	Called []ActionResult `json:"called"`
-
-	Alert   Alert         `json:"alert"`
-	EnvVars types.EnvVars `json:"env" masq:"secret"`
-	Seq     int           `json:"seq"`
-}
-
-type ActionExitResponse struct {
-	Exit []Next `json:"exit"`
-}
-
-func (x *ActionExitResponse) Abort() bool {
-	for _, e := range x.Exit {
-		if e.Abort {
-			return true
-		}
-	}
-	return false
-}
-
-func (x *ActionExitResponse) Attrs() Attributes {
-	var attrs Attributes
-	for _, e := range x.Exit {
-		attrs = append(attrs, e.Attrs...)
-	}
-	return attrs
+	Attrs  Attributes
 }

@@ -1,15 +1,21 @@
 package action
 
-run[res] {
+run contains res if {
 	input.alert.source == "aws"
 	res := {
 		"id": "ask-gpt",
 		"uses": "chatgpt.query",
 		"args": {"secret_api_key": input.env.CHATGPT_API_KEY},
+		"commit": [
+			{
+				"key": "asked_gpt",
+				"path": "choices[0].message.content",
+			},
+		]
 	}
 }
 
-run[res] {
+run contains res if {
 	gtp := input.called[_]
 	gtp.id == "ask-gpt"
 

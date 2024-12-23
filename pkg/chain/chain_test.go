@@ -1,19 +1,20 @@
 package chain_test
 
 import (
+	"context"
 	"encoding/json"
 	"sync"
 
 	"testing"
 
-	"github.com/m-mizutani/alertchain/pkg/chain"
-	"github.com/m-mizutani/alertchain/pkg/chain/core"
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
-	"github.com/m-mizutani/alertchain/pkg/infra/logging"
-	"github.com/m-mizutani/alertchain/pkg/infra/memory"
-	"github.com/m-mizutani/alertchain/pkg/infra/policy"
 	"github.com/m-mizutani/goerr"
 	"github.com/m-mizutani/gt"
+	"github.com/secmon-lab/alertchain/pkg/chain"
+	"github.com/secmon-lab/alertchain/pkg/chain/core"
+	"github.com/secmon-lab/alertchain/pkg/domain/model"
+	"github.com/secmon-lab/alertchain/pkg/infra/logging"
+	"github.com/secmon-lab/alertchain/pkg/infra/memory"
+	"github.com/secmon-lab/alertchain/pkg/infra/policy"
 )
 
 func TestBasic(t *testing.T) {
@@ -34,7 +35,7 @@ func TestBasic(t *testing.T) {
 	)).NoError(t)
 
 	var called int
-	mock := func(ctx *model.Context, _ model.Alert, args model.ActionArgs) (any, error) {
+	mock := func(ctx context.Context, _ model.Alert, args model.ActionArgs) (any, error) {
 		s, ok := args["s"].(string)
 		gt.B(t, ok).True()
 		gt.V(t, s).Equal("blue")
@@ -52,7 +53,7 @@ func TestBasic(t *testing.T) {
 		core.WithExtraAction("mock", mock),
 	)).NoError(t)
 
-	ctx := model.NewContext()
+	ctx := context.Background()
 	gt.R1(c.HandleAlert(ctx, "scc", alertData)).NoError(t)
 	gt.N(t, called).Equal(1)
 }
@@ -75,7 +76,7 @@ func TestDisableAction(t *testing.T) {
 	)).NoError(t)
 
 	var called int
-	mock := func(ctx *model.Context, _ model.Alert, _ model.ActionArgs) (any, error) {
+	mock := func(ctx context.Context, _ model.Alert, _ model.ActionArgs) (any, error) {
 		called++
 		return nil, nil
 	}
@@ -87,7 +88,7 @@ func TestDisableAction(t *testing.T) {
 		core.WithDisableAction(),
 	)).NoError(t)
 
-	ctx := model.NewContext()
+	ctx := context.Background()
 	gt.R1(c.HandleAlert(ctx, "scc", alertData)).NoError(t)
 	gt.N(t, called).Equal(0) // Action should not be called
 }
@@ -108,7 +109,7 @@ func TestChainControl(t *testing.T) {
 	)).NoError(t)
 
 	var calledMock, calledMockAfter int
-	mock := func(ctx *model.Context, alert model.Alert, _ model.ActionArgs) (any, error) {
+	mock := func(ctx context.Context, alert model.Alert, _ model.ActionArgs) (any, error) {
 		gt.A(t, alert.Attrs).Length(2).
 			At(0, func(t testing.TB, v model.Attribute) {
 				gt.V(t, v.Key).Equal("k1")
@@ -123,7 +124,7 @@ func TestChainControl(t *testing.T) {
 		return nil, nil
 	}
 
-	mockAfter := func(ctx *model.Context, alert model.Alert, _ model.ActionArgs) (any, error) {
+	mockAfter := func(ctx context.Context, alert model.Alert, _ model.ActionArgs) (any, error) {
 		gt.A(t, alert.Attrs).Length(3).
 			At(0, func(t testing.TB, v model.Attribute) {
 				gt.V(t, v.Key).Equal("k1")
@@ -149,7 +150,7 @@ func TestChainControl(t *testing.T) {
 		core.WithExtraAction("mock.after", mockAfter),
 	)).NoError(t)
 
-	ctx := model.NewContext()
+	ctx := context.Background()
 	gt.R1(c.HandleAlert(ctx, "my_test", alertData)).NoError(t)
 	gt.N(t, calledMock).Equal(1)
 	gt.N(t, calledMockAfter).Equal(1)
@@ -171,7 +172,7 @@ func TestChainLoop(t *testing.T) {
 	)).NoError(t)
 
 	var calledMock int
-	mock := func(ctx *model.Context, alert model.Alert, _ model.ActionArgs) (any, error) {
+	mock := func(ctx context.Context, alert model.Alert, _ model.ActionArgs) (any, error) {
 		gt.A(t, alert.Attrs).Length(1)
 		calledMock++
 		return nil, nil
@@ -183,7 +184,7 @@ func TestChainLoop(t *testing.T) {
 		core.WithExtraAction("mock", mock),
 	)).NoError(t)
 
-	ctx := model.NewContext()
+	ctx := context.Background()
 	gt.R1(c.HandleAlert(ctx, "my_test", alertData)).NoError(t)
 	gt.N(t, calledMock).Equal(9)
 }
@@ -215,7 +216,7 @@ func TestPlaybook(t *testing.T) {
 	})
 
 	var calledMock int
-	mock := func(ctx *model.Context, alert model.Alert, _ model.ActionArgs) (any, error) {
+	mock := func(ctx context.Context, alert model.Alert, _ model.ActionArgs) (any, error) {
 		gt.A(t, alert.Attrs).Length(1)
 		calledMock++
 		return nil, nil
@@ -231,7 +232,7 @@ func TestPlaybook(t *testing.T) {
 	)).NoError(t)
 
 	var alertData any
-	ctx := model.NewContext()
+	ctx := context.Background()
 	gt.R1(c.HandleAlert(ctx, "my_test", alertData)).NoError(t)
 	gt.N(t, calledMock).Equal(0)
 
@@ -264,7 +265,7 @@ func TestGlobalAttr(t *testing.T) {
 	)).NoError(t)
 
 	var calledMock int
-	mock := func(ctx *model.Context, alert model.Alert, _ model.ActionArgs) (any, error) {
+	mock := func(ctx context.Context, alert model.Alert, _ model.ActionArgs) (any, error) {
 		calledMock++
 		return nil, nil
 	}
@@ -275,7 +276,7 @@ func TestGlobalAttr(t *testing.T) {
 		core.WithExtraAction("mock", mock),
 	)).NoError(t)
 
-	ctx := model.NewContext()
+	ctx := context.Background()
 
 	// call HandleAlert twice, but mock action should be called only once
 	gt.R1(c.HandleAlert(ctx, "my_alert", alertData)).NoError(t)
@@ -301,7 +302,7 @@ func TestGlobalAttrRaceCondition(t *testing.T) {
 	cache := memory.New()
 
 	var calledMock int
-	mock := func(ctx *model.Context, alert model.Alert, _ model.ActionArgs) (any, error) {
+	mock := func(ctx context.Context, alert model.Alert, _ model.ActionArgs) (any, error) {
 		calledMock++
 		return nil, nil
 	}
@@ -315,7 +316,7 @@ func TestGlobalAttrRaceCondition(t *testing.T) {
 		core.WithDatabase(cache),
 	)).NoError(t)
 
-	ctx := model.NewContext()
+	ctx := context.Background()
 	wg := sync.WaitGroup{}
 	for i := 0; i < threadNum; i++ {
 		wg.Add(1)
@@ -350,7 +351,7 @@ func TestForceAction(t *testing.T) {
 	)).NoError(t)
 
 	calledStep := map[float64]bool{}
-	mock := func(ctx *model.Context, alert model.Alert, args model.ActionArgs) (any, error) {
+	mock := func(ctx context.Context, alert model.Alert, args model.ActionArgs) (any, error) {
 		step := gt.Cast[float64](t, args["step"])
 		calledStep[step] = true
 		return nil, goerr.New("force action should not be called")
@@ -362,7 +363,7 @@ func TestForceAction(t *testing.T) {
 		core.WithExtraAction("mock", mock),
 	)).NoError(t)
 
-	ctx := model.NewContext()
+	ctx := context.Background()
 
 	_ = gt.R1(c.HandleAlert(ctx, "my_alert", alertData)).Error(t)
 	gt.True(t, calledStep[1])

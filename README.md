@@ -38,7 +38,7 @@ AlertChain is an advanced tool that not only allows you to detect alerts through
 To install AlertChain, run the following command:
 
 ```bash
-$ go install github.com/m-mizutani/alertchain@latest
+$ go install github.com/secmon-lab/alertchain@latest
 ```
 
 ### Documents
@@ -94,7 +94,7 @@ Next, prepare an Action Policy. In this example, the action requests a summary a
 ```rego
 package action
 
-run[res] {
+run contains res if {
 	input.alert.source == "aws"
 	res := {
 		"id": "ask-gpt",
@@ -103,7 +103,7 @@ run[res] {
 	}
 }
 
-run[res] {
+run contains res if {
 	gtp := input.called[_]
 	gtp.id == "ask-gpt"
 

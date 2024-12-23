@@ -2,6 +2,7 @@ package server_test
 
 import (
 	"bytes"
+	"context"
 	_ "embed"
 	"encoding/json"
 	"net/http"
@@ -10,16 +11,16 @@ import (
 
 	"testing"
 
-	"github.com/m-mizutani/alertchain/pkg/chain"
-	"github.com/m-mizutani/alertchain/pkg/chain/core"
-	"github.com/m-mizutani/alertchain/pkg/controller/graphql"
-	"github.com/m-mizutani/alertchain/pkg/controller/server"
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
-	"github.com/m-mizutani/alertchain/pkg/domain/types"
-	"github.com/m-mizutani/alertchain/pkg/infra/memory"
-	"github.com/m-mizutani/alertchain/pkg/infra/policy"
-	"github.com/m-mizutani/alertchain/pkg/service"
 	"github.com/m-mizutani/gt"
+	"github.com/secmon-lab/alertchain/pkg/chain"
+	"github.com/secmon-lab/alertchain/pkg/chain/core"
+	"github.com/secmon-lab/alertchain/pkg/controller/graphql"
+	"github.com/secmon-lab/alertchain/pkg/controller/server"
+	"github.com/secmon-lab/alertchain/pkg/domain/model"
+	"github.com/secmon-lab/alertchain/pkg/domain/types"
+	"github.com/secmon-lab/alertchain/pkg/infra/memory"
+	"github.com/secmon-lab/alertchain/pkg/infra/policy"
+	"github.com/secmon-lab/alertchain/pkg/service"
 )
 
 //go:embed testdata/scc.json
@@ -27,7 +28,7 @@ var sccData []byte
 
 func TestSCC(t *testing.T) {
 	var called int
-	srv := server.New(func(ctx *model.Context, schema types.Schema, data any) ([]*model.Alert, error) {
+	srv := server.New(func(ctx context.Context, schema types.Schema, data any) ([]*model.Alert, error) {
 		called++
 		gt.V(t, schema).Equal("scc")
 		alert := gt.Cast[map[string]any](t, data)
@@ -45,7 +46,7 @@ func TestSCC(t *testing.T) {
 
 func TestPubSub(t *testing.T) {
 	var called int
-	srv := server.New(func(ctx *model.Context, schema types.Schema, data any) ([]*model.Alert, error) {
+	srv := server.New(func(ctx context.Context, schema types.Schema, data any) ([]*model.Alert, error) {
 		called++
 		gt.V(t, schema).Equal("scc")
 		alert := gt.Cast[map[string]any](t, data)

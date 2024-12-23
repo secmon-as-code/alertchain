@@ -1,26 +1,28 @@
 package cli
 
 import (
+	"context"
 	"io"
 	"os"
 	"path/filepath"
 
 	"log/slog"
 
-	"github.com/m-mizutani/alertchain/pkg/chain/core"
-	"github.com/m-mizutani/alertchain/pkg/controller/cli/config"
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
-	"github.com/m-mizutani/alertchain/pkg/domain/types"
-	"github.com/m-mizutani/alertchain/pkg/infra/logging"
 	"github.com/m-mizutani/goerr"
-	"github.com/urfave/cli/v2"
+	"github.com/secmon-lab/alertchain/pkg/chain/core"
+	"github.com/secmon-lab/alertchain/pkg/controller/cli/config"
+	"github.com/secmon-lab/alertchain/pkg/ctxutil"
+	"github.com/secmon-lab/alertchain/pkg/domain/model"
+	"github.com/secmon-lab/alertchain/pkg/domain/types"
+	"github.com/secmon-lab/alertchain/pkg/infra/logging"
+	"github.com/urfave/cli/v3"
 )
 
 func cmdPlay() *cli.Command {
 	var (
 		scenarioPath string
 		outDir       string
-		scenarioIDs  cli.StringSlice
+		scenarioIDs  []string
 
 		policyCfg config.Policy
 	)
@@ -30,7 +32,7 @@ func cmdPlay() *cli.Command {
 			Name:        "scenario",
 			Aliases:     []string{"s"},
 			Usage:       "scenario directory",
-			EnvVars:     []string{"ALERTCHAIN_SCENARIO"},
+			Sources:     cli.EnvVars("ALERTCHAIN_SCENARIO"),
 			Required:    true,
 			Destination: &scenarioPath,
 		},
@@ -38,7 +40,7 @@ func cmdPlay() *cli.Command {
 			Name:        "output",
 			Aliases:     []string{"o"},
 			Usage:       "output directory",
-			EnvVars:     []string{"ALERTCHAIN_OUTPUT"},
+			Sources:     cli.EnvVars("ALERTCHAIN_OUTPUT"),
 			Destination: &outDir,
 			Value:       "./output",
 		},
@@ -46,7 +48,7 @@ func cmdPlay() *cli.Command {
 			Name:        "target",
 			Aliases:     []string{"t"},
 			Usage:       "Target scenario ID to play. If not specified, all scenarios are played",
-			EnvVars:     []string{"ALERTCHAIN_TARGET"},
+			Sources:     cli.EnvVars("ALERTCHAIN_TARGET"),
 			Destination: &scenarioIDs,
 		},
 	}
@@ -58,7 +60,7 @@ func cmdPlay() *cli.Command {
 		Usage:   "Simulate alertchain policy",
 		Flags:   flags,
 
-		Action: func(c *cli.Context) error {
+		Action: func(ctx context.Context, cmd *cli.Command) error {
 			// Load playbook
 			scenarioFiles := make([]string, 0)
 			err := filepath.Walk(scenarioPath, func(path string, info os.FileInfo, err error) error {
@@ -74,14 +76,12 @@ func cmdPlay() *cli.Command {
 				return goerr.Wrap(err, "failed to walk through playbook directory")
 			}
 
-			ctx := model.NewContext(
-				model.WithBase(c.Context),
-				model.WithCLI(),
-			)
+			ctx = ctxutil.SetCLI(ctx)
+			logger := ctxutil.Logger(ctx)
 
 			var playbook model.Playbook
 			for _, scenarioFile := range scenarioFiles {
-				ctx.Logger().Debug("Load scenario", slog.String("file", scenarioFile))
+				logger.Debug("Load scenario", slog.String("file", scenarioFile))
 				s, err := model.ParseScenario(scenarioFile, os.ReadFile)
 				if err != nil {
 					return goerr.Wrap(err, "failed to parse playbook")
@@ -94,10 +94,10 @@ func cmdPlay() *cli.Command {
 				return err
 			}
 
-			ctx.Logger().Info("starting alertchain with play mode", slog.Any("scenario dir", scenarioPath))
+			logger.Info("starting alertchain with play mode", slog.Any("scenario dir", scenarioPath))
 
 			targets := make(map[types.ScenarioID]struct{})
-			for _, id := range scenarioIDs.Value() {
+			for _, id := range scenarioIDs {
 				targets[types.ScenarioID(id)] = struct{}{}
 			}
 
@@ -124,8 +124,9 @@ func (x *actionMockWrapper) GetResult(name types.ActionName) any {
 	return x.ev.GetResult(name)
 }
 
-func playScenario(ctx *model.Context, scenario *model.Scenario, cfg *config.Policy, outDir string) error {
-	ctx.Logger().Debug("Start scenario", slog.Any("scenario", scenario))
+func playScenario(ctx context.Context, scenario *model.Scenario, cfg *config.Policy, outDir string) error {
+	logger := ctxutil.Logger(ctx)
+	logger.Debug("Start scenario", slog.Any("scenario", scenario))
 
 	w, err := openLogFile(outDir, string(scenario.ID))
 	if err != nil {
@@ -133,7 +134,7 @@ func playScenario(ctx *model.Context, scenario *model.Scenario, cfg *config.Poli
 	}
 	defer func() {
 		if err := w.Close(); err != nil {
-			ctx.Logger().Warn("Failed to close log file", slog.String("err", err.Error()))
+			logger.Warn("Failed to close log file", slog.String("err", err.Error()))
 		}
 	}()
 	lg := logging.NewJSONLogger(w, scenario)
@@ -164,7 +165,7 @@ func playScenario(ctx *model.Context, scenario *model.Scenario, cfg *config.Poli
 	}
 
 	if err := lg.Flush(); err != nil {
-		ctx.Logger().Error("Failed to close scenario logger", "err", err)
+		logger.Error("Failed to close scenario logger", "err", err)
 	}
 
 	return nil
