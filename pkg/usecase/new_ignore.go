@@ -51,7 +51,7 @@ func getRegoPackageName(policyData string) (string, error) {
 }
 
 type NewIgnorePolicyInput struct {
-	AlertID          types.AlertID
+	AlertIDs         []types.AlertID
 	BasePolicyFile   string
 	TestDataDir      string
 	TestDataRegoPath string
@@ -59,9 +59,15 @@ type NewIgnorePolicyInput struct {
 }
 
 func (x NewIgnorePolicyInput) Validate() error {
-	if x.AlertID == "" {
+	if len(x.AlertIDs) == 0 {
 		return goerr.New("AlertID is empty")
 	}
+	for _, id := range x.AlertIDs {
+		if id == "" {
+			return goerr.New("AlertID is empty")
+		}
+	}
+
 	if x.BasePolicyFile == "" {
 		return goerr.New("BasePolicyFile is empty")
 	}
@@ -85,15 +91,20 @@ func NewIgnorePolicy(ctx context.Context,
 
 	logger := ctxutil.Logger(ctx)
 
-	alert, err := dbClient.GetAlert(ctx, input.AlertID)
-	if err != nil {
-		return err
+	var alertDataSet []string
+	for _, alertID := range input.AlertIDs {
+		alert, err := dbClient.GetAlert(ctx, alertID)
+		if err != nil {
+			return err
+		}
+		alertData, err := json.Marshal(alert.Data)
+		if err != nil {
+			return goerr.Wrap(err, "failed to marshal alert data")
+		}
+		logger.Info("Got alert data", "alertID", alertID)
+
+		alertDataSet = append(alertDataSet, string(alertData))
 	}
-	alertData, err := json.Marshal(alert.Data)
-	if err != nil {
-		return goerr.Wrap(err, "failed to marshal alert data")
-	}
-	logger.Info("Got alert data", "alertID", input.AlertID)
 
 	basePolicy, err := os.ReadFile(input.BasePolicyFile)
 	if err != nil {
@@ -118,11 +129,13 @@ func NewIgnorePolicy(ctx context.Context,
 		alertSlugPrompt += "\nExclude these list: \n" + strings.Join(testFileList, "\n") + "\n"
 	}
 
-	slugResp, err := genAI.Generate(ctx, alertSlugPrompt, string(alertData))
+	alertSlugPrompts := append([]string{alertSlugPrompt}, alertDataSet...)
+	slugResp, err := genAI.Generate(ctx, alertSlugPrompts...)
 	alertSlug := strings.TrimSpace(slugResp[0])
 	logger.Info("Generated slug", "slug", alertSlug)
 
-	policyResp, err := genAI.Generate(ctx, newIgnorePrompt, string(alertData), string(basePolicy))
+	newIgnorePrompts := append([]string{newIgnorePrompt, string(basePolicy)}, alertDataSet...)
+	policyResp, err := genAI.Generate(ctx, newIgnorePrompts...)
 	if err != nil {
 		return err
 	}
@@ -140,7 +153,7 @@ func NewIgnorePolicy(ctx context.Context,
 	if err := os.MkdirAll(filepath.Dir(testDataPath), 0755); err != nil {
 		return goerr.Wrap(err, "failed to create test data directory")
 	}
-	if err := os.WriteFile(testDataPath, alertData, 0644); err != nil {
+	if err := os.WriteFile(testDataPath, []byte(alertDataSet[0]), 0644); err != nil {
 		return goerr.Wrap(err, "failed to write test data file")
 	}
 	logger.Info("Wrote test data", "file", testDataPath)

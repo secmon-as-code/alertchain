@@ -65,7 +65,7 @@ func TestNewIgnorePolicy(t *testing.T) {
 	// defer os.RemoveAll(input.TestDataDir)
 
 	input := usecase.NewIgnorePolicyInput{
-		AlertID:          alertID,
+		AlertIDs:         []types.AlertID{alertID},
 		BasePolicyFile:   fd.Name(),
 		TestDataDir:      dir,
 		TestDataRegoPath: "test_rego_path",

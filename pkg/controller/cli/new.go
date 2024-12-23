@@ -5,6 +5,7 @@ import (
 	_ "embed"
 
 	"github.com/secmon-lab/alertchain/pkg/controller/cli/config"
+	"github.com/secmon-lab/alertchain/pkg/domain/types"
 	"github.com/secmon-lab/alertchain/pkg/infra/gemini"
 	"github.com/secmon-lab/alertchain/pkg/usecase"
 	"github.com/urfave/cli/v3"
@@ -23,8 +24,8 @@ func cmdNew() *cli.Command {
 
 func cmdNewIgnore() *cli.Command {
 	var (
-		input usecase.NewIgnorePolicyInput
-
+		input           usecase.NewIgnorePolicyInput
+		alertIDSet      []string
 		geminiProjectID string
 		geminiLocation  string
 
@@ -32,13 +33,13 @@ func cmdNewIgnore() *cli.Command {
 	)
 
 	flags := []cli.Flag{
-		&cli.StringFlag{
+		&cli.StringSliceFlag{
 			Name:        "alert-id",
 			Aliases:     []string{"i"},
 			Usage:       "Alert ID to ignore",
 			Sources:     cli.EnvVars("ALERTCHAIN_ALERT_ID"),
 			Required:    true,
-			Destination: (*string)(&input.AlertID),
+			Destination: (*[]string)(&alertIDSet),
 		},
 		&cli.StringFlag{
 			Name:        "base-policy-file",
@@ -95,6 +96,10 @@ func cmdNewIgnore() *cli.Command {
 		Flags: flags,
 
 		Action: func(ctx context.Context, cmd *cli.Command) error {
+			for _, id := range alertIDSet {
+				input.AlertIDs = append(input.AlertIDs, types.AlertID(id))
+			}
+
 			geminiClient, err := gemini.New(ctx, geminiProjectID, geminiLocation)
 			if err != nil {
 				return err

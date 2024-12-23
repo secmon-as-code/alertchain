@@ -5,6 +5,6 @@ The given JSON data represents a security alert. Generate a slug that represents
 # Constraints
 
 The slug must start with an alphabet letter.
-The slug should contain only lowercase letters, numbers, and underscores.
+The slug should contain only lowercase letters, numbers, and underscores. DO NOT use special characters or spaces.
 The slug should be expressed in lowercase.
 Separate words in the slug with underscores.
