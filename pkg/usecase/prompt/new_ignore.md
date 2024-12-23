@@ -9,3 +9,4 @@ The output should be in Rego code format only, not Markdown.
 Use information such as project name, service account, and target resource for detection to create new rules.
 Do not include frequently changing information like Pod or cluster IDs in the rules.
 Use tab indentation for the rules instead of spaces.
+Output only the Rego code. Do not include any other characters, spaces, or quotes like markdown in the output.

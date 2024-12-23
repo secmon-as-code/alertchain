@@ -13,11 +13,12 @@ type Client struct {
 }
 
 func New(ctx context.Context, projectID, location string) (*Client, error) {
-	modelName := "gemini-1.5-flash-002"
+	// modelName := "gemini-1.5-flash-002"
+	modelName := "gemini-2.0-flash-exp"
 
 	client, err := genai.NewClient(ctx, projectID, location)
 	if err != nil {
-		return nil, goerr.Wrap(err, "failed to create gemini client")
+		return nil, goerr.Wrap(err, "failed to create genai client")
 	}
 	return &Client{client: client, model: modelName}, nil
 }
