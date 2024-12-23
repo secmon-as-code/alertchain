@@ -52,7 +52,7 @@ func cmdNewIgnore() *cli.Command {
 		&cli.StringFlag{
 			Name:        "test-data-dir",
 			Aliases:     []string{"d"},
-			Usage:       "Directory path to store test data",
+			Usage:       "Directory path to store test data (e.g. alert/testdata/your_rule)",
 			Sources:     cli.EnvVars("ALERTCHAIN_TEST_DATA_DIR"),
 			Required:    true,
 			Destination: &input.TestDataDir,
@@ -60,7 +60,7 @@ func cmdNewIgnore() *cli.Command {
 		&cli.StringFlag{
 			Name:        "test-data-rego-path",
 			Aliases:     []string{"r"},
-			Usage:       "Path to store test data in rego format",
+			Usage:       "Path to store test data in rego format (e.g. data.alert.testdata.your_rule)",
 			Sources:     cli.EnvVars("ALERTCHAIN_TEST_DATA_REGO_PATH"),
 			Required:    true,
 			Destination: &input.TestDataRegoPath,
@@ -74,7 +74,7 @@ func cmdNewIgnore() *cli.Command {
 		},
 		&cli.StringFlag{
 			Name:        "gemini-location",
-			Usage:       "Google Cloud Location for Gemini",
+			Usage:       "Google Cloud Location for Gemini (e.g. us-central1)",
 			Sources:     cli.EnvVars("ALERTCHAIN_GEMINI_LOCATION"),
 			Required:    true,
 			Destination: &geminiLocation,
