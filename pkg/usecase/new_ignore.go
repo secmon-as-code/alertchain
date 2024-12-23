@@ -131,6 +131,9 @@ func NewIgnorePolicy(ctx context.Context,
 
 	alertSlugPrompts := append([]string{alertSlugPrompt}, alertDataSet...)
 	slugResp, err := genAI.Generate(ctx, alertSlugPrompts...)
+	if err != nil {
+		return err
+	}
 	alertSlug := strings.TrimSpace(slugResp[0])
 	logger.Info("Generated slug", "slug", alertSlug)
 
