@@ -1,19 +1,19 @@
 package cli
 
 import (
+	"context"
 	_ "embed"
 	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com/m-mizutani/alertchain/pkg/controller/cli/config"
-	"github.com/m-mizutani/alertchain/pkg/domain/model"
-	"github.com/m-mizutani/alertchain/pkg/domain/types"
-	"github.com/m-mizutani/alertchain/pkg/infra/gemini"
-	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/goerr"
-	"github.com/urfave/cli/v2"
+	"github.com/secmon-lab/alertchain/pkg/controller/cli/config"
+	"github.com/secmon-lab/alertchain/pkg/ctxutil"
+	"github.com/secmon-lab/alertchain/pkg/domain/types"
+	"github.com/secmon-lab/alertchain/pkg/infra/gemini"
+	"github.com/urfave/cli/v3"
 )
 
 func cmdNew() *cli.Command {
@@ -21,7 +21,7 @@ func cmdNew() *cli.Command {
 		Name:    "new",
 		Aliases: []string{"n"},
 		Usage:   "Create new alertchain policy",
-		Subcommands: []*cli.Command{
+		Commands: []*cli.Command{
 			cmdNewIgnore(),
 		},
 	}
@@ -51,7 +51,7 @@ func cmdNewIgnore() *cli.Command {
 			Name:        "alert-id",
 			Aliases:     []string{"i"},
 			Usage:       "Alert ID to ignore",
-			EnvVars:     []string{"ALERTCHAIN_ALERT_ID"},
+			Sources:     cli.EnvVars("ALERTCHAIN_ALERT_ID"),
 			Required:    true,
 			Destination: (*string)(&alertID),
 		},
@@ -59,7 +59,7 @@ func cmdNewIgnore() *cli.Command {
 			Name:        "base-policy-file",
 			Aliases:     []string{"b"},
 			Usage:       "Base policy file. It will be used as a template",
-			EnvVars:     []string{"ALERTCHAIN_BASE_POLICY"},
+			Sources:     cli.EnvVars("ALERTCHAIN_BASE_POLICY"),
 			Required:    true,
 			Destination: &basePolicyFile,
 		},
@@ -67,7 +67,7 @@ func cmdNewIgnore() *cli.Command {
 			Name:        "test-data-dir",
 			Aliases:     []string{"d"},
 			Usage:       "Directory path to store test data",
-			EnvVars:     []string{"ALERTCHAIN_TEST_DATA_DIR"},
+			Sources:     cli.EnvVars("ALERTCHAIN_TEST_DATA_DIR"),
 			Required:    true,
 			Destination: &testDataDir,
 		},
@@ -75,21 +75,21 @@ func cmdNewIgnore() *cli.Command {
 			Name:        "test-data-rego-path",
 			Aliases:     []string{"r"},
 			Usage:       "Path to store test data in rego format",
-			EnvVars:     []string{"ALERTCHAIN_TEST_DATA_REGO_PATH"},
+			Sources:     cli.EnvVars("ALERTCHAIN_TEST_DATA_REGO_PATH"),
 			Required:    true,
 			Destination: &testDataRegoPath,
 		},
 		&cli.StringFlag{
 			Name:        "gemini-project-id",
 			Usage:       "Google Cloud Project ID for Gemini",
-			EnvVars:     []string{"ALERTCHAIN_GEMINI_PROJECT_ID"},
+			Sources:     cli.EnvVars("ALERTCHAIN_GEMINI_PROJECT_ID"),
 			Required:    true,
 			Destination: &geminiProjectID,
 		},
 		&cli.StringFlag{
 			Name:        "gemini-location",
 			Usage:       "Google Cloud Location for Gemini",
-			EnvVars:     []string{"ALERTCHAIN_GEMINI_LOCATION"},
+			Sources:     cli.EnvVars("ALERTCHAIN_GEMINI_LOCATION"),
 			Required:    true,
 			Destination: &geminiLocation,
 		},
@@ -97,7 +97,7 @@ func cmdNewIgnore() *cli.Command {
 			Name:        "overwrite",
 			Aliases:     []string{"w"},
 			Usage:       "Overwrite existing base policy file",
-			EnvVars:     []string{"ALERTCHAIN_OVERWRITE"},
+			Sources:     cli.EnvVars("ALERTCHAIN_OVERWRITE"),
 			Destination: &overWrite,
 		},
 	}
@@ -109,9 +109,8 @@ func cmdNewIgnore() *cli.Command {
 		Usage: "Create new ignore policy based on the alert",
 		Flags: flags,
 
-		Action: func(c *cli.Context) error {
-			ctx := model.NewContext(model.WithBase(c.Context))
-			logger := utils.Logger()
+		Action: func(ctx context.Context, cmd *cli.Command) error {
+			logger := ctxutil.Logger(ctx)
 
 			geminiClient, err := gemini.New(ctx, geminiProjectID, geminiLocation)
 			if err != nil {

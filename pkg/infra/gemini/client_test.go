@@ -5,9 +5,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/m-mizutani/alertchain/pkg/infra/gemini"
-	"github.com/m-mizutani/alertchain/pkg/utils"
 	"github.com/m-mizutani/gt"
+	"github.com/secmon-lab/alertchain/pkg/infra/gemini"
+	"github.com/secmon-lab/alertchain/pkg/utils"
 )
 
 func TestGenerateRule(t *testing.T) {
