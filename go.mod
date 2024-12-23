@@ -27,7 +27,7 @@ require (
 	github.com/sashabaranov/go-openai v1.36.0
 	github.com/slack-go/slack v0.12.3
 	github.com/urfave/cli/v3 v3.0.0-beta1
-	github.com/vektah/gqlparser/v2 v2.5.11
+	github.com/vektah/gqlparser/v2 v2.5.14
 	google.golang.org/api v0.214.0
 	google.golang.org/grpc v1.69.2
 )
