@@ -1,7 +1,7 @@
 package types
 
 const (
-	AppVersion = "v0.0.12"
+	AppVersion = "v0.2.0"
 
 	DefaultMaxSequences = 32
 
