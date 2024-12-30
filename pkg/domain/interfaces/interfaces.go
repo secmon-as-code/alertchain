@@ -7,9 +7,6 @@ import (
 	"github.com/secmon-lab/alertchain/pkg/domain/types"
 )
 
-// RunAction is a function to run an action. The function is registered as an option within the chain.Chain.
-type RunAction func(ctx context.Context, alert model.Alert, args model.ActionArgs) (any, error)
-
 // ActionMock is an interface for "play" mode. The mock should be registered as an option within the chain.Chain. This mock only returns the prepared result for each action ID.
 type ActionMock interface {
 	GetResult(name types.ActionName) any
