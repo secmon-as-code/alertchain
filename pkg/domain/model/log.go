@@ -7,7 +7,7 @@ type ScenarioLog struct {
 	Title types.ScenarioTitle `json:"title"`
 
 	Results []*PlayLog `json:"results,omitempty"`
-	Error   string     `json:"error,omitempty"`
+	Error   any        `json:"error,omitempty"`
 }
 
 type PlayLog struct {
