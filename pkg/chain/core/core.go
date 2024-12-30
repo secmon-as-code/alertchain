@@ -5,6 +5,7 @@ import (
 
 	"github.com/secmon-lab/alertchain/action"
 	"github.com/secmon-lab/alertchain/pkg/domain/interfaces"
+	"github.com/secmon-lab/alertchain/pkg/domain/model"
 	"github.com/secmon-lab/alertchain/pkg/domain/types"
 	"github.com/secmon-lab/alertchain/pkg/infra/memory"
 	"github.com/secmon-lab/alertchain/pkg/infra/policy"
@@ -19,7 +20,7 @@ type Core struct {
 
 	scenarioLogger interfaces.ScenarioLogger
 	actionMock     interfaces.ActionMock
-	actionMap      map[types.ActionName]interfaces.RunAction
+	actionMap      map[types.ActionName]model.RunAction
 
 	disableAction bool
 	enablePrint   bool
@@ -83,7 +84,7 @@ func WithEnablePrint() Option {
 	}
 }
 
-func WithExtraAction(name types.ActionName, action interfaces.RunAction) Option {
+func WithExtraAction(name types.ActionName, action model.RunAction) Option {
 	return func(c *Core) {
 		if _, ok := c.actionMap[name]; ok {
 			panic("action name is already registered: " + name)

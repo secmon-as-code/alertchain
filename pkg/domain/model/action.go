@@ -1,10 +1,14 @@
 package model
 
 import (
+	"context"
 	"encoding/json"
 
 	"github.com/m-mizutani/goerr"
 )
+
+// RunAction is a function to run an action. The function is registered as an option within the chain.Chain.
+type RunAction func(ctx context.Context, alert Alert, args ActionArgs) (any, error)
 
 type ActionArgs map[string]any
 

@@ -36,6 +36,7 @@ func (x *Playbook) Validate() error {
 	return nil
 }
 
+// Event is a single event in a scenario. It also serves as interfaces.MockAction, returning arbitrary data during play mode execution.
 type Event struct {
 	Input   any                        `json:"input"`
 	Schema  types.Schema               `json:"schema"`

@@ -29,22 +29,24 @@ const (
 	ErrTypeBadRequest
 )
 
-type errorTypeKey struct{}
+const (
+	errorTypeKey = "errorType"
+)
 
 func AsConfigErr(err *goerr.Error) *goerr.Error {
-	return err.With(errorTypeKey{}, ErrTypeConfig)
+	return err.With(errorTypeKey, ErrTypeConfig)
 }
 func AsPolicyErr(err *goerr.Error) *goerr.Error {
-	return err.With(errorTypeKey{}, ErrTypePolicy)
+	return err.With(errorTypeKey, ErrTypePolicy)
 }
 func AsRuntimeErr(err *goerr.Error) *goerr.Error {
-	return err.With(errorTypeKey{}, ErrTypeRuntime)
+	return err.With(errorTypeKey, ErrTypeRuntime)
 }
 func AsActionErr(err *goerr.Error) *goerr.Error {
-	return err.With(errorTypeKey{}, ErrTypeAction)
+	return err.With(errorTypeKey, ErrTypeAction)
 }
 func AsBadRequestErr(err *goerr.Error) *goerr.Error {
-	return err.With(errorTypeKey{}, ErrTypeBadRequest)
+	return err.With(errorTypeKey, ErrTypeBadRequest)
 }
 
 func GetErrorType(err error) ErrorType {
@@ -53,7 +55,7 @@ func GetErrorType(err error) ErrorType {
 	}
 
 	if e, ok := err.(*goerr.Error); ok {
-		if v, ok := e.Values()[errorTypeKey{}]; ok {
+		if v, ok := e.Values()[errorTypeKey]; ok {
 			return v.(ErrorType)
 		}
 	}

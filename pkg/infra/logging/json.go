@@ -41,6 +41,11 @@ func (x *JSONLogger) NewAlertLogger(alert *model.Alert) interfaces.AlertLogger {
 }
 
 func (x *JSONLogger) LogError(err error) {
+	if gErr := goerr.Unwrap(err); gErr != nil {
+		x.log.Error = gErr.Printable()
+		return
+	}
+
 	x.log.Error = err.Error()
 }
 
