@@ -1,10 +1,12 @@
 package config
 
 import (
+	"context"
 	"io"
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/m-mizutani/goerr"
 	"github.com/secmon-lab/alertchain/pkg/domain/types"
@@ -36,7 +38,6 @@ func (x *Logger) Flags() []cli.Flag {
 			Aliases:     []string{"f"},
 			Sources:     cli.EnvVars("ALERTCHAIN_LOG_FORMAT"),
 			Usage:       "Set log format [console|json]",
-			Value:       "json",
 			Destination: &x.format,
 		},
 		&cli.StringFlag{
@@ -58,9 +59,21 @@ func (x *Logger) Configure() (func(), error) {
 		"console": logging.FormatConsole,
 		"json":    logging.FormatJSON,
 	}
-	format, ok := formatMap[x.format]
-	if !ok {
-		return closer, goerr.Wrap(types.ErrInvalidOption, "Invalid log format").With("format", x.format)
+
+	var format logging.Format
+	if x.format == "" {
+		term := os.Getenv("TERM")
+		if strings.Contains(term, "color") || strings.Contains(term, "xterm") {
+			format = logging.FormatConsole
+		} else {
+			format = logging.FormatJSON
+		}
+	} else {
+		fmt, ok := formatMap[x.format]
+		if !ok {
+			return closer, goerr.Wrap(types.ErrInvalidOption, "Invalid log format").With("format", x.format)
+		}
+		format = fmt
 	}
 
 	levelMap := map[string]slog.Level{
@@ -87,7 +100,7 @@ func (x *Logger) Configure() (func(), error) {
 		}
 		output = f
 		closer = func() {
-			utils.SafeClose(f)
+			utils.SafeClose(context.Background(), f)
 		}
 	}
 

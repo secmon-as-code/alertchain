@@ -68,7 +68,11 @@ func Play(ctx context.Context, input PlayInput) error {
 		return err
 	}
 
-	logger.Info("starting alertchain with play mode", slog.Any("scenario dir", input.ScenarioPath))
+	logger.Info("starting alertchain with play mode",
+		"scenario dir", input.ScenarioPath,
+		"output dir", input.OutDir,
+		"targets", input.Targets,
+	)
 
 	targets := make(map[types.ScenarioID]struct{})
 	for _, id := range input.Targets {
@@ -83,6 +87,8 @@ func Play(ctx context.Context, input PlayInput) error {
 		if err := playScenario(ctx, s, input.CoreOptions, input.OutDir); err != nil {
 			return err
 		}
+
+		logger.Info("Done playbook", slog.Group("scenario", slog.Any("id", s.ID), slog.Any("title", s.Title)))
 	}
 
 	return nil

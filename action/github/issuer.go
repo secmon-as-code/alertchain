@@ -102,7 +102,7 @@ func CreateIssue(ctx context.Context, alert model.Alert, args model.ActionArgs) 
 		return nil, goerr.Wrap(err).With("resp", resp)
 	}
 
-	ctxutil.Logger(ctx).Info("Created GitHub issue",
+	ctxutil.Logger(ctx).Debug("Created GitHub issue",
 		slog.Any("issue_number", ptr.From(issue.Number)),
 		slog.Any("title", ptr.From(issue.Title)),
 	)

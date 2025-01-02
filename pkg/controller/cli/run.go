@@ -53,7 +53,7 @@ func cmdRun() *cli.Command {
 		Action: func(ctx context.Context, cmd *cli.Command) error {
 			var chainOptions []chain.Option
 
-			chain, err := buildChain(&policyCfg, chainOptions...)
+			chain, err := buildChain(ctx, &policyCfg, chainOptions...)
 			if err != nil {
 				return err
 			}

@@ -41,7 +41,7 @@ func (x *Chain) runWorkflow(ctx context.Context, alert model.Alert, svc *service
 			return goerr.Wrap(err, "failed to get persistent attrs")
 		}
 
-		logger.Info("loaded persistent attributes", slog.Any("attrs", persistent))
+		logger.Debug("loaded persistent attributes", slog.Any("attrs", persistent))
 
 		alert.Attrs = append(alert.Attrs, persistent...).Tidy()
 	}
@@ -99,7 +99,7 @@ func (x *Chain) runWorkflow(ctx context.Context, alert model.Alert, svc *service
 			return goerr.Wrap(err, "failed to put persistent attrs")
 		}
 
-		logger.Info("saved persistent attributes", slog.Any("attrs", persistent))
+		logger.Debug("saved persistent attributes", slog.Any("attrs", persistent))
 	}
 
 	if err := wfSvc.UpdateLastAttrs(ctx, alert.Attrs); err != nil {
@@ -191,7 +191,7 @@ func (x *sequence) runAction(ctx context.Context, baseAction model.Action) (*mod
 
 	logger := ctxutil.Logger(ctx)
 	if copied.Abort {
-		logger.Info("abort action", slog.Any("action", copied))
+		logger.Debug("abort action", slog.Any("action", copied))
 		return nil, errActionAbort
 	}
 
@@ -202,7 +202,7 @@ func (x *sequence) runAction(ctx context.Context, baseAction model.Action) (*mod
 			return nil, goerr.Wrap(types.ErrActionNotFound).With("uses", copied.Uses)
 		}
 
-		logger.Info("run action", slog.Any("proc", copied))
+		logger.Debug("run action", slog.Any("proc", copied))
 
 		// Run action. If actionMock is set, use it instead of action.Run()
 		if x.actionMock != nil {

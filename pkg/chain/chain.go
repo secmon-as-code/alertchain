@@ -111,7 +111,7 @@ func WithDatabase(db interfaces.Database) Option {
 // HandleAlert is main function of alert chain. It receives alert data and execute actions according to the Rego policies.
 func (x *Chain) HandleAlert(ctx context.Context, schema types.Schema, data any) ([]*model.Alert, error) {
 	logger := ctxutil.Logger(ctx)
-	logger.Info("[input] detect alert", slog.Any("data", data), slog.Any("schema", schema))
+	logger.Debug("[input] detect alert", slog.Any("data", data), slog.Any("schema", schema))
 
 	var alertResult model.AlertPolicyResult
 	if err := x.queryAlertPolicy(ctx, schema, data, &alertResult); err != nil {
@@ -127,12 +127,13 @@ func (x *Chain) HandleAlert(ctx context.Context, schema types.Schema, data any) 
 		alerts[i] = model.NewAlert(meta, schema, data)
 	}
 
-	logger.Info("[output] detect alert", slog.Any("alerts", alerts))
+	logger.Debug("[output] detect alert", slog.Any("alerts", alerts))
 
 	svc := service.New(x.dbClient)
 
 	for _, alert := range alerts {
-		if err := x.runWorkflow(ctx, alert, svc); err != nil {
+		newCtx := ctxutil.InjectLogger(ctx, logger.With("alert_id", alert.ID))
+		if err := x.runWorkflow(newCtx, alert, svc); err != nil {
 			return nil, err
 		}
 	}
@@ -155,7 +156,7 @@ func (x *Chain) queryAlertPolicy(ctx context.Context, schema types.Schema, in, o
 	if err := x.alertPolicy.Query(ctx, in, out, options...); err != nil && !errors.Is(err, types.ErrNoPolicyResult) {
 		return types.AsPolicyErr(goerr.Wrap(err, "failed to evaluate alert policy").With("request", in))
 	}
-	ctxutil.Logger(ctx).Info("queried action policy", slog.Any("in", in), slog.Any("out", out))
+	ctxutil.Logger(ctx).Debug("queried action policy", slog.Any("in", in), slog.Any("out", out))
 
 	return nil
 }
@@ -173,7 +174,7 @@ func (x *Chain) queryActionPolicy(ctx context.Context, in, out any) error {
 	if err := x.actionPolicy.Query(ctx, in, out, options...); err != nil && !errors.Is(err, types.ErrNoPolicyResult) {
 		return types.AsPolicyErr(goerr.Wrap(err, "failed to evaluate action policy").With("request", in))
 	}
-	ctxutil.Logger(ctx).Info("queried action policy", slog.Any("in", in), slog.Any("out", out))
+	ctxutil.Logger(ctx).Debug("queried action policy", slog.Any("in", in), slog.Any("out", out))
 
 	return nil
 }

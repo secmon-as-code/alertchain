@@ -19,7 +19,6 @@ import (
 	"github.com/secmon-lab/alertchain/pkg/domain/model"
 	"github.com/secmon-lab/alertchain/pkg/domain/types"
 	"github.com/secmon-lab/alertchain/pkg/infra/policy"
-	"github.com/secmon-lab/alertchain/pkg/logging"
 	"github.com/secmon-lab/alertchain/pkg/utils"
 )
 
@@ -57,7 +56,7 @@ func WithEnv(env interfaces.Env) Option {
 	}
 }
 
-func respondError(w http.ResponseWriter, err error) {
+func respondError(ctx context.Context, w http.ResponseWriter, err error) {
 	body := struct {
 		Error string `json:"error"`
 	}{
@@ -82,7 +81,7 @@ func respondError(w http.ResponseWriter, err error) {
 
 	w.WriteHeader(code)
 	if err := json.NewEncoder(w).Encode(body); err != nil {
-		logging.Default().Error("failed to convert error message", "err", err)
+		ctxutil.Logger(ctx).Error("failed to encode response body", "err", err)
 		return
 	}
 }
@@ -106,15 +105,17 @@ func New(hdlr interfaces.AlertHandler, options ...Option) *Server {
 
 	wrap := func(handler apiAlertHandler) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
+
 			defer func() {
 				if err := recover(); err != nil {
-					respondError(w, goerr.Wrap(err.(error), "panic in handler"))
+					respondError(ctx, w, goerr.Wrap(err.(error), "panic in handler"))
 				}
 			}()
 
 			resp, err := handler(r, hdlr)
 			if err != nil {
-				respondError(w, err)
+				respondError(ctx, w, err)
 				return
 			}
 
@@ -126,7 +127,7 @@ func New(hdlr interfaces.AlertHandler, options ...Option) *Server {
 
 			w.WriteHeader(resp.Code)
 			if err := json.NewEncoder(w).Encode(body); err != nil {
-				respondError(w, goerr.Wrap(err, "failed to encode response body"))
+				respondError(ctx, w, goerr.Wrap(err, "failed to encode response body"))
 				return
 			}
 		}
@@ -138,7 +139,7 @@ func New(hdlr interfaces.AlertHandler, options ...Option) *Server {
 	r.Route("/health", func(r chi.Router) {
 		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
-			utils.SafeWrite(w, []byte("OK"))
+			utils.SafeWrite(r.Context(), w, []byte("OK"))
 		})
 	})
 
