@@ -81,7 +81,7 @@ func CreateComment(ctx context.Context, alert model.Alert, args model.ActionArgs
 		return nil, goerr.Wrap(err).With("resp", resp)
 	}
 
-	ctxutil.Logger(ctx).Info("Created GitHub comment",
+	ctxutil.Logger(ctx).Debug("Created GitHub comment",
 		slog.Any("comment_id", ptr.From(comment.ID)),
 	)
 

@@ -103,9 +103,13 @@ func Authorize(authz *policy.Client, getEnv interfaces.Env) func(next http.Handl
 
 func Logging(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		logger := ctxutil.Logger(ctx).With("request_id", types.NewRequestID())
+		ctx = ctxutil.InjectLogger(ctx, logger)
+
 		sw := &StatusCodeWriter{ResponseWriter: w}
-		next.ServeHTTP(sw, r)
-		ctxutil.Logger(r.Context()).Info("request",
+		next.ServeHTTP(sw, r.WithContext(ctx))
+		logger.Info("request",
 			slog.Any("method", r.Method),
 			slog.Any("path", r.URL.Path),
 			slog.Int("status", sw.code),
