@@ -140,11 +140,6 @@ func (x *Chain) HandleAlert(ctx context.Context, schema types.Schema, data any) 
 	return utils.ToPtrSlice(alerts), nil
 }
 
-func (x *Chain) getAction(name types.ActionName) (model.RunAction, bool) {
-	action, ok := x.actionMap[name]
-	return action, ok
-}
-
 func (x *Chain) queryAlertPolicy(ctx context.Context, schema types.Schema, in, out any) error {
 	if x.alertPolicy == nil {
 		return nil
