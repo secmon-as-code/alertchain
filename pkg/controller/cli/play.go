@@ -52,7 +52,7 @@ func cmdPlay() *cli.Command {
 		Action: func(ctx context.Context, cmd *cli.Command) error {
 			ctx = ctxutil.SetCLI(ctx)
 
-			coreOptions, err := policyCfg.CoreOption()
+			coreOptions, err := policyCfg.CoreOption(ctx)
 			if err != nil {
 				return err
 			}

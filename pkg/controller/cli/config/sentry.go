@@ -1,10 +1,12 @@
 package config
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	"github.com/getsentry/sentry-go"
+	"github.com/secmon-lab/alertchain/pkg/ctxutil"
 	"github.com/secmon-lab/alertchain/pkg/domain/types"
 	"github.com/secmon-lab/alertchain/pkg/logging"
 	"github.com/urfave/cli/v3"
@@ -36,9 +38,9 @@ func (x *Sentry) Flags() []cli.Flag {
 	}
 }
 
-func (x *Sentry) Configure() (func(), error) {
+func (x *Sentry) Configure(ctx context.Context) (func(), error) {
 	if x.dsn == "" {
-		logging.Default().Warn("Sentry is not configured")
+		ctxutil.Logger(ctx).Warn("Sentry is not configured")
 		return func() {}, nil
 	}
 
@@ -49,7 +51,7 @@ func (x *Sentry) Configure() (func(), error) {
 		Debug:       false,
 	})
 	if err != nil {
-		logging.Default().Warn("failed to initialize Sentry", logging.ErrAttr(err))
+		ctxutil.Logger(ctx).Warn("failed to initialize Sentry", logging.ErrAttr(err))
 		return nil, err
 	}
 

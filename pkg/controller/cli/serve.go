@@ -77,13 +77,13 @@ func cmdServe() *cli.Command {
 			defer dbCloser()
 			chainOpt = append(chainOpt, chain.WithDatabase(dbClient))
 
-			sentryCloser, err := sentryCfg.Configure()
+			sentryCloser, err := sentryCfg.Configure(ctx)
 			if err != nil {
 				return err
 			}
 			defer sentryCloser()
 
-			chain, err := buildChain(&policyCfg, chainOpt...)
+			chain, err := buildChain(ctx, &policyCfg, chainOpt...)
 			if err != nil {
 				return err
 			}
@@ -91,7 +91,7 @@ func cmdServe() *cli.Command {
 			// Build server
 			var serverOpt []server.Option
 
-			authz, err := policyCfg.Load("authz")
+			authz, err := policyCfg.Load(ctx, "authz")
 			if err != nil {
 				return err
 			}

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"context"
 	"io"
 	"log/slog"
 	"os"
@@ -99,7 +100,7 @@ func (x *Logger) Configure() (func(), error) {
 		}
 		output = f
 		closer = func() {
-			utils.SafeClose(f)
+			utils.SafeClose(context.Background(), f)
 		}
 	}
 

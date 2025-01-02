@@ -51,10 +51,10 @@ func Authorize(authz *policy.Client, getEnv interfaces.Env) func(next http.Handl
 				if err != nil {
 					utils.HandleError(ctx, err)
 					w.WriteHeader(http.StatusBadRequest)
-					utils.SafeWrite(w, []byte(err.Error()))
+					utils.SafeWrite(ctx, w, []byte(err.Error()))
 					return
 				}
-				defer utils.SafeClose(reader)
+				defer utils.SafeClose(ctx, reader)
 				r.Body = io.NopCloser(bytes.NewReader(body))
 
 				input := &HTTPAuthzInput{
@@ -91,7 +91,7 @@ func Authorize(authz *policy.Client, getEnv interfaces.Env) func(next http.Handl
 
 				if output.Deny {
 					w.WriteHeader(http.StatusForbidden)
-					utils.SafeWrite(w, []byte("Access denied"))
+					utils.SafeWrite(ctx, w, []byte("Access denied"))
 					return
 				}
 			}

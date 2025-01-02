@@ -27,7 +27,7 @@ func (x *Database) Flags() []cli.Flag {
 			Usage:       "Database type (memory, firestore)",
 			Category:    category,
 			Aliases:     []string{"t"},
-			Sources:    cli.EnvVars("ALERTCHAIN_DB_TYPE"),
+			Sources:     cli.EnvVars("ALERTCHAIN_DB_TYPE"),
 			Value:       "memory",
 			Destination: &x.dbType,
 		},
@@ -35,14 +35,14 @@ func (x *Database) Flags() []cli.Flag {
 			Name:        "firestore-project-id",
 			Usage:       "Project ID of Firestore",
 			Category:    category,
-			Sources:    cli.EnvVars("ALERTCHAIN_FIRESTORE_PROJECT_ID"),
+			Sources:     cli.EnvVars("ALERTCHAIN_FIRESTORE_PROJECT_ID"),
 			Destination: &x.firestoreProjectID,
 		},
 		&cli.StringFlag{
 			Name:        "firestore-database-id",
 			Usage:       "Prefix of Firestore database ID",
 			Category:    category,
-			Sources:    cli.EnvVars("ALERTCHAIN_FIRESTORE_DATABASE_ID"),
+			Sources:     cli.EnvVars("ALERTCHAIN_FIRESTORE_DATABASE_ID"),
 			Destination: &x.firestoreDatabaseID,
 		},
 	}
@@ -67,7 +67,7 @@ func (x *Database) New(ctx context.Context) (interfaces.Database, func(), error)
 		if err != nil {
 			return nil, nopCloser, goerr.Wrap(err, "failed to initialize firestore client")
 		}
-		return client, func() { utils.SafeClose(client) }, nil
+		return client, func() { utils.SafeClose(ctx, client) }, nil
 
 	default:
 		return nil, nopCloser, goerr.Wrap(types.ErrInvalidOption, "invalid db-type").With("db-type", x.dbType)
