@@ -13,6 +13,11 @@ type Attribute struct {
 	TTL     int             `json:"ttl" firestore:"ttl"`
 }
 
+func (x Attribute) Copy() Attribute {
+	copied := x
+	return copied
+}
+
 type Attributes []Attribute
 
 func (x Attributes) Copy() Attributes {

@@ -12,21 +12,21 @@ type ActionMock interface {
 	GetResult(name types.ActionName) any
 }
 
-// ScenarioLogger records the "play" result of the alert chain, which is used for debugging and testing purposes. A logger should be created by the LoggerFactory for each scenario. The LoggerFactory is registered as an option within the chain.Chain.
-type ScenarioLogger interface {
-	NewAlertLogger(alert *model.Alert) AlertLogger
+// ScenarioRecorder records the "play" result of the alert chain, which is used for debugging and testing purposes. A logger should be created by the LoggerFactory for each scenario. The LoggerFactory is registered as an option within the chain.Chain.
+type ScenarioRecorder interface {
+	NewAlertRecorder(alert *model.Alert) AlertRecorder
 	LogError(err error)
 	Flush() error
 }
 
-// AlertLogger records the "play" Action results of the chain, which is used for debugging and testing purposes. An AlertLogger should be created by the ScenarioLogger for each alert. The ScenarioLogger is registered as an option within the chain.Chain.
-type AlertLogger interface {
-	NewActionLogger() ActionLogger
+// AlertRecorder records the "play" Action results of the chain, which is used for debugging and testing purposes. An AlertRecorder should be created by the ScenarioRecorder for each alert. The ScenarioRecorder is registered as an option within the chain.Chain.
+type AlertRecorder interface {
+	NewActionRecorder() ActionRecorder
 }
 
-// ActionLogger records the "play" result of each action, which is used for debugging and testing purposes. An ActionLogger should be created by the AlertLogger for each action. The AlertLogger is registered as an option within the chain.Chain.
-type ActionLogger interface {
-	LogRun(logs []model.Action)
+// ActionRecorder records the "play" result of each action, which is used for debugging and testing purposes. An ActionRecorder should be created by the AlertRecorder for each action. The AlertRecorder is registered as an option within the chain.Chain.
+type ActionRecorder interface {
+	Add(action model.Action)
 }
 
 // AlertHandler is a function to handle the alert from data source. The handler is registered as an option within the chain.Chain.

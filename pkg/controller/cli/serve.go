@@ -4,7 +4,7 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/secmon-lab/alertchain/pkg/chain/core"
+	"github.com/secmon-lab/alertchain/pkg/chain"
 	"github.com/secmon-lab/alertchain/pkg/controller/cli/config"
 	"github.com/secmon-lab/alertchain/pkg/controller/graphql"
 	"github.com/secmon-lab/alertchain/pkg/controller/server"
@@ -34,13 +34,6 @@ func cmdServe() *cli.Command {
 			Sources:     cli.EnvVars("ALERTCHAIN_ADDR"),
 			Value:       "127.0.0.1:8080",
 			Destination: &addr,
-		},
-		&cli.BoolFlag{
-			Name:        "disable-action",
-			Usage:       "Disable action execution (for debug or dry-run)",
-			Sources:     cli.EnvVars("ALERTCHAIN_DISABLE_ACTION"),
-			Value:       false,
-			Destination: &disableAction,
 		},
 		&cli.BoolFlag{
 			Name:        "graphql",
@@ -75,17 +68,14 @@ func cmdServe() *cli.Command {
 			)
 
 			// Build chain
-			var chainOpt []core.Option
-			if disableAction {
-				chainOpt = append(chainOpt, core.WithDisableAction())
-			}
+			var chainOpt []chain.Option
 
 			dbClient, dbCloser, err := dbCfg.New(ctx)
 			if err != nil {
 				return err
 			}
 			defer dbCloser()
-			chainOpt = append(chainOpt, core.WithDatabase(dbClient))
+			chainOpt = append(chainOpt, chain.WithDatabase(dbClient))
 
 			sentryCloser, err := sentryCfg.Configure()
 			if err != nil {

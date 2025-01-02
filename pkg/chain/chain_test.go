@@ -10,11 +10,10 @@ import (
 	"github.com/m-mizutani/goerr"
 	"github.com/m-mizutani/gt"
 	"github.com/secmon-lab/alertchain/pkg/chain"
-	"github.com/secmon-lab/alertchain/pkg/chain/core"
 	"github.com/secmon-lab/alertchain/pkg/domain/model"
-	"github.com/secmon-lab/alertchain/pkg/infra/logging"
 	"github.com/secmon-lab/alertchain/pkg/infra/memory"
 	"github.com/secmon-lab/alertchain/pkg/infra/policy"
+	"github.com/secmon-lab/alertchain/pkg/infra/recorder"
 )
 
 func TestBasic(t *testing.T) {
@@ -48,49 +47,14 @@ func TestBasic(t *testing.T) {
 	}
 
 	c := gt.R1(chain.New(
-		core.WithPolicyAlert(alertPolicy),
-		core.WithPolicyAction(actionPolicy),
-		core.WithExtraAction("mock", mock),
+		chain.WithPolicyAlert(alertPolicy),
+		chain.WithPolicyAction(actionPolicy),
+		chain.WithExtraAction("mock", mock),
 	)).NoError(t)
 
 	ctx := context.Background()
 	gt.R1(c.HandleAlert(ctx, "scc", alertData)).NoError(t)
 	gt.N(t, called).Equal(1)
-}
-
-func TestDisableAction(t *testing.T) {
-	var alertData any
-	sccData := gt.R1(read("testdata/basic/input/scc.json")).NoError(t)
-	gt.NoError(t, json.Unmarshal([]byte(sccData), &alertData))
-
-	alertPolicy := gt.R1(policy.New(
-		policy.WithPackage("alert"),
-		policy.WithFile("testdata/basic/alert.rego"),
-		policy.WithReadFile(read),
-	)).NoError(t)
-
-	actionPolicy := gt.R1(policy.New(
-		policy.WithPackage("action"),
-		policy.WithFile("testdata/basic/action.rego"),
-		policy.WithReadFile(read),
-	)).NoError(t)
-
-	var called int
-	mock := func(ctx context.Context, _ model.Alert, _ model.ActionArgs) (any, error) {
-		called++
-		return nil, nil
-	}
-
-	c := gt.R1(chain.New(
-		core.WithPolicyAlert(alertPolicy),
-		core.WithPolicyAction(actionPolicy),
-		core.WithExtraAction("mock", mock),
-		core.WithDisableAction(),
-	)).NoError(t)
-
-	ctx := context.Background()
-	gt.R1(c.HandleAlert(ctx, "scc", alertData)).NoError(t)
-	gt.N(t, called).Equal(0) // Action should not be called
 }
 
 func TestChainControl(t *testing.T) {
@@ -144,10 +108,10 @@ func TestChainControl(t *testing.T) {
 	}
 
 	c := gt.R1(chain.New(
-		core.WithPolicyAlert(alertPolicy),
-		core.WithPolicyAction(actionPolicy),
-		core.WithExtraAction("mock", mock),
-		core.WithExtraAction("mock.after", mockAfter),
+		chain.WithPolicyAlert(alertPolicy),
+		chain.WithPolicyAction(actionPolicy),
+		chain.WithExtraAction("mock", mock),
+		chain.WithExtraAction("mock.after", mockAfter),
 	)).NoError(t)
 
 	ctx := context.Background()
@@ -179,9 +143,9 @@ func TestChainLoop(t *testing.T) {
 	}
 
 	c := gt.R1(chain.New(
-		core.WithPolicyAlert(alertPolicy),
-		core.WithPolicyAction(actionPolicy),
-		core.WithExtraAction("mock", mock),
+		chain.WithPolicyAlert(alertPolicy),
+		chain.WithPolicyAction(actionPolicy),
+		chain.WithExtraAction("mock", mock),
 	)).NoError(t)
 
 	ctx := context.Background()
@@ -222,13 +186,13 @@ func TestPlaybook(t *testing.T) {
 		return nil, nil
 	}
 
-	recorder := logging.NewMemory(playbook.Scenarios[0])
+	recorder := recorder.NewMemory(playbook.Scenarios[0])
 	c := gt.R1(chain.New(
-		core.WithPolicyAlert(alertPolicy),
-		core.WithPolicyAction(actionPolicy),
-		core.WithExtraAction("mock", mock),
-		core.WithActionMock(&playbook.Scenarios[0].Events[0]),
-		core.WithScenarioLogger(recorder),
+		chain.WithPolicyAlert(alertPolicy),
+		chain.WithPolicyAction(actionPolicy),
+		chain.WithExtraAction("mock", mock),
+		chain.WithActionMock(&playbook.Scenarios[0].Events[0]),
+		chain.WithScenarioRecorder(recorder),
 	)).NoError(t)
 
 	var alertData any
@@ -271,9 +235,9 @@ func TestGlobalAttr(t *testing.T) {
 	}
 
 	c := gt.R1(chain.New(
-		core.WithPolicyAlert(alertPolicy),
-		core.WithPolicyAction(actionPolicy),
-		core.WithExtraAction("mock", mock),
+		chain.WithPolicyAlert(alertPolicy),
+		chain.WithPolicyAction(actionPolicy),
+		chain.WithExtraAction("mock", mock),
 	)).NoError(t)
 
 	ctx := context.Background()
@@ -310,10 +274,10 @@ func TestGlobalAttrRaceCondition(t *testing.T) {
 	threadNum := 64
 
 	c := gt.R1(chain.New(
-		core.WithPolicyAlert(alertPolicy),
-		core.WithPolicyAction(actionPolicy),
-		core.WithExtraAction("mock", mock),
-		core.WithDatabase(cache),
+		chain.WithPolicyAlert(alertPolicy),
+		chain.WithPolicyAction(actionPolicy),
+		chain.WithExtraAction("mock", mock),
+		chain.WithDatabase(cache),
 	)).NoError(t)
 
 	ctx := context.Background()
@@ -358,9 +322,9 @@ func TestForceAction(t *testing.T) {
 	}
 
 	c := gt.R1(chain.New(
-		core.WithPolicyAlert(alertPolicy),
-		core.WithPolicyAction(actionPolicy),
-		core.WithExtraAction("mock", mock),
+		chain.WithPolicyAlert(alertPolicy),
+		chain.WithPolicyAction(actionPolicy),
+		chain.WithExtraAction("mock", mock),
 	)).NoError(t)
 
 	ctx := context.Background()

@@ -9,18 +9,17 @@ import (
 
 	"github.com/m-mizutani/goerr"
 	"github.com/secmon-lab/alertchain/pkg/chain"
-	"github.com/secmon-lab/alertchain/pkg/chain/core"
 	"github.com/secmon-lab/alertchain/pkg/ctxutil"
 	"github.com/secmon-lab/alertchain/pkg/domain/model"
 	"github.com/secmon-lab/alertchain/pkg/domain/types"
-	"github.com/secmon-lab/alertchain/pkg/infra/logging"
+	"github.com/secmon-lab/alertchain/pkg/infra/recorder"
 )
 
 type PlayInput struct {
 	ScenarioPath string
 	OutDir       string
 	Targets      []string
-	CoreOptions  []core.Option
+	CoreOptions  []chain.Option
 }
 
 func (x PlayInput) Validate() error {
@@ -97,7 +96,7 @@ func (x *actionMockWrapper) GetResult(name types.ActionName) any {
 	return x.ev.GetResult(name)
 }
 
-func playScenario(ctx context.Context, scenario *model.Scenario, baseOptions []core.Option, outDir string) error {
+func playScenario(ctx context.Context, scenario *model.Scenario, baseOptions []chain.Option, outDir string) error {
 	logger := ctxutil.Logger(ctx)
 	logger.Debug("Start scenario", slog.Any("scenario", scenario))
 
@@ -110,16 +109,16 @@ func playScenario(ctx context.Context, scenario *model.Scenario, baseOptions []c
 			logger.Warn("Failed to close log file", slog.String("err", err.Error()))
 		}
 	}()
-	lg := logging.NewJSONLogger(w, scenario)
+	lg := recorder.NewJsonRecorder(w, scenario)
 
 	mockWrapper := &actionMockWrapper{}
-	options := append(baseOptions, []core.Option{
-		core.WithScenarioLogger(lg),
-		core.WithActionMock(mockWrapper),
+	options := append(baseOptions, []chain.Option{
+		chain.WithScenarioRecorder(lg),
+		chain.WithActionMock(mockWrapper),
 	}...)
 
 	if scenario.Env != nil {
-		options = append(options, core.WithEnv(func() types.EnvVars {
+		options = append(options, chain.WithEnv(func() types.EnvVars {
 			return scenario.Env
 		}))
 	}
