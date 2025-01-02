@@ -8,12 +8,11 @@ import (
 
 	"github.com/m-mizutani/gt"
 	"github.com/secmon-lab/alertchain/pkg/chain"
-	"github.com/secmon-lab/alertchain/pkg/chain/core"
 	"github.com/secmon-lab/alertchain/pkg/domain/model"
 	"github.com/secmon-lab/alertchain/pkg/domain/types"
-	"github.com/secmon-lab/alertchain/pkg/infra/logging"
 	"github.com/secmon-lab/alertchain/pkg/infra/memory"
 	"github.com/secmon-lab/alertchain/pkg/infra/policy"
+	"github.com/secmon-lab/alertchain/pkg/infra/recorder"
 	"github.com/secmon-lab/alertchain/pkg/service"
 )
 
@@ -43,24 +42,24 @@ func TestWorkflow(t *testing.T) {
 	}
 
 	buf := &buffer{}
-	recorder := logging.NewJSONLogger(buf, playbook.Scenarios[0])
-	c := core.New(
-		core.WithPolicyAction(actionPolicy),
-		core.WithExtraAction("mock", mock),
-		core.WithActionMock(&playbook.Scenarios[0].Events[0]),
-		core.WithScenarioLogger(recorder),
-		core.WithEnv(func() types.EnvVars { return types.EnvVars{} }),
-		core.WithEnablePrint(),
+	recorder := recorder.NewJsonRecorder(buf, playbook.Scenarios[0])
+	c, err := chain.New(
+		chain.WithPolicyAction(actionPolicy),
+		chain.WithExtraAction("mock", mock),
+		chain.WithActionMock(&playbook.Scenarios[0].Events[0]),
+		chain.WithScenarioRecorder(recorder),
+		chain.WithEnv(func() types.EnvVars { return types.EnvVars{} }),
+		chain.WithEnablePrint(),
 	)
+	gt.NoError(t, err)
 
 	ctx := context.Background()
 	alert := model.NewAlert(model.AlertMetaData{
 		Title: "test-alert",
 	}, "test-alert", "test-data")
 
-	w := gt.R1(service.New(memory.New()).Workflow.Create(ctx, alert)).NoError(t)
-	wf := chain.NewWorkflow(c, alert, w)
-	gt.NoError(t, wf.Run(ctx))
+	svc := service.New(memory.New())
+	gt.NoError(t, c.RunWorkflow(ctx, alert, svc))
 	recorder.Flush()
 
 	var log model.ScenarioLog

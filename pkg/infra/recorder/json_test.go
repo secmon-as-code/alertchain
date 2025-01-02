@@ -1,4 +1,4 @@
-package logging_test
+package recorder_test
 
 import (
 	"bytes"
@@ -7,7 +7,7 @@ import (
 
 	"github.com/m-mizutani/gt"
 	"github.com/secmon-lab/alertchain/pkg/domain/model"
-	"github.com/secmon-lab/alertchain/pkg/infra/logging"
+	"github.com/secmon-lab/alertchain/pkg/infra/recorder"
 )
 
 // bufferWriteCloser is a wrapper around bytes.Buffer that implements io.WriteCloser.
@@ -33,25 +33,23 @@ func TestJSONLogger(t *testing.T) {
 	}
 
 	buf := NewBufferWriteCloser()
-	jsonLogger := logging.NewJSONLogger(buf, scenario)
+	jsonLogger := recorder.NewJsonRecorder(buf, scenario)
 
 	alert := model.Alert{
 		ID: "test-alert",
 	}
 
-	alertLogger := jsonLogger.NewAlertLogger(&alert)
+	AlertRecorder := jsonLogger.NewAlertRecorder(&alert)
 
 	// first process
-	actionLogger := alertLogger.NewActionLogger()
-	actionLogger.LogRun([]model.Action{
-		{
-			ID:   "test-action",
-			Name: "test-action-name",
-		},
+	ActionRecorder := AlertRecorder.NewActionRecorder()
+	ActionRecorder.Add(model.Action{
+		ID:   "test-action",
+		Name: "test-action-name",
 	})
 
 	// second process, but not action recorded
-	_ = alertLogger.NewActionLogger()
+	_ = AlertRecorder.NewActionRecorder()
 
 	err := jsonLogger.Flush()
 	gt.NoError(t, err)

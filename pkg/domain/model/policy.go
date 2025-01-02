@@ -44,6 +44,13 @@ type Commit struct {
 	Path string `json:"path"`
 }
 
+func (x Commit) Copy() Commit {
+	return Commit{
+		Attribute: x.Attribute.Copy(),
+		Path:      x.Path,
+	}
+}
+
 func (x *Commit) ToAttr(data any) (*Attribute, error) {
 	attr := x.Attribute
 
@@ -78,5 +85,4 @@ func (x *Commit) ToAttr(data any) (*Attribute, error) {
 type ActionResult struct {
 	Action
 	Result any `json:"result,omitempty"`
-	Attrs  Attributes
 }

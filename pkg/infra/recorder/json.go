@@ -1,4 +1,4 @@
-package logging
+package recorder
 
 import (
 	"encoding/json"
@@ -14,16 +14,16 @@ type JSONLogger struct {
 	log model.ScenarioLog
 }
 
-var _ interfaces.ScenarioLogger = &JSONLogger{}
+var _ interfaces.ScenarioRecorder = &JSONLogger{}
 
-func NewJSONLogger(w io.WriteCloser, s *model.Scenario) *JSONLogger {
+func NewJsonRecorder(w io.WriteCloser, s *model.Scenario) *JSONLogger {
 	return &JSONLogger{
 		w:   w,
 		log: s.ToLog(),
 	}
 }
 
-func (x *JSONLogger) NewAlertLogger(alert *model.Alert) interfaces.AlertLogger {
+func (x *JSONLogger) NewAlertRecorder(alert *model.Alert) interfaces.AlertRecorder {
 	copied := alert.Copy()
 
 	// Remove redundant data from alert
@@ -35,7 +35,7 @@ func (x *JSONLogger) NewAlertLogger(alert *model.Alert) interfaces.AlertLogger {
 	}
 	x.log.Results = append(x.log.Results, log)
 
-	return &JSONAlertLogger{
+	return &JSONAlertRecorder{
 		log: log,
 	}
 }
@@ -60,16 +60,16 @@ func (x *JSONLogger) Flush() error {
 	return nil
 }
 
-var _ interfaces.AlertLogger = &JSONAlertLogger{}
+var _ interfaces.AlertRecorder = &JSONAlertRecorder{}
 
-type JSONAlertLogger struct {
+type JSONAlertRecorder struct {
 	seq int
 	log *model.PlayLog
 }
 
-// NewJSONActionLogger implements interfaces.AlertLogger.
-func (x *JSONAlertLogger) NewActionLogger() interfaces.ActionLogger {
-	logger := &JSONActionLogger{
+// NewJSONActionRecorder implements interfaces.AlertRecorder.
+func (x *JSONAlertRecorder) NewActionRecorder() interfaces.ActionRecorder {
+	logger := &JSONActionRecorder{
 		seq: x.seq,
 		log: x.log,
 	}
@@ -78,17 +78,15 @@ func (x *JSONAlertLogger) NewActionLogger() interfaces.ActionLogger {
 	return logger
 }
 
-type JSONActionLogger struct {
+type JSONActionRecorder struct {
 	seq int
 	log *model.PlayLog
 }
 
-// LogRun implements interfaces.AlertLogger.
-func (x *JSONActionLogger) LogRun(logs []model.Action) {
-	for _, log := range logs {
-		x.log.Actions = append(x.log.Actions, &model.ActionLog{
-			Seq:    x.seq,
-			Action: log,
-		})
-	}
+// Add implements interfaces.AlertRecorder.
+func (x *JSONActionRecorder) Add(log model.Action) {
+	x.log.Actions = append(x.log.Actions, &model.ActionLog{
+		Seq:    x.seq,
+		Action: log,
+	})
 }

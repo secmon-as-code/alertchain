@@ -10,7 +10,7 @@ import (
 	"log/slog"
 
 	"github.com/m-mizutani/goerr"
-	"github.com/secmon-lab/alertchain/pkg/chain/core"
+	"github.com/secmon-lab/alertchain/pkg/chain"
 	"github.com/secmon-lab/alertchain/pkg/controller/cli/config"
 	"github.com/secmon-lab/alertchain/pkg/ctxutil"
 	"github.com/secmon-lab/alertchain/pkg/domain/types"
@@ -51,7 +51,7 @@ func cmdRun() *cli.Command {
 		Usage:   "Run alertchain policy at once and exit in",
 		Flags:   flags,
 		Action: func(ctx context.Context, cmd *cli.Command) error {
-			var chainOptions []core.Option
+			var chainOptions []chain.Option
 
 			chain, err := buildChain(&policyCfg, chainOptions...)
 			if err != nil {

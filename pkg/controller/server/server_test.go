@@ -13,7 +13,6 @@ import (
 
 	"github.com/m-mizutani/gt"
 	"github.com/secmon-lab/alertchain/pkg/chain"
-	"github.com/secmon-lab/alertchain/pkg/chain/core"
 	"github.com/secmon-lab/alertchain/pkg/controller/graphql"
 	"github.com/secmon-lab/alertchain/pkg/controller/server"
 	"github.com/secmon-lab/alertchain/pkg/domain/model"
@@ -94,15 +93,15 @@ func sendGraphQLRequest(t *testing.T, srv *server.Server, query string, out any)
 func TestGraphQL(t *testing.T) {
 	dbClient := memory.New()
 	chain := gt.R1(chain.New(
-		core.WithPolicyAlert(gt.R1(policy.New(
+		chain.WithPolicyAlert(gt.R1(policy.New(
 			policy.WithPackage("alert"),
 			policy.WithPolicyData("alert.rego", alertRego),
 		)).NoError(t)),
-		core.WithPolicyAction(gt.R1(policy.New(
+		chain.WithPolicyAction(gt.R1(policy.New(
 			policy.WithPackage("action"),
 			policy.WithPolicyData("action.rego", actionRego),
 		)).NoError(t)),
-		core.WithDatabase(dbClient),
+		chain.WithDatabase(dbClient),
 	)).NoError(t)
 
 	resolver := graphql.NewResolver(service.New(dbClient))

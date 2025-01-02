@@ -3,7 +3,7 @@ package config
 import (
 	"log/slog"
 
-	"github.com/secmon-lab/alertchain/pkg/chain/core"
+	"github.com/secmon-lab/alertchain/pkg/chain"
 	"github.com/secmon-lab/alertchain/pkg/infra/policy"
 	"github.com/secmon-lab/alertchain/pkg/logging"
 	"github.com/urfave/cli/v3"
@@ -50,25 +50,25 @@ func (x *Policy) Load(pkgName string) (*policy.Client, error) {
 	return policy.New(policy.WithDir(x.path), policy.WithPackage(pkgName))
 }
 
-func (x *Policy) CoreOption() ([]core.Option, error) {
-	var options []core.Option
+func (x *Policy) CoreOption() ([]chain.Option, error) {
+	var options []chain.Option
 
 	if x.Print() {
 		logging.Default().Info("enable print mode")
-		options = append(options, core.WithEnablePrint())
+		options = append(options, chain.WithEnablePrint())
 	}
 
 	alertPolicy, err := x.Load("alert")
 	if err != nil {
 		return nil, err
 	}
-	options = append(options, core.WithPolicyAlert(alertPolicy))
+	options = append(options, chain.WithPolicyAlert(alertPolicy))
 
 	actionPolicy, err := x.Load("action")
 	if err != nil {
 		return nil, err
 	}
-	options = append(options, core.WithPolicyAction(actionPolicy))
+	options = append(options, chain.WithPolicyAction(actionPolicy))
 
 	return options, nil
 }

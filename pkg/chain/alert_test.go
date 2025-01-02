@@ -8,7 +8,6 @@ import (
 
 	"github.com/m-mizutani/gt"
 	"github.com/secmon-lab/alertchain/pkg/chain"
-	"github.com/secmon-lab/alertchain/pkg/chain/core"
 	"github.com/secmon-lab/alertchain/pkg/domain/model"
 	"github.com/secmon-lab/alertchain/pkg/infra/policy"
 )
@@ -41,9 +40,9 @@ func TestAlertRaw(t *testing.T) {
 	}
 
 	c := gt.R1(chain.New(
-		core.WithPolicyAlert(alertPolicy),
-		core.WithPolicyAction(actionPolicy),
-		core.WithExtraAction("test.output_raw", mock),
+		chain.WithPolicyAlert(alertPolicy),
+		chain.WithPolicyAction(actionPolicy),
+		chain.WithExtraAction("test.output_raw", mock),
 	)).NoError(t)
 
 	ctx := context.Background()

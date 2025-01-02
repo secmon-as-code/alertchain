@@ -1,13 +1,5 @@
 package action
 
-# init[res] {
-# 	input.seq == 0
-# 	res := {"attrs": [{
-# 		"key": "color",
-# 		"value": "blue",
-# 	}]}
-# }
-
 run contains job if {
 	input.seq == 0
 	job := {
@@ -16,16 +8,6 @@ run contains job if {
 		"args": {"tick": 1},
 	}
 }
-
-# exit[job] {
-# 	input.action.id == "1st"
-# 	print(input.action.result)
-
-# 	job := {"attrs": [{
-# 		"key": "index1",
-# 		"value": input.action.result.index,
-# 	}]}
-# }
 
 run contains job if {
 	input.seq == 1
