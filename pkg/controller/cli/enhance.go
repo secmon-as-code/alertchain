@@ -11,20 +11,20 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-func cmdNew() *cli.Command {
+func cmdEnhance() *cli.Command {
 	return &cli.Command{
-		Name:    "new",
-		Aliases: []string{"n"},
-		Usage:   "Create new alertchain policy",
+		Name:    "enhance",
+		Aliases: []string{"e"},
+		Usage:   "Enhance alertchain policy with Generative AI",
 		Commands: []*cli.Command{
-			cmdNewIgnore(),
+			cmdEnhanceIgnore(),
 		},
 	}
 }
 
-func cmdNewIgnore() *cli.Command {
+func cmdEnhanceIgnore() *cli.Command {
 	var (
-		input           usecase.NewIgnorePolicyInput
+		input           usecase.EnhanceIgnorePolicyInput
 		alertIDSet      []string
 		geminiProjectID string
 		geminiLocation  string
@@ -111,7 +111,7 @@ func cmdNewIgnore() *cli.Command {
 			}
 			defer dbClose()
 
-			if err := usecase.NewIgnorePolicy(ctx, dbClient, geminiClient, input); err != nil {
+			if err := usecase.EnhanceIgnorePolicy(ctx, dbClient, geminiClient, input); err != nil {
 				return err
 			}
 

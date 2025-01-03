@@ -18,7 +18,7 @@ import (
 //go:embed testdata/example_policy.rego
 var examplePolicy []byte
 
-func TestNewIgnorePolicy(t *testing.T) {
+func TestEnhanceIgnorePolicy(t *testing.T) {
 	ctx := context.Background()
 
 	alertID := types.AlertID("test-alert-id")
@@ -64,7 +64,7 @@ func TestNewIgnorePolicy(t *testing.T) {
 	// TODO: Enable this line
 	// defer os.RemoveAll(input.TestDataDir)
 
-	input := usecase.NewIgnorePolicyInput{
+	input := usecase.EnhanceIgnorePolicyInput{
 		AlertIDs:         []types.AlertID{alertID},
 		BasePolicyFile:   fd.Name(),
 		TestDataDir:      dir,
@@ -72,7 +72,7 @@ func TestNewIgnorePolicy(t *testing.T) {
 		OverWrite:        true,
 	}
 
-	gt.NoError(t, usecase.NewIgnorePolicy(ctx, dbClient, genAI, input))
+	gt.NoError(t, usecase.EnhanceIgnorePolicy(ctx, dbClient, genAI, input))
 
 	// Check if test data file is created
 	testDataPath := filepath.Join(input.TestDataDir, slug, "data.json")

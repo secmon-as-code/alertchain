@@ -50,7 +50,7 @@ func getRegoPackageName(policyData string) (string, error) {
 	return strings.Join(terms, "."), nil
 }
 
-type NewIgnorePolicyInput struct {
+type EnhanceIgnorePolicyInput struct {
 	AlertIDs         []types.AlertID
 	BasePolicyFile   string
 	TestDataDir      string
@@ -58,7 +58,7 @@ type NewIgnorePolicyInput struct {
 	OverWrite        bool
 }
 
-func (x NewIgnorePolicyInput) Validate() error {
+func (x EnhanceIgnorePolicyInput) Validate() error {
 	if len(x.AlertIDs) == 0 {
 		return goerr.New("AlertID is empty")
 	}
@@ -80,10 +80,10 @@ func (x NewIgnorePolicyInput) Validate() error {
 	return nil
 }
 
-func NewIgnorePolicy(ctx context.Context,
+func EnhanceIgnorePolicy(ctx context.Context,
 	dbClient interfaces.Database,
 	genAI interfaces.GenAI,
-	input NewIgnorePolicyInput,
+	input EnhanceIgnorePolicyInput,
 ) error {
 	if err := input.Validate(); err != nil {
 		return err
