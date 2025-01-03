@@ -3,6 +3,7 @@ package model
 import (
 	"encoding/json"
 	"path/filepath"
+	"time"
 
 	"github.com/google/go-jsonnet"
 	"github.com/m-mizutani/goerr"
@@ -65,6 +66,10 @@ func (x *Scenario) Validate() error {
 	}
 
 	return nil
+}
+
+func (x *Scenario) GetLogFilePath(outDir string) string {
+	return filepath.Join(outDir, string(x.ID), "data.json")
 }
 
 func (x *Event) Validate() error {
@@ -150,4 +155,17 @@ func ParseScenario(entryFile string, readFile ReadFile) (*Scenario, error) {
 	}
 
 	return &scenario, nil
+}
+
+type ScenarioResult struct {
+	ID      types.ScenarioID `json:"id"`
+	Output  string           `json:"output"`
+	Success bool             `json:"success"`
+	Error   string           `json:"error,omitempty"`
+}
+
+type PlayResult struct {
+	StartedAt  time.Time         `json:"started_at"`
+	FinishedAt time.Time         `json:"finished_at"`
+	Scenarios  []*ScenarioResult `json:"scenarios"`
 }
