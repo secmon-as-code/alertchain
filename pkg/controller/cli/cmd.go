@@ -46,7 +46,7 @@ func New() *CLI {
 			cmdServe(),
 			cmdRun(),
 			cmdPlay(),
-			cmdNew(),
+			cmdEnhance(),
 			{
 				Name:    "version",
 				Aliases: []string{"v"},
