@@ -86,12 +86,13 @@ func Play(ctx context.Context, input PlayInput) error {
 		StartedAt: time.Now(),
 	}
 
+	var errs []error
 	for _, s := range playbook.Scenarios {
 		if _, ok := targets[s.ID]; len(targets) > 0 && !ok {
 			continue
 		}
 
-		scenarioAttr := slog.Group("scenario", slog.Any("id", s.ID), slog.Any("title", s.Title))
+		scenarioAttr := slog.Any("id", s.ID)
 		err := playScenario(ctx, s, input.CoreOptions, input.OutDir)
 		if err != nil {
 			logger.Error("Failed to play scenario", scenarioAttr, "error", err)
@@ -106,6 +107,7 @@ func Play(ctx context.Context, input PlayInput) error {
 		}
 		if err != nil {
 			r.Error = err.Error()
+			errs = append(errs, err)
 		}
 		result.Scenarios = append(result.Scenarios, r)
 	}
@@ -124,6 +126,9 @@ func Play(ctx context.Context, input PlayInput) error {
 		return goerr.Wrap(err, "failed to write result file")
 	}
 
+	if len(errs) > 0 {
+		return goerr.New("failed to play scenarios").With("errors", errs)
+	}
 	return nil
 }
 

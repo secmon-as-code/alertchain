@@ -44,7 +44,7 @@ func ReconfigureLogger(w io.Writer, level slog.Level, format Format) {
 			clog.WithWriter(w),
 			clog.WithLevel(level),
 			clog.WithReplaceAttr(filter),
-			clog.WithSource(true),
+			// clog.WithSource(true),
 			// clog.WithTimeFmt("2006-01-02 15:04:05"),
 			clog.WithColorMap(&clog.ColorMap{
 				Level: map[slog.Level]*color.Color{
