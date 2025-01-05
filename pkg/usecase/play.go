@@ -2,10 +2,12 @@ package usecase
 
 import (
 	"context"
+	"encoding/json"
 	"io"
 	"log/slog"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/m-mizutani/goerr"
 	"github.com/secmon-lab/alertchain/pkg/chain"
@@ -13,6 +15,7 @@ import (
 	"github.com/secmon-lab/alertchain/pkg/domain/model"
 	"github.com/secmon-lab/alertchain/pkg/domain/types"
 	"github.com/secmon-lab/alertchain/pkg/infra/recorder"
+	"github.com/secmon-lab/alertchain/pkg/utils"
 )
 
 type PlayInput struct {
@@ -79,18 +82,53 @@ func Play(ctx context.Context, input PlayInput) error {
 		targets[types.ScenarioID(id)] = struct{}{}
 	}
 
+	result := model.PlayResult{
+		StartedAt: time.Now(),
+	}
+
+	var errs []error
 	for _, s := range playbook.Scenarios {
 		if _, ok := targets[s.ID]; len(targets) > 0 && !ok {
 			continue
 		}
 
-		if err := playScenario(ctx, s, input.CoreOptions, input.OutDir); err != nil {
-			return err
+		scenarioAttr := slog.Any("id", s.ID)
+		err := playScenario(ctx, s, input.CoreOptions, input.OutDir)
+		if err != nil {
+			logger.Error("Failed to play scenario", scenarioAttr, "error", err)
+		} else {
+			logger.Info("Done scenario", scenarioAttr)
 		}
 
-		logger.Info("Done playbook", slog.Group("scenario", slog.Any("id", s.ID), slog.Any("title", s.Title)))
+		r := &model.ScenarioResult{
+			ID:      s.ID,
+			Output:  s.GetLogFilePath(input.OutDir),
+			Success: err == nil,
+		}
+		if err != nil {
+			r.Error = err.Error()
+			errs = append(errs, err)
+		}
+		result.Scenarios = append(result.Scenarios, r)
+	}
+	result.FinishedAt = time.Now()
+
+	resultFilePath := filepath.Clean(filepath.Join(input.OutDir, "result.json"))
+	fd, err := os.Create(resultFilePath)
+	if err != nil {
+		return goerr.Wrap(err, "failed to create result file")
+	}
+	defer utils.SafeClose(ctx, fd)
+
+	encoder := json.NewEncoder(fd)
+	encoder.SetIndent("", "  ")
+	if err := encoder.Encode(result); err != nil {
+		return goerr.Wrap(err, "failed to write result file")
 	}
 
+	if len(errs) > 0 {
+		return goerr.New("failed to play scenarios").With("errors", errs)
+	}
 	return nil
 }
 
@@ -106,7 +144,7 @@ func playScenario(ctx context.Context, scenario *model.Scenario, baseOptions []c
 	logger := ctxutil.Logger(ctx)
 	logger.Debug("Start scenario", slog.Any("scenario", scenario))
 
-	w, err := openLogFile(outDir, string(scenario.ID))
+	w, err := openLogFile(scenario.GetLogFilePath(outDir))
 	if err != nil {
 		return err
 	}
@@ -149,15 +187,14 @@ func playScenario(ctx context.Context, scenario *model.Scenario, baseOptions []c
 	return nil
 }
 
-func openLogFile(dir, name string) (io.WriteCloser, error) {
-	dirName := filepath.Clean(filepath.Join(dir, name))
+func openLogFile(fpath string) (io.WriteCloser, error) {
+	dirName := filepath.Dir(filepath.Clean(fpath))
 	// #nosec G301
 	if err := os.MkdirAll(dirName, 0755); err != nil {
 		return nil, goerr.Wrap(err, "Failed to create scenario logging directory")
 	}
 
-	path := filepath.Join(dirName, "data.json")
-	fd, err := os.Create(filepath.Clean(path))
+	fd, err := os.Create(filepath.Clean(fpath))
 	if err != nil {
 		return nil, goerr.Wrap(err, "Failed to create scenario logging file")
 	}
