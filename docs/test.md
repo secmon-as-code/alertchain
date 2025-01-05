@@ -95,7 +95,7 @@ Action Policy is a policy that controls the behavior of actions. As such, testin
 
 The play mode itself is not for verifying the behavior of the policy; it only logs the execution results. However, by testing these logs using OPA/Rego, you can verify how the Action Policy behaved based on the responses obtained from each action. This achieves the "Automatic test for orchestration and automated response," which is one of the challenges in SOAR implementation.
 
-### Playbook
+### Scenario
 
 Here is an example of a Scenario jsonnet file:
 
