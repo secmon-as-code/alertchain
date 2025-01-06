@@ -176,6 +176,16 @@ func playScenario(ctx context.Context, scenario *model.Scenario, baseOptions []c
 		mockWrapper.ev = &scenario.Events[i]
 		if _, err := chain.HandleAlert(ctx, ev.Schema, ev.Input); err != nil {
 			lg.LogError(err)
+			attrs := []any{slog.Any("msg", err.Error())}
+			if goErr := goerr.Unwrap(err); goErr != nil {
+				attrs = append(attrs, slog.Any("value", goErr.Values()))
+			}
+			logger.Error("Failed to handle alert",
+				"scenario.id", scenario.ID,
+				"event.sequence", i,
+				"event.schema", ev.Schema,
+				slog.Group("error", attrs...),
+			)
 			break
 		}
 	}
