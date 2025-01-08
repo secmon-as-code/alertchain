@@ -18,7 +18,7 @@ require (
 	github.com/google/go-jsonnet v0.20.0
 	github.com/google/uuid v1.6.0
 	github.com/m-mizutani/clog v0.0.4
-	github.com/m-mizutani/goerr v0.2.1-0.20250106010559-c6ee1c33da36
+	github.com/m-mizutani/goerr v1.0.0
 	github.com/m-mizutani/gots v0.0.0-20230529013424-0639119b2cdd
 	github.com/m-mizutani/gt v0.0.13-0.20241214054244-b80c68b94455
 	github.com/m-mizutani/masq v0.1.5
