@@ -11,13 +11,13 @@ require (
 	github.com/PaesslerAG/jsonpath v0.1.1
 	github.com/andygrunwald/go-jira v1.16.0
 	github.com/bradleyfalzon/ghinstallation/v2 v2.9.0
-	github.com/fatih/color v1.16.0
+	github.com/fatih/color v1.18.0
 	github.com/getsentry/sentry-go v0.26.0
 	github.com/go-chi/chi/v5 v5.0.11
 	github.com/google/go-github v17.0.0+incompatible
 	github.com/google/go-jsonnet v0.20.0
 	github.com/google/uuid v1.6.0
-	github.com/m-mizutani/clog v0.0.4
+	github.com/m-mizutani/clog v0.0.8-0.20250109003414-76bf74889657
 	github.com/m-mizutani/goerr/v2 v2.0.0-alpha.1.0.20250108231337-0b64a5f93f03
 	github.com/m-mizutani/gots v0.0.0-20230529013424-0639119b2cdd
 	github.com/m-mizutani/gt v0.0.13-0.20241214054244-b80c68b94455
@@ -66,10 +66,9 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.7 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
-	github.com/k0kubun/pp/v3 v3.2.0 // indirect
+	github.com/k0kubun/pp/v3 v3.4.1 // indirect
 	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.5 // indirect
-	github.com/m-mizutani/goerr v0.2.1-0.20250106010559-c6ee1c33da36 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
@@ -104,7 +103,7 @@ require (
 	golang.org/x/net v0.33.0 // indirect
 	golang.org/x/oauth2 v0.24.0 // indirect
 	golang.org/x/sync v0.10.0 // indirect
-	golang.org/x/sys v0.28.0 // indirect
+	golang.org/x/sys v0.29.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
 	golang.org/x/time v0.8.0 // indirect
 	golang.org/x/tools v0.28.0 // indirect
