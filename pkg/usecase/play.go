@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/m-mizutani/goerr"
+	"github.com/m-mizutani/goerr/v2"
 	"github.com/secmon-lab/alertchain/pkg/chain"
 	"github.com/secmon-lab/alertchain/pkg/ctxutil"
 	"github.com/secmon-lab/alertchain/pkg/domain/model"
@@ -127,7 +127,7 @@ func Play(ctx context.Context, input PlayInput) error {
 	}
 
 	if len(errs) > 0 {
-		return goerr.New("failed to play scenarios").With("errors", errs)
+		return goerr.New("failed to play scenarios", goerr.V("errors", errs))
 	}
 	return nil
 }

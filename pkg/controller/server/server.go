@@ -12,7 +12,7 @@ import (
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/go-chi/chi/v5"
-	"github.com/m-mizutani/goerr"
+	"github.com/m-mizutani/goerr/v2"
 	"github.com/secmon-lab/alertchain/pkg/controller/graphql"
 	"github.com/secmon-lab/alertchain/pkg/ctxutil"
 	"github.com/secmon-lab/alertchain/pkg/domain/interfaces"
@@ -66,17 +66,12 @@ func respondError(ctx context.Context, w http.ResponseWriter, err error) {
 	utils.HandleError(context.Background(), err)
 
 	var code int
-	switch types.GetErrorType(err) {
-	case
-		types.ErrTypeAction,
-		types.ErrTypePolicy,
-		types.ErrTypeRuntime,
-		types.ErrTypeConfig,
-		types.ErrTypeUnknown:
-		code = http.StatusInternalServerError
-
-	case types.ErrTypeBadRequest:
+	switch {
+	case goerr.HasTag(err, types.ErrTagBadRequest):
 		code = http.StatusBadRequest
+
+	default:
+		code = http.StatusInternalServerError
 	}
 
 	w.WriteHeader(code)
@@ -89,7 +84,7 @@ func respondError(ctx context.Context, w http.ResponseWriter, err error) {
 func getSchema(r *http.Request) (types.Schema, error) {
 	schema := chi.URLParam(r, "schema")
 	if schema == "" {
-		return "", goerr.Wrap(types.ErrInvalidHTTPRequest, "schema is empty")
+		return "", goerr.New("schema is empty", goerr.T(types.ErrTagBadRequest))
 	}
 
 	return types.Schema(schema), nil
@@ -202,18 +197,18 @@ func handlePubSubAlert(r *http.Request, route interfaces.AlertHandler) (*apiAler
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		return nil, goerr.Wrap(err, "reading pub/sub message").With("body", string(body))
+		return nil, goerr.Wrap(err, "reading pub/sub message", goerr.V("body", string(body)))
 	}
 	ctxutil.Logger(r.Context()).Debug("recv pubsub message", slog.String("body", string(body)))
 
 	var req model.PubSubRequest
 	if err := json.Unmarshal(body, &req); err != nil {
-		return nil, goerr.Wrap(err, "parsing pub/sub message").With("body", string(body))
+		return nil, goerr.Wrap(err, "parsing pub/sub message", goerr.V("body", string(body)))
 	}
 
 	var data any
 	if err := json.Unmarshal(req.Message.Data, &data); err != nil {
-		return nil, goerr.Wrap(err, "parsing pub/sub data field").With("data", string(req.Message.Data))
+		return nil, goerr.Wrap(err, "parsing pub/sub data field", goerr.V("data", string(req.Message.Data)))
 	}
 
 	ctx := r.Context()

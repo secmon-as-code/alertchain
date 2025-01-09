@@ -9,7 +9,7 @@ import (
 
 	"log/slog"
 
-	"github.com/m-mizutani/goerr"
+	"github.com/m-mizutani/goerr/v2"
 	"github.com/secmon-lab/alertchain/pkg/chain"
 	"github.com/secmon-lab/alertchain/pkg/controller/cli/config"
 	"github.com/secmon-lab/alertchain/pkg/ctxutil"

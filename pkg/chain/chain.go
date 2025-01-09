@@ -7,7 +7,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/m-mizutani/goerr"
+	"github.com/m-mizutani/goerr/v2"
 	"github.com/secmon-lab/alertchain/action"
 	"github.com/secmon-lab/alertchain/pkg/ctxutil"
 	"github.com/secmon-lab/alertchain/pkg/domain/interfaces"
@@ -115,7 +115,7 @@ func (x *Chain) HandleAlert(ctx context.Context, schema types.Schema, data any) 
 
 	var alertResult model.AlertPolicyResult
 	if err := x.queryAlertPolicy(ctx, schema, data, &alertResult); err != nil {
-		return nil, goerr.Wrap(err)
+		return nil, err
 	}
 
 	if len(alertResult.Alerts) == 0 {
@@ -154,7 +154,7 @@ func (x *Chain) queryAlertPolicy(ctx context.Context, schema types.Schema, in, o
 	}
 
 	if err := x.alertPolicy.Query(ctx, in, out, options...); err != nil && !errors.Is(err, types.ErrNoPolicyResult) {
-		return types.AsPolicyErr(goerr.Wrap(err, "failed to evaluate alert policy").With("request", in))
+		return goerr.Wrap(err, "failed to evaluate alert policy", goerr.V("request", in), goerr.T(types.ErrTagPolicy))
 	}
 	ctxutil.Logger(ctx).Debug("queried action policy", slog.Any("in", in), slog.Any("out", out))
 
@@ -172,7 +172,7 @@ func (x *Chain) queryActionPolicy(ctx context.Context, in, out any) error {
 	}
 
 	if err := x.actionPolicy.Query(ctx, in, out, options...); err != nil && !errors.Is(err, types.ErrNoPolicyResult) {
-		return types.AsPolicyErr(goerr.Wrap(err, "failed to evaluate action policy").With("request", in))
+		return goerr.Wrap(err, "failed to evaluate action policy", goerr.V("request", in), goerr.T(types.ErrTagPolicy))
 	}
 	ctxutil.Logger(ctx).Debug("queried action policy", slog.Any("in", in), slog.Any("out", out))
 

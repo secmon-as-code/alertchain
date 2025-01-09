@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/m-mizutani/goerr"
+	"github.com/m-mizutani/goerr/v2"
 	"github.com/open-policy-agent/opa/v1/ast"
 	"github.com/open-policy-agent/opa/v1/rego"
 	"github.com/secmon-lab/alertchain/pkg/domain/types"
@@ -81,7 +81,7 @@ func New(options ...Option) (*Client, error) {
 	for _, dirPath := range client.dirs {
 		err := filepath.WalkDir(dirPath, func(path string, d fs.DirEntry, err error) error {
 			if err != nil {
-				return goerr.Wrap(err, "Failed to walk directory").With("path", path)
+				return err
 			}
 			if d.IsDir() {
 				return nil
@@ -95,7 +95,7 @@ func New(options ...Option) (*Client, error) {
 			return nil
 		})
 		if err != nil {
-			return nil, goerr.Wrap(err)
+			return nil, goerr.Wrap(err, "Failed to walk directory", goerr.V("path", dirPath))
 		}
 	}
 	targetFiles = append(targetFiles, client.files...)
@@ -103,7 +103,7 @@ func New(options ...Option) (*Client, error) {
 	for _, filePath := range targetFiles {
 		raw, err := os.ReadFile(filepath.Clean(filePath))
 		if err != nil {
-			return nil, goerr.Wrap(err, "Failed to read policy file").With("path", filePath)
+			return nil, goerr.Wrap(err, "Failed to read policy file", goerr.V("path", filePath))
 		}
 
 		client.policies[filePath] = string(raw)
@@ -114,7 +114,7 @@ func New(options ...Option) (*Client, error) {
 	}
 
 	if len(client.policies) == 0 {
-		return nil, goerr.Wrap(types.ErrNoPolicyData)
+		return nil, goerr.New("No policy data", goerr.T(types.ErrTagPolicy))
 	}
 
 	compiler, err := ast.CompileModulesWithOpt(client.policies, ast.CompileOpts{
@@ -122,7 +122,7 @@ func New(options ...Option) (*Client, error) {
 		ParserOptions:         ast.ParserOptions{RegoVersion: ast.RegoV1},
 	})
 	if err != nil {
-		return nil, goerr.Wrap(err)
+		return nil, goerr.Wrap(err, "Failed to compile policy", goerr.V("policies", client.policies))
 	}
 	client.compiler = compiler
 
@@ -174,19 +174,21 @@ func (x *Client) Query(ctx context.Context, input interface{}, output interface{
 	}
 
 	rs, err := rego.New(regoOpt...).Eval(ctx)
+	eb := goerr.NewBuilder(goerr.V("query", query), goerr.V("input", input), goerr.V("rs", rs))
+
 	if err != nil {
-		return goerr.Wrap(err, "fail to eval local policy").With("input", input)
+		return eb.Wrap(err, "Fail to evaluate policy")
 	}
 	if len(rs) == 0 || len(rs[0].Expressions) == 0 {
-		return goerr.Wrap(types.ErrNoPolicyResult)
+		return eb.Wrap(types.ErrNoPolicyResult, "No policy result", goerr.T(types.ErrTagPolicy))
 	}
 
 	raw, err := json.Marshal(rs[0].Expressions[0].Value)
 	if err != nil {
-		return goerr.Wrap(err, "fail to marshal a result of rego.Eval").With("rs", rs)
+		return goerr.Wrap(err, "fail to marshal a result of rego.Eval", goerr.V("rs", rs))
 	}
 	if err := json.Unmarshal(raw, output); err != nil {
-		return goerr.Wrap(err, "fail to unmarshal a result of rego.Eval to out").With("rs", rs)
+		return goerr.Wrap(err, "fail to unmarshal a result of rego.Eval to out", goerr.V("rs", rs))
 	}
 
 	return nil

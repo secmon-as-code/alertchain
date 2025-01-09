@@ -3,7 +3,7 @@ package config
 import (
 	"context"
 
-	"github.com/m-mizutani/goerr"
+	"github.com/m-mizutani/goerr/v2"
 	"github.com/secmon-lab/alertchain/pkg/domain/interfaces"
 	"github.com/secmon-lab/alertchain/pkg/domain/types"
 	"github.com/secmon-lab/alertchain/pkg/infra/firestore"
@@ -57,19 +57,19 @@ func (x *Database) New(ctx context.Context) (interfaces.Database, func(), error)
 
 	case "firestore":
 		if x.firestoreProjectID == "" {
-			return nil, nopCloser, goerr.Wrap(types.ErrInvalidOption, "firestore-project-id is required for firestore")
+			return nil, nopCloser, goerr.New("firestore-project-id is required for firestore", goerr.T(types.ErrTagConfig))
 		}
 		if x.firestoreDatabaseID == "" {
-			return nil, nopCloser, goerr.Wrap(types.ErrInvalidOption, "firestore-collection-prefix is required for firestore")
+			return nil, nopCloser, goerr.New("firestore-collection-prefix is required for firestore")
 		}
 
 		client, err := firestore.New(ctx, x.firestoreProjectID, x.firestoreDatabaseID)
 		if err != nil {
-			return nil, nopCloser, goerr.Wrap(err, "failed to initialize firestore client")
+			return nil, nopCloser, goerr.Wrap(err, "failed to initialize firestore client", goerr.T(types.ErrTagConfig))
 		}
 		return client, func() { utils.SafeClose(ctx, client) }, nil
 
 	default:
-		return nil, nopCloser, goerr.Wrap(types.ErrInvalidOption, "invalid db-type").With("db-type", x.dbType)
+		return nil, nopCloser, goerr.New("invalid db-type", goerr.V("db-type", x.dbType), goerr.T(types.ErrTagConfig))
 	}
 }

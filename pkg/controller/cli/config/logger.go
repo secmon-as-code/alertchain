@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/m-mizutani/goerr"
+	"github.com/m-mizutani/goerr/v2"
 	"github.com/secmon-lab/alertchain/pkg/domain/types"
 	"github.com/secmon-lab/alertchain/pkg/logging"
 	"github.com/secmon-lab/alertchain/pkg/utils"
@@ -71,7 +71,7 @@ func (x *Logger) Configure() (func(), error) {
 	} else {
 		fmt, ok := formatMap[x.format]
 		if !ok {
-			return closer, goerr.Wrap(types.ErrInvalidOption, "Invalid log format").With("format", x.format)
+			return closer, goerr.New("Invalid log format", goerr.V("format", x.format), goerr.T(types.ErrTagConfig))
 		}
 		format = fmt
 	}
@@ -84,7 +84,7 @@ func (x *Logger) Configure() (func(), error) {
 	}
 	level, ok := levelMap[x.level]
 	if !ok {
-		return closer, goerr.Wrap(types.ErrInvalidOption, "Invalid log level").With("level", x.level)
+		return closer, goerr.New("Invalid log level", goerr.V("level", x.level), goerr.T(types.ErrTagConfig))
 	}
 
 	var output io.Writer
@@ -96,7 +96,7 @@ func (x *Logger) Configure() (func(), error) {
 	default:
 		f, err := os.OpenFile(filepath.Clean(x.output), os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
 		if err != nil {
-			return closer, goerr.Wrap(err, "Failed to open log file").With("path", x.output)
+			return closer, goerr.Wrap(err, "Failed to open log file", goerr.V("path", x.output))
 		}
 		output = f
 		closer = func() {

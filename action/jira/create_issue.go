@@ -10,7 +10,7 @@ import (
 	"text/template"
 
 	"github.com/andygrunwald/go-jira"
-	"github.com/m-mizutani/goerr"
+	"github.com/m-mizutani/goerr/v2"
 	"github.com/secmon-lab/alertchain/pkg/domain/model"
 )
 
@@ -102,7 +102,7 @@ func CreateIssue(ctx context.Context, alert model.Alert, args model.ActionArgs) 
 	issue, resp, err := jiraClient.Issue.CreateWithContext(ctx, &i)
 	if err != nil {
 		data, _ := io.ReadAll(resp.Body)
-		return nil, goerr.Wrap(err, "Failed to create issue").With("body", string(data))
+		return nil, goerr.Wrap(err, "Failed to create issue", goerr.V("body", string(data)))
 	}
 
 	fname := fmt.Sprintf("alert-%s.json", alert.ID)

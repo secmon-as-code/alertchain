@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/m-mizutani/goerr"
+	"github.com/m-mizutani/goerr/v2"
 	"github.com/secmon-lab/alertchain/pkg/ctxutil"
 	"github.com/secmon-lab/alertchain/pkg/domain/interfaces"
 	"github.com/secmon-lab/alertchain/pkg/domain/model"
@@ -66,7 +66,8 @@ func attrsToRecord(attrs model.Attributes) []*model.AttributeRecord {
 func (x *WorkflowService) Create(ctx context.Context, alert model.Alert) (*Workflow, error) {
 	rawData, err := json.Marshal(alert.Data)
 	if err != nil {
-		return nil, types.AsBadRequestErr(goerr.Wrap(err, "Fail to marshal alert data"))
+		return nil, goerr.Wrap(err, "Fail to marshal alert data", goerr.T(types.ErrTagBadRequest))
+		// types.AsBadRequestErr(goerr.Wrap(err, "Fail to marshal alert data"))
 	}
 
 	var namespace *string

@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/google/go-jsonnet"
-	"github.com/m-mizutani/goerr"
+	"github.com/m-mizutani/goerr/v2"
 	"github.com/secmon-lab/alertchain/pkg/domain/types"
 )
 
@@ -29,7 +29,7 @@ func (x *Playbook) Validate() error {
 		}
 
 		if _, ok := ids[s.ID]; ok {
-			return goerr.Wrap(types.ErrInvalidScenario, "scenario ID is not unique")
+			return goerr.New("scenario ID is not unique", goerr.T(types.ErrTagConfig))
 		}
 		ids[s.ID] = struct{}{}
 	}
@@ -55,7 +55,7 @@ type Scenario struct {
 
 func (x *Scenario) Validate() error {
 	if x.ID == "" {
-		return goerr.Wrap(types.ErrInvalidScenario, "scenario ID is empty")
+		return goerr.New("scenario ID is empty", goerr.T(types.ErrTagConfig))
 	}
 
 	// check event schema
@@ -74,7 +74,7 @@ func (x *Scenario) GetLogFilePath(outDir string) string {
 
 func (x *Event) Validate() error {
 	if x.Schema == "" {
-		return goerr.Wrap(types.ErrInvalidScenario, "schema is empty")
+		return goerr.New("schema is empty", goerr.T(types.ErrTagConfig))
 	}
 	return nil
 }

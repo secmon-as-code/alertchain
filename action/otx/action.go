@@ -6,7 +6,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/m-mizutani/goerr"
+	"github.com/m-mizutani/goerr/v2"
 	"github.com/secmon-lab/alertchain/pkg/ctxutil"
 	"github.com/secmon-lab/alertchain/pkg/domain/model"
 	"github.com/secmon-lab/alertchain/pkg/domain/types"
@@ -64,7 +64,11 @@ func Indicator(ctx context.Context, _ model.Alert, args model.ActionArgs) (any, 
 	}()
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		return nil, goerr.Wrap(types.ErrActionFailed, "OTX returns non-200 status code").With("status", resp.StatusCode).With("url", url).With("body", string(body))
+		return nil, goerr.New("OTX returns non-200 status code",
+			goerr.V("status", resp.StatusCode),
+			goerr.V("url", url),
+			goerr.V("body", string(body)),
+		)
 	}
 
 	var result any
@@ -73,7 +77,7 @@ func Indicator(ctx context.Context, _ model.Alert, args model.ActionArgs) (any, 
 		return nil, goerr.Wrap(err, "Fail to read HTTP response body from OTX")
 	}
 	if err := json.Unmarshal(respBody, &result); err != nil {
-		return nil, goerr.Wrap(err, "Fail to parse JSON response from OTX").With("body", string(respBody))
+		return nil, goerr.Wrap(err, "Fail to parse JSON response from OTX", goerr.V("body", string(respBody)))
 	}
 
 	return result, nil

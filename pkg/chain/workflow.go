@@ -5,7 +5,7 @@ import (
 	"errors"
 	"log/slog"
 
-	"github.com/m-mizutani/goerr"
+	"github.com/m-mizutani/goerr/v2"
 	"github.com/secmon-lab/alertchain/pkg/ctxutil"
 	"github.com/secmon-lab/alertchain/pkg/domain/interfaces"
 	"github.com/secmon-lab/alertchain/pkg/domain/model"
@@ -199,7 +199,7 @@ func (x *sequence) runAction(ctx context.Context, baseAction model.Action) (*mod
 	if copied.Uses != "" {
 		run, ok := x.actionMap[copied.Uses]
 		if !ok {
-			return nil, goerr.Wrap(types.ErrActionNotFound).With("uses", copied.Uses)
+			return nil, goerr.New("action not found", goerr.V("uses", copied.Uses), goerr.V("action", copied), goerr.T(types.ErrTagPolicy))
 		}
 
 		logger.Debug("run action", slog.Any("proc", copied))
@@ -210,7 +210,7 @@ func (x *sequence) runAction(ctx context.Context, baseAction model.Action) (*mod
 		} else {
 			resp, err := run(ctx, x.alert, copied.Args)
 			if err != nil && !copied.Force {
-				return nil, types.AsActionErr(goerr.Wrap(err))
+				return nil, goerr.Wrap(err, "failed to run action", goerr.V("action", copied), goerr.T(types.ErrTagAction))
 			}
 			result = resp
 		}

@@ -3,7 +3,7 @@ package utils
 import (
 	"os"
 
-	"github.com/m-mizutani/goerr"
+	"github.com/m-mizutani/goerr/v2"
 )
 
 type EnvLoader func() error
@@ -12,7 +12,7 @@ func EnvDef(key string, dst *string) EnvLoader {
 	return func() error {
 		v, ok := os.LookupEnv(key)
 		if !ok {
-			return goerr.New("No such env: %s", key)
+			return goerr.New("No such env: " + key)
 		}
 		*dst = v
 		return nil
