@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/m-mizutani/goerr"
+	"github.com/m-mizutani/goerr/v2"
 )
 
 // RunAction is a function to run an action. The function is registered as an option within the chain.Chain.
@@ -24,17 +24,17 @@ func ArgDef[T any](key string, dst *T, options ...ArgOption) ArgParser {
 			if opt.Optional {
 				return nil
 			}
-			return goerr.New("No such Optional key in action args").With("key", key)
+			return goerr.New("No such Optional key in action args", goerr.V("key", key))
 		}
 
 		raw, err := json.Marshal(v)
 		if err != nil {
-			return goerr.Wrap(err, "Failed to marshal action args").With("key", key)
+			return goerr.Wrap(err, "Failed to marshal action args", goerr.V("key", key))
 		}
 
 		var src T
 		if err := json.Unmarshal(raw, &src); err != nil {
-			return goerr.Wrap(err, "Failed to unmarshal action args").With("key", key)
+			return goerr.Wrap(err, "Failed to unmarshal action args", goerr.V("key", key))
 		}
 
 		*dst = src

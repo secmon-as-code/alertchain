@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"cloud.google.com/go/vertexai/genai"
-	"github.com/m-mizutani/goerr"
+	"github.com/m-mizutani/goerr/v2"
 )
 
 type Client struct {

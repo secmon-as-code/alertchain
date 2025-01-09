@@ -14,7 +14,7 @@ import (
 
 	"github.com/bradleyfalzon/ghinstallation/v2"
 	"github.com/google/go-github/github"
-	"github.com/m-mizutani/goerr"
+	"github.com/m-mizutani/goerr/v2"
 	"github.com/m-mizutani/gots/ptr"
 	"github.com/secmon-lab/alertchain/pkg/ctxutil"
 	"github.com/secmon-lab/alertchain/pkg/domain/model"
@@ -96,10 +96,10 @@ func CreateIssue(ctx context.Context, alert model.Alert, args model.ActionArgs) 
 
 	issue, resp, err := client.Issues.Create(ctx, owner, repo, req)
 	if err != nil {
-		return nil, goerr.Wrap(err)
+		return nil, goerr.Wrap(err, "Failed to create GitHub issue")
 	}
 	if resp.StatusCode != http.StatusCreated {
-		return nil, goerr.Wrap(err).With("resp", resp)
+		return nil, goerr.New("unexpected status code in creating GitHub issue", goerr.V("status", resp.StatusCode))
 	}
 
 	ctxutil.Logger(ctx).Debug("Created GitHub issue",

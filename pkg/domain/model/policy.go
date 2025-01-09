@@ -5,7 +5,7 @@ import (
 
 	"github.com/PaesslerAG/gval"
 	"github.com/PaesslerAG/jsonpath"
-	"github.com/m-mizutani/goerr"
+	"github.com/m-mizutani/goerr/v2"
 	"github.com/secmon-lab/alertchain/pkg/domain/types"
 )
 
@@ -56,13 +56,13 @@ func (x *Commit) ToAttr(data any) (*Attribute, error) {
 
 	if x.Path == "" {
 		if attr.Value == nil {
-			return nil, goerr.New("Path is empty and Value is nil").With("attr", attr)
+			return nil, goerr.New("Path is empty and Value is nil", goerr.V("attr", attr))
 		}
 		return &attr, nil
 	}
 
 	if data == nil {
-		return nil, goerr.New("Data is nil").With("commit", x)
+		return nil, goerr.New("Data is nil", goerr.V("commit", x))
 	}
 
 	builder := gval.Full(jsonpath.PlaceholderExtension())
@@ -75,7 +75,7 @@ func (x *Commit) ToAttr(data any) (*Attribute, error) {
 			return &attr, nil
 		}
 
-		return nil, goerr.Wrap(err, "failed to evaluate JSON path").With("path", x.Path).With("data", data)
+		return nil, goerr.Wrap(err, "failed to evaluate JSON path", goerr.V("path", x.Path), goerr.V("data", data))
 	}
 	attr.Value = dst
 

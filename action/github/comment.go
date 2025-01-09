@@ -10,7 +10,7 @@ import (
 
 	"github.com/bradleyfalzon/ghinstallation/v2"
 	"github.com/google/go-github/github"
-	"github.com/m-mizutani/goerr"
+	"github.com/m-mizutani/goerr/v2"
 	"github.com/m-mizutani/gots/ptr"
 	"github.com/secmon-lab/alertchain/pkg/ctxutil"
 	"github.com/secmon-lab/alertchain/pkg/domain/model"
@@ -75,10 +75,10 @@ func CreateComment(ctx context.Context, alert model.Alert, args model.ActionArgs
 
 	comment, resp, err := client.Issues.CreateComment(ctx, owner, repo, int(issue_number), req)
 	if err != nil {
-		return nil, goerr.Wrap(err)
+		return nil, goerr.Wrap(err, "Failed to create GitHub comment")
 	}
 	if resp.StatusCode != http.StatusCreated {
-		return nil, goerr.Wrap(err).With("resp", resp)
+		return nil, goerr.New("Failed to create GitHub comment (unexpected status code)", goerr.V("status", resp.StatusCode))
 	}
 
 	ctxutil.Logger(ctx).Debug("Created GitHub comment",

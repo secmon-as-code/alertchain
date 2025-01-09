@@ -13,7 +13,7 @@ import (
 	"github.com/secmon-lab/alertchain/pkg/domain/types"
 
 	"cloud.google.com/go/bigquery"
-	"github.com/m-mizutani/goerr"
+	"github.com/m-mizutani/goerr/v2"
 	"google.golang.org/api/googleapi"
 )
 
@@ -188,7 +188,7 @@ func insert(ctx context.Context, table *bigquery.Table, schema bigquery.Schema, 
 	}
 
 	if err := insertWithRetry(ctx, table, data); err != nil {
-		return goerr.Wrap(err, "Fail to insert data").With("table", table)
+		return goerr.Wrap(err, "Fail to insert data", goerr.V("table", table))
 	}
 
 	return nil

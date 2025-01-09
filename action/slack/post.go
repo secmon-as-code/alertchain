@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/m-mizutani/goerr"
+	"github.com/m-mizutani/goerr/v2"
 	"github.com/secmon-lab/alertchain/pkg/ctxutil"
 	"github.com/secmon-lab/alertchain/pkg/domain/model"
 	"github.com/secmon-lab/alertchain/pkg/domain/types"
@@ -83,7 +83,7 @@ func Post(ctx context.Context, alert model.Alert, args model.ActionArgs) (any, e
 
 	if err := slack.PostWebhookContext(ctx, url, msg); err != nil {
 		raw, _ := json.Marshal(msg)
-		return nil, goerr.Wrap(err, "failed to post slack message").With("body", string(raw))
+		return nil, goerr.Wrap(err, "failed to post slack message", goerr.V("body", string(raw)), goerr.T(types.ErrTagAction))
 	}
 
 	return nil, nil
