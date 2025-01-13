@@ -21,7 +21,7 @@ require (
 	github.com/m-mizutani/goerr/v2 v2.0.0-alpha.1.0.20250108231337-0b64a5f93f03
 	github.com/m-mizutani/gots v0.0.0-20230529013424-0639119b2cdd
 	github.com/m-mizutani/gt v0.0.13-0.20241214054244-b80c68b94455
-	github.com/m-mizutani/masq v0.1.5
+	github.com/m-mizutani/masq v0.1.10
 	github.com/open-policy-agent/opa v1.0.0
 	github.com/opsgenie/opsgenie-go-sdk-v2 v1.2.22
 	github.com/sashabaranov/go-openai v1.36.0

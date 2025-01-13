@@ -174,8 +174,8 @@ github.com/m-mizutani/gots v0.0.0-20230529013424-0639119b2cdd h1:mmuUG300WqGOvGN
 github.com/m-mizutani/gots v0.0.0-20230529013424-0639119b2cdd/go.mod h1:MDYrqsaKL6z6djDZpy6admhX6GOOCvyST+c0VnLbT4w=
 github.com/m-mizutani/gt v0.0.13-0.20241214054244-b80c68b94455 h1:dqDdnuW9QUST4U6iPd12rLow7N65UA6EiglnAC/RZFw=
 github.com/m-mizutani/gt v0.0.13-0.20241214054244-b80c68b94455/go.mod h1:0MPYSfGBLmYjTduzADVmIqD58ELQ5IfBFiK/f0FmB3k=
-github.com/m-mizutani/masq v0.1.5 h1:+ebFJ9gdIZdiNA0X3Cn8MAXgfH4Z6m0cLJE9UNcKQKk=
-github.com/m-mizutani/masq v0.1.5/go.mod h1:42/bKhlCNIQjmh3KBypeuh6iOvxNfUIlrZD1i0amEoc=
+github.com/m-mizutani/masq v0.1.10 h1:vriZQHZ15volCty03OMTV8kke5fVvEQozQ5DsUf84E0=
+github.com/m-mizutani/masq v0.1.10/go.mod h1:H8jy743m5h+niZ1ByiZfPnLNnXzb7Khr/K59vT15f18=
 github.com/mattn/go-colorable v0.1.13 h1:fFA4WZxdEF4tXPZVKMLwD8oUnCTTo08duU7wxecdEvA=
 github.com/mattn/go-colorable v0.1.13/go.mod h1:7S9/ev0klgBDR4GtXTXX8a3vIGJpMovkB8vQcUbaXHg=
 github.com/mattn/go-isatty v0.0.16/go.mod h1:kYGgaQfpe5nmfYZH+SKPsOc2e4SrIfOl2e/yFXSvRLM=
