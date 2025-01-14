@@ -11,6 +11,7 @@ import (
 	"github.com/secmon-lab/alertchain/pkg/ctxutil"
 	"github.com/secmon-lab/alertchain/pkg/domain/model"
 	"github.com/secmon-lab/alertchain/pkg/domain/types"
+	"github.com/secmon-lab/alertchain/pkg/utils"
 )
 
 func Query(ctx context.Context, alert model.Alert, args model.ActionArgs) (any, error) {
@@ -52,15 +53,5 @@ func Query(ctx context.Context, alert model.Alert, args model.ActionArgs) (any, 
 		return nil, goerr.Wrap(err, "Failed to call OpenAI API")
 	}
 
-	raw, err := json.Marshal(resp)
-	if err != nil {
-		return nil, goerr.Wrap(err, "Failed to marshal response", goerr.V("response", resp))
-	}
-
-	var respData any
-	if err := json.Unmarshal(raw, &respData); err != nil {
-		return nil, goerr.Wrap(err, "Failed to unmarshal response", goerr.V("response", string(raw)))
-	}
-
-	return respData, nil
+	return utils.ToAny(resp)
 }

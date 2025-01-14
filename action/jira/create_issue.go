@@ -12,6 +12,7 @@ import (
 	"github.com/andygrunwald/go-jira"
 	"github.com/m-mizutani/goerr/v2"
 	"github.com/secmon-lab/alertchain/pkg/domain/model"
+	"github.com/secmon-lab/alertchain/pkg/utils"
 )
 
 //go:embed issue_template.txt
@@ -111,5 +112,5 @@ func CreateIssue(ctx context.Context, alert model.Alert, args model.ActionArgs) 
 		return nil, goerr.Wrap(err, "Failed to post attachment")
 	}
 
-	return issue, nil
+	return utils.ToAny(issue)
 }

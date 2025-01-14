@@ -19,6 +19,7 @@ import (
 	"github.com/secmon-lab/alertchain/pkg/ctxutil"
 	"github.com/secmon-lab/alertchain/pkg/domain/model"
 	"github.com/secmon-lab/alertchain/pkg/domain/types"
+	"github.com/secmon-lab/alertchain/pkg/utils"
 )
 
 //go:embed issuer_template.md
@@ -107,7 +108,7 @@ func CreateIssue(ctx context.Context, alert model.Alert, args model.ActionArgs) 
 		slog.Any("title", ptr.From(issue.Title)),
 	)
 
-	return issue, nil
+	return utils.ToAny(issue)
 }
 
 func isRSAPrivateKey(s string) bool {
