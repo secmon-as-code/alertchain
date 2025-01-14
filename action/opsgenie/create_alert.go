@@ -8,6 +8,7 @@ import (
 	og_alert "github.com/opsgenie/opsgenie-go-sdk-v2/alert"
 	"github.com/opsgenie/opsgenie-go-sdk-v2/client"
 	"github.com/secmon-lab/alertchain/pkg/domain/model"
+	"github.com/secmon-lab/alertchain/pkg/utils"
 )
 
 type Responder struct {
@@ -62,5 +63,5 @@ func CreateAlert(ctx context.Context, alert model.Alert, args model.ActionArgs) 
 		return nil, goerr.Wrap(err, "Failed to create OpsGenie alert")
 	}
 
-	return resp, nil
+	return utils.ToAny(resp)
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/andygrunwald/go-jira"
 	"github.com/m-mizutani/goerr/v2"
 	"github.com/secmon-lab/alertchain/pkg/domain/model"
+	"github.com/secmon-lab/alertchain/pkg/utils"
 )
 
 func AddComment(ctx context.Context, alert model.Alert, args model.ActionArgs) (any, error) {
@@ -51,5 +52,5 @@ func AddComment(ctx context.Context, alert model.Alert, args model.ActionArgs) (
 		return nil, goerr.Wrap(err, "Failed to add comment")
 	}
 
-	return comment, nil
+	return utils.ToAny(comment)
 }

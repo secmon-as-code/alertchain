@@ -15,6 +15,7 @@ import (
 	"github.com/secmon-lab/alertchain/pkg/ctxutil"
 	"github.com/secmon-lab/alertchain/pkg/domain/model"
 	"github.com/secmon-lab/alertchain/pkg/domain/types"
+	"github.com/secmon-lab/alertchain/pkg/utils"
 )
 
 func CreateComment(ctx context.Context, alert model.Alert, args model.ActionArgs) (any, error) {
@@ -85,5 +86,5 @@ func CreateComment(ctx context.Context, alert model.Alert, args model.ActionArgs
 		slog.Any("comment_id", ptr.From(comment.ID)),
 	)
 
-	return comment, nil
+	return utils.ToAny(comment)
 }
