@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -36,9 +37,14 @@ func TestAnalystInquiry(t *testing.T) {
 	}
 
 	resp := gt.R1(chatgpt.Query(ctx, alert, model.ActionArgs{
-		"secret_api_key": os.Getenv("TEST_CHATGPT_API_KEY"),
+		"secret_api_key": strings.TrimSpace(os.Getenv("TEST_CHATGPT_API_KEY")),
 	})).NoError(t)
-	data := gt.Cast[openai.ChatCompletionResponse](t, resp)
+	raw, err := json.Marshal(resp)
+	gt.NoError(t, err)
+
+	var data openai.ChatCompletionResponse
+	gt.NoError(t, json.Unmarshal(raw, &data))
+
 	gt.A(t, data.Choices).Length(1)
 	t.Log(data.Choices[0].Message.Content)
 }
