@@ -13,6 +13,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
+      id-token: write
       contents: read
       packages: write
 
@@ -69,8 +70,9 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64
-      - uses: secmon-lab/github-actions/notify@main
+      - uses: m-mizutani/xroute-action@main
         with:
+          url: ${{ vars.XROUTE_URL }}
           message: "Build and pushed image: ${{ env.GITHUB_IMAGE_NAME }}"
 
   release-ghcr:
@@ -102,6 +104,7 @@ jobs:
         run: docker push "${{ env.GITHUB_IMAGE_REPO }}:${{ steps.tag.outputs.tag }}"
       - name: Push Docker image (latest)
         run: docker push "${{ env.GITHUB_IMAGE_REPO }}:latest"
-      - uses: secmon-lab/github-actions/notify@main
+      - uses: m-mizutani/xroute-action@main
         with:
-          message: "Build and pushed image: ${{ env.GITHUB_IMAGE_REPO }}"
+          url: ${{ vars.XROUTE_URL }}
+          message: "Build and pushed image: ${{ env.GITHUB_IMAGE_NAME }}"
