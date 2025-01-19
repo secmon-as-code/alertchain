@@ -107,4 +107,4 @@ jobs:
       - uses: m-mizutani/xroute-action@main
         with:
           url: ${{ vars.XROUTE_URL }}
-          message: "Build and pushed image: ${{ env.GITHUB_IMAGE_NAME }}"
+          message: "Build and pushed image: ${{ env.GITHUB_IMAGE_REPO }}"
